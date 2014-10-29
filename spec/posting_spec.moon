@@ -24,6 +24,15 @@ class PostingApp extends Application
       success: true
     }
 
+  "/new-post": capture_errors_json =>
+    @flow\new_post!
+
+    json: {
+      post: @flow.post
+      success: true
+    }
+
+
 describe "posting flow", ->
   setup ->
     load_test_server!
@@ -37,17 +46,17 @@ describe "posting flow", ->
     truncate_tables Users, Categories, Topics, Posts
     current_user = factory.Users!
 
-  new_topic = (get={}) ->
-    get.current_user_id or= current_user.id
-    status, res = mock_request PostingApp, "/new-topic", {
-      :get
-      expect: "json"
-    }
-
-    assert.same 200, status
-    res
-
   describe "new topic", ->
+    new_topic = (get={}) ->
+      get.current_user_id or= current_user.id
+      status, res = mock_request PostingApp, "/new-topic", {
+        :get
+        expect: "json"
+      }
+
+      assert.same 200, status
+      res
+
     it "should not post anything when missing all data", ->
       res = new_topic!
       assert.truthy res.errors
@@ -97,4 +106,34 @@ describe "posting flow", ->
       category\refresh!
       assert.same 1, category.topics_count
 
+
+  describe "new post", ->
+    new_post = (get={}) ->
+      get.current_user_id or= current_user.id
+      status, res = mock_request PostingApp, "/new-post", {
+        :get
+        expect: "json"
+      }
+
+      assert.same 200, status
+      res
+
+
+    it "should post a new post", ->
+      topic = factory.Topics!
+
+      res = new_post {
+        current_user_id: current_user.id
+        topic_id: topic.id
+        "post[body]": "This is post body"
+      }
+
+      topic\refresh!
+      post = unpack Posts\select!
+
+      assert.same current_user.id, post.user_id
+      assert.same topic.id, post.topic_id
+      assert.same "This is post body", post.body
+
+      assert.same topic.posts_count, 1
 

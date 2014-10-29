@@ -7,14 +7,17 @@ import assert_valid from require "lapis.validate"
 
 import trim_filter from require "lapis.util"
 
+import Categories, Topics, Posts from require "models"
+
+MAX_BODY_LEN = 1024 * 10
+MAX_TITLE_LEN = 256
+
 class Posting extends Flow
   new: (req) =>
     super req
     assert @current_user, "missing current user for post flow"
 
   new_topic: =>
-    import Categories, Topics, Posts from require "models"
-
     assert_valid @params, {
       {"category_id", is_integer: true }
       {"topic", type: "table"}
@@ -25,8 +28,8 @@ class Posting extends Flow
 
     new_topic = trim_filter @params.topic
     assert_valid new_topic, {
-      {"body", exists: true, max_length: 1024*10}
-      {"title", exists: true, max_length: 256}
+      {"body", exists: true, max_length: MAX_BODY_LEN}
+      {"title", exists: true, max_length: MAX_TITLE_LEN}
     }
 
     @topic = Topics\create {
@@ -46,5 +49,27 @@ class Posting extends Flow
 
     true
 
+  new_post: =>
+    assert_valid @params, {
+      {"topic_id", is_integer: true }
+      {"post", type: "table"}
+    }
+
+    @topic = assert_error Topics\find(@params.topic_id), "invalid post"
+    assert_error @topic\allowed_to_post @current_user
+
+    new_post = trim_filter @params.post
+    assert_valid new_post, {
+      {"body", exists: true, max_length: MAX_BODY_LEN}
+    }
+
+    @post = Posts\create {
+      user_id: @current_user.id
+      topic_id: @topic.id
+      body: new_post.body
+    }
+
+    @topic\update { posts_count: db.raw "posts_count + 1" }, timestamp: false
+    true
 
 
