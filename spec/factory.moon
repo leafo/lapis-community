@@ -23,5 +23,17 @@ Categories = (opts={}) ->
   opts.name or= "category-#{next_counter "category"}"
   assert models.Categories\create opts
 
+Topics = (opts={}) ->
+  opts.category_id or= Categories!.id
+  opts.user_id or= Users!.id
+  opts.title or= "Topic #{next_counter "topic"}"
+
+  assert models.Topics\create opts
+
+Posts = (opts={}) ->
+  opts.topic_id or= Topics!.id
+  opts.user_id or= Users!.id
+  opts.body or= "Post #{next_counter "post"} body"
+
 { :next_counter, :next_email,
-  :Users, :Categories }
+  :Users, :Categories, :Topics, :Posts }

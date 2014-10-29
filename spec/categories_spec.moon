@@ -1,7 +1,7 @@
 
 import load_test_server, close_test_server, request from require "lapis.spec.server"
 import truncate_tables from require "lapis.spec.db"
-import Categories from require "models"
+import Users, Categories from require "models"
 
 factory = require "spec.factory"
 

@@ -4,7 +4,7 @@ import Users from require "models"
 
 factory = require "spec.factory"
 
-describe "categories", ->
+describe "users", ->
   setup ->
     load_test_server!
 
