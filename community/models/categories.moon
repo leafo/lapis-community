@@ -10,3 +10,6 @@ class Categories extends Model
     opts.slug or= slugify opts.name
     Model.create @, opts
 
+  allowed_to_post: (user) =>
+    return nil, "no user" unless user
+    true

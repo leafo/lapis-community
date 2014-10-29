@@ -12,3 +12,7 @@ class Topics extends Model
 
     Model.create @, opts
 
+  allowed_to_post: (user) =>
+    return nil, "no user" unless user
+    true
+
