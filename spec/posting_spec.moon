@@ -37,33 +37,50 @@ describe "posting flow", ->
     truncate_tables Users, Categories, Topics, Posts
     current_user = factory.Users!
 
+  new_topic = (get={}) ->
+    get.current_user_id or= current_user.id
+    status, res = mock_request PostingApp, "/new-topic", {
+      :get
+      expect: "json"
+    }
+
+    assert.same 200, status
+    res
+
   describe "new topic", ->
     it "should not post anything when missing all data", ->
-      status, res = mock_request PostingApp, "/new-topic", {
-        get: {
-          current_user_id: current_user.id
-        }
-        expect: "json"
-      }
-
-      assert.same 200, status
+      res = new_topic!
       assert.truthy res.errors
 
+    it "should fail with bad category", ->
+      res = new_topic {
+        current_user_id: current_user.id
+        category_id: 0
+        "topic[title]": "hello"
+        "topic[body]": "world"
+      }
+      assert.same { "invalid category" }, res.errors
+
+    it "should fail with empty body", ->
+      res = new_topic {
+        current_user_id: current_user.id
+        category_id: factory.Categories!.id
+        "topic[title]": "hello"
+        "topic[body]": ""
+      }
+
+      assert.same { "body must be provided" }, res.errors
 
     it "should post a new topic", ->
       category = factory.Categories!
 
-      status, res = mock_request PostingApp, "/new-topic", {
-        get: {
-          current_user_id: current_user.id
-          category_id: category.id
-          "topic[title]": "Hello world"
-          "topic[body]": "This is the body"
-        }
-        expect: "json"
+      res = new_topic {
+        current_user_id: current_user.id
+        category_id: category.id
+        "topic[title]": "Hello world"
+        "topic[body]": "This is the body"
       }
 
-      assert.same 200, status
       assert.truthy res.success
 
       topic = unpack Topics\select!
