@@ -10,3 +10,4 @@ nginx.conf.compiled
 /app.lua
 /config.lua
 /models.lua
+/schema.lua

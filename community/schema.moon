@@ -1,6 +1,5 @@
 db = require "lapis.nginx.postgres"
 schema = require "lapis.db.schema"
-migrations = require "lapis.db.migrations"
 
 import create_table, create_index, drop_table from schema
 
