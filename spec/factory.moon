@@ -35,5 +35,8 @@ Posts = (opts={}) ->
   opts.user_id or= Users!.id
   opts.body or= "Post #{next_counter "post"} body"
 
+  assert models.Posts\create opts
+
+
 { :next_counter, :next_email,
   :Users, :Categories, :Topics, :Posts }

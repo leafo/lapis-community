@@ -15,6 +15,14 @@ describe "posts", ->
     truncate_tables Users, Categories, Topics, Posts
 
   it "should create a post", ->
-    factory.Posts!
+    post = factory.Posts!
 
+  it "should create a series of posts in same topic", ->
+    post1 = factory.Posts topic_id: 1
+    post2 = factory.Posts topic_id: 1
+    post3 = factory.Posts topic_id: 1
+    post4 = factory.Posts topic_id: 1
+    post5 = factory.Posts topic_id: 1
+
+    assert.same 5, post5.post_number
 

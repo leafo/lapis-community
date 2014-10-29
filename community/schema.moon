@@ -50,6 +50,7 @@ make_schema = ->
     {"id", serial}
     {"topic_id", foreign_key}
     {"user_id", foreign_key}
+    {"post_number", integer}
 
     {"body", text}
 
@@ -58,5 +59,7 @@ make_schema = ->
 
     "PRIMARY KEY (id)"
   }
+
+  create_index "posts", "topic_id", "post_number", unique: true
 
 { :make_schema }
