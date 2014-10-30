@@ -37,6 +37,12 @@ Posts = (opts={}) ->
 
   assert models.Posts\create opts
 
+PostVotes = (opts={}) ->
+  opts.user_id or= Users!.id
+  opts.post_id or= Posts!.id
+  opts.positive = true if opts.positive == nil
+  assert models.PostVotes\create opts
+
 
 { :next_counter, :next_email,
-  :Users, :Categories, :Topics, :Posts }
+  :Users, :Categories, :Topics, :Posts, :PostVotes }

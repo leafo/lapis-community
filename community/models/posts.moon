@@ -17,3 +17,7 @@ class Posts extends Model
     opts.post_number = db.raw post_number
     Model.create @, opts
 
+  allowed_to_vote: (user) =>
+    return false unless user
+    true
+

@@ -54,6 +54,9 @@ make_schema = ->
 
     {"body", text}
 
+    {"down_votes_count", integer}
+    {"up_votes_count", integer}
+
     {"created_at", time}
     {"updated_at", time}
 
@@ -61,5 +64,17 @@ make_schema = ->
   }
 
   create_index "posts", "topic_id", "post_number", unique: true
+
+  create_table "post_votes", {
+    {"user_id", foreign_key}
+    {"post_id", foreign_key}
+    {"positive", boolean}
+
+    {"created_at", time}
+    {"updated_at", time}
+
+    "PRIMARY KEY (user_id, post_id)"
+  }
+
 
 { :make_schema }

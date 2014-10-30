@@ -1,6 +1,6 @@
 import load_test_server, close_test_server, request from require "lapis.spec.server"
 import truncate_tables from require "lapis.spec.db"
-import Users, Categories, Topics, Posts from require "models"
+import Users, Categories, Topics, Posts, PostVotes from require "models"
 
 factory = require "spec.factory"
 
@@ -32,6 +32,10 @@ class PostingApp extends Application
       success: true
     }
 
+  "/vote-post": capture_errors_json =>
+    @flow\vote_post!
+    json: { success: true }
+
 
 describe "posting flow", ->
   setup ->
@@ -43,7 +47,7 @@ describe "posting flow", ->
   local current_user
 
   before_each ->
-    truncate_tables Users, Categories, Topics, Posts
+    truncate_tables Users, Categories, Topics, Posts, PostVotes
     current_user = factory.Users!
 
   describe "new topic", ->
@@ -137,3 +141,41 @@ describe "posting flow", ->
 
       assert.same topic.posts_count, 1
 
+  describe "vote post", ->
+    vote_post = (get={}) ->
+      get.current_user_id or= current_user.id
+      status, res = mock_request PostingApp, "/vote-post", {
+        :get
+        expect: "json"
+      }
+
+      assert.same 200, status
+      res
+
+
+    it "should vote on a post", ->
+      post = factory.Posts!
+      res = vote_post {
+        post_id: post.id
+        direction: "up"
+      }
+
+      assert.same { success: true }, res
+      vote = assert unpack PostVotes\select!
+      assert.same post.id, vote.post_id
+      assert.same current_user.id, vote.user_id
+      assert.same true, vote.positive
+
+    it "should update a vote", ->
+      vote = factory.PostVotes user_id: current_user.id
+
+      res = vote_post {
+        post_id: vote.post_id
+        direction: "down"
+      }
+
+      votes = PostVotes\select!
+      assert.same 1, #votes
+      new_vote = unpack votes
+
+      assert.same false, new_vote.positive
