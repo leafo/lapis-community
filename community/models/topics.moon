@@ -16,3 +16,6 @@ class Topics extends Model
     return nil, "no user" unless user
     true
 
+  allowed_to_view: (user) =>
+    true
+
