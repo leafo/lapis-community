@@ -38,9 +38,13 @@ Posts = (opts={}) ->
   assert models.Posts\create opts
 
 PostVotes = (opts={}) ->
-  opts.user_id or= Users!.id
-  opts.post_id or= Posts!.id
   opts.positive = true if opts.positive == nil
+
+  opts.user_id or= Users!.id
+  opts.post_id or= Posts({
+    [opts.positive and "up_votes_count" or "down_votes_count"]: 1
+  }).id
+
   assert models.PostVotes\create opts
 
 

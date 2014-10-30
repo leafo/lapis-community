@@ -3,6 +3,8 @@ db = require "lapis.db"
 
 import insert, concat from table
 
+-- return false on update
+-- return result of create on create
 upsert = (model, data, opts) ->
   error "can't upsert with no data" unless next data
 

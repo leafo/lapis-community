@@ -166,6 +166,11 @@ describe "posting flow", ->
       assert.same current_user.id, vote.user_id
       assert.same true, vote.positive
 
+      post\refresh!
+
+      assert.same 1, post.up_votes_count
+      assert.same 0, post.down_votes_count
+
     it "should update a vote", ->
       vote = factory.PostVotes user_id: current_user.id
 
@@ -179,3 +184,9 @@ describe "posting flow", ->
       new_vote = unpack votes
 
       assert.same false, new_vote.positive
+
+      post = Posts\find new_vote.post_id
+      assert.same 0, post.up_votes_count
+      assert.same , post.down_votes_count
+
+

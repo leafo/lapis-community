@@ -81,9 +81,9 @@ class Posting extends Flow
 
     @post = assert_error Posts\find(@params.post_id), "invalid post"
     assert_error @post\allowed_to_vote @current_user
-
     import PostVotes from require "models"
-    @post_vote = PostVotes\vote @post, @current_user, @params.direction == "up"
+    PostVotes\vote @post, @current_user, @params.direction == "up"
+
     true
 
 
