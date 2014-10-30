@@ -152,7 +152,6 @@ describe "posting flow", ->
       assert.same 200, status
       res
 
-
     it "should vote on a post", ->
       post = factory.Posts!
       res = vote_post {
@@ -170,6 +169,34 @@ describe "posting flow", ->
 
       assert.same 1, post.up_votes_count
       assert.same 0, post.down_votes_count
+
+
+    it "should update a vote with no changes", ->
+      post = factory.Posts!
+      res = vote_post {
+        post_id: post.id
+        direction: "up"
+      }
+
+      assert.same { success: true }, res
+
+      res = vote_post {
+        post_id: post.id
+        direction: "up"
+      }
+
+      assert.same { success: true }, res
+
+      vote = assert unpack PostVotes\select!
+      assert.same post.id, vote.post_id
+      assert.same current_user.id, vote.user_id
+      assert.same true, vote.positive
+
+      post\refresh!
+
+      assert.same 1, post.up_votes_count
+      assert.same 0, post.down_votes_count
+
 
     it "should update a vote", ->
       vote = factory.PostVotes user_id: current_user.id
