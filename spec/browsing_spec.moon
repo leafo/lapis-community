@@ -19,6 +19,9 @@ class BrowsingApp extends Application
     posts = @flow\topic_posts!
     json: { :posts, success: true }
 
+  "/category-topics": capture_errors_json =>
+    topics = @flow\category_topics!
+    json: { :topics, success: true }
 
 describe "browsing flow", ->
   setup ->
@@ -73,4 +76,23 @@ describe "browsing flow", ->
       res = topic_posts topic_id: topic.id, before: 2
       assert.truthy res.success
       assert.same 1, #res.posts
+
+  describe "category topics", ->
+    category_topics = (get) ->
+      status, res = mock_request BrowsingApp, "/category-topics", {
+        :get
+        expect: "json"
+      }
+      assert.same 200, status
+      res
+
+
+    it "should get empty category", ->
+      category = factory.Categories!
+      res = category_topics {
+        category_id: category.id
+      }
+
+      assert.truthy res.success
+      assert.same 0, #res.topics
 

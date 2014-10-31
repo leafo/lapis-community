@@ -9,7 +9,6 @@ class Categories extends Model
   @create: (opts={}) =>
     assert opts.name, "missing name"
     opts.slug or= slugify opts.name
-    opts.last_post_at or= db.format_date!
 
     Model.create @, opts
 

@@ -54,12 +54,12 @@ class Browsing extends Flow
     assert_error @category\allowed_to_view @current_user
 
     import OrderedPaginator from require "lapis.db.pagination"
-    pager = OrderedPaginator Posts, {"last_post_at", "id"}, [[
+    pager = OrderedPaginator Topics, {"last_post_at", "id"}, [[
       where category_id = ?
     ]], @category.id, {
       per_page: 20
-      prepare_results: (topics) =>
-        Users\include_in posts, "user_id"
+      prepare_results: (topics) ->
+        Users\include_in topics, "user_id"
         topics
     }
 
