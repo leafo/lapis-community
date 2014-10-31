@@ -26,10 +26,12 @@ make_schema = ->
 
     {"created_at", time}
     {"updated_at", time}
-
+    {"last_post_at", time}
 
     "PRIMARY KEY (id)"
   }
+
+  create_index "categories", "last_post_at", "id"
 
   create_table "topics", {
     {"id", serial}
