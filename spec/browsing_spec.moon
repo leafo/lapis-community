@@ -20,8 +20,8 @@ class BrowsingApp extends Application
     json: { :posts, success: true }
 
   "/category-topics": capture_errors_json =>
-    topics = @flow\category_topics!
-    json: { :topics, success: true }
+    topics, after_date, after_id = @flow\category_topics!
+    json: { :topics, success: true, next_page: {after_date, after_id} }
 
 describe "browsing flow", ->
   setup ->
@@ -95,4 +95,17 @@ describe "browsing flow", ->
 
       assert.truthy res.success
       assert.same 0, #res.topics
+
+
+    it "should get some topics", ->
+      category = factory.Categories!
+      for i=1,4
+        factory.Topics category_id: category.id
+
+      res = category_topics {
+        category_id: category.id
+      }
+
+      assert.truthy res.success
+      assert.same 4, #res.topics
 

@@ -7,6 +7,8 @@ import OrderedPaginator from require "lapis.db.pagination"
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 
+date = require "date"
+
 class Browsing extends Flow
   set_before_after: =>
     assert_valid @params, {
@@ -63,9 +65,11 @@ class Browsing extends Flow
         topics
     }
 
-    if @before
+    topics, after_date, after_id = if @before
       pager\before @before
     else
       pager\after @after
 
+    after_date = (date(after_date) - date\epoch!)\spanseconds!
+    topics, after_date, after_id
 
