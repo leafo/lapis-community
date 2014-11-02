@@ -79,5 +79,11 @@ make_schema = ->
     "PRIMARY KEY (user_id, post_id)"
   }
 
+  create_table "post_replies", {
+    {"parent_post_id", foreign_key}
+    {"child_post_id", foreign_key}
+
+    "PRIMARY KEY (parent_post_id, child_post_id)"
+  }
 
 { :make_schema }
