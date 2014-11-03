@@ -27,12 +27,14 @@ class Posts extends Model
 
   allowed_to_vote: (user) =>
     return false unless user
+    return false if @deleted
     true
 
   allowed_to_edit: (user) =>
     return false unless user
     return true if user\is_admin!
     return true if user.id == @user_id
+    return false if @deleted
 
     topic = @get_topic!
 

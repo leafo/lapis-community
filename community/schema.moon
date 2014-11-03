@@ -55,6 +55,7 @@ make_schema = ->
     {"topic_id", foreign_key}
     {"user_id", foreign_key}
     {"post_number", integer}
+    {"deleted", boolean}
 
     {"body", text}
 
