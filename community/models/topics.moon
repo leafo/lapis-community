@@ -6,6 +6,11 @@ import slugify from require "lapis.util"
 class Topics extends Model
   @timestamp: true
 
+  @relations: {
+    category: "Categories"
+    user: "Users"
+  }
+
   @create: (opts={}) =>
     assert opts.category_id, "missing category_id"
     assert opts.user_id, "missing user_id"
@@ -17,6 +22,7 @@ class Topics extends Model
 
   allowed_to_post: (user) =>
     return false if @deleted
+    return false if @locked
     return nil, "no user" unless user
     true
 

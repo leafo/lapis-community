@@ -37,6 +37,7 @@ make_schema = ->
     {"user_id", foreign_key}
     {"title", varchar}
     {"slug", varchar}
+    {"locked", boolean}
     {"deleted", boolean}
 
     {"posts_count", integer}
