@@ -37,6 +37,7 @@ make_schema = ->
     {"user_id", foreign_key}
     {"title", varchar}
     {"slug", varchar}
+    {"deleted", boolean}
 
     {"posts_count", integer}
 
@@ -47,7 +48,7 @@ make_schema = ->
     "PRIMARY KEY (id)"
   }
 
-  create_index "topics", "last_post_at", "id"
+  create_index "topics", "category_id", "last_post_at", "id", where: "not deleted"
 
   create_table "posts", {
     {"id", serial}

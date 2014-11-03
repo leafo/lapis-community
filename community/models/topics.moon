@@ -16,9 +16,11 @@ class Topics extends Model
     Model.create @, opts
 
   allowed_to_post: (user) =>
+    return false if @deleted
     return nil, "no user" unless user
     true
 
   allowed_to_view: (user) =>
+    return false if @deleted
     true
 
