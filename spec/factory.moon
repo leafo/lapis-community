@@ -13,6 +13,8 @@ next_counter = do
 next_email = ->
   "me-#{next_counter "email"}@example.com"
 
+local *
+
 Users = (opts={}) ->
   opts.username or= "user-#{next_counter "username"}"
   opts.email or= next_email!
@@ -47,6 +49,10 @@ PostVotes = (opts={}) ->
 
   assert models.PostVotes\create opts
 
+CategoryModerators = (opts={}) =>
+  opts.user_id or= Users!.id
+  opts.category_id or= Categories!.id
+  assert models.CategoryModerators\create opts
 
 { :next_counter, :next_email,
   :Users, :Categories, :Topics, :Posts, :PostVotes }

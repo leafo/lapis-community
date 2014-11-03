@@ -86,4 +86,17 @@ make_schema = ->
     "PRIMARY KEY (parent_post_id, child_post_id)"
   }
 
+  create_table "category_moderators", {
+    {"user_id", foreign_key}
+    {"category_id", foreign_key}
+    {"admin", boolean}
+
+    {"created_at", time}
+    {"updated_at", time}
+
+    "PRIMARY KEY (user_id, category_id)"
+  }
+
+  create_index "category_moderators", "category_id", "created_at"
+
 { :make_schema }
