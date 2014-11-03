@@ -49,10 +49,10 @@ PostVotes = (opts={}) ->
 
   assert models.PostVotes\create opts
 
-CategoryModerators = (opts={}) =>
+CategoryModerators = (opts={}) ->
   opts.user_id or= Users!.id
   opts.category_id or= Categories!.id
   assert models.CategoryModerators\create opts
 
 { :next_counter, :next_email,
-  :Users, :Categories, :Topics, :Posts, :PostVotes }
+  :Users, :Categories, :Topics, :Posts, :PostVotes, :CategoryModerators }

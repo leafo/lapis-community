@@ -264,3 +264,66 @@ describe "posting flow", ->
       post\refresh!
       assert.same "the new body", post.body
       assert.same "the new title", post\get_topic!.title
+
+    it "should not edit invalid post", ->
+      res = edit_post {
+        post_id: 0
+        "post[body]": "the new body"
+        "post[title]": "the new title"
+      }
+
+      assert.truthy res.errors
+
+    it "should not let stranger edit post", ->
+      post = factory.Posts!
+
+      res = edit_post {
+        post_id: post.id
+        "post[body]": "the new body"
+        "post[title]": "the new title"
+      }
+
+      assert.truthy res.errors
+
+    it "should let moderator edit post", ->
+      post = factory.Posts!
+      topic = post\get_topic!
+
+      factory.CategoryModerators {
+        user_id: current_user.id
+        category_id: topic.category_id
+      }
+
+      res = edit_post {
+        post_id: post.id
+        "post[body]": "the new body"
+        "post[title]": "the new title"
+      }
+
+      assert.truthy res.success
+
+      post\refresh!
+      assert.same "the new body", post.body
+      assert.same "the new title", post\get_topic!.title
+
+    it "should edit nth post in topic #xxx", ->
+      topic = factory.Topics!
+      post1 = factory.Posts topic_id: topic.id
+      post2 = factory.Posts topic_id: topic.id, user_id: current_user.id
+
+      res = edit_post {
+        post_id: post2.id
+        "post[body]": "the new body"
+        "post[title]": "the new title"
+      }
+
+      assert.truthy res.success
+
+      post1\refresh!
+      post2\refresh!
+      before_title = topic.title
+      topic\refresh!
+
+      assert.same "the new body", post2.body
+      assert.same before_title, topic.title
+

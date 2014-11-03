@@ -2,6 +2,7 @@ import Model from require "lapis.db.model"
 
 class CategoryModerators extends Model
   @timestamp: true
+  @primary_key: {"user_id", "category_id"}
 
   @relations: {
     user: "Users"
