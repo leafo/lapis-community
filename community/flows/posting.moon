@@ -72,6 +72,35 @@ class Posting extends Flow
     @topic\update { posts_count: db.raw "posts_count + 1" }, timestamp: false
     true
 
+  edit_post: =>
+    assert_valid @params, {
+      {"post_id", is_integer: true }
+      {"post", type: "table"}
+    }
+
+    @post = Posts\find @params.post_id
+    assert_error @post, "invalid post"
+    assert_error @post\allowed_to_edit(@current_user), "not allowed to edit"
+
+    @topic = @post\get_topic!
+
+    post_update = trim_filter @params.post
+    assert_valid post_update, {
+      {"body", exists: true, max_length: MAX_BODY_LEN}
+    }
+
+    @post\update body: post_update.body
+
+    if @post\is_topic_post!
+      assert_valid post_update, {
+        {"title", optional: true, max_length: MAX_TITLE_LEN}
+      }
+
+      if post_update.title
+        @topic\update title: post_update.title
+
+    true
+
 
   vote_post: =>
     assert_valid @params, {

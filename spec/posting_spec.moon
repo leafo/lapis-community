@@ -1,6 +1,13 @@
 import load_test_server, close_test_server, request from require "lapis.spec.server"
 import truncate_tables from require "lapis.spec.db"
-import Users, Categories, Topics, Posts, PostVotes from require "models"
+import
+  Categories
+  CategoryModerators
+  PostVotes
+  Posts
+  Topics
+  Users
+  from require "models"
 
 factory = require "spec.factory"
 
@@ -32,6 +39,11 @@ class PostingApp extends Application
       success: true
     }
 
+  "/edit-post": capture_errors_json =>
+    @flow\edit_post!
+    json: { success: true }
+
+
   "/vote-post": capture_errors_json =>
     @flow\vote_post!
     json: { success: true }
@@ -47,7 +59,7 @@ describe "posting flow", ->
   local current_user
 
   before_each ->
-    truncate_tables Users, Categories, Topics, Posts, PostVotes
+    truncate_tables Users, Categories, Topics, Posts, PostVotes, CategoryModerators
     current_user = factory.Users!
 
   describe "new topic", ->
@@ -216,4 +228,39 @@ describe "posting flow", ->
       assert.same 0, post.up_votes_count
       assert.same , post.down_votes_count
 
+  describe "edit post", ->
+    edit_post = (get={}) ->
+      get.current_user_id or= current_user.id
+      status, res = mock_request PostingApp, "/edit-post", {
+        :get
+        expect: "json"
+      }
 
+      assert.same 200, status
+      res
+
+    it "should edit post", ->
+      post = factory.Posts user_id: current_user.id
+
+      res = edit_post {
+        post_id: post.id
+        "post[body]": "the new body"
+      }
+
+      assert.truthy res.success
+      post\refresh!
+      assert.same "the new body", post.body
+
+    it "should edit post and title", ->
+      post = factory.Posts user_id: current_user.id
+
+      res = edit_post {
+        post_id: post.id
+        "post[body]": "the new body"
+        "post[title]": "the new title"
+      }
+
+      assert.truthy res.success
+      post\refresh!
+      assert.same "the new body", post.body
+      assert.same "the new title", post\get_topic!.title
