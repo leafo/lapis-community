@@ -20,6 +20,7 @@ make_schema = ->
     {"id", serial}
     {"name", varchar}
     {"slug", varchar}
+    {"user_id", foreign_key null: true}
     {"parent_category_id", foreign_key null: true}
 
     {"topics_count", integer}
@@ -29,7 +30,6 @@ make_schema = ->
 
     "PRIMARY KEY (id)"
   }
-
 
   create_table "topics", {
     {"id", serial}

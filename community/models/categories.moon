@@ -19,3 +19,19 @@ class Categories extends Model
   allowed_to_view: (user) =>
     true
 
+  allowed_to_edit_moderators: (user) =>
+    return nil unless user
+    return true if user\is_admin!
+    return true if user.id == @user_id
+    return true if @find_moderator user
+    false
+
+  find_moderator: (user) =>
+    return nil unless user
+
+    import CategoryModerators from require "models"
+    CategoryModerators\find {
+      category_id: @id
+      user_id: user.id
+    }
+

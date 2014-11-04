@@ -38,12 +38,8 @@ class Posts extends Model
 
     topic = @get_topic!
 
-    import CategoryModerators from require "models"
+    import Categories from require "models"
+    cat = Categories\load id:(topic.category_id)
+    return true if cat\find_moderator user
 
-    moderator = CategoryModerators\find {
-      category_id: topic.category_id
-      user_id: user.id
-    }
-
-    return true if moderator
     false

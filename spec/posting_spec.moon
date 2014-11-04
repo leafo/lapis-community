@@ -306,7 +306,7 @@ describe "posting flow", ->
       assert.same "the new body", post.body
       assert.same "the new title", post\get_topic!.title
 
-    it "should edit nth post in topic #xxx", ->
+    it "should edit nth post in topic", ->
       topic = factory.Topics!
       post1 = factory.Posts topic_id: topic.id
       post2 = factory.Posts topic_id: topic.id, user_id: current_user.id
