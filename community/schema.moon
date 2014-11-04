@@ -110,6 +110,8 @@ make_schema = ->
     {"category_id", foreign_key}
     {"admin", boolean}
 
+    {"accepted", boolean}
+
     {"created_at", time}
     {"updated_at", time}
 

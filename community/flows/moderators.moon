@@ -22,13 +22,20 @@ class Moderators extends Flow
     @category = assert_error Categories\find(@params.category_id), "invalid category"
     assert_error @category\allowed_to_edit_moderators(@current_user), "invalid category"
 
+    @user = assert_error Users\find(@params.user_id), "invalid user"
+    @moderator = @category\find_moderator @user
+
   add_moderator: =>
     @_assert_category!
+    assert_error not @moderator, "already moderator"
 
+    CategoryModerators\create {
+      user_id: @user.id
+      category_id: @category.id
+    }
 
   remove_moderator: =>
     @_assert_category!
-
-
-
+    assert_error @moderator, "not a moderator"
+    @moderator\delete!
 
