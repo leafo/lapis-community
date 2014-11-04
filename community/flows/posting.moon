@@ -7,7 +7,7 @@ import assert_valid from require "lapis.validate"
 
 import trim_filter from require "lapis.util"
 
-import Categories, Topics, Posts from require "models"
+import Categories, Topics, Posts, PostEdits from require "models"
 
 MAX_BODY_LEN = 1024 * 10
 MAX_TITLE_LEN = 256
@@ -87,6 +87,14 @@ class Posting extends Flow
     post_update = trim_filter @params.post
     assert_valid post_update, {
       {"body", exists: true, max_length: MAX_BODY_LEN}
+      {"reason", optional: true, max_length: MAX_BODY_LEN}
+    }
+
+    PostEdits\create {
+      user_id: @current_user.id
+      body_before: @post.body
+      reason: post_update.reason
+      post_id: @post.id
     }
 
     @post\update body: post_update.body

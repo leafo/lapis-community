@@ -3,6 +3,7 @@ import truncate_tables from require "lapis.spec.db"
 import
   Categories
   CategoryModerators
+  PostEdits
   PostVotes
   Posts
   Topics
@@ -59,7 +60,9 @@ describe "posting flow", ->
   local current_user
 
   before_each ->
-    truncate_tables Users, Categories, Topics, Posts, PostVotes, CategoryModerators
+    truncate_tables Users, Categories, Topics, Posts, PostVotes,
+      CategoryModerators, PostEdits
+
     current_user = factory.Users!
 
   describe "new topic", ->
@@ -260,10 +263,40 @@ describe "posting flow", ->
         "post[title]": "the new title"
       }
 
+      old_body = post.body
+
       assert.truthy res.success
       post\refresh!
       assert.same "the new body", post.body
       assert.same "the new title", post\get_topic!.title
+
+      edit = unpack PostEdits\select!
+      assert edit, "missing edit"
+      assert.same current_user.id, edit.user_id
+      assert.same post.id, edit.post_id
+      assert.same old_body, edit.body_before
+
+
+    it "should edit post with reason", ->
+      post = factory.Posts user_id: current_user.id
+
+      res = edit_post {
+        post_id: post.id
+        "post[body]": "the newer body"
+        "post[reason]": "changed something"
+      }
+
+      old_body = post.body
+      assert.truthy res.success
+      post\refresh!
+      assert.same "the newer body", post.body
+
+      edit = unpack PostEdits\select!
+      assert edit, "missing edit"
+      assert.same current_user.id, edit.user_id
+      assert.same post.id, edit.post_id
+      assert.same old_body, edit.body_before
+      assert.same "changed something", edit.reason
 
     it "should not edit invalid post", ->
       res = edit_post {

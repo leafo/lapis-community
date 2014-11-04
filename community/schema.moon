@@ -77,6 +77,7 @@ make_schema = ->
     {"user_id", foreign_key}
 
     {"body_before", text}
+    {"reason", text null: true}
 
     {"created_at", time}
     {"updated_at", time}
