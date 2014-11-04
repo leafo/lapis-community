@@ -71,6 +71,21 @@ make_schema = ->
 
   create_index "posts", "topic_id", "post_number", unique: true
 
+  create_table "post_edits", {
+    {"id", serial}
+    {"post_id", foreign_key}
+    {"user_id", foreign_key}
+
+    {"body_before", text}
+
+    {"created_at", time}
+    {"updated_at", time}
+
+    "PRIMARY KEY (id)"
+  }
+
+  create_index "post_edits", "post_id", "id", unique: true
+
   create_table "post_votes", {
     {"user_id", foreign_key}
     {"post_id", foreign_key}
