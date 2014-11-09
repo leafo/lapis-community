@@ -111,6 +111,21 @@ describe "moderators flow", ->
       assert.truthy res.errors
       assert.same {}, CategoryModerators\select!
 
+    it "should not let non-admin moderator add moderator", ->
+      category = factory.Categories!
+      factory.CategoryModerators {
+        category_id: category.id
+        user_id: current_user.id
+      }
+
+      other_user = factory.Users!
+      res = add_moderator {
+        category_id: category.id
+        user_id: other_user.id
+      }
+
+      assert.truthy res.errors
+
   describe "remove_moderator", ->
     remove_moderator = (get) ->
       get.current_user_id or= current_user.id
@@ -175,4 +190,15 @@ describe "moderators flow", ->
 
       assert.truthy res.success
       assert.same {}, CategoryModerators\select!
+
+    it "should not let non-admin moderator remove moderator", ->
+      factory.CategoryModerators user_id: current_user.id
+      mod = factory.CategoryModerators!
+
+      res = remove_moderator {
+        category_id: mod.category_id
+        user_id: mod.user_id
+      }
+
+      assert.truthy res.errors
 
