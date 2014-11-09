@@ -10,3 +10,6 @@ clean_test:
 test:
 	busted
 
+lint:
+	moonc -l community/
+	moonc -l spec/

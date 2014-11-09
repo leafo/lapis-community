@@ -9,5 +9,6 @@ nginx.conf.compiled
 /.gitignore
 /app.lua
 /config.lua
+/lint_config.lua
 /models.lua
 /schema.lua
