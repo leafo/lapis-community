@@ -57,6 +57,60 @@ describe "moderators flow", ->
       res = add_moderator { }
       assert.truthy res.errors
 
+    it "should let category owner add moderator", ->
+      category = factory.Categories user_id: current_user.id
+      other_user = factory.Users!
+
+      res = add_moderator {
+        category_id: category.id
+        user_id: other_user.id
+      }
+
+      assert.truthy res.success
+      mod = assert unpack CategoryModerators\select!
+      assert.same false, mod.accepted
+      assert.same false, mod.admin
+
+      assert.same other_user.id, mod.user_id
+      assert.same category.id, mod.category_id
+
+    it "should let category admin add moderator", ->
+      category = factory.Categories!
+      factory.CategoryModerators {
+        category_id: category.id
+        user_id: current_user.id
+        admin: true
+      }
+
+      other_user = factory.Users!
+      res = add_moderator {
+        category_id: category.id
+        user_id: other_user.id
+      }
+
+      assert.truthy res.success
+      mod = assert unpack CategoryModerators\select [[
+        where user_id != ?
+      ]], current_user.id
+
+      assert.same false, mod.accepted
+      assert.same false, mod.admin
+
+      assert.same other_user.id, mod.user_id
+      assert.same category.id, mod.category_id
+
+    it "should not let stranger add moderator", ->
+      category = factory.Categories!
+      other_user = factory.Users!
+
+      res = add_moderator {
+        category_id: category.id
+        user_id: other_user.id
+      }
+
+      assert.truthy res.errors
+      assert.same {}, CategoryModerators\select!
+
   describe "remove_moderator", ->
     remove_moderator = (get) ->
       get.current_user_id or= current_user.id
@@ -72,7 +126,53 @@ describe "moderators flow", ->
       res = remove_moderator { }
       assert.truthy res.errors
 
+    it "should not let stranger remove moderator", ->
+      category = factory.Categories!
+      mod = factory.CategoryModerators category_id: category.id
 
+      res = remove_moderator {
+        category_id: mod.category_id
+        user_id: mod.user_id
+      }
 
+      assert.truthy res.errors
 
+    it "should let category owner remove moderator", ->
+      category = factory.Categories user_id: current_user.id
+      mod = factory.CategoryModerators category_id: category.id
+
+      res = remove_moderator {
+        category_id: mod.category_id
+        user_id: mod.user_id
+      }
+
+      assert.truthy res.success
+      assert.same {}, CategoryModerators\select!
+
+    it "should let category admin remove moderator", ->
+      category = factory.Categories!
+      factory.CategoryModerators {
+        category_id: category.id
+        user_id: current_user.id
+        admin: true
+      }
+
+      mod = factory.CategoryModerators category_id: category.id
+      res = remove_moderator {
+        category_id: mod.category_id
+        user_id: mod.user_id
+      }
+
+      assert.truthy res.success
+
+    it "should let (non admin/owner) moderator remove self", ->
+      mod = factory.CategoryModerators user_id: current_user.id
+
+      res = remove_moderator {
+        category_id: mod.category_id
+        user_id: mod.user_id
+      }
+
+      assert.truthy res.success
+      assert.same {}, CategoryModerators\select!
 

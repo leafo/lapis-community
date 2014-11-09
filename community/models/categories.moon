@@ -33,5 +33,6 @@ class Categories extends Model
     CategoryModerators\find {
       category_id: @id
       user_id: user.id
+      accepted: true
     }
 
