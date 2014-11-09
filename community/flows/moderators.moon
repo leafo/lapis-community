@@ -52,11 +52,13 @@ class Moderators extends Flow
       {"category_id", is_integer: true }
     }
 
-    mod = CategoryModerators\select [[
-      where user_id = ? and category_id = ?
-    ]], @current_user.id, @params.category_id
+    mod = CategoryModerators\find {
+      user_id: @current_user.id
+      category_id: @params.category_id
+    }
 
     assert_error mod and not mod.accepted, "invalid moderator"
+    mod\update accepted: true
     true
 
 

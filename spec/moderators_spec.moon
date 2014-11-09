@@ -16,7 +16,7 @@ import capture_errors_json from require "lapis.application"
 
 class ModeratorsApp extends Application
   @before_filter =>
-    @current_user = Users\find assert @params.current_user_id, "missing user id"
+    @current_user = Users\find assert @params.current_user_id, "missing current user id"
     ModeratorsFlow = require "community.flows.moderators"
     @flow = ModeratorsFlow @
 
@@ -26,6 +26,10 @@ class ModeratorsApp extends Application
 
   "/remove-moderator": capture_errors_json =>
     @flow\remove_moderator!
+    json: { success: true }
+
+  "/accept-mod": capture_errors_json =>
+    @flow\accept_moderator_position!
     json: { success: true }
 
 describe "moderators flow", ->
@@ -201,4 +205,46 @@ describe "moderators flow", ->
       }
 
       assert.truthy res.errors
+
+  describe "accept_moderator_position", ->
+    accept_moderator = (get) ->
+      get.current_user_id or= current_user.id
+      status, res = mock_request ModeratorsApp, "/accept-mod", {
+        :get
+        expect: "json"
+      }
+
+      assert.same 200, status
+      res
+
+    it "should do nothing for stranger", ->
+      mod = factory.CategoryModerators accepted: false
+      res = accept_moderator category_id: mod.category_id
+      assert.truthy res.errors
+
+      mod\refresh!
+      assert.same false, mod.accepted
+
+    it "should accept moderator position", ->
+      mod = factory.CategoryModerators accepted: false, user_id: current_user.id
+      res = accept_moderator category_id: mod.category_id
+      assert.truthy res.success
+      mod\refresh!
+      assert.same true, mod.accepted
+
+    it "should reject moderator position", ->
+      mod = factory.CategoryModerators accepted: false, user_id: current_user.id
+
+      status, res = mock_request ModeratorsApp, "/remove-moderator", {
+        get: {
+          category_id: mod.category_id
+          user_id: mod.user_id
+          current_user_id: current_user.id
+        }
+        expect: "json"
+      }
+
+      assert.same 200, status
+      assert.same {}, CategoryModerators\select!
+
 
