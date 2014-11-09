@@ -23,7 +23,9 @@ class Categories extends Model
     return nil unless user
     return true if user\is_admin!
     return true if user.id == @user_id
-    return true if @find_moderator user
+    if mod = @find_moderator user
+      return true if mod.accepted and mod.admin
+
     false
 
   find_moderator: (user) =>
@@ -33,6 +35,5 @@ class Categories extends Model
     CategoryModerators\find {
       category_id: @id
       user_id: user.id
-      accepted: true
     }
 
