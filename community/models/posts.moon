@@ -40,6 +40,7 @@ class Posts extends Model
 
     import Categories from require "models"
     cat = Categories\load id:(topic.category_id)
-    return true if cat\find_moderator user
+    if mod = cat\find_moderator user
+      return true if mod.accepted
 
     false
