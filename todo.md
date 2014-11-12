@@ -1,10 +1,17 @@
 * preifx models/table names to avoid name collisions
 * post nesting
-* editing posts/topics
-* reporting a post
 * blocking users
-* topic tags
+* topic tags (sourced from category_tags)
+* ?? post quick responses (helpful, funny, etc)
 * counters on user
-* moderators
-* topic/post permissions
 
+* reporting a post
+
+* topic participants (new table??)
+* deleting a post/topic
+
+
+* category_membership
+
+-- 
+* check for missing indexes
