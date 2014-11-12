@@ -120,4 +120,24 @@ make_schema = ->
 
   create_index "category_moderators", "category_id", "created_at"
 
+  create_table "post_reports", {
+    {"id", serial}
+    {"category_id", foreign_key} -- denormalized
+    {"post_id", foreign_key}
+    {"user_id", foreign_key}
+
+    {"status", integer}
+
+    {"reason", integer}
+    {"body", text}
+
+    {"created_at", time}
+    {"updated_at", time}
+
+    "PRIMARY KEY (id)"
+  }
+
+  create_index "post_reports", "post_id", "id"
+  create_index "post_reports", "category_id", "id"
+
 { :make_schema }
