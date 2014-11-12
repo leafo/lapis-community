@@ -32,6 +32,10 @@ class ModeratorsApp extends Application
     @flow\accept_moderator_position!
     json: { success: true }
 
+  "/show-mods": capture_errors_json =>
+    moderators = @flow\moderators_for_category!
+    json: { success: true, :moderators }
+
 describe "moderators flow", ->
   setup ->
     load_test_server!
@@ -268,4 +272,31 @@ describe "moderators flow", ->
       post = factory.Posts!
       assert.falsy post\allowed_to_edit current_user
 
+
+  describe "show moderators", ->
+    show_moderators = (get) ->
+      get.current_user_id or= current_user.id
+      status, res = mock_request ModeratorsApp, "/show-mods", {
+        :get
+        expect: "json"
+      }
+
+      assert.same 200, status
+      res
+
+    it "should get moderators when there are none", ->
+      category = factory.Categories!
+      res = show_moderators category_id: category.id
+      assert.same {success: true, moderators: {}}, res
+
+    it "should get moderators when there are some", ->
+      category = factory.Categories!
+      factory.CategoryModerators! -- unrelated mod
+
+      for i=1,2
+        factory.CategoryModerators category_id: category.id
+
+      res = show_moderators category_id: category.id
+      assert.truthy res.success
+      assert.same 2, #res.moderators
 

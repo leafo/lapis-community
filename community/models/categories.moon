@@ -6,6 +6,10 @@ import slugify from require "lapis.util"
 class Categories extends Model
   @timestamp: true
 
+  @relations: {
+    {"moderators", has_many: "CategoryModerators", key: "category_id", where: {accepted: true}}
+  }
+
   @create: (opts={}) =>
     assert opts.name, "missing name"
     opts.slug or= slugify opts.name

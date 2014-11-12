@@ -47,6 +47,19 @@ class Moderators extends Flow
     assert_error @moderator, "not a moderator"
     @moderator\delete!
 
+  moderators_for_category: =>
+    assert_valid @params, {
+      {"category_id", is_integer: true}
+      {"page", optional: true, is_integer: true}
+    }
+
+    @category = assert_error Categories\find(@params.category_id), "invalid category"
+    @pager = @category\get_moderators per_page: 20
+    @page = tonumber(@params.page) or 1
+
+    @moderators = @pager\get_page @page
+    @moderators
+
   accept_moderator_position: =>
     assert_valid @params, {
       {"category_id", is_integer: true }
