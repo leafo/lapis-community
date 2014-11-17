@@ -5,8 +5,8 @@ class PostEdits extends Model
   @timestamp: true
 
   @relations: {
-    {"post", has_one: "Posts"}
-    {"user", has_one: "Users"}
+    {"post", belongs_to: "Posts"}
+    {"user", belongs_to: "Users"}
   }
 
   @create: (opts={}) =>

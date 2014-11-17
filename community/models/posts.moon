@@ -5,8 +5,8 @@ class Posts extends Model
   @timestamp: true
 
   @relations: {
-    {"topic", has_one: "Topics"}
-    {"user", has_one: "Users"}
+    {"topic", belongs_to: "Topics"}
+    {"user", belongs_to: "Users"}
   }
 
   @create: (opts={}) =>

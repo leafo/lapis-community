@@ -5,8 +5,8 @@ class CategoryModerators extends Model
   @primary_key: {"user_id", "category_id"}
 
   @relations: {
-    {"user", has_one: "Users"}
-    {"category", has_one: "Categories"}
+    {"user", belongs_to: "Users"}
+    {"category", belongs_to: "Categories"}
   }
 
   @create: (opts={}) =>

@@ -7,8 +7,8 @@ class Topics extends Model
   @timestamp: true
 
   @relations: {
-    {"category", has_one: "Categories"}
-    {"user", has_one: "Users"}
+    {"category", belongs_to: "Categories"}
+    {"user", belongs_to: "Users"}
   }
 
   @create: (opts={}) =>
