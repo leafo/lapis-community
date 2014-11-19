@@ -25,11 +25,27 @@ make_schema = ->
 
     {"topics_count", integer}
 
+    {"membership_type", integer}
+
     {"created_at", time}
     {"updated_at", time}
 
     "PRIMARY KEY (id)"
   }
+
+  create_table "category_members", {
+    {"user_id", foreign_key}
+    {"category_id", foreign_key}
+
+    {"approved", boolean}
+
+    {"created_at", time}
+    {"updated_at", time}
+
+    "PRIMARY KEY (user_id, category_id)"
+  }
+
+  create_index "category_members", "category_id", "user_id", where: "approved"
 
   create_table "topics", {
     {"id", serial}

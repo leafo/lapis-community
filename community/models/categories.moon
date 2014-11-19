@@ -1,10 +1,15 @@
 db = require "lapis.db"
-import Model from require "lapis.db.model"
+import Model, enum from require "lapis.db.model"
 
 import slugify from require "lapis.util"
 
 class Categories extends Model
   @timestamp: true
+
+  @membership_types: enum {
+    public: 1
+    members_only: 2
+  }
 
   @relations: {
     {"moderators", has_many: "CategoryModerators", key: "category_id", where: {accepted: true}}
@@ -12,6 +17,7 @@ class Categories extends Model
 
   @create: (opts={}) =>
     assert opts.name, "missing name"
+    opts.membership_type = @membership_types\for_db opts.membership_type or "public"
     opts.slug or= slugify opts.name
 
     Model.create @, opts

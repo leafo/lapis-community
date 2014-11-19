@@ -76,5 +76,11 @@ PostReports = (opts={}) ->
 
   assert models.PostReports\create opts
 
+CategoryMembers = (opts={}) ->
+  opts.user_id or= Users!.id
+  opts.category_id or= Categories!.id
+  assert models.CategoryMembers\create opts
+
 { :next_counter, :next_email,
-  :Users, :Categories, :Topics, :Posts, :PostVotes, :CategoryModerators, :PostReports }
+  :Users, :Categories, :Topics, :Posts, :PostVotes, :CategoryModerators,
+  :PostReports, :CategoryMembers }

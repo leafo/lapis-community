@@ -43,4 +43,3 @@ describe "categories", ->
       assert.truthy category\allowed_to_moderate mod_user
 
 
-
