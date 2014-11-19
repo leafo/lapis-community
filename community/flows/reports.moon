@@ -43,3 +43,23 @@ class Reports extends Flow
 
     true
 
+  update_report: =>
+    assert_valid @params, {
+      {"report_id", is_integer: true}
+      {"report", type: "table"}
+    }
+
+    @report = assert_error PostReports\find(@params.report_id)
+    @category = @report\get_category!
+    assert_error @category\allowed_to_moderate(@current_user), "invaild category"
+
+    report = trim_filter @params.report
+
+    assert_valid report, {
+      {"status", one_of: PostReports.statuses}
+    }
+
+    @report\update status: PostReports.statuses\for_db report.status
+    true
+
+

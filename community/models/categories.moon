@@ -32,6 +32,15 @@ class Categories extends Model
 
     false
 
+  allowed_to_moderate: (user) =>
+    return nil unless user
+    return true if user\is_admin!
+    return true if user.id == @user_id
+    if mod = @find_moderator user
+      return true if mod.accepted
+
+    false
+
   find_moderator: (user) =>
     return nil unless user
 

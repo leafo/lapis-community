@@ -15,6 +15,11 @@ class PostReports extends Model
     offensive: 2
   }
 
+  @relations: {
+    {"category", belongs_to: "Categories"}
+    {"post", belongs_to: "Posts"}
+  }
+
   @create: (opts={}) =>
     opts.status or= "pending"
     opts.status = @statuses\for_db opts.status
