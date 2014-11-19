@@ -25,6 +25,10 @@ class ReportingApp extends Application
     @flow\new_report!
     json: { success: true }
 
+  "/update-report": capture_errors_json =>
+    @flow\update_report!
+    json: { success: true }
+
 describe "reports", ->
   local current_user
 
@@ -53,7 +57,6 @@ describe "reports", ->
       res = new_report!
       assert.truthy {}, res.errors
 
-
     it "should create a new report", ->
       post = factory.Posts!
       res = new_report {
@@ -74,4 +77,33 @@ describe "reports", ->
       assert.same PostReports.statuses.pending, report.status
       assert.same PostReports.reasons.other, report.reason
       assert.same "this is the problem", report.body
+
+  describe "update_report", ->
+    update_report = (get={}) ->
+      get.current_user_id or= current_user.id
+      status, res = mock_request ReportingApp, "/update-report", {
+        :get
+        expect: "json"
+      }
+
+      assert.same 200, status
+      res
+
+    it "should fail with no params", ->
+      res = update_report!
+      assert.truthy res.errors
+
+    it "should update report", ->
+      category = factory.Categories user_id: current_user.id
+      report = factory.PostReports category_id: category.id
+
+      res = update_report {
+        report_id: report.id
+        "report[status]": "resolved"
+      }
+
+      assert.truthy res.success
+      report\refresh!
+      assert.same PostReports.statuses.resolved, report.status
+
 

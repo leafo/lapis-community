@@ -55,5 +55,26 @@ CategoryModerators = (opts={}) ->
   opts.accepted = true if opts.accepted == nil
   assert models.CategoryModerators\create opts
 
+PostReports = (opts={}) ->
+  if opts.category_id
+    assert not opts.post_id, "no post id please"
+    topic = Topics category_id: opts.category_id
+    post = Posts topic_id: topic.id
+    opts.post_id = post.id
+  else
+    post = if opts.post_id
+      models.Posts\find opts.post_id
+    else
+      with post = Posts!
+        opts.post_id = post.id
+
+    opts.category_id or= post\get_topic!\get_category!.id
+
+  opts.reason or= "offensive"
+  opts.body or= "hello world"
+  opts.user_id or= Users!.id
+
+  assert models.PostReports\create opts
+
 { :next_counter, :next_email,
-  :Users, :Categories, :Topics, :Posts, :PostVotes, :CategoryModerators }
+  :Users, :Categories, :Topics, :Posts, :PostVotes, :CategoryModerators, :PostReports }
