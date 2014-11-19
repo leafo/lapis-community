@@ -53,3 +53,25 @@ describe "reports", ->
       res = new_report!
       assert.truthy {}, res.errors
 
+
+    it "should create a new report", ->
+      post = factory.Posts!
+      res = new_report {
+        post_id: post.id
+        "report[reason]": "other"
+        "report[body]": "this is the problem"
+      }
+
+      assert.same {success: true}, res
+      reports = PostReports\select!
+      assert.same 1, #reports
+
+      topic = post\get_topic!
+      report = unpack reports
+      assert.same topic.category_id, report.category_id
+      assert.same post.id, report.post_id
+      assert.same current_user.id, report.user_id
+      assert.same PostReports.statuses.pending, report.status
+      assert.same PostReports.reasons.other, report.reason
+      assert.same "this is the problem", report.body
+

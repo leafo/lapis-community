@@ -34,8 +34,8 @@ class Reports extends Flow
     }
 
     @report = PostReports\create {
-      user_id: @current_user_id
-      post_id: @post_id
+      user_id: @current_user.id
+      post_id: @post.id
       category_id: @topic.category_id
       reason: report.reason
       body: report.body

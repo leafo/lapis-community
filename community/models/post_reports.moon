@@ -19,7 +19,7 @@ class PostReports extends Model
     opts.status or= "pending"
     opts.status = @statuses\for_db opts.status
 
-    opts.reason = @reason\for_db opts.reason
+    opts.reason = @reasons\for_db opts.reason
 
     assert opts.body, "missing body"
     assert opts.post_id, "missing post_id"
