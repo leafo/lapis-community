@@ -33,9 +33,21 @@ class Categories extends Flow
       {"user_id", is_integer: true}
     }
 
-    user_id = Users\find @params.user_id
+    assert_error Users\find @params(user_id), "invalid user"
     CategoryMembers\create category_id: @category.id, user_id: @user.id
     true
+
+  remove_member: =>
+    @find_category!
+
+    import CategoryMembers from require "models"
+
+    assert_valid @params, {
+      {"user_id", is_integer: true}
+    }
+
+    cm = CategoryMembers\find user_id: @params.user_id, category_id: @category.id
+
 
 
 
