@@ -13,7 +13,7 @@ class Categories extends Flow
     super req
     assert @current_user, "missing current user for post flow"
 
-  find_category: =>
+  _assert_category: =>
     assert_valid @params, {
       {"category_id", is_integer: true}
     }
@@ -22,11 +22,12 @@ class Categories extends Flow
     assert_error @category, "invalid category"
 
   show_members: =>
-    @find_category!
+    @_assert_category!
 
   add_member: =>
-    @find_category!
-    -- TODO: assert admin
+    @_assert_category!
+    assert_error @category\allowed_to_edit_members(@current_user), "invalid category"
+
     import CategoryMembers from require "models"
 
     assert_valid @params, {
@@ -38,7 +39,8 @@ class Categories extends Flow
     true
 
   remove_member: =>
-    @find_category!
+    @_assert_category!
+    assert_error @category\allowed_to_edit_members(@current_user), "invalid category"
 
     import CategoryMembers from require "models"
 
@@ -46,8 +48,20 @@ class Categories extends Flow
       {"user_id", is_integer: true}
     }
 
-    cm = CategoryMembers\find user_id: @params.user_id, category_id: @category.id
+    membership = CategoryMembers\find {
+      user_id: @params.user_id
+      category_id: @category.id
+    }
 
+    assert_error membership, "invalid membership"
+    membership\delete!
+    true
 
-
+  approve_member: =>
+    @_assert_category!
+    import CategoryMembers from require "models"
+    membership = CategoryMembers\find category_id: @category.id, user_id: @current_user.id
+    assert_error membership, "invalid membership"
+    membership\update approved: true
+    true
 

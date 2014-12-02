@@ -27,7 +27,20 @@ class Categories extends Model
     true
 
   allowed_to_view: (user) =>
-    true
+    swtich @membership_types[@membership_type]
+    when "public"
+      true
+    when "members_only"
+      return false unless user
+      return true if @allowed_to_moderate user
+      import CategoryMembers from require "models"
+      membership = CategoryMembers\find {
+        user_id: user.id
+        category_id: @id
+        approved: true
+      }
+
+      not not membership
 
   allowed_to_edit_moderators: (user) =>
     return nil unless user
@@ -37,6 +50,10 @@ class Categories extends Model
       return true if mod.accepted and mod.admin
 
     false
+
+  allowed_to_edit_members: (user) =>
+    return nil unless user
+    return @allowed_to_moderate user
 
   allowed_to_moderate: (user) =>
     return nil unless user
