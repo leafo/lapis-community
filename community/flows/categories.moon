@@ -23,6 +23,7 @@ class Categories extends Flow
 
   show_members: =>
     @_assert_category!
+    -- ...
 
   add_member: =>
     @_assert_category!
