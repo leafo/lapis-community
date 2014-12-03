@@ -8,7 +8,7 @@ import assert_valid from require "lapis.validate"
 
 date = require "date"
 
-class Categories extends Flow
+class CategoriesFlow extends Flow
   new: (req) =>
     super req
     assert @current_user, "missing current user for post flow"
@@ -35,7 +35,7 @@ class Categories extends Flow
       {"user_id", is_integer: true}
     }
 
-    assert_error Users\find @params(user_id), "invalid user"
+    @user = assert_error Users\find @params.user_id, "invalid user"
     CategoryMembers\create category_id: @category.id, user_id: @user.id
     true
 
