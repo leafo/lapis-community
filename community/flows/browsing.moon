@@ -70,6 +70,6 @@ class Browsing extends Flow
     else
       pager\after @after
 
-    after_date = (date(after_date) - date\epoch!)\spanseconds!
+    after_date = if after_date then (date(after_date) - date\epoch!)\spanseconds!
     topics, after_date, after_id
 
