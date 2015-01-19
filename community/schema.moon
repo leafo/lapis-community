@@ -2,6 +2,7 @@ db = require "lapis.nginx.postgres"
 schema = require "lapis.db.schema"
 
 import create_table, create_index, drop_table from schema
+{prefix_table: T} = require "community.model"
 
 make_schema = ->
   {
@@ -16,7 +17,7 @@ make_schema = ->
     :double
   } = schema.types
 
-  create_table "categories", {
+  create_table T"categories", {
     {"id", serial}
     {"name", varchar}
     {"slug", varchar}
@@ -33,7 +34,7 @@ make_schema = ->
     "PRIMARY KEY (id)"
   }
 
-  create_table "category_members", {
+  create_table T"category_members", {
     {"user_id", foreign_key}
     {"category_id", foreign_key}
 
@@ -45,9 +46,9 @@ make_schema = ->
     "PRIMARY KEY (user_id, category_id)"
   }
 
-  create_index "category_members", "category_id", "user_id", where: "approved"
+  create_index T"category_members", "category_id", "user_id", where: "approved"
 
-  create_table "topics", {
+  create_table T"topics", {
     {"id", serial}
     {"category_id", foreign_key}
     {"user_id", foreign_key}
@@ -65,9 +66,9 @@ make_schema = ->
     "PRIMARY KEY (id)"
   }
 
-  create_index "topics", "category_id", "last_post_at", "id", where: "not deleted"
+  create_index T"topics", "category_id", "last_post_at", "id", where: "not deleted"
 
-  create_table "posts", {
+  create_table T"posts", {
     {"id", serial}
     {"topic_id", foreign_key}
     {"user_id", foreign_key}
@@ -85,9 +86,9 @@ make_schema = ->
     "PRIMARY KEY (id)"
   }
 
-  create_index "posts", "topic_id", "post_number", unique: true
+  create_index T"posts", "topic_id", "post_number", unique: true
 
-  create_table "post_edits", {
+  create_table T"post_edits", {
     {"id", serial}
     {"post_id", foreign_key}
     {"user_id", foreign_key}
@@ -101,9 +102,9 @@ make_schema = ->
     "PRIMARY KEY (id)"
   }
 
-  create_index "post_edits", "post_id", "id", unique: true
+  create_index T"post_edits", "post_id", "id", unique: true
 
-  create_table "post_votes", {
+  create_table T"post_votes", {
     {"user_id", foreign_key}
     {"post_id", foreign_key}
     {"positive", boolean}
@@ -114,14 +115,14 @@ make_schema = ->
     "PRIMARY KEY (user_id, post_id)"
   }
 
-  create_table "post_replies", {
+  create_table T"post_replies", {
     {"parent_post_id", foreign_key}
     {"child_post_id", foreign_key}
 
     "PRIMARY KEY (parent_post_id, child_post_id)"
   }
 
-  create_table "category_moderators", {
+  create_table T"category_moderators", {
     {"user_id", foreign_key}
     {"category_id", foreign_key}
     {"admin", boolean}
@@ -134,9 +135,9 @@ make_schema = ->
     "PRIMARY KEY (user_id, category_id)"
   }
 
-  create_index "category_moderators", "category_id", "created_at"
+  create_index T"category_moderators", "category_id", "created_at"
 
-  create_table "post_reports", {
+  create_table T"post_reports", {
     {"id", serial}
     {"category_id", foreign_key} -- denormalized
     {"post_id", foreign_key}
@@ -153,7 +154,7 @@ make_schema = ->
     "PRIMARY KEY (id)"
   }
 
-  create_index "post_reports", "post_id", "id"
-  create_index "post_reports", "category_id", "id"
+  create_index T"post_reports", "post_id", "id"
+  create_index T"post_reports", "category_id", "id"
 
 { :make_schema }

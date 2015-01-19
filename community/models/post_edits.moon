@@ -1,5 +1,5 @@
 
-import Model, constraints from require "lapis.db.model"
+import Model from require "community.model"
 
 class PostEdits extends Model
   @timestamp: true

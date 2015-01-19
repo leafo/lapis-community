@@ -1,6 +1,6 @@
 
 db = require "lapis.db"
-import Model from require "lapis.db.model"
+import Model from require "community.model"
 
 class CategoryMembers extends Model
   @timestamp: true

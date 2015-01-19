@@ -1,5 +1,6 @@
 
-import Model, enum from require "lapis.db.model"
+import enum from require "lapis.db.model"
+import Model from require "community.model"
 
 class PostReports extends Model
   @timestamp: true

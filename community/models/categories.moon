@@ -1,5 +1,6 @@
 db = require "lapis.db"
-import Model, enum from require "lapis.db.model"
+import enum from require "lapis.db.model"
+import Model from require "community.model"
 
 import slugify from require "lapis.util"
 

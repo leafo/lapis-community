@@ -1,4 +1,4 @@
-import Model from require "lapis.db.model"
+import Model from require "community.model"
 
 class CategoryModerators extends Model
   @timestamp: true
