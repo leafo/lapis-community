@@ -10,8 +10,10 @@
 * topic participants (new table??)
 * deleting a post/topic
 
-
 * category_membership
 
 -- 
 * check for missing indexes
+* remove schema.moon and turn into migration
+
+

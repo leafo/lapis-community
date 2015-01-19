@@ -6,7 +6,6 @@ config "development", ->
     database: "community"
   }
 
-
 config "test", ->
   postgres {
     backend: "pgmoon"
