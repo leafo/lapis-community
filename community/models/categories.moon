@@ -18,7 +18,7 @@ class Categories extends Model
 
   @create: (opts={}) =>
     assert opts.name, "missing name"
-    opts.membership_type = @membership_types\for_db opts.membership_type or "public"
+    opts.membership_type = @@membership_types\for_db opts.membership_type or "public"
     opts.slug or= slugify opts.name
 
     Model.create @, opts
@@ -28,7 +28,7 @@ class Categories extends Model
     true
 
   allowed_to_view: (user) =>
-    switch @membership_types[@membership_type]
+    switch @@membership_types[@membership_type]
       when "public"
         true
       when "members_only"
