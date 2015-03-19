@@ -5,6 +5,8 @@ import mock_request from require "lapis.spec.request"
 
 import Application from require "lapis"
 
+assert = require "luassert"
+
 class TestApp extends Application
   @require_user: ->
     @before_filter =>
