@@ -189,6 +189,8 @@ describe "posting flow", ->
       assert.same 1, post.up_votes_count
       assert.same 0, post.down_votes_count
 
+      cu = CommunityUsers\for_user(current_user)
+      assert.same 1, cu.votes_count
 
     it "should update a vote with no changes", ->
       post = factory.Posts!
@@ -216,6 +218,9 @@ describe "posting flow", ->
       assert.same 1, post.up_votes_count
       assert.same 0, post.down_votes_count
 
+      cu = CommunityUsers\for_user(current_user)
+      assert.same 1, cu.votes_count
+
 
     it "should update a vote", ->
       vote = factory.PostVotes user_id: current_user.id
@@ -233,7 +238,11 @@ describe "posting flow", ->
 
       post = Posts\find new_vote.post_id
       assert.same 0, post.up_votes_count
-      assert.same , post.down_votes_count
+      assert.same 1, post.down_votes_count
+
+      -- still 0 because the factory didn't set initial value on counter
+      cu = CommunityUsers\for_user(current_user)
+      assert.same 0, cu.votes_count
 
   describe "edit post", ->
     edit_post = (get={}) ->

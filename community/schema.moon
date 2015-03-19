@@ -162,6 +162,7 @@ make_schema = ->
 
     {"posts_count", integer}
     {"topics_count", integer}
+    {"votes_count", integer}
 
     {"created_at", time}
     {"updated_at", time}

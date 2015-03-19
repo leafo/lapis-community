@@ -110,7 +110,6 @@ class Posting extends Flow
 
     true
 
-
   vote_post: =>
     assert_valid @params, {
       {"post_id", is_integer: true }
@@ -120,7 +119,10 @@ class Posting extends Flow
     @post = assert_error Posts\find(@params.post_id), "invalid post"
     assert_error @post\allowed_to_vote @current_user
     import PostVotes from require "models"
-    PostVotes\vote @post, @current_user, @params.direction == "up"
+    _, action = PostVotes\vote @post, @current_user, @params.direction == "up"
+
+    if action == "insert"
+      CommunityUsers\for_user(@current_user)\increment "votes_count"
 
     true
 

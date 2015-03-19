@@ -15,7 +15,7 @@ class PostVotes extends Model
 
     existing = @find user.id, post.id
 
-    vote, status = upsert @, {
+    vote, action = upsert @, {
       post_id: post.id
       user_id: user.id
       positive: not not positive
@@ -25,7 +25,7 @@ class PostVotes extends Model
     existing\decrement! if existing
     vote\increment!
 
-    true
+    true, action
 
   increment: =>
     import Posts from require "models"
