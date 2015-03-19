@@ -63,4 +63,16 @@ upsert = (data, keys) =>
   db.update @table_name!, data, keys
   @load(data), "update"
 
-{ :upsert, :safe_insert, :filter_update }
+
+-- set deleted to true
+soft_delete = =>
+  primary = @_primary_cond!
+  primary.deleted = false
+
+  res = db.update @@table_name!, {
+    deleted: true
+  }, primary
+
+  res.affected_rows and res.affected_rows > 0
+
+{ :upsert, :safe_insert, :filter_update, :soft_delete }
