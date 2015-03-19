@@ -1,9 +1,8 @@
-* preifx models/table names to avoid name collisions
 * post nesting
 * blocking users
 * topic tags (sourced from category_tags)
 * ?? post quick responses (helpful, funny, etc)
-* counters on user
+* counters on user (make community user)
 
 * reporting a post
 

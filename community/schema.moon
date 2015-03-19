@@ -157,4 +157,16 @@ make_schema = ->
   create_index T"post_reports", "post_id", "id"
   create_index T"post_reports", "category_id", "id"
 
+  create_table T"users", {
+    {"user_id", foreign_key}
+
+    {"posts_count", integer}
+    {"topics_count", integer}
+
+    {"created_at", time}
+    {"updated_at", time}
+
+    "PRIMARY KEY (user_id)"
+  }
+
 { :make_schema }
