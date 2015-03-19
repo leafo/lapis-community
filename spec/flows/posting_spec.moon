@@ -153,7 +153,7 @@ describe "posting flow", ->
 
       assert.same topic.posts_count, 1
 
-  describe "vote post", ->
+  describe "vote post #votes", ->
     vote_post = (get={}) ->
       get.current_user_id or= current_user.id
       status, res = mock_request PostingApp, "/vote-post", {

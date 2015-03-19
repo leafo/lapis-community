@@ -3,51 +3,29 @@ db = require "lapis.db"
 
 import insert, concat from table
 
--- return false on update
--- return result of create on create
-upsert = (model, data, opts) ->
-  error "can't upsert with no data" unless next data
+-- remove fields that haven't changed
+filter_update = (model, update) ->
+  for key,val in pairs update
+    if model[key] == val
+      update[key] = nil
 
-  -- split data into primary keys and rest
-  primary_keys = { model\primary_keys! }
-  update_data = {k,v for k,v in pairs data}
+    if val == db.NULL and model[key] == nil
+      update[key] = nil
 
-  for key in *primary_keys
-    key_value = data[key]
-    unless key_value
-      error "missing primary key `#{key}` for upsert"
+  update
 
-    primary_keys[key] = key_value
-    update_data[key] = nil
+-- safe_insert Model, {color: true, id: 100}, {id: 100}
+safe_insert = (data, check_cond=data) =>
+  table_name = db.escape_identifier @table_name!
 
-  -- remove array items
-  for i=#primary_keys, 1, -1
-    primary_keys[i] = nil
-
-  -- update
-  if next update_data
-    if model.timestamp
-      time = db.format_date!
-      update_data.updated_at = time
-
-    res = db.update model\table_name!, update_data, primary_keys
-    if res.affected_rows and res.affected_rows > 0
-      return false
-
-  table_name = db.escape_identifier model\table_name!
-
-  if opts and opts.before_create
-    opts.before_create data
+  if @timestamp
+    data = {k,v for k,v in pairs data}
+    time = db.format_date!
+    data.created_at = time
+    data.updated_at = time
 
   columns = [key for key in pairs data]
   values = [db.escape_literal data[col] for col in *columns]
-
-  if model.timestamp
-    time = db.escape_literal db.format_date!
-    insert columns, "created_at"
-    insert columns, "updated_at"
-    insert values, time
-    insert values, time
 
   for i, col in ipairs columns
     columns[i] = db.escape_identifier col
@@ -63,10 +41,26 @@ upsert = (model, data, opts) ->
     "where not exists ( select 1 from"
     table_name
     "where"
-    db.encode_clause primary_keys
-    ")"
+    db.encode_clause check_cond
+    ") returning *"
   }, "  "
 
-  db.query q
+  res = db.query q
+  if next res
+    @load (unpack res)
+  else
+    nil, "already exists"
+
+upsert = (data, keys) =>
+  unless keys
+    keys = {k, data[k] for k in *{@primary_keys!}}
+
+  assert next(keys), "no primary keys provided"
+
+  res = safe_insert @, data, keys
+  return res, "insert" if res
+
+  db.update @table_name!, data, keys
+  @load(data), "update"
 
 { :upsert }

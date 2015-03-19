@@ -15,18 +15,15 @@ class PostVotes extends Model
 
     existing = @find user.id, post.id
 
-    opts = {
+    vote, status = upsert @, {
       post_id: post.id
       user_id: user.id
       positive: not not positive
     }
 
-    inserted_new = upsert @, opts
-
+    -- decrement and increment if positive changed
     existing\decrement! if existing
-
-    if not inserted_new or inserted_new.affected_rows > 0
-      @\load(opts)\increment!
+    vote\increment!
 
     true
 

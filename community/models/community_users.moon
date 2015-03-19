@@ -16,3 +16,12 @@ class CommunityUsers extends Model
     {"user", belongs_to: "Users"}
   }
 
+  @create: (opts={}) =>
+    assert opts.user_id, "missing user id"
+    Model.create @, opts
+
+  @for_user: (user_id) =>
+    user_id = user_id.id if type(user_id) == "table"
+    community_user = @find(:user_id)
+
+
