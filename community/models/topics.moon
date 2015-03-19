@@ -30,3 +30,16 @@ class Topics extends Model
     return false if @deleted
     true
 
+  allowed_to_edit: (user) =>
+    return false if @deleted
+    return false unless user
+    return true if user.id == @user_id
+    return true if user\is_admin!
+    return true if @allowed_to_moderate user
+
+    false
+
+  allowed_to_moderate: (user) =>
+    return false unless user
+    import Categories from require "models"
+    Categories\load(id: @category_id)\allowed_to_moderate user

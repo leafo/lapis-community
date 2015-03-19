@@ -38,9 +38,6 @@ class Posts extends Model
 
     topic = @get_topic!
 
-    import Categories from require "models"
-    cat = Categories\load id:(topic.category_id)
-    if mod = cat\find_moderator user
-      return true if mod.accepted
+    return true if topic\allowed_to_moderate user
 
     false
