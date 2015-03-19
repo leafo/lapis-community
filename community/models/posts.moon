@@ -41,3 +41,13 @@ class Posts extends Model
     return true if topic\allowed_to_moderate user
 
     false
+
+  delete: =>
+    import soft_delete from require "community.helpers.models"
+
+    if soft_delete @
+      import CommunityUsers from require "models"
+      CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
+      return true
+
+  false

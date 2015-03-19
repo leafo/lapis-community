@@ -54,7 +54,7 @@ class Posting extends Flow
       {"topic_id", is_integer: true }
     }
 
-    @topic = assert_error Topics\find(@params.topic_id), "invalid post"
+    @topic = assert_error Topics\find(@params.topic_id), "invalid topic"
     assert_error @topic\allowed_to_edit(@current_user), "not allowed to edit"
 
     @topic\delete!
@@ -119,6 +119,16 @@ class Posting extends Flow
         @topic\update title: post_update.title
 
     true
+
+  delete_post: =>
+    assert_valid @params, {
+      {"post_id", is_integer: true }
+    }
+
+    @post = assert_error Posts\find(@params.post_id), "invalid post"
+    assert_error @post\allowed_to_edit(@current_user), "not allowed to edit"
+
+    @post\delete!
 
   vote_post: =>
     assert_valid @params, {

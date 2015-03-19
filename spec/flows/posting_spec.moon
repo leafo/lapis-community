@@ -51,6 +51,8 @@ class PostingApp extends TestApp
     @flow\edit_post!
     json: { success: true }
 
+  "/delete-post": capture_errors_json =>
+    json: { success: @flow\delete_post! }
 
   "/vote-post": capture_errors_json =>
     @flow\vote_post!
@@ -264,6 +266,8 @@ describe "posting flow", ->
       topic\refresh!
       assert.truthy topic.deleted
 
+      assert.same -1, CommunityUsers\for_user(current_user).topics_count
+
     it "should not allow unrelated user to delete topic", ->
       other_user = factory.Users!
 
@@ -401,4 +405,27 @@ describe "posting flow", ->
 
       assert.same "the new body", post2.body
       assert.same before_title, topic.title
+
+    it "should delete post", ->
+      post = factory.Posts user_id: current_user.id
+      res = PostingApp\get current_user, "/delete-post", {
+        post_id: post.id
+      }
+
+      assert.truthy res.success
+      post\refresh!
+      assert.truthy post.deleted
+
+      assert.same -1, CommunityUsers\for_user(current_user).posts_count
+
+    it "should not delete unrelated post", ->
+      other_user = factory.Users!
+      post = factory.Posts user_id: current_user.id
+
+      res = PostingApp\get other_user, "/delete-post", {
+        post_id: post.id
+      }
+
+      assert.same {errors: {"not allowed to edit"}}, res
+
 
