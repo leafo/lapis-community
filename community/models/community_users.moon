@@ -1,7 +1,7 @@
 db = require "lapis.db"
 import Model from require "community.model"
 
-class CommunityUsers extends require ""
+class CommunityUsers extends Model
   @timestamp: true
   @primary_key: "user_id"
 
