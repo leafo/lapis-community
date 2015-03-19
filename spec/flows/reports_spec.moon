@@ -1,8 +1,4 @@
-import
-  load_test_server
-  close_test_server
-  request
-  from require "lapis.spec.server"
+import use_test_env from require "lapis.spec"
 
 import truncate_tables from require "lapis.spec.db"
 
@@ -30,13 +26,9 @@ class ReportingApp extends Application
     json: { success: true }
 
 describe "reports", ->
+  use_test_env!
+
   local current_user
-
-  setup ->
-    load_test_server!
-
-  teardown ->
-    close_test_server!
 
   before_each ->
     truncate_tables Users, Categories, Topics, Posts, PostReports

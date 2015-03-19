@@ -1,9 +1,4 @@
-import
-  load_test_server
-  close_test_server
-  request
-  from require "lapis.spec.server"
-
+import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
 factory = require "spec.factory"
@@ -34,14 +29,10 @@ class PostingApp extends TestApp
     json: { success: true }
 
 describe "category_membership", ->
+  use_test_env!
+
   local current_user
   local category
-
-  setup ->
-    load_test_server!
-
-  teardown ->
-    close_test_server!
 
   before_each ->
     truncate_tables Users, Categories, Posts, Topics, CategoryMembers, CategoryModerators

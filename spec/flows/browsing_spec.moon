@@ -1,4 +1,4 @@
-import load_test_server, close_test_server, request from require "lapis.spec.server"
+import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 import Users, Categories, Topics, Posts, PostVotes from require "models"
 
@@ -24,11 +24,7 @@ class BrowsingApp extends Application
     json: { :topics, success: true, next_page: {after_date, after_id} }
 
 describe "browsing flow", ->
-  setup ->
-    load_test_server!
-
-  teardown ->
-    close_test_server!
+  use_test_env!
 
   local current_user
 

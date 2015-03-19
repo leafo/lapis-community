@@ -1,5 +1,6 @@
-import load_test_server, close_test_server, request from require "lapis.spec.server"
+import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
+
 import
   Categories
   CategoryModerators
@@ -51,11 +52,7 @@ class PostingApp extends Application
 
 
 describe "posting flow", ->
-  setup ->
-    load_test_server!
-
-  teardown ->
-    close_test_server!
+  use_test_env!
 
   local current_user
 
