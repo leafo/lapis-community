@@ -255,7 +255,7 @@ describe "posting flow", ->
     before_each ->
       topic = factory.Topics user_id: current_user.id
 
-    it "should delete topic #ddd", ->
+    it "should delete topic", ->
       res = PostingApp\get current_user, "/delete-topic", {
         topic_id: topic.id
       }
@@ -263,6 +263,15 @@ describe "posting flow", ->
       assert.truthy res.success
       topic\refresh!
       assert.truthy topic.deleted
+
+    it "should not allow unrelated user to delete topic", ->
+      other_user = factory.Users!
+
+      res = PostingApp\get other_user, "/delete-topic", {
+        topic_id: topic.id
+      }
+
+      assert.same {errors: {"not allowed to edit"}}, res
 
   describe "edit post", ->
     edit_post = (get={}) ->
