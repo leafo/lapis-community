@@ -49,6 +49,16 @@ class Posting extends Flow
     CommunityUsers\for_user(@current_user)\increment "topics_count"
     true
 
+  delete_topic: =>
+    assert_valid @params, {
+      {"topic_id", is_integer: true }
+    }
+
+    @topic = assert_error Topics\find(@params.topic_id), "invalid post"
+    assert_error @topic\allowed_to_edit(@current_user), "not allowed to edit"
+
+    @topic\delete!
+
   new_post: =>
     assert_valid @params, {
       {"topic_id", is_integer: true }

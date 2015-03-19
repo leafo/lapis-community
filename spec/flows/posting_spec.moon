@@ -19,7 +19,9 @@ import mock_request from require "lapis.spec.request"
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
 
-class PostingApp extends Application
+import TestApp from require "spec.helpers"
+
+class PostingApp extends TestApp
   @before_filter =>
     @current_user = Users\find assert @params.current_user_id, "missing user id"
     PostingFlow = require "community.flows.posting"
@@ -33,6 +35,9 @@ class PostingApp extends Application
       post: @flow.post
       success: true
     }
+
+  "/delete-topic": capture_errors_json =>
+    json: { success: @flow\delete_topic! }
 
   "/new-post": capture_errors_json =>
     @flow\new_post!
@@ -243,6 +248,21 @@ describe "posting flow", ->
       -- still 0 because the factory didn't set initial value on counter
       cu = CommunityUsers\for_user(current_user)
       assert.same 0, cu.votes_count
+
+  describe "edit topic", ->
+    local topic
+
+    before_each ->
+      topic = factory.Topics user_id: current_user.id
+
+    it "should delete topic #ddd", ->
+      res = PostingApp\get current_user, "/delete-topic", {
+        topic_id: topic.id
+      }
+
+      assert.truthy res.success
+      topic\refresh!
+      assert.truthy topic.deleted
 
   describe "edit post", ->
     edit_post = (get={}) ->

@@ -43,3 +43,13 @@ class Topics extends Model
     return false unless user
     import Categories from require "models"
     Categories\load(id: @category_id)\allowed_to_moderate user
+
+  delete: =>
+    import soft_delete from require "community.helpers.models"
+
+    if soft_delete @
+      import CommunityUsers from require "models"
+      CommunityUsers\for_user(@get_user!)\increment "topics_count", -1
+      return true
+
+    false
