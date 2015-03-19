@@ -4,6 +4,7 @@ import truncate_tables from require "lapis.spec.db"
 import
   Categories
   CategoryModerators
+  CommunityUsers
   PostEdits
   PostVotes
   Posts
@@ -58,7 +59,7 @@ describe "posting flow", ->
 
   before_each ->
     truncate_tables Users, Categories, Topics, Posts, PostVotes,
-      CategoryModerators, PostEdits
+      CategoryModerators, PostEdits, CommunityUsers
 
     current_user = factory.Users!
 
@@ -122,6 +123,9 @@ describe "posting flow", ->
       category\refresh!
       assert.same 1, category.topics_count
 
+      cu = CommunityUsers\for_user(current_user)
+      assert.same 1, cu.topics_count
+      assert.same 0, cu.posts_count
 
   describe "new post", ->
     new_post = (get={}) ->
@@ -133,7 +137,6 @@ describe "posting flow", ->
 
       assert.same 200, status
       res
-
 
     it "should post a new post", ->
       topic = factory.Topics!
@@ -152,6 +155,10 @@ describe "posting flow", ->
       assert.same "This is post body", post.body
 
       assert.same topic.posts_count, 1
+
+      cu = CommunityUsers\for_user(current_user)
+      assert.same 0, cu.topics_count
+      assert.same 1, cu.posts_count
 
   describe "vote post #votes", ->
     vote_post = (get={}) ->

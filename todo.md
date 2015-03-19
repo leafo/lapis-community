@@ -16,3 +16,6 @@
 * remove schema.moon and turn into migration
 
 
+-- 
+
+* make a basic site that demonstrates the functionality

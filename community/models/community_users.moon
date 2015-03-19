@@ -24,4 +24,15 @@ class CommunityUsers extends Model
     user_id = user_id.id if type(user_id) == "table"
     community_user = @find(:user_id)
 
+    unless community_user
+      import safe_insert from require "community.helpers.models"
+      community_user = safe_insert @, :user_id
+      community_user or= @find(:user_id)
+
+    community_user
+
+  increment: (field, amount=1) =>
+    @update {
+      [field]: db.raw db.interpolate_query "#{db.escape_identifier field} + ?", amount
+    }, timestamp: false
 

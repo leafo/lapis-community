@@ -63,4 +63,4 @@ upsert = (data, keys) =>
   db.update @table_name!, data, keys
   @load(data), "update"
 
-{ :upsert }
+{ :upsert, :safe_insert, :filter_update }
