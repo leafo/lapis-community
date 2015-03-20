@@ -5,6 +5,7 @@ import Topics from require "models"
 
 import assert_error from require "lapis.application"
 import trim_filter from require "lapis.util"
+import assert_valid from require "lapis.validate"
 
 class TopicsFlow extends Flow
   expose_assigns: true
@@ -18,7 +19,7 @@ class TopicsFlow extends Flow
       {"topic_id", is_integer: true}
     }
 
-    @topic = Topics\find @params.category_id
+    @topic = Topics\find @params.topic_id
     assert_error @topic, "invalid category"
 
   set_tags: =>

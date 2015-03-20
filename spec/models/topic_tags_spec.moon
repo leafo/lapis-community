@@ -5,7 +5,7 @@ import Users, Categories, Topics, Posts, TopicTags from require "models"
 
 factory = require "spec.factory"
 
-describe "topics", ->
+describe "topic tags", ->
   use_test_env!
 
   local topic
