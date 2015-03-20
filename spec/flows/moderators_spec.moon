@@ -33,7 +33,7 @@ class ModeratorsApp extends Application
     json: { success: true }
 
   "/show-mods": capture_errors_json =>
-    moderators = @flow\moderators_for_category!
+    moderators = @flow\show_moderators!
     json: { success: true, :moderators }
 
 describe "moderators flow", ->

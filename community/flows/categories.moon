@@ -1,12 +1,15 @@
 
 import Flow from require "lapis.flow"
 
-import Categories, Topics, Posts, Users from require "models"
+import Categories, Users, CategoryMembers from require "models"
 
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
+import assert_page from require "community.helpers.app"
 
 class CategoriesFlow extends Flow
+  expose_assigns: true
+
   new: (req) =>
     super req
     assert @current_user, "missing current user for post flow"
@@ -21,13 +24,21 @@ class CategoriesFlow extends Flow
 
   show_members: =>
     @_assert_category!
-    -- ...
+    assert_page @
+
+    @pager = CategoryMembers\paginated [[
+      where category_id = ?
+      order by created_at desc
+    ]], prepare_results: (members) =>
+      Users\include_in members, "user_id"
+      members
+
+    @members = @pager\get_page @page
+    @members
 
   add_member: =>
     @_assert_category!
     assert_error @category\allowed_to_edit_members(@current_user), "invalid category"
-
-    import CategoryMembers from require "models"
 
     assert_valid @params, {
       {"user_id", is_integer: true}
@@ -40,8 +51,6 @@ class CategoriesFlow extends Flow
   remove_member: =>
     @_assert_category!
     assert_error @category\allowed_to_edit_members(@current_user), "invalid category"
-
-    import CategoryMembers from require "models"
 
     assert_valid @params, {
       {"user_id", is_integer: true}
@@ -58,7 +67,7 @@ class CategoriesFlow extends Flow
 
   accept_member: =>
     @_assert_category!
-    import CategoryMembers from require "models"
+
     membership = CategoryMembers\find {
       category_id: @category.id
       user_id: @current_user.id
