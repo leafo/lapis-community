@@ -1,11 +1,12 @@
 * post nesting
-* blocking users
 * banning users
 
-* topic tags (sourced from category_tags)
 * ?? post quick responses (helpful, funny, etc)
+* a topic can exist without a category (comments)
 
-* a topic can exist without a category
+--
+* render posts preloaded
+* render topics preloaded, in order
 
 -- 
 * check for missing indexes
@@ -13,3 +14,4 @@
 -- 
 
 * make a basic site that demonstrates the functionality
+* view counters on topics,categories, (everywhere??)

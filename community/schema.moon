@@ -192,4 +192,14 @@ make_schema = ->
     "PRIMARY KEY (topic_id, slug)"
   }
 
+  -- user blocks user
+  create_table T"blocks", {
+    {"blocker_id", foreign_key}
+    {"blocked_id", foreign_key}
+
+    {"created_at", time}
+    {"updated_at", time}
+
+    "PRIMARY KEY (blocker_id, blocked_id)"
+  }
 { :make_schema }

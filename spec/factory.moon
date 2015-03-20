@@ -81,6 +81,11 @@ CategoryMembers = (opts={}) ->
   opts.category_id or= Categories!.id
   assert models.CategoryMembers\create opts
 
+Blocks = (opts={}) ->
+  opts.blocker_id or= Users!
+  opts.blocked_id or= Users!
+  assert models.Blocks\create opts
+
 { :next_counter, :next_email,
   :Users, :Categories, :Topics, :Posts, :PostVotes, :CategoryModerators,
-  :PostReports, :CategoryMembers }
+  :PostReports, :CategoryMembers, :Blocks }
