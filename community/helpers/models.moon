@@ -51,7 +51,7 @@ safe_insert = (data, check_cond=data) =>
   else
     nil, "already exists"
 
-upsert = (data, keys) =>
+upsert = (data, keys, update_data) =>
   unless keys
     keys = {k, data[k] for k in *{@primary_keys!}}
 
@@ -60,9 +60,12 @@ upsert = (data, keys) =>
   res = safe_insert @, data, keys
   return res, "insert" if res
 
+  if update_data
+    for k,v in pairs update_data
+      data[k] = v
+
   db.update @table_name!, data, keys
   @load(data), "update"
-
 
 -- set deleted to true
 soft_delete = =>

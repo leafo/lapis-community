@@ -170,4 +170,16 @@ make_schema = ->
     "PRIMARY KEY (user_id)"
   }
 
+  create_table T"topic_participants", {
+    {"topic_id", foreign_key}
+    {"user_id", foreign_key}
+    {"posts_count", integer}
+
+    {"created_at", time}
+    {"updated_at", time}
+
+    "PRIMARY KEY (topic_id, user_id)"
+  }
+
+
 { :make_schema }

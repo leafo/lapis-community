@@ -2,12 +2,10 @@
 * blocking users
 * topic tags (sourced from category_tags)
 * ?? post quick responses (helpful, funny, etc)
-* counters on user (make community user)
 
 * reporting a post
 
 * topic participants (new table??)
-* deleting a post/topic
 
 * category_membership
 
