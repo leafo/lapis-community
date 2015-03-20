@@ -7,7 +7,7 @@ import assert_valid from require "lapis.validate"
 
 import trim_filter from require "lapis.util"
 
-import Categories, Topics, Posts, PostEdits, CommunityUsers from require "models"
+import Categories, Topics, Posts, PostEdits, CommunityUsers, TopicParticipants from require "models"
 
 MAX_BODY_LEN = 1024 * 10
 MAX_TITLE_LEN = 256
@@ -47,6 +47,8 @@ class Posting extends Flow
 
     @category\update { topics_count: db.raw "topics_count + 1" }, timestamp: false
     CommunityUsers\for_user(@current_user)\increment "topics_count"
+    @topic\increment_participant @current_user
+
     true
 
   delete_topic: =>
@@ -81,6 +83,8 @@ class Posting extends Flow
 
     @topic\update { posts_count: db.raw "posts_count + 1" }, timestamp: false
     CommunityUsers\for_user(@current_user)\increment "posts_count"
+    @topic\increment_participant @current_user
+
     true
 
   edit_post: =>
@@ -128,7 +132,10 @@ class Posting extends Flow
     @post = assert_error Posts\find(@params.post_id), "invalid post"
     assert_error @post\allowed_to_edit(@current_user), "not allowed to edit"
 
-    @post\delete!
+    if @post\delete!
+      topic = @post\get_topic!
+      topic\decrement_participant @current_user
+      true
 
   vote_post: =>
     assert_valid @params, {

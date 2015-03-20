@@ -8,6 +8,7 @@ import
   PostEdits
   PostVotes
   Posts
+  TopicParticipants
   Topics
   Users
   from require "models"
@@ -66,7 +67,7 @@ describe "posting flow", ->
 
   before_each ->
     truncate_tables Users, Categories, Topics, Posts, PostVotes,
-      CategoryModerators, PostEdits, CommunityUsers
+      CategoryModerators, PostEdits, CommunityUsers, TopicParticipants
 
     current_user = factory.Users!
 
@@ -134,7 +135,12 @@ describe "posting flow", ->
       assert.same 1, cu.topics_count
       assert.same 0, cu.posts_count
 
+      tps = TopicParticipants\select "where topic_id = ?", topic.id
+      assert.same 1, #tps
+
   describe "new post", ->
+    local topic
+
     new_post = (get={}) ->
       get.current_user_id or= current_user.id
       status, res = mock_request PostingApp, "/new-post", {
@@ -145,11 +151,11 @@ describe "posting flow", ->
       assert.same 200, status
       res
 
-    it "should post a new post", ->
+    before_each ->
       topic = factory.Topics!
 
-      res = new_post {
-        current_user_id: current_user.id
+    it "should post a new post", ->
+      res = PostingApp\get current_user, "/new-post", {
         topic_id: topic.id
         "post[body]": "This is post body"
       }
@@ -166,6 +172,21 @@ describe "posting flow", ->
       cu = CommunityUsers\for_user(current_user)
       assert.same 0, cu.topics_count
       assert.same 1, cu.posts_count
+
+      -- 1 less because factory didn't seed topic participants
+      tps = TopicParticipants\select "where topic_id = ?", topic.id
+      assert.same 1, #tps
+
+    it "should post two posts", ->
+      for i=1,2
+        PostingApp\get current_user, "/new-post", {
+          topic_id: topic.id
+          "post[body]": "This is post body"
+        }
+
+      tps = TopicParticipants\select "where topic_id = ?", topic.id
+      assert.same 1, #tps
+      assert.same 2, tps[1].posts_count
 
   describe "vote post #votes", ->
     vote_post = (get={}) ->
@@ -408,6 +429,9 @@ describe "posting flow", ->
 
     it "should delete post", ->
       post = factory.Posts user_id: current_user.id
+      topic = post\get_topic!
+      topic\increment_participant current_user
+
       res = PostingApp\get current_user, "/delete-post", {
         post_id: post.id
       }
@@ -417,6 +441,9 @@ describe "posting flow", ->
       assert.truthy post.deleted
 
       assert.same -1, CommunityUsers\for_user(current_user).posts_count
+
+      tps = TopicParticipants\select "where topic_id = ?", topic.id
+      assert.same 0, #tps
 
     it "should not delete unrelated post", ->
       other_user = factory.Users!

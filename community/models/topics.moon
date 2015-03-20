@@ -44,6 +44,16 @@ class Topics extends Model
     import Categories from require "models"
     Categories\load(id: @category_id)\allowed_to_moderate user
 
+  increment_participant: (user) =>
+    return unless user
+    import TopicParticipants from require "models"
+    TopicParticipants\increment @id, user.id
+
+  decrement_participant: (user) =>
+    return unless user
+    import TopicParticipants from require "models"
+    TopicParticipants\decrement @id, user.id
+
   delete: =>
     import soft_delete from require "community.helpers.models"
 
