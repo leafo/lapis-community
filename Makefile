@@ -13,3 +13,6 @@ test:
 lint:
 	moonc -l community/
 	moonc -l spec/
+
+count::
+	wc -l $$(git ls-files | grep 'scss$$\|moon$$\|coffee$$\|md$$\|conf$$') | sort -n | tail

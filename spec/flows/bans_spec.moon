@@ -22,6 +22,14 @@ class BansApp extends TestApp
     @flow\unban_from_category!
     json: { success: true }
 
+  "/topic-ban": capture_errors_json =>
+    @flow\ban_from_topic!
+    json: { success: true }
+
+  "/topic-unban": capture_errors_json =>
+    @flow\unban_from_topic!
+    json: { success: true }
+
 describe "topic tags", ->
   use_test_env!
 
@@ -72,6 +80,44 @@ describe "topic tags", ->
 
       res = BansApp\get current_user, "/category-unban", {
         category_id: category.id
+        banned_user_id: other_user.id
+      }
+
+      assert.same 0, #Bans\select!
+
+  describe "with topic", ->
+    local topic
+
+    before_each ->
+      category = factory.Categories user_id: current_user.id
+      topic = factory.Topics category_id: category.id
+
+    it "should ban user from topic", ->
+      other_user = factory.Users!
+      res = BansApp\get current_user, "/topic-ban", {
+        topic_id: topic.id
+        banned_user_id: other_user.id
+        reason: [[this user]]
+      }
+
+      assert.truthy res.success
+      bans = Bans\select!
+      assert.same 1, #bans
+      ban = unpack bans
+
+      assert.same other_user.id, ban.banned_user_id
+      assert.same current_user.id, ban.banning_user_id
+      assert.same topic.id, ban.object_id
+      assert.same Bans.object_types.topic, ban.object_type
+      assert.same "this user", ban.reason
+
+
+    it "should unban user", ->
+      other_user = factory.Users!
+      factory.Bans object: topic, banned_user_id: other_user.id
+
+      res = BansApp\get current_user, "/topic-unban", {
+        topic_id: topic.id
         banned_user_id: other_user.id
       }
 

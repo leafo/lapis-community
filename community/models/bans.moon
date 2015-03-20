@@ -15,6 +15,7 @@ class Bans extends Model
 
   @object_types: enum {
     category: 1
+    topic: 2
   }
 
   @object_type_name_for_object: (object) =>
@@ -23,6 +24,8 @@ class Bans extends Model
     switch object.__class
       when models.Categories
         "category"
+      when models.Topics
+        "topic"
       else
         error "unknown object: #{object.__class.__name}"
 
@@ -33,6 +36,8 @@ class Bans extends Model
     switch type_name
       when "category"
         models.Categories
+      when "topic"
+        models.Topics
       else
         error "no model for type #{type_name}"
 
