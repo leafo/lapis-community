@@ -16,7 +16,9 @@ class BansFlow extends Flow
   _do_ban: (object) =>
     Bans\create {
       :object
+      reason: @params.reason
       banned_user_id: @banned.id
+      banner_id: @current_user.id
     }
 
   _assert_category: =>
@@ -30,7 +32,6 @@ class BansFlow extends Flow
   _assert_banned_user: =>
     assert_valid @params, {
       {"banned_user_id", is_integer: true}
-      {"reason", exists: true}
     }
 
     @banned = assert_error Users\find(@params.banned_user_id), "invalid user"
@@ -39,6 +40,11 @@ class BansFlow extends Flow
   ban_from_category: =>
     @_assert_banned_user!
     @_assert_category!
+
+    assert_valid @params, {
+      {"reason", exists: true}
+    }
+
     @_do_ban @category
 
   unban_from_category: =>
@@ -52,6 +58,7 @@ class BansFlow extends Flow
     }
 
     ban\delete! if ban
+    true
 
   -- ban_from_topic: =>
 

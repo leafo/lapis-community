@@ -86,6 +86,13 @@ Blocks = (opts={}) ->
   opts.blocked_id or= Users!
   assert models.Blocks\create opts
 
+Bans = (opts={}) ->
+  opts.object or= Categories!
+  opts.banned_user_id or= Users!.id
+  opts.reason or= "this user is banned"
+  opts.banner_id or= Users!.id
+  assert models.Bans\create opts
+
 { :next_counter, :next_email,
   :Users, :Categories, :Topics, :Posts, :PostVotes, :CategoryModerators,
-  :PostReports, :CategoryMembers, :Blocks }
+  :PostReports, :CategoryMembers, :Blocks, :Bans }

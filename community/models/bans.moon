@@ -6,7 +6,7 @@ import safe_insert from require "community.helpers.models"
 
 class Bans extends Model
   @timestamp: true
-  @primary_key: {"object_type", "object_id", "blocked_id"}
+  @primary_key: {"object_type", "object_id", "banned_user_id"}
 
   @relations: {
     {"banned_user", belongs_to: "Users"}

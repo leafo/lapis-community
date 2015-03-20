@@ -48,6 +48,13 @@ describe "topic tags", ->
       assert.truthy res.success
       bans = Bans\select!
       assert.same 1, #bans
+      ban = unpack bans
+
+      assert.same other_user.id, ban.banned_user_id
+      assert.same current_user.id, ban.banner_id
+      assert.same category.id, ban.object_id
+      assert.same Bans.object_types.category, ban.object_type
+      assert.same "this user", ban.reason
 
     it "should not let unrelated user ban", ->
       other_user = factory.Users!
@@ -59,4 +66,14 @@ describe "topic tags", ->
 
       assert.same {errors: {"invalid permissions"}}, res
 
+    it "should unban user", ->
+      other_user = factory.Users!
+      factory.Bans object: category, banned_user_id: other_user.id
+
+      res = BansApp\get current_user, "/category-unban", {
+        category_id: category.id
+        banned_user_id: other_user.id
+      }
+
+      assert.same 0, #Bans\select!
 
