@@ -5,8 +5,6 @@
 * topic tags (sourced from category_tags)
 * ?? post quick responses (helpful, funny, etc)
 
-* category_membership (is this done?)
-
 * a topic can exist without a category
 
 -- 

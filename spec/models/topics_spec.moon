@@ -13,4 +13,3 @@ describe "topics", ->
   it "should create a post", ->
     factory.Topics!
 
-

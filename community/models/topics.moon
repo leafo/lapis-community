@@ -42,7 +42,7 @@ class Topics extends Model
   allowed_to_moderate: (user) =>
     return false unless user
     import Categories from require "models"
-    Categories\load(id: @category_id)\allowed_to_moderate user
+    @get_category!\allowed_to_moderate user
 
   increment_participant: (user) =>
     return unless user
@@ -63,3 +63,38 @@ class Topics extends Model
       return true
 
     false
+
+  get_tags: =>
+    unless @tags
+      import TopicTags from require "models"
+      @tags = TopicTags\select "where topic_id = ?", @id
+
+    @tags
+
+  set_tags: (tags_str) =>
+    import TopicTags from require "models"
+
+    tags = TopicTags\parse tags_str
+    old_tags = {tag.slug, true for tag in *@get_tags!}
+    new_tags = {TopicTags\slugify(tag), tag for tag in *tags}
+
+    -- filter and mark ones to add and ones to remove
+    for slug in pairs new_tags
+      if slug\match("^%-*$") or old_tags[slug]
+        new_tags[slug] = nil
+        old_tags[slug] = nil
+
+    if next old_tags
+      slugs = table.concat [db.escape_literal slug for slug in pairs old_tags], ","
+      db.delete TopicTags\table_name!, "topic_id = ? and slug in (#{slugs})", @id
+
+    for slug, label in pairs new_tags
+      TopicTags\create {
+        topic_id: @id
+        :label
+        :slug
+      }
+
+    @tags = nil -- clear cache
+    true
+

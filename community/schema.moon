@@ -181,5 +181,15 @@ make_schema = ->
     "PRIMARY KEY (topic_id, user_id)"
   }
 
+  create_table T"topic_tags", {
+    {"topic_id", foreign_key}
+    {"slug", varchar}
+    {"label", varchar}
+
+    {"created_at", time}
+    {"updated_at", time}
+
+    "PRIMARY KEY (topic_id, slug)"
+  }
 
 { :make_schema }
