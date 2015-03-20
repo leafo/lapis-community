@@ -10,7 +10,7 @@ import capture_errors_json from require "lapis.application"
 
 import Users, Categories, Posts, Topics, CategoryMembers, CategoryModerators from require "models"
 
-class PostingApp extends TestApp
+class CategoryApp extends TestApp
   @before_filter =>
     @current_user = Users\find assert @params.current_user_id, "missing user id"
     CategoriesFlow = require "community.flows.categories"
@@ -43,7 +43,7 @@ describe "category_membership", ->
     it "should add member", ->
       other_user = factory.Users!
 
-      res = PostingApp\get current_user, "/add-member", {
+      res = CategoryApp\get current_user, "/add-member", {
         category_id: category.id
         user_id: other_user.id
       }

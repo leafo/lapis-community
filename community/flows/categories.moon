@@ -6,8 +6,6 @@ import Categories, Topics, Posts, Users from require "models"
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 
-date = require "date"
-
 class CategoriesFlow extends Flow
   new: (req) =>
     super req
