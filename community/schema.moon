@@ -211,7 +211,7 @@ make_schema = ->
     {"banned_user_id", foreign_key}
 
     {"reason", text null: true}
-    {"banner_id", foreign_key null: true}
+    {"banning_user_id", foreign_key null: true}
 
     {"created_at", time}
     {"updated_at", time}

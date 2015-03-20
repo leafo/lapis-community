@@ -18,7 +18,7 @@ class BansFlow extends Flow
       :object
       reason: @params.reason
       banned_user_id: @banned.id
-      banner_id: @current_user.id
+      banning_user_id: @current_user.id
     }
 
   _assert_category: =>

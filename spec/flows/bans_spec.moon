@@ -51,7 +51,7 @@ describe "topic tags", ->
       ban = unpack bans
 
       assert.same other_user.id, ban.banned_user_id
-      assert.same current_user.id, ban.banner_id
+      assert.same current_user.id, ban.banning_user_id
       assert.same category.id, ban.object_id
       assert.same Bans.object_types.category, ban.object_type
       assert.same "this user", ban.reason

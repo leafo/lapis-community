@@ -90,7 +90,7 @@ Bans = (opts={}) ->
   opts.object or= Categories!
   opts.banned_user_id or= Users!.id
   opts.reason or= "this user is banned"
-  opts.banner_id or= Users!.id
+  opts.banning_user_id or= Users!.id
   assert models.Bans\create opts
 
 { :next_counter, :next_email,

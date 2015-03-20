@@ -10,6 +10,7 @@ class Bans extends Model
 
   @relations: {
     {"banned_user", belongs_to: "Users"}
+    {"banning_user", belongs_to: "Users"}
   }
 
   @object_types: enum {
