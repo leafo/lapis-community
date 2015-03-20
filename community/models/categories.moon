@@ -38,7 +38,7 @@ class Categories extends Model
         membership = CategoryMembers\find {
           user_id: user.id
           category_id: @id
-          approved: true
+          accepted: true
         }
 
         not not membership

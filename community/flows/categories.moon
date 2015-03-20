@@ -56,11 +56,15 @@ class CategoriesFlow extends Flow
     membership\delete!
     true
 
-  approve_member: =>
+  accept_member: =>
     @_assert_category!
     import CategoryMembers from require "models"
-    membership = CategoryMembers\find category_id: @category.id, user_id: @current_user.id
+    membership = CategoryMembers\find {
+      category_id: @category.id
+      user_id: @current_user.id
+      accepted: false
+    }
     assert_error membership, "invalid membership"
-    membership\update approved: true
+    membership\update accepted: true
     true
 

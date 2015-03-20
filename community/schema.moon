@@ -38,7 +38,7 @@ make_schema = ->
     {"user_id", foreign_key}
     {"category_id", foreign_key}
 
-    {"approved", boolean}
+    {"accepted", boolean}
 
     {"created_at", time}
     {"updated_at", time}
@@ -46,7 +46,7 @@ make_schema = ->
     "PRIMARY KEY (user_id, category_id)"
   }
 
-  create_index T"category_members", "category_id", "user_id", where: "approved"
+  create_index T"category_members", "category_id", "user_id", where: "accepted"
 
   create_table T"topics", {
     {"id", serial}

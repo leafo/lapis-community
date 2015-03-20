@@ -24,8 +24,8 @@ class CategoryApp extends TestApp
     @flow\remove_member!
     json: { success: true }
 
-  "/approve-member": capture_errors_json =>
-    @flow\approve_member!
+  "/accept-member": capture_errors_json =>
+    @flow\accept_member!
     json: { success: true }
 
 describe "category_membership", ->
@@ -54,8 +54,30 @@ describe "category_membership", ->
       member = unpack members
       assert.same category.id, member.category_id
       assert.same other_user.id, member.user_id
-      assert.same false, member.approved
+      assert.same false, member.accepted
 
       assert.same { success: true }, res
 
+    it "should accept member", ->
+      other_user = factory.Users!
+
+      factory.CategoryMembers {
+        user_id: other_user.id
+        category_id: category.id
+        accepted: false
+      }
+
+      res = CategoryApp\get other_user, "/accept-member", {
+        category_id: category.id
+      }
+
+      assert.same { success: true }, res
+
+    it "should not accept unininvited user", ->
+      other_user = factory.Users!
+      res = CategoryApp\get other_user, "/accept-member", {
+        category_id: category.id
+      }
+
+      assert.same { errors: {"invalid membership"} }, res
 
