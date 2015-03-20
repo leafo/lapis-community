@@ -1,5 +1,6 @@
 * post nesting
-* banning users
+
+* banning: need to enforce
 
 * ?? post quick responses (helpful, funny, etc)
 * a topic can exist without a category (comments)

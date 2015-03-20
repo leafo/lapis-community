@@ -202,4 +202,21 @@ make_schema = ->
 
     "PRIMARY KEY (blocker_id, blocked_id)"
   }
+
+  -- user blocked from thing
+  create_table T"bans", {
+    {"object_type", integer}
+    {"object_id", foreign_key}
+
+    {"banned_user_id", foreign_key}
+
+    {"reason", text null: true}
+    {"banner_id", foreign_key null: true}
+
+    {"created_at", time}
+    {"updated_at", time}
+
+    "PRIMARY KEY (object_type, object_id, banned_user_id)"
+  }
+
 { :make_schema }
