@@ -14,6 +14,7 @@ class Categories extends Model
 
   @relations: {
     {"moderators", has_many: "CategoryModerators", key: "category_id", where: {accepted: true}}
+    {"user", belongs_to: "Users"}
   }
 
   @create: (opts={}) =>

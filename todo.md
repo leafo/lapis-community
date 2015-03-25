@@ -3,7 +3,11 @@
 * banning: need to enforce
 
 * ?? post quick responses (helpful, funny, etc)
+
+
 * a topic can exist without a category (comments)
+
+* topic user should be optional
 
 --
 * render posts preloaded
