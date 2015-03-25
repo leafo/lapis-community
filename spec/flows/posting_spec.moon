@@ -336,6 +336,7 @@ describe "posting flow", ->
       post\refresh!
       assert.same "the new body", post.body
       assert.same "the new title", post\get_topic!.title
+      assert.same "the-new-title", post\get_topic!.slug
 
       edit = unpack PostEdits\select!
       assert edit, "missing edit"

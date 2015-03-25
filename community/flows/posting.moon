@@ -5,7 +5,7 @@ db = require "lapis.db"
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 
-import trim_filter from require "lapis.util"
+import trim_filter, slugify from require "lapis.util"
 
 import Categories, Topics, Posts, PostEdits, CommunityUsers, TopicParticipants from require "models"
 
@@ -120,7 +120,10 @@ class Posting extends Flow
       }
 
       if post_update.title
-        @topic\update title: post_update.title
+        @topic\update {
+          title: post_update.title
+          slug: slugify post_update.title
+        }
 
     true
 
