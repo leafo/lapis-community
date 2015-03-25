@@ -12,9 +12,9 @@ class Topics extends Model
   }
 
   @create: (opts={}) =>
-    assert opts.user_id, "missing user_id"
-    assert opts.title, "missing user_id"
-    opts.slug or= slugify opts.title
+    if opts.title
+      opts.slug or= slugify opts.title
+
     opts.last_post_at or= db.format_date!
 
     Model.create @, opts
@@ -60,8 +60,9 @@ class Topics extends Model
     import soft_delete from require "community.helpers.models"
 
     if soft_delete @
-      import CommunityUsers from require "models"
-      CommunityUsers\for_user(@get_user!)\increment "topics_count", -1
+      if @user_id
+        import CommunityUsers from require "models"
+        CommunityUsers\for_user(@get_user!)\increment "topics_count", -1
       return true
 
     false

@@ -51,9 +51,10 @@ make_schema = ->
   create_table T"topics", {
     {"id", serial}
     {"category_id", foreign_key null: true}
-    {"user_id", foreign_key}
+    {"user_id", foreign_key null: true}
     {"title", varchar null: true}
     {"slug", varchar null: true}
+
     {"locked", boolean}
     {"deleted", boolean}
 
