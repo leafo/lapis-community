@@ -12,7 +12,6 @@ class Topics extends Model
   }
 
   @create: (opts={}) =>
-    assert opts.category_id, "missing category_id"
     assert opts.user_id, "missing user_id"
     assert opts.title, "missing user_id"
     opts.slug or= slugify opts.title
@@ -41,7 +40,10 @@ class Topics extends Model
 
   allowed_to_moderate: (user) =>
     return false unless user
+    return false unless @category_id
+
     import Categories from require "models"
+
     @get_category!\allowed_to_moderate user
 
   increment_participant: (user) =>

@@ -26,7 +26,11 @@ Categories = (opts={}) ->
   assert models.Categories\create opts
 
 Topics = (opts={}) ->
-  opts.category_id or= Categories!.id
+  if opts.category == false
+    opts.category = nil
+  else
+    opts.category_id or= Categories!.id
+
   opts.user_id or= Users!.id
   opts.title or= "Topic #{next_counter "topic"}"
 
