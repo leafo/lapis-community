@@ -29,7 +29,6 @@ class PostReports extends Model
 
     assert opts.body, "missing body"
     assert opts.post_id, "missing post_id"
-    assert opts.category_id, "missing category_id"
     assert opts.user_id, "missing user_id"
 
     Model.create @, opts

@@ -139,7 +139,7 @@ make_schema = ->
 
   create_table T"post_reports", {
     {"id", serial}
-    {"category_id", foreign_key} -- denormalized
+    {"category_id", foreign_key null: true} -- denormalized
     {"post_id", foreign_key}
     {"user_id", foreign_key}
 

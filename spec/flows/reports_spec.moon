@@ -3,6 +3,7 @@ import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
 import Users, Categories, Topics, Posts, PostReports from require "models"
+import TestApp from require "spec.helpers"
 
 factory = require "spec.factory"
 
@@ -11,7 +12,7 @@ import mock_request from require "lapis.spec.request"
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
 
-class ReportingApp extends Application
+class ReportingApp extends TestApp
   @before_filter =>
     @current_user = Users\find assert @params.current_user_id, "missing user id"
     ReportsFlow = require "community.flows.reports"
@@ -69,6 +70,25 @@ describe "reports", ->
       assert.same PostReports.statuses.pending, report.status
       assert.same PostReports.reasons.other, report.reason
       assert.same "this is the problem", report.body
+
+    it "should create new report for post in topic without category", ->
+      topic = factory.Topics category: false
+      post = factory.Posts topic_id: topic.id
+
+      res = ReportingApp\get current_user, "/new-report", {
+        post_id: post.id
+        "report[reason]": "other"
+        "report[body]": "please report"
+      }
+
+      assert.truthy res.success
+
+      reports = PostReports\select!
+      assert.same 1, #reports
+
+      report = unpack reports
+      assert.same nil, report.category_id
+      assert.same post.id, report.post_id
 
   describe "update_report", ->
     update_report = (get={}) ->
