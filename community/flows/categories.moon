@@ -1,4 +1,3 @@
-
 import Flow from require "lapis.flow"
 
 import Categories, Users, CategoryMembers from require "models"
@@ -6,6 +5,9 @@ import Categories, Users, CategoryMembers from require "models"
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 import assert_page from require "community.helpers.app"
+import trim_filter from require "lapis.util"
+
+MAX_NAME_LEN = 256
 
 class CategoriesFlow extends Flow
   expose_assigns: true
@@ -77,3 +79,25 @@ class CategoriesFlow extends Flow
     membership\update accepted: true
     true
 
+  new_category: =>
+    assert_valid @params, {
+      {"category", type: "table"}
+    }
+
+    new_category = @params.category
+    trim_filter new_category
+
+    assert_valid new_category, {
+      {"name", exists: true, max_length: MAX_NAME_LEN}
+      {"membership_type", one_of: Categories.membership_types}
+    }
+
+    @category = Categories\create {
+      user_id: @current_user.id
+      name: new_category.name
+      membership_type: new_category.membership_type
+    }
+
+    true
+
+  edit_category: =>

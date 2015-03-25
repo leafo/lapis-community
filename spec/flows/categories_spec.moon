@@ -16,6 +16,10 @@ class CategoryApp extends TestApp
     CategoriesFlow = require "community.flows.categories"
     @flow = CategoriesFlow @
 
+  "/new-category": capture_errors_json =>
+    @flow\new_category!
+    json: { success: true }
+
   "/add-member": capture_errors_json =>
     @flow\add_member!
     json: { success: true }
@@ -28,7 +32,7 @@ class CategoryApp extends TestApp
     @flow\accept_member!
     json: { success: true }
 
-describe "category_membership", ->
+describe "categories", ->
   use_test_env!
 
   local current_user
@@ -37,9 +41,25 @@ describe "category_membership", ->
   before_each ->
     truncate_tables Users, Categories, Posts, Topics, CategoryMembers, CategoryModerators
     current_user = factory.Users!
-    category = factory.Categories user_id: current_user.id
+
+  it "should create category", ->
+    res = CategoryApp\get current_user, "/new-category", {
+      "category[name]": "hello world"
+      "category[membership_type]": "public"
+    }
+
+    assert.truthy res.success
+    category = unpack Categories\select!
+    assert.truthy category
+
+    assert.same current_user.id, category.user_id
+    assert.same "hello world", category.name
+    assert.same Categories.membership_types.public, category.membership_type
 
   describe "add_member", ->
+    before_each ->
+      category = factory.Categories user_id: current_user.id
+
     it "should add member", ->
       other_user = factory.Users!
 
