@@ -155,7 +155,7 @@ make_schema = ->
   }
 
   create_index T"post_reports", "post_id", "id"
-  create_index T"post_reports", "category_id", "id"
+  create_index T"post_reports", "category_id", "id", where: "category_id is not null"
 
   create_table T"users", {
     {"user_id", foreign_key}
