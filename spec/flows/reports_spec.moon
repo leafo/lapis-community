@@ -82,25 +82,15 @@ describe "reports", ->
       assert.same post.id, report.post_id
 
   describe "update_report", ->
-    update_report = (get={}) ->
-      get.current_user_id or= current_user.id
-      status, res = mock_request ReportingApp, "/update-report", {
-        :get
-        expect: "json"
-      }
-
-      assert.same 200, status
-      res
-
     it "should fail with no params", ->
-      res = update_report!
+      res = ReportingApp\get current_user, "/update-report", {}
       assert.truthy res.errors
 
     it "should update report", ->
       category = factory.Categories user_id: current_user.id
       report = factory.PostReports category_id: category.id
 
-      res = update_report {
+      res = ReportingApp\get current_user, "/update-report", {
         report_id: report.id
         "report[status]": "resolved"
       }
