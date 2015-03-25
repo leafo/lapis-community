@@ -36,23 +36,14 @@ describe "reports", ->
     current_user = factory.Users!
 
   describe "new_report", ->
-    new_report = (get={}) ->
-      get.current_user_id or= current_user.id
-      status, res = mock_request ReportingApp, "/new-report", {
-        :get
-        expect: "json"
-      }
-
-      assert.same 200, status
-      res
-
     it "should fail to create report", ->
-      res = new_report!
-      assert.truthy {}, res.errors
+      res = ReportingApp\get current_user, "/new-report", {}
+      assert.truthy res.errors
 
     it "should create a new report", ->
       post = factory.Posts!
-      res = new_report {
+
+      res = ReportingApp\get current_user, "/new-report", {
         post_id: post.id
         "report[reason]": "other"
         "report[body]": "this is the problem"
