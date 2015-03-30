@@ -5,6 +5,7 @@ import Categories, Users, CategoryMembers from require "models"
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 import assert_page from require "community.helpers.app"
+import filter_update from require "community.helpers.models"
 import trim_filter from require "lapis.util"
 
 MAX_NAME_LEN = 256
@@ -101,3 +102,23 @@ class CategoriesFlow extends Flow
     true
 
   edit_category: =>
+    @_assert_category!
+
+    assert_valid @params, {
+      {"category", exists: true, type: "table"}
+    }
+
+    category_update = trim_filter @params.category, "name", "membership_type"
+
+    assert_valid category_update, {
+      {"name", exists: true, max_length: MAX_NAME_LEN}
+      {"membership_type", one_of: Categories.membership_types}
+    }
+
+    category_update.membership_type = Categories.membership_types\for_db category_update.membership_type
+    category_update = filter_update @category, category_update
+
+    if next category_update
+      @category\update category_update
+
+
