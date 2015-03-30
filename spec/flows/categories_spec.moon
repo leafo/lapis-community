@@ -20,6 +20,10 @@ class CategoryApp extends TestApp
     @flow\new_category!
     json: { success: true }
 
+  "/edit-category": capture_errors_json =>
+    @flow\edit_category!
+    json: { success: true }
+
   "/add-member": capture_errors_json =>
     @flow\add_member!
     json: { success: true }
@@ -36,7 +40,6 @@ describe "categories", ->
   use_test_env!
 
   local current_user
-  local category
 
   before_each ->
     truncate_tables Users, Categories, Posts, Topics, CategoryMembers, CategoryModerators
@@ -56,7 +59,28 @@ describe "categories", ->
     assert.same "hello world", category.name
     assert.same Categories.membership_types.public, category.membership_type
 
+
+  describe "with category", ->
+    local category
+
+    before_each ->
+      category = factory.Categories user_id: current_user.id
+
+    it "should edit category", ->
+      res = CategoryApp\get current_user, "/edit-category", {
+        category_id: category.id
+        "category[name]": "The good category"
+        "category[membership_type]": "members_only"
+      }
+
+      assert.same {success: true}, res
+      category\refresh!
+      assert.same "The good category", category.name
+      assert.same Categories.membership_types.members_only, category.membership_type
+
   describe "add_member", ->
+    local category
+
     before_each ->
       category = factory.Categories user_id: current_user.id
 

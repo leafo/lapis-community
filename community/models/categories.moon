@@ -44,6 +44,12 @@ class Categories extends Model
 
         not not membership
 
+  allowed_to_edit: (user) =>
+    return nil unless user
+    return true if user\is_admin!
+    return true if user.id == @user_id
+    false
+
   allowed_to_edit_moderators: (user) =>
     return nil unless user
     return true if user\is_admin!

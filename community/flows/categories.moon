@@ -103,12 +103,13 @@ class CategoriesFlow extends Flow
 
   edit_category: =>
     @_assert_category!
+    assert_error @category\allowed_to_edit(@current_user), "invalid category"
 
     assert_valid @params, {
       {"category", exists: true, type: "table"}
     }
 
-    category_update = trim_filter @params.category, "name", "membership_type"
+    category_update = trim_filter @params.category, {"name", "membership_type"}
 
     assert_valid category_update, {
       {"name", exists: true, max_length: MAX_NAME_LEN}
@@ -121,4 +122,5 @@ class CategoriesFlow extends Flow
     if next category_update
       @category\update category_update
 
+    true
 
