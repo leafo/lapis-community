@@ -78,6 +78,17 @@ describe "categories", ->
       assert.same "The good category", category.name
       assert.same Categories.membership_types.members_only, category.membership_type
 
+
+    it "should not let unknown user edit category", ->
+      other_user = factory.Users!
+      res = CategoryApp\get other_user, "/edit-category", {
+        category_id: category.id
+        "category[name]": "The good category"
+        "category[membership_type]": "members_only"
+      }
+
+      assert.same {errors: {"invalid category"}}, res
+
   describe "add_member", ->
     local category
 
