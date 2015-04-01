@@ -1,4 +1,4 @@
-db = require "lapis.nginx.postgres"
+db = require "lapis.db.postgres"
 schema = require "lapis.db.schema"
 
 import create_table, create_index, drop_table from schema
@@ -73,7 +73,11 @@ make_schema = ->
     {"id", serial}
     {"topic_id", foreign_key}
     {"user_id", foreign_key}
+    {"parent_post_id", foreign_key null: true}
+
     {"post_number", integer}
+    {"depth", integer}
+
     {"deleted", boolean}
 
     {"body", text}
@@ -87,7 +91,7 @@ make_schema = ->
     "PRIMARY KEY (id)"
   }
 
-  create_index T"posts", "topic_id", "post_number", unique: true
+  create_index T"posts", "topic_id", "depth", "post_number", unique: true
 
   create_table T"post_edits", {
     {"id", serial}

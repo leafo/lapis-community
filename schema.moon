@@ -1,4 +1,4 @@
-db = require "lapis.nginx.postgres"
+db = require "lapis.db.postgres"
 schema = require "lapis.db.schema"
 
 import create_table, create_index, drop_table from schema

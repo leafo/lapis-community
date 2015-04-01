@@ -14,10 +14,22 @@ class Posts extends Model
     assert opts.user_id, "missing user id"
     assert opts.body, "missing body"
 
+    parent = if id = opts.parent_id
+      @find id
+    else
+      with opts.parent
+        opts.parent = nil
+
+    if parent
+      assert parent.topic_id == opts.topic_id
+      opts.depth = parent.depth + 1
+    else
+      opts.depth = 1
+
     post_number = db.interpolate_query "
      (select count(*) from #{db.escape_identifier @table_name!}
-     where topic_id = ?) + 1
-    ", opts.topic_id
+     where topic_id = ? and depth = ?) + 1
+    ", opts.topic_id, opts.depth
 
     opts.post_number = db.raw post_number
     Model.create @, opts
