@@ -56,6 +56,7 @@ make_schema = ->
     {"slug", varchar null: true}
 
     {"locked", boolean}
+    {"sticky", boolean}
     {"deleted", boolean}
 
     {"posts_count", integer}
@@ -67,7 +68,7 @@ make_schema = ->
     "PRIMARY KEY (id)"
   }
 
-  create_index T"topics", "category_id", "last_post_at", "id", where: "not deleted"
+  create_index T"topics", "category_id", "sticky", "last_post_at", "id", where: "not deleted"
 
   create_table T"posts", {
     {"id", serial}
