@@ -183,7 +183,7 @@ describe "posting flow", ->
 
       res = PostingApp\get current_user, "/new-post", {
         topic_id: topic.id
-        parent_id: post.id
+        parent_post_id: post.id
         "post[body]": "This is a sub message"
       }
 
@@ -194,7 +194,7 @@ describe "posting flow", ->
       assert.same 2, #posts
 
       child_post = Posts\find child_post.id
-      assert.same post.id, child_post.parent_id
+      assert.same post.id, child_post.parent_post_id
 
 
   describe "vote post #votes", ->

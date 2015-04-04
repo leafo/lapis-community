@@ -65,7 +65,7 @@ class Posting extends Flow
     trim_filter @params
     assert_valid @params, {
       {"topic_id", is_integer: true }
-      {"parent_id", optional: true, is_integer: true }
+      {"parent_post_id", optional: true, is_integer: true }
       {"post", type: "table"}
     }
 
@@ -77,17 +77,18 @@ class Posting extends Flow
       {"body", exists: true, max_length: MAX_BODY_LEN}
     }
 
-    parent = if pid = @params.parent_id
+    parent_post = if pid = @params.parent_post_id
       Posts\find pid
 
-    if parent
-      assert_error parent.topic_id == @topic.id, "topic id mismatch (#{parent.topic_id} != #{@topic.id})"
+    if parent_post
+      assert_error parent_post.topic_id == @topic.id,
+        "topic id mismatch (#{parent_post.topic_id} != #{@topic.id})"
 
     @post = Posts\create {
       user_id: @current_user.id
       topic_id: @topic.id
       body: new_post.body
-      :parent
+      :parent_post
     }
 
     @topic\update { posts_count: db.raw "posts_count + 1" }, timestamp: false

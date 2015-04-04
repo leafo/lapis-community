@@ -14,15 +14,16 @@ class Posts extends Model
     assert opts.user_id, "missing user id"
     assert opts.body, "missing body"
 
-    parent = if id = opts.parent_id
+    parent = if id = opts.parent_post_id
       @find id
     else
-      with opts.parent
-        opts.parent = nil
+      with opts.parent_post
+        opts.parent_post = nil
 
     if parent
       assert parent.topic_id == opts.topic_id, "invalid parent"
       opts.depth = parent.depth + 1
+      opts.parent_post_id = parent.id
     else
       opts.depth = 1
 
