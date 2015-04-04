@@ -62,8 +62,10 @@ class Posting extends Flow
     @topic\delete!
 
   new_post: =>
+    trim_filter @params
     assert_valid @params, {
       {"topic_id", is_integer: true }
+      {"parent_id", optional: true, is_integer: true }
       {"post", type: "table"}
     }
 
@@ -75,10 +77,17 @@ class Posting extends Flow
       {"body", exists: true, max_length: MAX_BODY_LEN}
     }
 
+    parent = if pid = @params.parent_id
+      Posts\find pid
+
+    if parent
+      assert_error parent.topic_id == @topic.id, "topic id mismatch (#{parent.topic_id} != #{@topic.id})"
+
     @post = Posts\create {
       user_id: @current_user.id
       topic_id: @topic.id
       body: new_post.body
+      :parent
     }
 
     @topic\update { posts_count: db.raw "posts_count + 1" }, timestamp: false

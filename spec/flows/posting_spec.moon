@@ -141,16 +141,6 @@ describe "posting flow", ->
   describe "new post", ->
     local topic
 
-    new_post = (get={}) ->
-      get.current_user_id or= current_user.id
-      status, res = mock_request PostingApp, "/new-post", {
-        :get
-        expect: "json"
-      }
-
-      assert.same 200, status
-      res
-
     before_each ->
       topic = factory.Topics!
 
@@ -187,6 +177,25 @@ describe "posting flow", ->
       tps = TopicParticipants\select "where topic_id = ?", topic.id
       assert.same 1, #tps
       assert.same 2, tps[1].posts_count
+
+    it "should post a threaded post", ->
+      post = factory.Posts topic_id: topic.id
+
+      res = PostingApp\get current_user, "/new-post", {
+        topic_id: topic.id
+        parent_id: post.id
+        "post[body]": "This is a sub message"
+      }
+
+      assert.truthy res.success
+      child_post = res.post
+
+      posts = Posts\select!
+      assert.same 2, #posts
+
+      child_post = Posts\find child_post.id
+      assert.same post.id, child_post.parent_id
+
 
   describe "vote post #votes", ->
     vote_post = (get={}) ->
