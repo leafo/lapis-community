@@ -14,13 +14,6 @@ make_schema = ->
   create_table "users", {
     {"id", serial}
     {"username", varchar}
-    {"password", varchar}
-    {"email", varchar}
-
-    {"display_name", varchar null: true}
-
-    {"posts_count", integer}
-    {"topics_count", integer}
 
     {"created_at", time}
     {"updated_at", time}
@@ -29,7 +22,5 @@ make_schema = ->
   }
 
   create_index "users", db.raw"lower(username)", unique: true
-  create_index "users", db.raw"lower(email)", unique: true
-
 
 { :make_schema }
