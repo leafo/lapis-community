@@ -10,6 +10,8 @@ import assert_valid from require "lapis.validate"
 date = require "date"
 
 class Browsing extends Flow
+  expose_assigns: true
+
   set_before_after: =>
     assert_valid @params, {
       {"before", optional: true, is_integer: true}

@@ -1,6 +1,7 @@
 lapis = require "lapis"
 
-import respond_to, capture_errors, assert_error from require "lapis.application"
+import respond_to, capture_errors, capture_errors_json,
+  assert_error from require "lapis.application"
 
 import assert_valid from require "lapis.validate"
 
@@ -42,6 +43,24 @@ class extends lapis.Application
       assert_error Users\find(username: @params.username), "invalid user"
   }
 
+  [new_category: "/new-category"]: respond_to {
+    GET: => render: true
+
+    POST: capture_errors =>
+      CategoriesFlow = require "community.flows.categories"
+      CategoriesFlow(@)\new_category!
+
+      redirect_to: @url_for "index"
+
+  }
+
+  [category: "/category/:category_id"]: capture_errors_json =>
+    Browsing = require "community.flows.browsing"
+    @topics = Browsing(@)\category_topics!
+    render: true
+
   [index: "/"]: =>
+    import Categories from require "models"
+    @categories = Categories\select!
     render: true
 
