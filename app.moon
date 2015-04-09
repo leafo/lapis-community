@@ -98,10 +98,19 @@ class extends lapis.Application
   }
 
   [delete_post: "/post/:post_id/delete"]: respond_to {
+    before: =>
+      PostsFlow = require "community.flows.posts"
+      @flow = PostsFlow @
+      @flow\load_post!
+      @topic = @post\get_topic!
+
+      assert_error @post\allowed_to_edit(@user), "invalid post"
+
     GET: =>
       render: true
 
     POST: =>
+
   }
 
   [category: "/category/:category_id"]: capture_errors_json =>
