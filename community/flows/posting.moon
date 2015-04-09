@@ -13,6 +13,8 @@ MAX_BODY_LEN = 1024 * 10
 MAX_TITLE_LEN = 256
 
 class PostingFlow extends Flow
+  expose_assigns: true
+
   new: (req) =>
     super req
     assert @current_user, "missing current user for post flow"

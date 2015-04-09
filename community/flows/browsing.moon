@@ -21,7 +21,6 @@ class BrowsingFlow extends Flow
     @before = tonumber @params.before
     @after = tonumber @params.after
 
-
   topic_posts: =>
     assert_valid @params, {
       {"topic_id", is_integer: true }

@@ -14,8 +14,6 @@ class Category extends require "widgets.base"
 
       for topic in *@topics
         tr ->
-          td topic.title
-
-
-
+          td ->
+            a href: @url_for("topic", topic_id: topic.id), topic.title
 

@@ -67,9 +67,24 @@ class extends lapis.Application
       redirect_to: @url_for("category", category_id: @category.id)
   }
 
+  [new_post: "/topic/:topic_id/new-post"]: capture_errors respond_to {
+    GET: =>
+      render: true
+
+    POST: =>
+      PostingFlow = require "community.flows.posting"
+      PostingFlow(@)\new_post!
+      redirect_to: @url_for("topic", topic_id: @topic.id)
+  }
+
   [category: "/category/:category_id"]: capture_errors_json =>
-    Browsing = require "community.flows.browsing"
-    @topics = Browsing(@)\category_topics!
+    BrowsingFlow = require "community.flows.browsing"
+    @topics = BrowsingFlow(@)\category_topics!
+    render: true
+
+  [topic: "/topic/:topic_id"]: capture_errors_json =>
+    BrowsingFlow = require "community.flows.browsing"
+    @posts = BrowsingFlow(@)\topic_posts!
     render: true
 
   [index: "/"]: =>
