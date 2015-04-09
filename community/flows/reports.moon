@@ -9,7 +9,7 @@ import trim_filter from require "lapis.util"
 
 import PostReports from require "models"
 
-class Reports extends Flow
+class ReportsFlow extends Flow
   new: (req) =>
     super req
     assert @current_user, "missing current user for post flow"

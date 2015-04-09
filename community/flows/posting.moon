@@ -12,7 +12,7 @@ import Categories, Topics, Posts, PostEdits, CommunityUsers, TopicParticipants f
 MAX_BODY_LEN = 1024 * 10
 MAX_TITLE_LEN = 256
 
-class Posting extends Flow
+class PostingFlow extends Flow
   new: (req) =>
     super req
     assert @current_user, "missing current user for post flow"

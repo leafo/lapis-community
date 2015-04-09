@@ -9,7 +9,7 @@ import assert_valid from require "lapis.validate"
 
 date = require "date"
 
-class Browsing extends Flow
+class BrowsingFlow extends Flow
   expose_assigns: true
 
   set_before_after: =>
