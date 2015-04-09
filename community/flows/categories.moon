@@ -8,7 +8,7 @@ import assert_page from require "community.helpers.app"
 import filter_update from require "community.helpers.models"
 import trim_filter from require "lapis.util"
 
-MAX_NAME_LEN = 256
+limits = require "community.limits"
 
 class CategoriesFlow extends Flow
   expose_assigns: true
@@ -91,7 +91,7 @@ class CategoriesFlow extends Flow
     trim_filter new_category
 
     assert_valid new_category, {
-      {"name", exists: true, max_length: MAX_NAME_LEN}
+      {"name", exists: true, max_length: limits.MAX_TITLE_LEN}
       {"membership_type", one_of: Categories.membership_types}
     }
 
@@ -114,7 +114,7 @@ class CategoriesFlow extends Flow
     category_update = trim_filter @params.category, {"name", "membership_type"}
 
     assert_valid category_update, {
-      {"name", exists: true, max_length: MAX_NAME_LEN}
+      {"name", exists: true, max_length: limits.MAX_TITLE_LEN}
       {"membership_type", one_of: Categories.membership_types}
     }
 
