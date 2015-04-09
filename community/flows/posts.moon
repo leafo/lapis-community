@@ -8,8 +8,7 @@ import trim_filter, slugify from require "lapis.util"
 
 import require_login from require "community.helpers.app"
 
-MAX_BODY_LEN = 1024 * 10
-MAX_TITLE_LEN = 256
+limits = require "community.limits"
 
 class PostsFlow extends Flow
   expose_assigns: true
@@ -37,7 +36,7 @@ class PostsFlow extends Flow
 
     new_post = trim_filter @params.post
     assert_valid new_post, {
-      {"body", exists: true, max_length: MAX_BODY_LEN}
+      {"body", exists: true, max_length: limits.MAX_BODY_LEN}
     }
 
     parent_post = if pid = @params.parent_post_id
@@ -72,8 +71,8 @@ class PostsFlow extends Flow
 
     post_update = trim_filter @params.post
     assert_valid post_update, {
-      {"body", exists: true, max_length: MAX_BODY_LEN}
-      {"reason", optional: true, max_length: MAX_BODY_LEN}
+      {"body", exists: true, max_length: limits.MAX_BODY_LEN}
+      {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
     }
 
     PostEdits\create {
@@ -87,7 +86,7 @@ class PostsFlow extends Flow
 
     if @post\is_topic_post!
       assert_valid post_update, {
-        {"title", optional: true, max_length: MAX_TITLE_LEN}
+        {"title", optional: true, max_length: limits.MAX_TITLE_LEN}
       }
 
       if post_update.title

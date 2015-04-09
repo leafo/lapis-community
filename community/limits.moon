@@ -1,0 +1,4 @@
+{
+  MAX_BODY_LEN: 1024 * 10
+  MAX_TITLE_LEN: 256
+}

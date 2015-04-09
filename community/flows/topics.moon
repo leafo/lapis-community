@@ -10,8 +10,7 @@ import assert_valid from require "lapis.validate"
 
 import require_login from require "community.helpers.app"
 
-MAX_BODY_LEN = 1024 * 10
-MAX_TITLE_LEN = 256
+limits = require "community.limits"
 
 class TopicsFlow extends Flow
   expose_assigns: true
@@ -45,8 +44,8 @@ class TopicsFlow extends Flow
 
     new_topic = trim_filter @params.topic
     assert_valid new_topic, {
-      {"body", exists: true, max_length: MAX_BODY_LEN}
-      {"title", exists: true, max_length: MAX_TITLE_LEN}
+      {"body", exists: true, max_length: limits.MAX_BODY_LEN}
+      {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
     }
 
     @topic = Topics\create {
