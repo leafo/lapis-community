@@ -17,8 +17,6 @@ local *
 
 Users = (opts={}) ->
   opts.username or= "user-#{next_counter "username"}"
-  opts.email or= next_email!
-  opts.password or= "my-password"
   assert models.Users\create opts
 
 Categories = (opts={}) ->
