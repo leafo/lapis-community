@@ -81,10 +81,20 @@ class extends lapis.Application
     before: =>
       @editing = true
 
+      PostsFlow = require "community.flows.posts"
+      @flow = PostsFlow @
+      @flow\load_post!
+
+      @topic = @post\get_topic!
+
+      assert_error @post\allowed_to_edit(@user), "invalid post"
+
     GET: =>
       render: true
 
     POST: =>
+      @flow\edit_post!
+      redirect_to: @url_for "topic", topic_id: @topic.id
   }
 
   [delete_post: "/post/:post_id/delete"]: respond_to {
