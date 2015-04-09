@@ -123,6 +123,16 @@ class extends lapis.Application
     @posts = BrowsingFlow(@)\topic_posts!
     render: true
 
+  [user: "/user/:user_id"]: capture_errors_json =>
+    import Users, CommunityUsers from require "models"
+    assert_valid @params, {
+      {"user_id", is_integer: true}
+    }
+
+    @user = Users\find @params.user_id
+    @community_user = CommunityUsers\for_user @user
+    render: true
+
   [index: "/"]: =>
     import Categories from require "models"
     @categories = Categories\select!
