@@ -69,12 +69,7 @@ class TopicsFlow extends Flow
     true
 
   delete_topic: require_login =>
-    assert_valid @params, {
-      {"topic_id", is_integer: true }
-    }
-
-    @topic = assert_error Topics\find(@params.topic_id), "invalid topic"
+    @load_topic!
     assert_error @topic\allowed_to_edit(@current_user), "not allowed to edit"
-
     @topic\delete!
 

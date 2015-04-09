@@ -1,12 +1,10 @@
 import Flow from require "lapis.flow"
+import Topics, Posts, PostEdits, CommunityUsers from require "models"
 
 db = require "lapis.db"
 import assert_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
-
 import trim_filter, slugify from require "lapis.util"
-
-import Topics, Posts, PostEdits, CommunityUsers from require "models"
 
 import require_login from require "community.helpers.app"
 
@@ -16,16 +14,26 @@ MAX_TITLE_LEN = 256
 class PostsFlow extends Flow
   expose_assigns: true
 
+  load_post: =>
+    return if @post
+
+    assert_valid @params, {
+      {"post_id", is_integer: true }
+    }
+
+    @post = Posts\find @params.post_id
+    assert_error @post, "invalid category"
+
   new_post: require_login =>
+    TopicsFlow = require "community.flows.topics"
+    TopicsFlow(@)\load_topic!
+    assert_error @topic\allowed_to_post @current_user
+
     trim_filter @params
     assert_valid @params, {
-      {"topic_id", is_integer: true }
       {"parent_post_id", optional: true, is_integer: true }
       {"post", type: "table"}
     }
-
-    @topic = assert_error Topics\find(@params.topic_id), "invalid post"
-    assert_error @topic\allowed_to_post @current_user
 
     new_post = trim_filter @params.post
     assert_valid new_post, {
@@ -53,14 +61,12 @@ class PostsFlow extends Flow
     true
 
   edit_post: require_login =>
+    @load_post!
+    assert_error @post\allowed_to_edit(@current_user), "not allowed to edit"
+
     assert_valid @params, {
-      {"post_id", is_integer: true }
       {"post", type: "table"}
     }
-
-    @post = Posts\find @params.post_id
-    assert_error @post, "invalid post"
-    assert_error @post\allowed_to_edit(@current_user), "not allowed to edit"
 
     @topic = @post\get_topic!
 
@@ -93,11 +99,7 @@ class PostsFlow extends Flow
     true
 
   delete_post: require_login =>
-    assert_valid @params, {
-      {"post_id", is_integer: true }
-    }
-
-    @post = assert_error Posts\find(@params.post_id), "invalid post"
+    @load_post!
     assert_error @post\allowed_to_edit(@current_user), "not allowed to edit"
 
     if @post\delete!
@@ -106,13 +108,13 @@ class PostsFlow extends Flow
       true
 
   vote_post: require_login =>
+    @load_post!
+    assert_error @post\allowed_to_vote @current_user
+
     assert_valid @params, {
-      {"post_id", is_integer: true }
       {"direction", one_of: {"up", "down"}}
     }
 
-    @post = assert_error Posts\find(@params.post_id), "invalid post"
-    assert_error @post\allowed_to_vote @current_user
     import PostVotes from require "models"
     _, action = PostVotes\vote @post, @current_user, @params.direction == "up"
 
