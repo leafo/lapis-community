@@ -10,7 +10,9 @@ install:
   - sudo luarocks install https://rocks.moonscript.org/manifests/olivine-labs/busted-2.0.rc7-0.rockspec
   - sudo luarocks install https://raw.githubusercontent.com/leafo/lapis/master/lapis-dev-1.rockspec
   - sudo luarocks install moonscript
+  - sudo luarocks install luabitop
   - moonc .
+  - make clean_test
   # - cat $(which busted) | sed 's/\/usr\/bin\/lua/.\/luajit/' > busted
   # - chmod +x busted
 
