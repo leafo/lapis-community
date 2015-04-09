@@ -9,4 +9,10 @@ assert_page = =>
   @page = math.max 1, tonumber(@params.page) or 1
   @page
 
-{:assert_page}
+require_login = (fn) ->
+  import assert_error from require "lapis.application"
+  =>
+    assert_error @current_user, "missing current user for post flow"
+    fn @
+
+{:assert_page, :require_login}

@@ -1,69 +1,22 @@
-
 import Flow from require "lapis.flow"
 
 db = require "lapis.db"
-import assert_error, yield_error from require "lapis.application"
+import assert_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 
 import trim_filter, slugify from require "lapis.util"
 
-import Categories, Topics, Posts, PostEdits, CommunityUsers, TopicParticipants from require "models"
+import Topics, Posts, PostEdits, CommunityUsers from require "models"
+
+import require_login from require "community.helpers.app"
 
 MAX_BODY_LEN = 1024 * 10
 MAX_TITLE_LEN = 256
 
-class PostingFlow extends Flow
+class PostsFlow extends Flow
   expose_assigns: true
 
-  new: (req) =>
-    super req
-    assert @current_user, "missing current user for post flow"
-
-  new_topic: =>
-    CategoriesFlow = require "community.flows.categories"
-    CategoriesFlow(@)\load_category!
-    assert_error @category\allowed_to_post @current_user
-
-    assert_valid @params, {
-      {"topic", type: "table"}
-    }
-
-    new_topic = trim_filter @params.topic
-    assert_valid new_topic, {
-      {"body", exists: true, max_length: MAX_BODY_LEN}
-      {"title", exists: true, max_length: MAX_TITLE_LEN}
-    }
-
-    @topic = Topics\create {
-      user_id: @current_user.id
-      category_id: @category.id
-      title: new_topic.title
-      posts_count: 1
-    }
-
-    @post = Posts\create {
-      user_id: @current_user.id
-      topic_id: @topic.id
-      body: new_topic.body
-    }
-
-    @category\update { topics_count: db.raw "topics_count + 1" }, timestamp: false
-    CommunityUsers\for_user(@current_user)\increment "topics_count"
-    @topic\increment_participant @current_user
-
-    true
-
-  delete_topic: =>
-    assert_valid @params, {
-      {"topic_id", is_integer: true }
-    }
-
-    @topic = assert_error Topics\find(@params.topic_id), "invalid topic"
-    assert_error @topic\allowed_to_edit(@current_user), "not allowed to edit"
-
-    @topic\delete!
-
-  new_post: =>
+  new_post: require_login =>
     trim_filter @params
     assert_valid @params, {
       {"topic_id", is_integer: true }
@@ -99,7 +52,7 @@ class PostingFlow extends Flow
 
     true
 
-  edit_post: =>
+  edit_post: require_login =>
     assert_valid @params, {
       {"post_id", is_integer: true }
       {"post", type: "table"}
@@ -139,7 +92,7 @@ class PostingFlow extends Flow
 
     true
 
-  delete_post: =>
+  delete_post: require_login =>
     assert_valid @params, {
       {"post_id", is_integer: true }
     }
@@ -152,7 +105,7 @@ class PostingFlow extends Flow
       topic\decrement_participant @current_user
       true
 
-  vote_post: =>
+  vote_post: require_login =>
     assert_valid @params, {
       {"post_id", is_integer: true }
       {"direction", one_of: {"up", "down"}}
@@ -167,5 +120,3 @@ class PostingFlow extends Flow
       CommunityUsers\for_user(@current_user)\increment "votes_count"
 
     true
-
-

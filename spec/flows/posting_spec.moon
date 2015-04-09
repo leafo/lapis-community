@@ -22,41 +22,44 @@ import capture_errors_json from require "lapis.application"
 
 import TestApp from require "spec.helpers"
 
+TopicsFlow = require "community.flows.topics"
+PostsFlow = require "community.flows.posts"
+
 class PostingApp extends TestApp
   @before_filter =>
     @current_user = Users\find assert @params.current_user_id, "missing user id"
-    PostingFlow = require "community.flows.posting"
-    @flow = PostingFlow @
 
   "/new-topic": capture_errors_json =>
-    @flow\new_topic!
+    TopicsFlow(@)\new_topic!
 
     json: {
-      topic: @flow.topic
-      post: @flow.post
+      topic: @topic
+      post: @post
       success: true
     }
 
   "/delete-topic": capture_errors_json =>
-    json: { success: @flow\delete_topic! }
+    res = TopicsFlow(@)\delete_topic!
+    json: { success: res }
 
   "/new-post": capture_errors_json =>
-    @flow\new_post!
+    PostsFlow(@)\new_post!
 
     json: {
-      post: @flow.post
+      post: @post
       success: true
     }
 
   "/edit-post": capture_errors_json =>
-    @flow\edit_post!
+    PostsFlow(@)\edit_post!
     json: { success: true }
 
   "/delete-post": capture_errors_json =>
-    json: { success: @flow\delete_post! }
+    res = PostsFlow(@)\delete_post!
+    json: { success: res }
 
   "/vote-post": capture_errors_json =>
-    @flow\vote_post!
+    PostsFlow(@)\vote_post!
     json: { success: true }
 
 
