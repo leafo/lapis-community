@@ -1,0 +1,17 @@
+language: c
+
+addons:
+  postgresql: "9.3"
+
+install:
+  - sudo apt-get install luarocks
+  - mkdir -p ~/.luarocks
+  - echo 'rocks_servers = { "http://rocks.moonscript.org" }' > ~/.luarocks/config.lua
+  - sudo luarocks install https://rocks.moonscript.org/manifests/olivine-labs/busted-2.0.rc7-0.rockspec
+  - sudo luarocks install https://raw.githubusercontent.com/leafo/lapis/master/lapis-dev-1.rockspec
+  - sudo luarocks install moonscript
+  - moonc .
+  - cat $(which busted) | sed 's/\/usr\/bin\/lua/.\/luajit/' > busted
+  - chmod +x busted
+
+script: ./busted
