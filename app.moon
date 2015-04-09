@@ -51,7 +51,20 @@ class extends lapis.Application
       CategoriesFlow(@)\new_category!
 
       redirect_to: @url_for "index"
+  }
 
+  [new_topic: "/category/:category_id/new-topic"]: capture_errors respond_to {
+    before_filter: =>
+      CategoriesFlow = require "community.flows.categories"
+      CategoriesFlow(@)\load_category!
+
+    GET:  =>
+      render: true
+
+    POST:  =>
+      PostingFlow = require "community.flows.posting"
+      PostingFlow(@)\new_topic!
+      redirect_to: @url_for("category", category_id: @category.id)
   }
 
   [category: "/category/:category_id"]: capture_errors_json =>
