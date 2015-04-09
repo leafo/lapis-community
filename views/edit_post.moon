@@ -13,6 +13,12 @@ class EditPost extends require "widgets.base"
     @render_errors!
 
     form method: "post", ->
+      if @editing and @post\is_topic_post!
+        div ->
+          label ->
+            strong "Title"
+            input type: "text", name: "post[title]", value: @topic and @topic.title
+
       div ->
         label ->
           strong "Body"

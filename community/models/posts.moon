@@ -36,7 +36,7 @@ class Posts extends Model
     Model.create @, opts
 
   is_topic_post: =>
-    @post_number == 1
+    @post_number == 1 and @depth == 1
 
   allowed_to_vote: (user) =>
     return false unless user
