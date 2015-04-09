@@ -62,9 +62,9 @@ class extends lapis.Application
       render: true
 
     POST:  =>
-      PostingFlow = require "community.flows.posting"
-      PostingFlow(@)\new_topic!
-      redirect_to: @url_for("category", category_id: @category.id)
+      TopicsFlow = require "community.flows.topics"
+      TopicsFlow(@)\new_topic!
+      redirect_to: @url_for "category", category_id: @category.id
   }
 
   [new_post: "/topic/:topic_id/new-post"]: capture_errors respond_to {
@@ -72,9 +72,9 @@ class extends lapis.Application
       render: true
 
     POST: =>
-      PostingFlow = require "community.flows.posting"
-      PostingFlow(@)\new_post!
-      redirect_to: @url_for("topic", topic_id: @topic.id)
+      PostsFlow = require "community.flows.posts"
+      PostsFlow(@)\new_post!
+      redirect_to: @url_for "topic", topic_id: @topic.id
   }
 
   [edit_post: "/post/:post_id/edit"]: respond_to {
