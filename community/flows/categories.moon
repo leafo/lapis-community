@@ -18,12 +18,17 @@ class CategoriesFlow extends Flow
     assert @current_user, "missing current user for post flow"
 
   _assert_category: =>
+    return if @category
+
     assert_valid @params, {
       {"category_id", is_integer: true}
     }
 
     @category = Categories\find @params.category_id
     assert_error @category, "invalid category"
+
+  load_category: =>
+    @_assert_category!
 
   show_members: =>
     @_assert_category!

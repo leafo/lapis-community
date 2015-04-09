@@ -18,13 +18,13 @@ class PostingFlow extends Flow
     assert @current_user, "missing current user for post flow"
 
   new_topic: =>
+    CategoriesFlow = require "community.flows.categories"
+    CategoriesFlow(@)\load_category!
+    assert_error @category\allowed_to_post @current_user
+
     assert_valid @params, {
-      {"category_id", is_integer: true }
       {"topic", type: "table"}
     }
-
-    @category = assert_error Categories\find(@params.category_id), "invalid category"
-    assert_error @category\allowed_to_post @current_user
 
     new_topic = trim_filter @params.topic
     assert_valid new_topic, {
