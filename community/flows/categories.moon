@@ -17,7 +17,7 @@ class CategoriesFlow extends Flow
     super req
     assert @current_user, "missing current user for post flow"
 
-  _assert_category: =>
+  load_category: =>
     return if @category
 
     assert_valid @params, {
@@ -27,11 +27,8 @@ class CategoriesFlow extends Flow
     @category = Categories\find @params.category_id
     assert_error @category, "invalid category"
 
-  load_category: =>
-    @_assert_category!
-
   show_members: =>
-    @_assert_category!
+    @load_category!
     assert_page @
 
     @pager = CategoryMembers\paginated [[
@@ -45,7 +42,7 @@ class CategoriesFlow extends Flow
     @members
 
   add_member: =>
-    @_assert_category!
+    @load_category!
     assert_error @category\allowed_to_edit_members(@current_user), "invalid category"
 
     assert_valid @params, {
@@ -57,7 +54,7 @@ class CategoriesFlow extends Flow
     true
 
   remove_member: =>
-    @_assert_category!
+    @load_category!
     assert_error @category\allowed_to_edit_members(@current_user), "invalid category"
 
     assert_valid @params, {
@@ -74,7 +71,7 @@ class CategoriesFlow extends Flow
     true
 
   accept_member: =>
-    @_assert_category!
+    @load_category!
 
     membership = CategoryMembers\find {
       category_id: @category.id
@@ -107,7 +104,7 @@ class CategoriesFlow extends Flow
     true
 
   edit_category: =>
-    @_assert_category!
+    @load_category!
     assert_error @category\allowed_to_edit(@current_user), "invalid category"
 
     assert_valid @params, {
