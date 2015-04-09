@@ -77,6 +77,23 @@ class extends lapis.Application
       redirect_to: @url_for("topic", topic_id: @topic.id)
   }
 
+  [edit_post: "/post/:post_id/edit"]: respond_to {
+    before: =>
+      @editing = true
+
+    GET: =>
+      render: true
+
+    POST: =>
+  }
+
+  [delete_post: "/post/:post_id/delete"]: respond_to {
+    GET: =>
+      render: true
+
+    POST: =>
+  }
+
   [category: "/category/:category_id"]: capture_errors_json =>
     BrowsingFlow = require "community.flows.browsing"
     @topics = BrowsingFlow(@)\category_topics!

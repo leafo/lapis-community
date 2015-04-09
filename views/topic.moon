@@ -16,6 +16,9 @@ class Topic extends require "widgets.base"
 
       if post\allowed_to_edit @current_user
         div ->
-          a href: "", "Edit"
+          a href: @url_for("edit_post", post_id: post.id), "Edit"
+          text " . "
+          a href: @url_for("delete_post", post_id: post.id), "Delete"
 
+      hr!
 
