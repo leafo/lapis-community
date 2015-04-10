@@ -75,22 +75,12 @@ describe "posting flow", ->
     current_user = factory.Users!
 
   describe "new topic", ->
-    new_topic = (get={}) ->
-      get.current_user_id or= current_user.id
-      status, res = mock_request PostingApp, "/new-topic", {
-        :get
-        expect: "json"
-      }
-
-      assert.same 200, status
-      res
-
     it "should not post anything when missing all data", ->
-      res = new_topic!
+      res = PostingApp\get current_user, "/new-topic", {}
       assert.truthy res.errors
 
     it "should fail with bad category", ->
-      res = new_topic {
+      res = PostingApp\get current_user, "/new-topic", {
         current_user_id: current_user.id
         category_id: 0
         "topic[title]": "hello"
@@ -99,7 +89,7 @@ describe "posting flow", ->
       assert.same { "invalid category" }, res.errors
 
     it "should fail with empty body", ->
-      res = new_topic {
+      res = PostingApp\get current_user, "/new-topic", {
         current_user_id: current_user.id
         category_id: factory.Categories!.id
         "topic[title]": "hello"
@@ -111,7 +101,7 @@ describe "posting flow", ->
     it "should post a new topic", ->
       category = factory.Categories!
 
-      res = new_topic {
+      res = PostingApp\get current_user, "/new-topic", {
         current_user_id: current_user.id
         category_id: category.id
         "topic[title]": "Hello world"
@@ -201,19 +191,9 @@ describe "posting flow", ->
 
 
   describe "vote post #votes", ->
-    vote_post = (get={}) ->
-      get.current_user_id or= current_user.id
-      status, res = mock_request PostingApp, "/vote-post", {
-        :get
-        expect: "json"
-      }
-
-      assert.same 200, status
-      res
-
     it "should vote on a post", ->
       post = factory.Posts!
-      res = vote_post {
+      res = PostingApp\get current_user, "/vote-post", {
         post_id: post.id
         direction: "up"
       }
@@ -234,14 +214,14 @@ describe "posting flow", ->
 
     it "should update a vote with no changes", ->
       post = factory.Posts!
-      res = vote_post {
+      res = PostingApp\get current_user, "/vote-post", {
         post_id: post.id
         direction: "up"
       }
 
       assert.same { success: true }, res
 
-      res = vote_post {
+      res = PostingApp\get current_user, "/vote-post", {
         post_id: post.id
         direction: "up"
       }
@@ -265,7 +245,7 @@ describe "posting flow", ->
     it "should update a vote", ->
       vote = factory.PostVotes user_id: current_user.id
 
-      res = vote_post {
+      res = PostingApp\get current_user, "/vote-post", {
         post_id: vote.post_id
         direction: "down"
       }
@@ -311,20 +291,10 @@ describe "posting flow", ->
       assert.same {errors: {"not allowed to edit"}}, res
 
   describe "edit post", ->
-    edit_post = (get={}) ->
-      get.current_user_id or= current_user.id
-      status, res = mock_request PostingApp, "/edit-post", {
-        :get
-        expect: "json"
-      }
-
-      assert.same 200, status
-      res
-
     it "should edit post", ->
       post = factory.Posts user_id: current_user.id
 
-      res = edit_post {
+      res = PostingApp\get current_user, "/edit-post", {
         post_id: post.id
         "post[body]": "the new body"
       }
@@ -336,7 +306,7 @@ describe "posting flow", ->
     it "should edit post and title", ->
       post = factory.Posts user_id: current_user.id
 
-      res = edit_post {
+      res = PostingApp\get current_user, "/edit-post", {
         post_id: post.id
         "post[body]": "the new body"
         "post[title]": "the new title"
@@ -360,7 +330,7 @@ describe "posting flow", ->
     it "should edit post with reason", ->
       post = factory.Posts user_id: current_user.id
 
-      res = edit_post {
+      res = PostingApp\get current_user, "/edit-post", {
         post_id: post.id
         "post[body]": "the newer body"
         "post[reason]": "changed something"
@@ -379,7 +349,7 @@ describe "posting flow", ->
       assert.same "changed something", edit.reason
 
     it "should not edit invalid post", ->
-      res = edit_post {
+      res = PostingApp\get current_user, "/edit-post", {
         post_id: 0
         "post[body]": "the new body"
         "post[title]": "the new title"
@@ -390,7 +360,7 @@ describe "posting flow", ->
     it "should not let stranger edit post", ->
       post = factory.Posts!
 
-      res = edit_post {
+      res = PostingApp\get current_user, "/edit-post", {
         post_id: post.id
         "post[body]": "the new body"
         "post[title]": "the new title"
@@ -407,7 +377,7 @@ describe "posting flow", ->
         category_id: topic.category_id
       }
 
-      res = edit_post {
+      res = PostingApp\get current_user, "/edit-post", {
         post_id: post.id
         "post[body]": "the new body"
         "post[title]": "the new title"
@@ -424,7 +394,7 @@ describe "posting flow", ->
       post1 = factory.Posts topic_id: topic.id
       post2 = factory.Posts topic_id: topic.id, user_id: current_user.id
 
-      res = edit_post {
+      res = PostingApp\get current_user, "/edit-post", {
         post_id: post2.id
         "post[body]": "the new body"
         "post[title]": "the new title"
