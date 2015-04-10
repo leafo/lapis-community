@@ -39,7 +39,6 @@ class CategoryModerators extends require "widgets.base"
               "Link"
 
           td ->
-            return unless mod.accepted
             form {
               action: @url_for "category_remove_moderator", category_id: @category.id, user_id: user.id
               method: "post"

@@ -186,7 +186,11 @@ class extends lapis.Application
 
     POST: =>
       @flow\moderators_flow!\remove_moderator!
-      redirect_to: @url_for "category", category_id: @category.id
+
+      if @category\allowed_to_moderate @current_user
+        { redirect_to: @url_for "category_moderators", category_id: @category.id }
+      else
+        { redirect_to: @url_for "category", category_id: @category.id }
   }
 
   [category_accept_moderator: "/category/:category_id/accept-moderator"]: capture_errors_json respond_to {
