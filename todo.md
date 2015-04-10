@@ -1,25 +1,28 @@
+# Core
+
 * last post on category
 * post nesting
 * banning: need to enforce
-* edit category flow
-
---
-
-* render posts preloaded
-* render topics preloaded, in order
-
---
-
-* check for missing indexes
-* remove schema.moon and turn into migration
-
---
-
-* make a basic site that demonstrates the functionality
 * view counters on topics,categories, (everywhere??)
 
+# Demo app
 
-Maybe:
+* pagination for posts
+* pagination for topics
+* reply to post (nested)
+* edit category
+* show edits
+* block user
+* ban user
+* report post
 
-* ?? post quick responses (helpful, funny, etc)
+# Checklist
+
+* check for missing indexes
+* check n+1 queries on browsers
+* remove schema.moon and turn into migration
+
+# Other
+
+* post quick responses (helpful, funny, etc)
 

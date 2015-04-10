@@ -19,7 +19,6 @@ class CategoryMembers extends require "widgets.base"
           td "Accept url"
           td "Remove"
 
-
       for member in *@members
         user = member\get_user!
         @dump member
