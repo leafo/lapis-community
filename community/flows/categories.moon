@@ -4,9 +4,10 @@ import Categories, Users, CategoryMembers from require "models"
 
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
-import assert_page from require "community.helpers.app"
-import filter_update from require "community.helpers.models"
 import trim_filter from require "lapis.util"
+
+import assert_page, require_login from require "community.helpers.app"
+import filter_update from require "community.helpers.models"
 
 limits = require "community.limits"
 
@@ -15,7 +16,6 @@ class CategoriesFlow extends Flow
 
   new: (req) =>
     super req
-    assert @current_user, "missing current user for post flow"
 
   moderators_flow: =>
     @load_category!
@@ -46,7 +46,7 @@ class CategoriesFlow extends Flow
     @members = @pager\get_page @page
     @members
 
-  add_member: =>
+  add_member: require_login =>
     @load_category!
     assert_error @category\allowed_to_edit_members(@current_user), "invalid category"
 
@@ -58,7 +58,7 @@ class CategoriesFlow extends Flow
     CategoryMembers\create category_id: @category.id, user_id: @user.id
     true
 
-  remove_member: =>
+  remove_member: require_login =>
     @load_category!
     assert_error @category\allowed_to_edit_members(@current_user), "invalid category"
 
@@ -75,7 +75,7 @@ class CategoriesFlow extends Flow
     membership\delete!
     true
 
-  accept_member: =>
+  accept_member: require_login =>
     @load_category!
 
     membership = CategoryMembers\find {
@@ -87,7 +87,7 @@ class CategoriesFlow extends Flow
     membership\update accepted: true
     true
 
-  new_category: =>
+  new_category: require_login =>
     assert_valid @params, {
       {"category", type: "table"}
     }
@@ -108,7 +108,7 @@ class CategoriesFlow extends Flow
 
     true
 
-  edit_category: =>
+  edit_category: require_login =>
     @load_category!
     assert_error @category\allowed_to_edit(@current_user), "invalid category"
 

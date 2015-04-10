@@ -29,7 +29,7 @@ class BrowsingFlow extends Flow
     @set_before_after!
 
     @topic = Topics\find @params.topic_id
-    assert_error @topic\allowed_to_view @current_user
+    assert_error @topic\allowed_to_view(@current_user), "not allowed to view"
 
     import OrderedPaginator from require "lapis.db.pagination"
     pager = OrderedPaginator Posts, "post_number", [[
@@ -54,7 +54,7 @@ class BrowsingFlow extends Flow
     @set_before_after!
 
     @category = Categories\find @params.category_id
-    assert_error @category\allowed_to_view @current_user
+    assert_error @category\allowed_to_view(@current_user), "not allowed to view"
 
     import OrderedPaginator from require "lapis.db.pagination"
     pager = OrderedPaginator Topics, {"last_post_at", "id"}, [[

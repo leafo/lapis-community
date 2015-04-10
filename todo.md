@@ -1,7 +1,6 @@
+* last post on category
 * post nesting
-
 * banning: need to enforce
-
 * edit category flow
 
 --
