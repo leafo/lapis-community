@@ -110,7 +110,14 @@ class extends lapis.Application
       render: true
 
     POST: =>
-
+      @flow\delete_post!
+      if @post\is_topic_post!
+        if @category = @topic\get_category!
+          { redirect_to: @url_for "category", category_id: @category.id }
+        else
+          { redirect_to: @url_for "index" }
+      else
+        { redirect_to: @url_for "topic", topic_id: @topic.id }
   }
 
   [category: "/category/:category_id"]: capture_errors_json =>

@@ -6,7 +6,15 @@ class Category extends require "widgets.base"
       li ->
         a href: @url_for("new_topic", category_id: @category.id), "New topic"
 
+
+
     h3 "Topics"
+
+    p ->
+      strong "Count"
+      text " "
+      text @category.topics_count
+
     element "table", border: "1", ->
       thead ->
         tr ->
