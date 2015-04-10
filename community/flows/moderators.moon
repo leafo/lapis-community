@@ -34,7 +34,7 @@ class ModeratorsFlow extends Flow
     assert_error @user, "invalid user"
 
     unless allow_self
-      assert_error not @current_user or @current_user.id != @user.id, "invalid user"
+      assert_error not @current_user or @current_user.id != @user.id, "you can't chose yourself"
 
     @moderator = @category\find_moderator @user
 
@@ -65,7 +65,9 @@ class ModeratorsFlow extends Flow
     @pager = CategoryModerators\paginated "
       where category_id = ?
       order by created_at desc
-    ", @category.id, per_page: 20
+    ", @category.id, per_page: 20, prepare_results: (moderators) ->
+      Users\include_in moderators, "user_id"
+      moderators
 
     @moderators = @pager\get_page @page
     @moderators
