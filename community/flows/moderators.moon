@@ -16,21 +16,12 @@ import
 class ModeratorsFlow extends Flow
   expose_assigns: true
 
-  new: (req) =>
+  new: (req, @category_flow) =>
     super req
+    assert @category, "missing category"
     assert @current_user, "missing current user for post flow"
 
-  _assert_category: =>
-    assert_valid @params, {
-      {"category_id", is_integer: true}
-    }
-
-    @category = Categories\find @params.category_id
-    assert_error @category, "invalid category"
-
-  _assert_category_and_user: (allow_self) =>
-    @_assert_category!
-
+  load_user: (allow_self) =>
     @user = assert_error Users\find(@params.user_id), "invalid user"
     @moderator = @category\find_moderator @user
 
@@ -40,7 +31,7 @@ class ModeratorsFlow extends Flow
     assert_error @category\allowed_to_edit_moderators(@current_user), "invalid category"
 
   add_moderator: =>
-    @_assert_category_and_user!
+    @load_user!
     assert_error not @moderator, "already moderator"
 
     CategoryModerators\create {
@@ -49,12 +40,11 @@ class ModeratorsFlow extends Flow
     }
 
   remove_moderator: =>
-    @_assert_category_and_user true
+    @load_user true
     assert_error @moderator, "not a moderator"
     @moderator\delete!
 
   show_moderators: =>
-    @_assert_category!
     assert_page @
 
     @pager = @category\get_moderators per_page: 20

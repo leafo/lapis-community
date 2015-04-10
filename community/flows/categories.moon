@@ -17,6 +17,11 @@ class CategoriesFlow extends Flow
     super req
     assert @current_user, "missing current user for post flow"
 
+  moderators_flow: =>
+    @load_category!
+    ModeratorsFlow = require "community.flows.moderators"
+    ModeratorsFlow @, @
+
   load_category: =>
     return if @category
 

@@ -14,11 +14,16 @@ import mock_request from require "lapis.spec.request"
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
 
+writer = (fn) ->
+  (...) =>
+    res = { fn @, ... }
+    @write unpack res if next res
+
 class ModeratorsApp extends Application
-  @before_filter =>
+  @before_filter writer capture_errors_json =>
     @current_user = Users\find assert @params.current_user_id, "missing current user id"
-    ModeratorsFlow = require "community.flows.moderators"
-    @flow = ModeratorsFlow @
+    CategoriesFlow = require "community.flows.categories"
+    @flow = CategoriesFlow(@)\moderators_flow!
 
   "/add-moderator": capture_errors_json =>
     @flow\add_moderator!
