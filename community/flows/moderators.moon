@@ -73,15 +73,7 @@ class ModeratorsFlow extends Flow
     @moderators
 
   accept_moderator_position: require_login =>
-    assert_valid @params, {
-      {"category_id", is_integer: true }
-    }
-
-    mod = CategoryModerators\find {
-      user_id: @current_user.id
-      category_id: @params.category_id
-    }
-
+    mod = @category\find_moderator @current_user
     assert_error mod and not mod.accepted, "invalid moderator"
     mod\update accepted: true
     true
