@@ -1,12 +1,18 @@
 class Category extends require "widgets.base"
   inner_content: =>
     h1 @category.name
+    if @user
+      p ->
+        text "Created by "
+        a href: @url_for("user", user_id: @user.id), @user\name_for_display!
 
     ul ->
       li ->
         a href: @url_for("new_topic", category_id: @category.id), "New topic"
-
-
+      li ->
+        a href: @url_for("category_moderators", category_id: @category.id), "Moderators"
+      li ->
+        a href: @url_for("category_members", category_id: @category.id), "Members"
 
     h3 "Topics"
 

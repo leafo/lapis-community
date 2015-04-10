@@ -45,4 +45,6 @@ class Base extends Widget
       for e in *@errors
         li e
 
+  dump: (thing) =>
+    pre require("moon").dump thing
 

@@ -123,6 +123,7 @@ class extends lapis.Application
   [category: "/category/:category_id"]: capture_errors_json =>
     BrowsingFlow = require "community.flows.browsing"
     @topics = BrowsingFlow(@)\category_topics!
+    @user = @category\get_user!
     render: true
 
   [topic: "/topic/:topic_id"]: capture_errors_json =>
@@ -139,6 +140,44 @@ class extends lapis.Application
     @user = Users\find @params.user_id
     @community_user = CommunityUsers\for_user @user
     render: true
+
+  [category_members: "/category/:category_id/members"]: capture_errors_json =>
+    render: true
+
+  [category_moderators: "/category/:category_id/moderators"]: capture_errors_json respond_to {
+    before: =>
+      CategoriesFlow = require "community.flows.categories"
+      @flow = CategoriesFlow @
+      @flow\load_category!
+
+      assert_error @category\allowed_to_edit_moderators(@current_user),
+        "invalid category"
+
+    GET: =>
+      @flow\moderators_flow!\show_moderators!
+      render: true
+
+    POST: =>
+      error "not yet"
+  }
+
+  [category_new_moderator: "/category/:category_id/new-moderator"]: capture_errors respond_to {
+    before: =>
+      CategoriesFlow = require "community.flows.categories"
+      @flow = CategoriesFlow(@)
+      @flow\load_category!
+
+      assert_error @category\allowed_to_edit_moderators(@current_user),
+        "invalid category"
+
+
+    GET: =>
+      render: true
+
+    POST: =>
+      @flow\moderators_flow!\add_moderator!
+      redirect_to: @url_for "category_moderators", category_id: @category.id
+  }
 
   [index: "/"]: =>
     import Categories from require "models"

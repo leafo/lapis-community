@@ -1,4 +1,6 @@
 
+import Categories from require "models"
+
 class Index extends require "widgets.base"
   inner_content: =>
     h1 "Index"
@@ -19,9 +21,26 @@ class Index extends require "widgets.base"
         li ->
           a href: @url_for("login"), "Login"
 
-    if next @categories
-      h2 "Categories"
-      ul ->
-        for cat in *@categories
-          a href: @url_for("category", category_id: cat.id), cat.name
+    h2 "Categories"
+    element "table", border: 1, ->
+      thead ->
+        tr ->
+          td "Category"
+          td "Type"
+          td "Topics count"
+          td "Creator"
+
+      for cat in *@categories
+        tr ->
+          td ->
+            a href: @url_for("category", category_id: cat.id), cat.name
+
+          td Categories.membership_types[cat.membership_type]
+          td cat.topics_count
+          td ->
+            if user = cat\get_user!
+              a href: @url_for("user", user_id: user.id), user\name_for_display!
+
+    unless next @categories
+      p -> em "There are no categories"
 
