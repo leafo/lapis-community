@@ -54,25 +54,15 @@ describe "moderators flow", ->
     current_user = factory.Users!
   
   describe "add_moderator", ->
-    add_moderator = (get) ->
-      get.current_user_id or= current_user.id
-      status, res = mock_request ModeratorsApp, "/add-moderator", {
-        :get
-        expect: "json"
-      }
-
-      assert.same 200, status
-      res
-
     it "should fail to do anything with missing params", ->
-      res = add_moderator { }
+      res = ModeratorsApp\get current_user, "/add-moderator", {}
       assert.truthy res.errors
 
     it "should let category owner add moderator", ->
       category = factory.Categories user_id: current_user.id
       other_user = factory.Users!
 
-      res = add_moderator {
+      res = ModeratorsApp\get current_user, "/add-moderator", {
         category_id: category.id
         user_id: other_user.id
       }
@@ -94,7 +84,7 @@ describe "moderators flow", ->
       }
 
       other_user = factory.Users!
-      res = add_moderator {
+      res = ModeratorsApp\get current_user, "/add-moderator", {
         category_id: category.id
         user_id: other_user.id
       }
@@ -114,7 +104,7 @@ describe "moderators flow", ->
       category = factory.Categories!
       other_user = factory.Users!
 
-      res = add_moderator {
+      res = ModeratorsApp\get current_user, "/add-moderator", {
         category_id: category.id
         user_id: other_user.id
       }
@@ -130,7 +120,7 @@ describe "moderators flow", ->
       }
 
       other_user = factory.Users!
-      res = add_moderator {
+      res = ModeratorsApp\get current_user, "/add-moderator", {
         category_id: category.id
         user_id: other_user.id
       }
@@ -204,19 +194,13 @@ describe "moderators flow", ->
       assert.truthy res.errors
 
   describe "accept_moderator_position", ->
-    accept_moderator = (get) ->
-      get.current_user_id or= current_user.id
-      status, res = mock_request ModeratorsApp, "/accept-mod", {
-        :get
-        expect: "json"
-      }
-
-      assert.same 200, status
-      res
-
     it "should do nothing for stranger", ->
       mod = factory.CategoryModerators accepted: false
-      res = accept_moderator category_id: mod.category_id
+
+      res = ModeratorsApp\get current_user, "/accept-mod", {
+        category_id: mod.category_id
+      }
+
       assert.truthy res.errors
 
       mod\refresh!
@@ -224,7 +208,10 @@ describe "moderators flow", ->
 
     it "should accept moderator position", ->
       mod = factory.CategoryModerators accepted: false, user_id: current_user.id
-      res = accept_moderator category_id: mod.category_id
+      res = ModeratorsApp\get current_user, "/accept-mod", {
+        category_id: mod.category_id
+      }
+
       assert.truthy res.success
       mod\refresh!
       assert.same true, mod.accepted
@@ -232,18 +219,16 @@ describe "moderators flow", ->
     it "should reject moderator position", ->
       mod = factory.CategoryModerators accepted: false, user_id: current_user.id
 
-      status, res = mock_request ModeratorsApp, "/remove-moderator", {
-        get: {
-          category_id: mod.category_id
-          user_id: mod.user_id
-          current_user_id: current_user.id
-        }
-        expect: "json"
+      res = ModeratorsApp\get current_user, "/remove-moderator", {
+        category_id: mod.category_id
+        user_id: mod.user_id
+        current_user_id: current_user.id
       }
 
-      assert.same 200, status
+      assert.truthy res.success
       assert.same {}, CategoryModerators\select!
 
+  -- TODO: this is model spec not flow spec
   describe "moderator permissions", ->
     local mod
     import
@@ -267,19 +252,12 @@ describe "moderators flow", ->
 
 
   describe "show moderators", ->
-    show_moderators = (get) ->
-      get.current_user_id or= current_user.id
-      status, res = mock_request ModeratorsApp, "/show-mods", {
-        :get
-        expect: "json"
-      }
-
-      assert.same 200, status
-      res
-
     it "should get moderators when there are none", ->
       category = factory.Categories!
-      res = show_moderators category_id: category.id
+      res = ModeratorsApp\get current_user, "/show-mods", {
+        category_id: category.id
+      }
+
       assert.same {success: true, moderators: {}}, res
 
     it "should get moderators when there are some", ->
@@ -289,7 +267,10 @@ describe "moderators flow", ->
       for i=1,2
         factory.CategoryModerators category_id: category.id
 
-      res = show_moderators category_id: category.id
+      res = ModeratorsApp\get current_user, "/show-mods", {
+        category_id: category.id
+      }
+
       assert.truthy res.success
       assert.same 2, #res.moderators
 
