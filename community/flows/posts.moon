@@ -84,7 +84,11 @@ class PostsFlow extends Flow
         post_id: @post.id
       }
 
-      @post\update body: post_update.body
+      @post\update {
+        body: post_update.body
+        edits_count: db.raw "edits_count + 1"
+        last_edited_at: db.format_date!
+      }
 
     if @post\is_topic_post!
       assert_valid post_update, {

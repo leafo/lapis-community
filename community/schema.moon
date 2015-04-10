@@ -86,6 +86,9 @@ make_schema = ->
     {"down_votes_count", integer}
     {"up_votes_count", integer}
 
+    {"edits_count", integer}
+    {"last_edited_at", time null: true}
+
     {"created_at", time}
     {"updated_at", time}
 

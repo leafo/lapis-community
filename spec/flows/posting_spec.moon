@@ -326,6 +326,8 @@ describe "posting flow", ->
       assert.same post.id, edit.post_id
       assert.same old_body, edit.body_before
 
+      assert.same 1, post.edits_count
+      assert.truthy post.last_edited_at
 
     it "should edit post with reason", ->
       post = factory.Posts user_id: current_user.id
@@ -348,7 +350,10 @@ describe "posting flow", ->
       assert.same old_body, edit.body_before
       assert.same "changed something", edit.reason
 
-    it "should not create post edit when editing with unchanged body #ddd", ->
+      assert.same 1, post.edits_count
+      assert.truthy post.last_edited_at
+
+    it "should not create post edit when editing with unchanged body", ->
       post = factory.Posts user_id: current_user.id
       res = PostingApp\get current_user, "/edit-post", {
         post_id: post.id
@@ -358,6 +363,10 @@ describe "posting flow", ->
 
       edit = unpack PostEdits\select!
       assert.falsy edit
+
+      post\refresh!
+      assert.same 0, post.edits_count
+      assert.falsy post.last_edited_at
 
     it "should not edit invalid post", ->
       res = PostingApp\get current_user, "/edit-post", {
