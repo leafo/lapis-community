@@ -348,6 +348,17 @@ describe "posting flow", ->
       assert.same old_body, edit.body_before
       assert.same "changed something", edit.reason
 
+    it "should not create post edit when editing with unchanged body #ddd", ->
+      post = factory.Posts user_id: current_user.id
+      res = PostingApp\get current_user, "/edit-post", {
+        post_id: post.id
+        "post[body]": post.body
+        "post[reason]": "this will be ingored"
+      }
+
+      edit = unpack PostEdits\select!
+      assert.falsy edit
+
     it "should not edit invalid post", ->
       res = PostingApp\get current_user, "/edit-post", {
         post_id: 0

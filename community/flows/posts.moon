@@ -75,14 +75,16 @@ class PostsFlow extends Flow
       {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
     }
 
-    PostEdits\create {
-      user_id: @current_user.id
-      body_before: @post.body
-      reason: post_update.reason
-      post_id: @post.id
-    }
+    -- only if the body is different
+    if @post.body != post_update.body
+      PostEdits\create {
+        user_id: @current_user.id
+        body_before: @post.body
+        reason: post_update.reason
+        post_id: @post.id
+      }
 
-    @post\update body: post_update.body
+      @post\update body: post_update.body
 
     if @post\is_topic_post!
       assert_valid post_update, {
