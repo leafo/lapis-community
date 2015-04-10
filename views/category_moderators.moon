@@ -6,8 +6,9 @@ class CategoryModerators extends require "widgets.base"
       text " moderators"
 
     ul ->
-      li ->
-        a href: @url_for("category_new_moderator", category_id: @category.id), "New moderator"
+      if @category\allowed_to_edit_moderators @current_user
+        li ->
+          a href: @url_for("category_new_moderator", category_id: @category.id), "New moderator"
 
     element "table", border: 1, ->
       thead ->
@@ -15,6 +16,7 @@ class CategoryModerators extends require "widgets.base"
           td "Moderator"
           td "Accepted"
           td "Admin"
+          td "Accept url"
 
       for mod in *@moderators
         user = mod\get_user!
@@ -30,6 +32,10 @@ class CategoryModerators extends require "widgets.base"
             if mod.admin
               raw "&#x2713;"
 
+          td ->
+            return if mod.accepted
+            a href: @url_for("category_accept_moderator", category_id: @category.id),
+              "Link"
 
     unless next @moderators
       p ->

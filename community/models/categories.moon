@@ -80,4 +80,3 @@ class Categories extends Model
       category_id: @id
       user_id: user.id
     }
-

@@ -150,8 +150,7 @@ class extends lapis.Application
       @flow = CategoriesFlow @
       @flow\load_category!
 
-      assert_error @category\allowed_to_edit_moderators(@current_user),
-        "invalid category"
+      assert_error @category\allowed_to_moderate(@current_user), "invalid category"
 
     GET: =>
       @flow\moderators_flow!\show_moderators!
@@ -176,6 +175,23 @@ class extends lapis.Application
 
     POST: =>
       @flow\moderators_flow!\add_moderator!
+      redirect_to: @url_for "category_moderators", category_id: @category.id
+  }
+
+
+  [category_accept_moderator: "/category/:category_id/accept-moderator"]: capture_errors_json respond_to {
+    before: =>
+      CategoriesFlow = require "community.flows.categories"
+      @flow = CategoriesFlow(@)
+      @flow\load_category!
+      @moderator = @category\find_moderator @current_user
+      assert_error @moderator and not @moderator.accepted, "invalid moderator"
+
+    GET: =>
+      render: true
+
+    POST: =>
+      @flow\moderators_flow!\accept_moderator_position!
       redirect_to: @url_for "category_moderators", category_id: @category.id
   }
 
