@@ -12,7 +12,7 @@ assert_page = =>
 require_login = (fn) ->
   import assert_error from require "lapis.application"
   =>
-    assert_error @current_user, "missing current user for post flow"
+    assert_error @current_user, "you must be logged in"
     fn @
 
 {:assert_page, :require_login}

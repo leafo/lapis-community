@@ -19,7 +19,9 @@ writer = (fn) ->
     res = { fn @, ... }
     @write unpack res if next res
 
-class ModeratorsApp extends Application
+import TestApp from require "spec.helpers"
+
+class ModeratorsApp extends TestApp
   @before_filter writer capture_errors_json =>
     @current_user = Users\find assert @params.current_user_id, "missing current user id"
     CategoriesFlow = require "community.flows.categories"
@@ -136,25 +138,15 @@ describe "moderators flow", ->
       assert.truthy res.errors
 
   describe "remove_moderator", ->
-    remove_moderator = (get) ->
-      get.current_user_id or= current_user.id
-      status, res = mock_request ModeratorsApp, "/remove-moderator", {
-        :get
-        expect: "json"
-      }
-
-      assert.same 200, status
-      res
-
     it "should fail to do anything with missing params", ->
-      res = remove_moderator { }
+      res = ModeratorsApp\get current_user, "/remove-moderator", {}
       assert.truthy res.errors
 
     it "should not let stranger remove moderator", ->
       category = factory.Categories!
       mod = factory.CategoryModerators category_id: category.id
 
-      res = remove_moderator {
+      res = ModeratorsApp\get current_user, "/remove-moderator", {
         category_id: mod.category_id
         user_id: mod.user_id
       }
@@ -165,7 +157,7 @@ describe "moderators flow", ->
       category = factory.Categories user_id: current_user.id
       mod = factory.CategoryModerators category_id: category.id
 
-      res = remove_moderator {
+      res = ModeratorsApp\get current_user, "/remove-moderator", {
         category_id: mod.category_id
         user_id: mod.user_id
       }
@@ -182,7 +174,7 @@ describe "moderators flow", ->
       }
 
       mod = factory.CategoryModerators category_id: category.id
-      res = remove_moderator {
+      res = ModeratorsApp\get current_user, "/remove-moderator", {
         category_id: mod.category_id
         user_id: mod.user_id
       }
@@ -192,7 +184,7 @@ describe "moderators flow", ->
     it "should let (non admin/owner) moderator remove self", ->
       mod = factory.CategoryModerators user_id: current_user.id
 
-      res = remove_moderator {
+      res = ModeratorsApp\get current_user, "/remove-moderator", {
         category_id: mod.category_id
         user_id: mod.user_id
       }
@@ -204,7 +196,7 @@ describe "moderators flow", ->
       factory.CategoryModerators user_id: current_user.id
       mod = factory.CategoryModerators!
 
-      res = remove_moderator {
+      res = ModeratorsApp\get current_user, "/remove-moderator", {
         category_id: mod.category_id
         user_id: mod.user_id
       }
