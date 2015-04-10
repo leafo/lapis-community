@@ -17,6 +17,7 @@ class CategoryModerators extends require "widgets.base"
           td "Accepted"
           td "Admin"
           td "Accept url"
+          td "Remove"
 
       for mod in *@moderators
         user = mod\get_user!
@@ -36,6 +37,15 @@ class CategoryModerators extends require "widgets.base"
             return if mod.accepted
             a href: @url_for("category_accept_moderator", category_id: @category.id),
               "Link"
+
+          td ->
+            return unless mod.accepted
+            form {
+              action: @url_for "category_remove_moderator", category_id: @category.id, user_id: user.id
+              method: "post"
+            }, ->
+              button "Remove"
+
 
     unless next @moderators
       p ->

@@ -178,6 +178,16 @@ class extends lapis.Application
       redirect_to: @url_for "category_moderators", category_id: @category.id
   }
 
+  [category_remove_moderator: "/category/:category_id/remove-moderator/:user_id"]: capture_errors_json respond_to {
+    before: =>
+      CategoriesFlow = require "community.flows.categories"
+      @flow = CategoriesFlow(@)
+      @flow\load_category!
+
+    POST: =>
+      @flow\moderators_flow!\remove_moderator!
+      redirect_to: @url_for "category", category_id: @category.id
+  }
 
   [category_accept_moderator: "/category/:category_id/accept-moderator"]: capture_errors_json respond_to {
     before: =>
