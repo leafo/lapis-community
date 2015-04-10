@@ -20,6 +20,8 @@ test:
 lint:
 	moonc -l community/
 	moonc -l spec/
+	# moonc -l views/
+	moonc -l app.moon
 
 count::
 	wc -l $$(git ls-files | grep 'scss$$\|moon$$\|coffee$$\|md$$\|conf$$') | sort -n | tail
