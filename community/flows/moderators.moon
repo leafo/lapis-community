@@ -50,7 +50,11 @@ class ModeratorsFlow extends Flow
 
   remove_moderator: require_login =>
     @load_user true
-    assert_error @category\allowed_to_edit_moderators(@current_user), "invalid category"
+
+    -- you can remove yourself
+    unless @moderator and @moderator.user_id == @current_user.id
+      assert_error @category\allowed_to_edit_moderators(@current_user), "invalid category"
+
     assert_error @moderator, "not a moderator"
 
     @moderator\delete!
