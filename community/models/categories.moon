@@ -80,3 +80,12 @@ class Categories extends Model
       category_id: @id
       user_id: user.id
     }
+
+  find_member: (user) =>
+    return nil unless user
+    import CategoryMembers from require "models"
+
+    CategoryMembers\find {
+      category_id: @id
+      user_id: user.id
+    }

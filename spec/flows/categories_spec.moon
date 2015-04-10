@@ -25,15 +25,15 @@ class CategoryApp extends TestApp
     json: { success: true }
 
   "/add-member": capture_errors_json =>
-    @flow\add_member!
+    @flow\members_flow!\add_member!
     json: { success: true }
 
   "/remove-member": capture_errors_json =>
-    @flow\remove_member!
+    @flow\members_flow!\remove_member!
     json: { success: true }
 
   "/accept-member": capture_errors_json =>
-    @flow\accept_member!
+    @flow\members_flow!\accept_member!
     json: { success: true }
 
 describe "categories", ->
@@ -134,5 +134,5 @@ describe "categories", ->
         category_id: category.id
       }
 
-      assert.same { errors: {"invalid membership"} }, res
+      assert.same { errors: {"no pending membership"} }, res
 
