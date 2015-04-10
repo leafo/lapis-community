@@ -35,8 +35,8 @@ Topics = (opts={}) ->
   assert models.Topics\create opts
 
 Posts = (opts={}) ->
-  opts.topic_id or= Topics!.id
   opts.user_id or= Users!.id
+  opts.topic_id or= Topics(user_id: opts.user_id).id
   opts.body or= "Post #{next_counter "post"} body"
 
   assert models.Posts\create opts

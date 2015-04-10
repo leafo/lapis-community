@@ -101,6 +101,12 @@ class PostsFlow extends Flow
     @load_post!
     assert_error @post\allowed_to_edit(@current_user), "not allowed to edit"
 
+    if @post\is_topic_post!
+      @topic = @post\get_topic!
+      TopicsFlow = require "community.flows.topics"
+      TopicsFlow(@)\delete_topic!
+      return true
+
     if @post\delete!
       topic = @post\get_topic!
       topic\decrement_participant @current_user

@@ -441,7 +441,12 @@ describe "posting flow", ->
       assert.same before_title, topic.title
 
     it "should delete post", ->
-      post = factory.Posts user_id: current_user.id
+      -- creates second post
+      post = factory.Posts {
+        user_id: current_user.id
+        topic_id: factory.Posts(user_id: current_user.id).topic_id
+      }
+
       topic = post\get_topic!
       topic\increment_participant current_user
 
@@ -457,6 +462,21 @@ describe "posting flow", ->
 
       tps = TopicParticipants\select "where topic_id = ?", topic.id
       assert.same 0, #tps
+
+
+    it "should delete primary post", ->
+      post = factory.Posts {
+        user_id: current_user.id
+      }
+
+      topic = post\get_topic!
+
+      res = PostingApp\get current_user, "/delete-post", {
+        post_id: post.id
+      }
+
+      topic\refresh!
+      assert.truthy topic.deleted
 
     it "should not delete unrelated post", ->
       other_user = factory.Users!
