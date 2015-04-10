@@ -66,10 +66,10 @@ class BrowsingFlow extends Flow
         topics
     }
 
-    topics, after_date, after_id = if @before
-      pager\before @before
-    else
+    topics, after_date, after_id = if @after
       pager\after @after
+    else
+      pager\before @before
 
     after_date = if after_date then (date(after_date) - date\epoch!)\spanseconds!
     topics, after_date, after_id
