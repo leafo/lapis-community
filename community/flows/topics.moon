@@ -23,7 +23,7 @@ class TopicsFlow extends Flow
     }
 
     @topic = Topics\find @params.topic_id
-    assert_error @topic, "invalid category"
+    assert_error @topic, "invalid topic"
 
   set_tags: require_login =>
     @load_topic!

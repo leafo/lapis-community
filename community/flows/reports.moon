@@ -12,7 +12,7 @@ import PostReports from require "models"
 class ReportsFlow extends Flow
   new: (req) =>
     super req
-    assert @current_user, "missing current user for post flow"
+    assert @current_user, "missing current user for reports flow"
 
   new_report: =>
     assert_valid @params, {

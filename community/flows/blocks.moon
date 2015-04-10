@@ -11,7 +11,7 @@ class BlocksFlow extends Flow
 
   new: (req) =>
     super req
-    assert @current_user, "missing current user for post flow"
+    assert @current_user, "missing current user for blocks flow"
 
   _assert_blocked: =>
     assert_valid @params, {

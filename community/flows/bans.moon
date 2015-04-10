@@ -11,7 +11,7 @@ class BansFlow extends Flow
 
   new: (req) =>
     super req
-    assert @current_user, "missing current user for post flow"
+    assert @current_user, "missing current user for bans flow"
 
   _do_ban: (object) =>
     Bans\create {
