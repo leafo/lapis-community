@@ -36,7 +36,7 @@ class MembersFlow extends Flow
     @pager = CategoryMembers\paginated [[
       where category_id = ?
       order by created_at desc
-    ]], per_page: 20, prepare_results: (members) =>
+    ]], @category.id, per_page: 20, prepare_results: (members) ->
       Users\include_in members, "user_id"
       members
 
