@@ -22,14 +22,11 @@ class BrowsingFlow extends Flow
     @after = tonumber @params.after
 
   topic_posts: =>
-    assert_valid @params, {
-      {"topic_id", is_integer: true }
-    }
+    TopicsFlow = require "community.flows.topics"
+    TopicsFlow(@)\load_topic!
+    assert_error @topic\allowed_to_view(@current_user), "not allowed to view"
 
     @set_before_after!
-
-    @topic = Topics\find @params.topic_id
-    assert_error @topic\allowed_to_view(@current_user), "not allowed to view"
 
     import OrderedPaginator from require "lapis.db.pagination"
     pager = OrderedPaginator Posts, "post_number", [[
@@ -47,14 +44,11 @@ class BrowsingFlow extends Flow
       pager\after @after
 
   category_topics: =>
-    assert_valid @params, {
-      {"category_id", is_integer: true }
-    }
+    CategoriesFlow = require "community.flows.categories"
+    CategoriesFlow(@)\load_category!
+    assert_error @category\allowed_to_view(@current_user), "not allowed to view"
 
     @set_before_after!
-
-    @category = Categories\find @params.category_id
-    assert_error @category\allowed_to_view(@current_user), "not allowed to view"
 
     import OrderedPaginator from require "lapis.db.pagination"
     pager = OrderedPaginator Topics, {"last_post_at", "id"}, [[
