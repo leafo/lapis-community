@@ -149,8 +149,49 @@ class extends lapis.Application
     @flow = CategoriesFlow @
     @flow\load_category!
     assert_error @category\allowed_to_edit_members(@current_user), "invalid category"
-
+    @flow\members_flow!\show_members!
     render: true
+
+  [category_new_member: "/category/:category_id/new-member"]: capture_errors_json respond_to {
+    before: =>
+      CategoriesFlow = require "community.flows.categories"
+      @flow = CategoriesFlow @
+      @flow\load_category!
+      assert_error @category\allowed_to_edit_members(@current_user), "invalid category"
+
+    GET: =>
+      render: true
+
+    POST: capture_errors =>
+      @flow\members_flow!\add_member!
+      redirect_to: @url_for "category_members", category_id: @category.id
+  }
+
+  [category_remove_member: "/category/:category_id/remove-member/:user_id"]: capture_errors_json respond_to {
+    POST: =>
+      CategoriesFlow = require "community.flows.categories"
+      @flow = CategoriesFlow(@)
+      @flow\load_category!
+      @flow\members_flow!\remove_member!
+      redirect_to: @url_for "category_members", category_id: @category.id
+  }
+
+  [category_accept_member: "/category/:category_id/accept-member"]: capture_errors_json respond_to {
+    before: =>
+      CategoriesFlow = require "community.flows.categories"
+      @flow = CategoriesFlow @
+      @flow\load_category!
+
+      @member = @category\find_member @current_user
+      assert_error @member and not @member.accepted, "invalid member"
+
+    GET: =>
+      render: true
+
+    POST: =>
+      @flow\members_flow!\accept_member!
+      redirect_to: @url_for "category", category_id: @category.id
+  }
 
   [category_moderators: "/category/:category_id/moderators"]: capture_errors_json =>
     CategoriesFlow = require "community.flows.categories"
