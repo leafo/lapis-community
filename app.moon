@@ -40,7 +40,10 @@ class extends lapis.Application
         {"username", exists: true}
       }
 
-      assert_error Users\find(username: @params.username), "invalid user"
+      user = assert_error Users\find(username: @params.username), "invalid user"
+      @session.user_id = user.id
+
+      redirect_to: @url_for "index"
   }
 
   [new_category: "/new-category"]: respond_to {
@@ -142,23 +145,22 @@ class extends lapis.Application
     render: true
 
   [category_members: "/category/:category_id/members"]: capture_errors_json =>
+    CategoriesFlow = require "community.flows.categories"
+    @flow = CategoriesFlow @
+    @flow\load_category!
+    assert_error @category\allowed_to_edit_members(@current_user), "invalid category"
+
     render: true
 
-  [category_moderators: "/category/:category_id/moderators"]: capture_errors_json respond_to {
-    before: =>
-      CategoriesFlow = require "community.flows.categories"
-      @flow = CategoriesFlow @
-      @flow\load_category!
+  [category_moderators: "/category/:category_id/moderators"]: capture_errors_json =>
+    CategoriesFlow = require "community.flows.categories"
+    @flow = CategoriesFlow @
+    @flow\load_category!
 
-      assert_error @category\allowed_to_moderate(@current_user), "invalid category"
+    assert_error @category\allowed_to_moderate(@current_user), "invalid category"
 
-    GET: =>
-      @flow\moderators_flow!\show_moderators!
-      render: true
-
-    POST: =>
-      error "not yet"
-  }
+    @flow\moderators_flow!\show_moderators!
+    render: true
 
   [category_new_moderator: "/category/:category_id/new-moderator"]: capture_errors respond_to {
     before: =>
