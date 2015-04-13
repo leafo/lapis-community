@@ -7,6 +7,7 @@
 
 # Demo app
 
+* votes
 * pagination for posts
 * pagination for topics
 * reply to post (nested)
