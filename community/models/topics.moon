@@ -101,3 +101,11 @@ class Topics extends Model
     @tags = nil -- clear cache
     true
 
+  recount: =>
+    import Posts from require "models"
+    @update {
+      posts_count: db.raw "
+        (select count(*) from #{db.escape_identifier Posts\table_name!}
+          where topic_id = #{db.escape_identifier @@table_name!}.id)
+      "
+    }, timestamp: false

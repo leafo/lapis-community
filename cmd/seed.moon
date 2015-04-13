@@ -33,4 +33,7 @@ for i=1,10
     topic_id: topic.id
   }
 
+  topic\recount!
+
+cat1\recount!
 

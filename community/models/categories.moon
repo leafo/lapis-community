@@ -89,3 +89,12 @@ class Categories extends Model
       category_id: @id
       user_id: user.id
     }
+
+  recount: =>
+    import Topics from require "models"
+    @update {
+      topics_count: db.raw "
+        (select count(*) from #{db.escape_identifier Topics\table_name!}
+          where category_id = #{db.escape_identifier @@table_name!}.id)
+      "
+    }, timestamp: false
