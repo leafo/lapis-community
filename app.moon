@@ -123,6 +123,16 @@ class extends lapis.Application
         { redirect_to: @url_for "topic", topic_id: @topic.id }
   }
 
+  [vote_post: "/post/:post_id/vote"]: capture_errors_json respond_to {
+    POST: =>
+      PostsFlow = require "community.flows.posts"
+      flow = PostsFlow @
+      flow\vote_post!
+      topic = @post\get_topic!
+      redirect_to: @url_for "topic", topic_id: topic.id
+  }
+
+
   [category: "/category/:category_id"]: capture_errors_json =>
     BrowsingFlow = require "community.flows.browsing"
     @topics = BrowsingFlow(@)\category_topics!

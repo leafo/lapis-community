@@ -23,5 +23,12 @@ class Topic extends require "widgets.base"
           text " . "
           a href: @url_for("delete_post", post_id: post.id), "Delete"
 
+      if @current_user
+        div ->
+          form action: @url_for("vote_post", post_id: post.id), method: "post", ->
+            button value: "up", name: "direction", "Upvote"
+            text " . "
+            button value: "down", name: "direction", "Downvote"
+
       hr!
 
