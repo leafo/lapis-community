@@ -39,8 +39,11 @@ class BrowsingFlow extends Flow
         if @current_user
           import PostVotes from require "models"
 
-          PostVotes\include_in posts, "post_id", where: {
-            user_id: @current_user.id
+          PostVotes\include_in posts, "post_id", {
+            flip: true
+            where: {
+              user_id: @current_user.id
+            }
           }
 
         posts

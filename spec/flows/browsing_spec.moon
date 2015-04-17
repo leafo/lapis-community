@@ -32,8 +32,6 @@ describe "browsing flow", ->
   before_each ->
     truncate_tables Users, Categories, Topics, Posts, PostVotes
 
-
-
   for logged_in in *{true, false}
     local current_user
 
