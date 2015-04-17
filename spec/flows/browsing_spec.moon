@@ -9,7 +9,9 @@ import mock_request from require "lapis.spec.request"
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
 
-class BrowsingApp extends Application
+import TestApp from require "spec.helpers"
+
+class BrowsingApp extends TestApp
   @before_filter =>
     @current_user = @params.current_user_id and assert Users\find @params.current_user_id
     Browsing = require "community.flows.browsing"
@@ -33,16 +35,8 @@ describe "browsing flow", ->
     current_user = factory.Users!
 
   describe "topic posts", ->
-    topic_posts = (get) ->
-      status, res = mock_request BrowsingApp, "/topic-posts", {
-        :get
-        expect: "json"
-      }
-      assert.same 200, status
-      res
-
     it "should error with no topic id", ->
-      res = topic_posts!
+      res = BrowsingApp\get nil, "/topic-posts"
       assert.truthy res.errors
       assert.same {"topic_id must be an integer"}, res.errors
 
@@ -51,7 +45,7 @@ describe "browsing flow", ->
       for i=1,3
         factory.Posts topic_id: topic.id
 
-      res = topic_posts topic_id: topic.id
+      res = BrowsingApp\get nil, "/topic-posts", topic_id: topic.id
       assert.truthy res.success
       assert.same 3, #res.posts
 
@@ -60,7 +54,7 @@ describe "browsing flow", ->
       for i=1,3
         factory.Posts topic_id: topic.id
 
-      res = topic_posts topic_id: topic.id, after: 1
+      res = BrowsingApp\get nil, "/topic-posts", topic_id: topic.id, after: 1
       assert.truthy res.success
       assert.same 2, #res.posts
 
@@ -69,26 +63,14 @@ describe "browsing flow", ->
       for i=1,3
         factory.Posts topic_id: topic.id
 
-      res = topic_posts topic_id: topic.id, before: 2
+      res = BrowsingApp\get nil, "/topic-posts", topic_id: topic.id, before: 2
       assert.truthy res.success
       assert.same 1, #res.posts
 
   describe "category topics", ->
-    category_topics = (get) ->
-      status, res = mock_request BrowsingApp, "/category-topics", {
-        :get
-        expect: "json"
-      }
-      assert.same 200, status
-      res
-
-
     it "should get empty category", ->
       category = factory.Categories!
-      res = category_topics {
-        category_id: category.id
-      }
-
+      res = BrowsingApp\get nil, "/category-topics", category_id: category.id
       assert.truthy res.success
       assert.same 0, #res.topics
 
@@ -98,9 +80,7 @@ describe "browsing flow", ->
       for i=1,4
         factory.Topics category_id: category.id
 
-      res = category_topics {
-        category_id: category.id
-      }
+      res = BrowsingApp\get nil, "/category-topics", category_id: category.id
 
       assert.truthy res.success
       assert.same 4, #res.topics
