@@ -132,10 +132,9 @@ class extends lapis.Application
       redirect_to: @url_for "topic", topic_id: topic.id
   }
 
-
   [category: "/category/:category_id"]: capture_errors_json =>
     BrowsingFlow = require "community.flows.browsing"
-    @topics = BrowsingFlow(@)\category_topics!
+    BrowsingFlow(@)\category_topics!
     @user = @category\get_user!
     render: true
 

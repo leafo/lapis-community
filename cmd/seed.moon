@@ -21,7 +21,7 @@ cat2 = factory.Categories {
   membership_type: "members_only"
 }
 
-for i=1,10
+for i=1,77
   topic = factory.Topics {
     category_id: cat1.id
     user_id: leafo.id

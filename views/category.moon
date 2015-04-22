@@ -53,3 +53,25 @@ class Category extends require "widgets.base"
           td topic.created_at
           td topic.last_post_at
 
+
+    p ->
+      cat_opts = {category_id: @category.id }
+
+      a {
+        href: @url_for "category", cat_opts, {
+          after_date: @after_date
+          after_id: @after_id
+        }
+        "Previous page"
+      }
+
+      text " "
+
+      a {
+        href: @url_for "category", cat_opts, {
+          before_date: @before_date
+          before_id: @before_id
+        }
+        "Next page"
+      }
+

@@ -7,10 +7,19 @@ import OrderedPaginator from require "lapis.db.pagination"
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 
+db = require "lapis.db"
+
 date = require "date"
 
 class BrowsingFlow extends Flow
   expose_assigns: true
+
+  _date_to_unix: (d) =>
+    (date(d) - date\epoch!)\spanseconds!
+
+  _date_from_unix: (d) =>
+    d = assert_error tonumber(d), "invalid date"
+    db.format_date d
 
   set_before_after: =>
     assert_valid @params, {
@@ -59,7 +68,16 @@ class BrowsingFlow extends Flow
     CategoriesFlow(@)\load_category!
     assert_error @category\allowed_to_view(@current_user), "not allowed to view"
 
-    @set_before_after!
+    local after_date, after_id
+    local before_date, before_id
+
+    if @params.after_date and @params.after_id
+      after_date = @_date_from_unix @params.after_date
+      after_id = assert_error tonumber(@params.after_id), "invalid id"
+
+    if @params.before_date and @params.before_date
+      before_date = @_date_from_unix @params.before_date
+      before_id = assert_error tonumber(@params.before_id), "invalid id"
 
     import OrderedPaginator from require "lapis.db.pagination"
     pager = OrderedPaginator Topics, {"last_post_at", "id"}, [[
@@ -71,11 +89,19 @@ class BrowsingFlow extends Flow
         topics
     }
 
-    topics, after_date, after_id = if @after
-      pager\after @after
+    @topics = if after_date
+      pager\after after_date, after_id
     else
-      pager\before @before
+      pager\before before_date, before_id
 
-    after_date = if after_date then (date(after_date) - date\epoch!)\spanseconds!
-    topics, after_date, after_id
+    if t = @topics[1]
+      @after_date = @_date_to_unix t.last_post_at
+      @after_id = t.id
+
+    if t = @topics[#@topics]
+      print "Before: #{@_date_to_unix t.last_post_at} vs. #{t.unix_last_post_at}"
+      @before_date = @_date_to_unix t.last_post_at
+      @before_id = t.id
+
+    @topics
 
