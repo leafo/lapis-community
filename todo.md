@@ -4,16 +4,15 @@
 * post nesting
 * banning: need to enforce
 * view counters on topics,categories, (everywhere??)
+* topic lock reason
 
 # Demo app
 
-* votes
 * pagination for posts
-* pagination for topics
 * reply to post (nested)
 * edit category
 * edit topic (lock, stick)
-* show edits
+* show edits (for mods only? category option?)
 * block user
 * ban user
 * report post

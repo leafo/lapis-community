@@ -5,30 +5,48 @@ class Topic extends require "widgets.base"
 
     h1 @topic.title
 
+    p ->
+      strong "Post count"
+      text " "
+      text @topic.posts_count
+
     ul ->
       a href: @url_for("new_post", topic_id: @topic.id), "Reply"
 
     for post in *@posts
       continue if post.deleted
+
       div ->
         strong post.user\name_for_display!
         text " "
         em post.created_at
+        em " (#{post.id})"
 
-      q post.body
+        if post.edits_count > 0
+          em " (#{post.edits_count} edits)"
+
+        em " (+#{post.up_votes_count})"
+        em " (-#{post.down_votes_count})"
+
+      p post.body
 
       if post\allowed_to_edit @current_user
-        div ->
+        p ->
           a href: @url_for("edit_post", post_id: post.id), "Edit"
-          text " . "
+          raw " &middot; "
           a href: @url_for("delete_post", post_id: post.id), "Delete"
 
       if @current_user
-        div ->
+        p ->
           form action: @url_for("vote_post", post_id: post.id), method: "post", ->
             button value: "up", name: "direction", "Upvote"
-            text " . "
+            raw " &middot; "
             button value: "down", name: "direction", "Downvote"
+
+            if vote = post.post_vote
+              text " You voted #{vote\name!}"
+              raw " &middot; "
+              button value: "remove", name: "action", "Remove"
 
       hr!
 
