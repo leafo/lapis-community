@@ -26,6 +26,7 @@ class Category extends require "widgets.base"
         tr ->
           td "L"
           td "S"
+          td "id"
           td "Title"
           td "Poster"
           td "Posts"
@@ -42,6 +43,8 @@ class Category extends require "widgets.base"
             if topic.sticky
               raw "&#x2713;"
 
+          td topic.id
+
           td ->
             a href: @url_for("topic", topic_id: topic.id), topic.title
 
@@ -57,21 +60,32 @@ class Category extends require "widgets.base"
     p ->
       cat_opts = {category_id: @category.id }
 
-      a {
-        href: @url_for "category", cat_opts, {
-          after_date: @after_date
-          after_id: @after_id
+      if @before_date
+        a {
+          href: @url_for "category", cat_opts, {
+            before_date: @before_date
+            before_id: @before_id
+          }
+          "Next page"
         }
-        "Previous page"
-      }
 
-      text " "
+        text " "
 
-      a {
-        href: @url_for "category", cat_opts, {
-          before_date: @before_date
-          before_id: @before_id
+      if @after_date
+        a {
+          href: @url_for "category", cat_opts
+          "First page"
         }
-        "Next page"
-      }
+
+        text " "
+
+        a {
+          href: @url_for "category", cat_opts, {
+            after_date: @after_date
+            after_id: @after_id
+          }
+          "Previous page"
+        }
+
+        text " "
 

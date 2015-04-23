@@ -12,6 +12,7 @@
 * pagination for topics
 * reply to post (nested)
 * edit category
+* edit topic (lock, stick)
 * show edits
 * block user
 * ban user

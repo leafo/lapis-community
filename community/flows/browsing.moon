@@ -11,6 +11,8 @@ db = require "lapis.db"
 
 date = require "date"
 
+PER_PAGE = 20
+
 class BrowsingFlow extends Flow
   expose_assigns: true
 
@@ -41,7 +43,7 @@ class BrowsingFlow extends Flow
     pager = OrderedPaginator Posts, "post_number", [[
       where topic_id = ?
     ]], @topic.id, {
-      per_page: 20
+      per_page: PER_PAGE
       prepare_results: (posts) ->
         Users\include_in posts, "user_id"
 
@@ -83,25 +85,32 @@ class BrowsingFlow extends Flow
     pager = OrderedPaginator Topics, {"last_post_at", "id"}, [[
       where category_id = ? and not deleted
     ]], @category.id, {
-      per_page: 20
+      per_page: PER_PAGE
       prepare_results: (topics) ->
         Users\include_in topics, "user_id"
         topics
     }
 
-    @topics = if after_date
-      pager\after after_date, after_id
+    if after_date
+      @topics = pager\after after_date, after_id
+      -- reverse it
+      @topics = [@topics[i] for i=#@topics,1,-1]
     else
-      pager\before before_date, before_id
+      @topics = pager\before before_date, before_id
 
     if t = @topics[1]
-      @after_date = @_date_to_unix t.last_post_at
-      @after_id = t.id
+      unless after_date and #@topics < PER_PAGE
+        @after_date = @_date_to_unix t.last_post_at
+        @after_id = t.id
+
+      if not after_date and not before_date
+        @after_date = nil
+        @after_id = nil
 
     if t = @topics[#@topics]
-      print "Before: #{@_date_to_unix t.last_post_at} vs. #{t.unix_last_post_at}"
-      @before_date = @_date_to_unix t.last_post_at
-      @before_id = t.id
+      unless before_date and #@topics < PER_PAGE
+        @before_date = @_date_to_unix t.last_post_at
+        @before_id = t.id
 
     @topics
 
