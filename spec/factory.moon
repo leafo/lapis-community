@@ -16,8 +16,17 @@ next_email = ->
 local *
 
 Users = (opts={}) ->
+  community_user = opts.community_user
+  opts.community_user = nil
   opts.username or= "user-#{next_counter "username"}"
-  assert models.Users\create opts
+
+  with user = assert models.Users\create opts
+    if community_user
+      CommunityUsers user_id: user.id
+
+CommunityUsers = (opts={}) ->
+  opts.user_id or= Users!.id
+  assert models.CommunityUsers\create opts
 
 Categories = (opts={}) ->
   opts.name or= "category-#{next_counter "category"}"

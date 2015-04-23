@@ -1,4 +1,5 @@
 
+
 factory = require "spec.factory"
 
 words = [word for word in io.open("/usr/share/dict/american-english")\lines!]
@@ -15,10 +16,10 @@ pick_one = (...) ->
 sentence = (num_words=5) ->
   table.concat [words[math.random 1, #words] for i=1,num_words], " "
 
-leafo = factory.Users username: "leafo"
-lee = factory.Users username: "lee"
-adam = factory.Users username: "adam"
-fart = factory.Users username: "fart"
+leafo = factory.Users username: "leafo", community_user: true
+lee = factory.Users username: "lee", community_user: true
+adam = factory.Users username: "adam", community_user: true
+fart = factory.Users username: "fart", community_user: true
 
 rand_user = -> pick_one leafo, lee, adam, fart
 
@@ -52,7 +53,8 @@ for i=1,77
       body: sentence math.random 8, 10
     }
 
-  topic\recount!
 
-cat1\recount!
-
+import Categories, Topics, CommunityUsers from require "community.models"
+Topics\recount!
+Categories\recount!
+CommunityUsers\recount!
