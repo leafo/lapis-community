@@ -241,7 +241,6 @@ describe "posting flow", ->
       cu = CommunityUsers\for_user(current_user)
       assert.same 1, cu.votes_count
 
-
     it "should update a vote", ->
       vote = factory.PostVotes user_id: current_user.id
 
@@ -263,6 +262,25 @@ describe "posting flow", ->
       -- still 0 because the factory didn't set initial value on counter
       cu = CommunityUsers\for_user(current_user)
       assert.same 0, cu.votes_count
+
+    it "should remove vote on post", ->
+      vote = factory.PostVotes user_id: current_user.id
+      post = vote\get_post!
+
+      res = PostingApp\get current_user, "/vote-post", {
+        post_id: vote.post_id
+        action: "remove"
+      }
+
+      assert.same 0, #PostVotes\select!
+
+      post\refresh!
+      assert.same 0, post.up_votes_count
+      assert.same 0, post.up_votes_count
+
+      cu = CommunityUsers\for_user current_user
+      -- number off because factory didn't sync count to use
+      assert.same -1, cu.votes_count
 
   describe "edit topic", ->
     local topic

@@ -119,14 +119,26 @@ class PostsFlow extends Flow
       true
 
   vote_post: require_login =>
+    import PostVotes from require "models"
+
     @load_post!
     assert_error @post\allowed_to_vote @current_user
+
+
+    if @params.action
+      assert_valid @params, {
+        {"action", one_of: {"remove"}}
+      }
+
+      switch @params.action
+        when "remove"
+          if PostVotes\unvote @post, @current_user
+            CommunityUsers\for_user(@current_user)\increment "votes_count", -1
 
     assert_valid @params, {
       {"direction", one_of: {"up", "down"}}
     }
 
-    import PostVotes from require "models"
     _, action = PostVotes\vote @post, @current_user, @params.direction == "up"
 
     if action == "insert"
