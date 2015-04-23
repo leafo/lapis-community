@@ -124,7 +124,6 @@ class PostsFlow extends Flow
     @load_post!
     assert_error @post\allowed_to_vote @current_user
 
-
     if @params.action
       assert_valid @params, {
         {"action", one_of: {"remove"}}
@@ -135,13 +134,14 @@ class PostsFlow extends Flow
           if PostVotes\unvote @post, @current_user
             CommunityUsers\for_user(@current_user)\increment "votes_count", -1
 
-    assert_valid @params, {
-      {"direction", one_of: {"up", "down"}}
-    }
+    else
+      assert_valid @params, {
+        {"direction", one_of: {"up", "down"}}
+      }
 
-    _, action = PostVotes\vote @post, @current_user, @params.direction == "up"
+      _, action = PostVotes\vote @post, @current_user, @params.direction == "up"
 
-    if action == "insert"
-      CommunityUsers\for_user(@current_user)\increment "votes_count"
+      if action == "insert"
+        CommunityUsers\for_user(@current_user)\increment "votes_count"
 
     true
