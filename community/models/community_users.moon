@@ -36,3 +36,28 @@ class CommunityUsers extends Model
       [field]: db.raw db.interpolate_query "#{db.escape_identifier field} + ?", amount
     }, timestamp: false
 
+
+  @recount: =>
+    import Topics, Posts, PostVotes from require "models"
+
+    id_field = "#{db.escape_identifier @table_name!}.user_id"
+
+    db.update @table_name!, {
+      posts_count: db.raw "
+        (select count(*) from #{db.escape_identifier Posts\table_name!}
+          where user_id = #{id_field}
+          and not deleted)
+      "
+
+      votes_count: db.raw "
+        (select count(*) from #{db.escape_identifier PostVotes\table_name!}
+          where user_id = #{id_field})
+      "
+
+      topics_count: db.raw "
+        (select count(*) from #{db.escape_identifier Topics\table_name!}
+          where user_id = #{id_field}
+          and not deleted)
+      "
+    }
+
