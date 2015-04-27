@@ -20,17 +20,19 @@ class PostVotes extends Model
 
     existing = @find user.id, post.id
 
-    vote, action = upsert @, {
+    params = {
       post_id: post.id
       user_id: user.id
       positive: not not positive
     }
 
+    action = upsert @, params
+
     -- decrement and increment if positive changed
     existing\decrement! if existing
-    vote\increment!
+    @load(params)\increment!
 
-    true, action
+    action
 
   unvote: (post, user) =>
     clause = {

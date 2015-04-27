@@ -17,7 +17,7 @@ class TopicParticipants extends Model
     upsert @, {
       :user_id, :topic_id
       posts_count: 1
-    }, nil, {
+    }, {
       posts_count: db.raw "posts_count + 1"
     }
 

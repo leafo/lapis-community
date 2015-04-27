@@ -139,8 +139,7 @@ class PostsFlow extends Flow
         {"direction", one_of: {"up", "down"}}
       }
 
-      _, action = PostVotes\vote @post, @current_user, @params.direction == "up"
-
+      action = PostVotes\vote @post, @current_user, @params.direction == "up"
       if action == "insert"
         CommunityUsers\for_user(@current_user)\increment "votes_count"
 
