@@ -21,6 +21,9 @@ class Topic extends require "widgets.base"
       continue if post.deleted
 
       div ->
+        u "##{post.post_number}"
+        text " "
+
         strong post.user\name_for_display!
         text " "
         em post.created_at
