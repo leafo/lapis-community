@@ -23,21 +23,20 @@ class BrowsingFlow extends Flow
     d = assert_error tonumber(d), "invalid date"
     db.format_date d
 
-  set_before_after: =>
+  get_before_after: =>
     assert_valid @params, {
       {"before", optional: true, is_integer: true}
       {"after", optional: true, is_integer: true}
     }
 
-    @before = tonumber @params.before
-    @after = tonumber @params.after
+    tonumber(@params.before), tonumber(@params.after)
 
   topic_posts: =>
     TopicsFlow = require "community.flows.topics"
     TopicsFlow(@)\load_topic!
     assert_error @topic\allowed_to_view(@current_user), "not allowed to view"
 
-    @set_before_after!
+    before, after = @get_before_after!
 
     import OrderedPaginator from require "lapis.db.pagination"
     pager = OrderedPaginator Posts, "post_number", [[
@@ -60,10 +59,17 @@ class BrowsingFlow extends Flow
         posts
     }
 
-    if @before
-      pager\before @before
+    if before
+      @posts = pager\before before
+      @posts = [@posts[i] for i=#@posts,1,-1]
     else
-      pager\after @after
+      @posts = pager\after after
+
+    @after = if p =@posts[#@posts]
+      p.post_number
+
+    @before = if p = @posts[1]
+      p.post_number
 
   category_topics: =>
     CategoriesFlow = require "community.flows.categories"

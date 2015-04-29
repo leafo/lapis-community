@@ -13,6 +13,10 @@ class Topic extends require "widgets.base"
     ul ->
       a href: @url_for("new_post", topic_id: @topic.id), "Reply"
 
+
+    @pagination!
+    hr!
+
     for post in *@posts
       continue if post.deleted
 
@@ -49,4 +53,28 @@ class Topic extends require "widgets.base"
               button value: "remove", name: "action", "Remove"
 
       hr!
+
+    @pagination!
+
+
+  pagination: =>
+    topic_opts = { topic_id: @topic.id }
+
+    if @after
+      a {
+        href: @url_for "topic", topic_opts, {
+          after: @after
+        }
+        "Next page"
+      }
+
+    text " "
+
+    if @before
+      a {
+        href: @url_for "topic", topic_opts, {
+          before: @before
+        }
+        "Previous page"
+      }
 

@@ -140,7 +140,7 @@ class extends lapis.Application
 
   [topic: "/topic/:topic_id"]: capture_errors_json =>
     BrowsingFlow = require "community.flows.browsing"
-    @posts = BrowsingFlow(@)\topic_posts!
+    BrowsingFlow(@)\topic_posts!
     render: true
 
   [user: "/user/:user_id"]: capture_errors_json =>
