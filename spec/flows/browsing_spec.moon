@@ -18,12 +18,22 @@ class BrowsingApp extends TestApp
     @flow = Browsing @
 
   "/topic-posts": capture_errors_json =>
-    posts = @flow\topic_posts!
-    json: { :posts, success: true }
+    @flow\topic_posts!
+    json: { posts: @posts, success: true }
 
   "/category-topics": capture_errors_json =>
-    topics, after_date, after_id = @flow\category_topics!
-    json: { :topics, success: true, next_page: {after_date, after_id} }
+    @flow\category_topics!
+    json: {
+      success: true
+      topics: @topics
+      next_page: {
+        after_date: @after_date
+        after_id: @after_id
+
+        before_date: @before_date
+        before_id: @before_id
+      }
+    }
 
 describe "browsing flow", ->
   use_test_env!
