@@ -60,6 +60,7 @@ make_schema = ->
     {"deleted", boolean}
 
     {"posts_count", integer}
+    {"root_posts_count", integer}
 
     {"created_at", time}
     {"updated_at", time}

@@ -151,6 +151,7 @@ describe "posting flow", ->
       assert.same "This is post body", post.body
 
       assert.same topic.posts_count, 1
+      assert.same topic.root_posts_count, 1
 
       cu = CommunityUsers\for_user(current_user)
       assert.same 0, cu.topics_count

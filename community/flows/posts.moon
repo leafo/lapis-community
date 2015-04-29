@@ -53,7 +53,12 @@ class PostsFlow extends Flow
       :parent_post
     }
 
-    @topic\update { posts_count: db.raw "posts_count + 1" }, timestamp: false
+    @topic\update {
+      posts_count: db.raw "posts_count + 1"
+      root_posts_count: if @post.depth == 1
+        db.raw "root_posts_count + 1"
+    }, timestamp: false
+
     CommunityUsers\for_user(@current_user)\increment "posts_count"
     @topic\increment_participant @current_user
 

@@ -104,6 +104,12 @@ class Topics extends Model
   @recount: =>
     import Posts from require "models"
     db.update @table_name!, {
+      root_posts_count: db.raw "
+        (select count(*) from #{db.escape_identifier Posts\table_name!}
+          where topic_id = #{db.escape_identifier @table_name!}.id
+          and depth = 0)
+      "
+
       posts_count: db.raw "
         (select count(*) from #{db.escape_identifier Posts\table_name!}
           where topic_id = #{db.escape_identifier @table_name!}.id)
