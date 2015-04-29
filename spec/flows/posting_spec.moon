@@ -116,6 +116,7 @@ describe "posting flow", ->
       assert.same category.id, topic.category_id
       assert.same current_user.id, topic.user_id
       assert.same "Hello world", topic.title
+      assert.same 1, topic.category_order
 
       assert.same current_user.id, post.user_id
       assert.same topic.id, post.topic_id

@@ -62,6 +62,8 @@ make_schema = ->
     {"posts_count", integer}
     {"root_posts_count", integer}
 
+    {"category_order", integer}
+
     {"created_at", time}
     {"updated_at", time}
     {"last_post_at", time}

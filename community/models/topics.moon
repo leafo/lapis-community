@@ -16,8 +16,18 @@ class Topics extends Model
       opts.slug or= slugify opts.title
 
     opts.last_post_at or= db.format_date!
+    opts.category_order = @update_category_order_sql opts.category_id
 
     Model.create @, opts
+
+  @update_category_order_sql: (category_id) =>
+    return nil unless category_id
+
+    db.raw db.interpolate_query "
+      (select coalesce(max(category_order), 0) + 1
+      from #{db.escape_identifier @table_name!}
+      where category_id = ?)
+    ", category_id
 
   allowed_to_post: (user) =>
     return false if @deleted
