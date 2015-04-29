@@ -107,7 +107,7 @@ class Topics extends Model
       root_posts_count: db.raw "
         (select count(*) from #{db.escape_identifier Posts\table_name!}
           where topic_id = #{db.escape_identifier @table_name!}.id
-          and depth = 0)
+          and depth = 1)
       "
 
       posts_count: db.raw "

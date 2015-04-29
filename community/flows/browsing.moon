@@ -68,8 +68,12 @@ class BrowsingFlow extends Flow
     @after = if p =@posts[#@posts]
       p.post_number
 
+    @after = nil if @after == @topic.root_posts_count
+
     @before = if p = @posts[1]
       p.post_number
+
+    @before = nil if @before == 1
 
   category_topics: =>
     CategoriesFlow = require "community.flows.categories"
