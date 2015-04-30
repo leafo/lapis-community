@@ -33,7 +33,7 @@ class BrowsingFlow extends Flow
 
     import OrderedPaginator from require "lapis.db.pagination"
     pager = OrderedPaginator Posts, "post_number", [[
-      where topic_id = ?
+      where topic_id = ? and depth = 1
     ]], @topic.id, {
       per_page: PER_PAGE
       prepare_results: (posts) ->

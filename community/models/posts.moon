@@ -55,6 +55,10 @@ class Posts extends Model
 
     false
 
+  allowed_to_reply: (user) =>
+    return false unless user
+    true
+
   delete: =>
     import soft_delete from require "community.helpers.models"
 

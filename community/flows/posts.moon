@@ -46,6 +46,9 @@ class PostsFlow extends Flow
       assert_error parent_post.topic_id == @topic.id,
         "topic id mismatch (#{parent_post.topic_id} != #{@topic.id})"
 
+      assert_error parent_post\allowed_to_reply(@current_user),
+        "can't reply to post"
+
     @post = Posts\create {
       user_id: @current_user.id
       topic_id: @topic.id

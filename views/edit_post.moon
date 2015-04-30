@@ -8,11 +8,17 @@ class EditPost extends require "widgets.base"
       if @editing
         text "Edit post"
       else
-        text "New post"
+        if @parent_post
+          text "Reply to post"
+        else
+          text "New post"
 
     @render_errors!
 
     form method: "post", ->
+      if @parent_post
+        input type: "hidden", name: "parent_post_id", value: @parent_post.id
+
       if @editing and @post\is_topic_post!
         div ->
           label ->
@@ -29,4 +35,17 @@ class EditPost extends require "widgets.base"
           text "Save"
         else
           text "Post"
+
+
+    if @parent_post
+      hr!
+      h3 "Replying to"
+      p @parent_post.body
+      user = @parent_post\get_user!
+
+      p ->
+        em @parent_post.created_at
+
+      p ->
+        a href: @url_for("user", user_id: user.id), user\name_for_display!
 

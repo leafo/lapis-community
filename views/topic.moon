@@ -29,6 +29,9 @@ class Topic extends require "widgets.base"
         em post.created_at
         em " (#{post.id})"
 
+        if post.parent_post_id
+          em " (parent: #{post.parent_post_id})"
+
         if post.edits_count > 0
           em " (#{post.edits_count} edits)"
 
@@ -45,6 +48,8 @@ class Topic extends require "widgets.base"
 
       if @current_user
         p ->
+          a href: @url_for("reply_post", post_id: post.id), "Reply"
+
           form action: @url_for("vote_post", post_id: post.id), method: "post", ->
             button value: "up", name: "direction", "Upvote"
             raw " &middot; "

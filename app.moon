@@ -80,7 +80,7 @@ class extends lapis.Application
       redirect_to: @url_for "topic", topic_id: @topic.id
   }
 
-  [edit_post: "/post/:post_id/edit"]: respond_to {
+  [edit_post: "/post/:post_id/edit"]: capture_errors_json respond_to {
     before: =>
       @editing = true
 
@@ -100,7 +100,7 @@ class extends lapis.Application
       redirect_to: @url_for "topic", topic_id: @topic.id
   }
 
-  [delete_post: "/post/:post_id/delete"]: respond_to {
+  [delete_post: "/post/:post_id/delete"]: capture_errors_json respond_to {
     before: =>
       PostsFlow = require "community.flows.posts"
       @flow = PostsFlow @
@@ -130,6 +130,26 @@ class extends lapis.Application
       flow\vote_post!
       topic = @post\get_topic!
       redirect_to: @url_for "topic", topic_id: topic.id
+  }
+
+  [reply_post: "/post/:post_id/reply"]: respond_to {
+    before: =>
+      PostsFlow = require "community.flows.posts"
+      @flow = PostsFlow @
+      @flow\load_post!
+      @topic = @post\get_topic!
+
+      @parent_post = @post
+      @post = nil
+
+      assert_error @parent_post\allowed_to_reply(@user), "invalid post"
+
+    GET: =>
+      render: true
+
+    POST: =>
+      @flow\new_post!
+      redirect_to: @url_for "topic", topic_id: @topic.id
   }
 
   [category: "/category/:category_id"]: capture_errors_json =>
