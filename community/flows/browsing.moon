@@ -94,7 +94,6 @@ class BrowsingFlow extends Flow
       @topics = pager\before before
 
     ranges = @category\get_order_ranges!
-    require("moon").p ranges
     min, max = ranges.regular.min, ranges.regular.max
 
     @after = if t = @topics[1]
