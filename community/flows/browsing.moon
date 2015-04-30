@@ -38,6 +38,8 @@ class BrowsingFlow extends Flow
       per_page: PER_PAGE
       prepare_results: (posts) ->
         Users\include_in posts, "user_id"
+        for p in *posts
+          p.topic = @topic
 
         if @current_user
           import PostVotes from require "models"
