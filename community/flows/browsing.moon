@@ -16,13 +16,6 @@ PER_PAGE = 20
 class BrowsingFlow extends Flow
   expose_assigns: true
 
-  _date_to_unix: (d) =>
-    (date(d) - date\epoch!)\spanseconds!
-
-  _date_from_unix: (d) =>
-    d = assert_error tonumber(d), "invalid date"
-    db.format_date d
-
   get_before_after: =>
     assert_valid @params, {
       {"before", optional: true, is_integer: true}
@@ -61,11 +54,12 @@ class BrowsingFlow extends Flow
 
     if before
       @posts = pager\before before
+      -- reverse it
       @posts = [@posts[i] for i=#@posts,1,-1]
     else
       @posts = pager\after after
 
-    @after = if p =@posts[#@posts]
+    @after = if p = @posts[#@posts]
       p.post_number
 
     @after = nil if @after == @topic.root_posts_count
@@ -80,20 +74,11 @@ class BrowsingFlow extends Flow
     CategoriesFlow(@)\load_category!
     assert_error @category\allowed_to_view(@current_user), "not allowed to view"
 
-    local after_date, after_id
-    local before_date, before_id
-
-    if @params.after_date and @params.after_id
-      after_date = @_date_from_unix @params.after_date
-      after_id = assert_error tonumber(@params.after_id), "invalid id"
-
-    if @params.before_date and @params.before_date
-      before_date = @_date_from_unix @params.before_date
-      before_id = assert_error tonumber(@params.before_id), "invalid id"
+    before, after = @get_before_after!
 
     import OrderedPaginator from require "lapis.db.pagination"
-    pager = OrderedPaginator Topics, {"last_post_at", "id"}, [[
-      where category_id = ? and not deleted
+    pager = OrderedPaginator Topics, "category_order", [[
+      where category_id = ? and not deleted and not sticky
     ]], @category.id, {
       per_page: PER_PAGE
       prepare_results: (topics) ->
@@ -101,26 +86,26 @@ class BrowsingFlow extends Flow
         topics
     }
 
-    if after_date
-      @topics = pager\after after_date, after_id
+    if after
+      @topics = pager\after after
       -- reverse it
       @topics = [@topics[i] for i=#@topics,1,-1]
     else
-      @topics = pager\before before_date, before_id
+      @topics = pager\before before
 
-    if t = @topics[1]
-      unless after_date and #@topics < PER_PAGE
-        @after_date = @_date_to_unix t.last_post_at
-        @after_id = t.id
+    ranges = @category\get_order_ranges!
+    require("moon").p ranges
+    min, max = ranges.regular.min, ranges.regular.max
 
-      if not after_date and not before_date
-        @after_date = nil
-        @after_id = nil
+    @after = if t = @topics[1]
+      t.category_order
 
-    if t = @topics[#@topics]
-      unless before_date and #@topics < PER_PAGE
-        @before_date = @_date_to_unix t.last_post_at
-        @before_id = t.id
+    @after = nil if max and @after >= max
+
+    @before = if t = @topics[#@topics]
+      t.category_order
+
+    @before = nil if min and @before <= min
 
     @topics
 

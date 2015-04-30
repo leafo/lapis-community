@@ -46,6 +46,8 @@ class Category extends require "widgets.base"
           td topic.id
 
           td ->
+            text "(#{topic.category_order}) "
+
             a href: @url_for("topic", topic_id: topic.id), topic.title
 
           td ->
@@ -60,18 +62,26 @@ class Category extends require "widgets.base"
     p ->
       cat_opts = {category_id: @category.id }
 
-      if @before_date
+      if @before
         a {
           href: @url_for "category", cat_opts, {
-            before_date: @before_date
-            before_id: @before_id
+            before: @before
           }
           "Next page"
         }
 
         text " "
 
-      if @after_date
+      if @after
+        a {
+          href: @url_for "category", cat_opts, {
+            after: @after
+          }
+          "Previous page"
+        }
+
+        text " "
+
         a {
           href: @url_for "category", cat_opts
           "First page"
@@ -79,13 +89,5 @@ class Category extends require "widgets.base"
 
         text " "
 
-        a {
-          href: @url_for "category", cat_opts, {
-            after_date: @after_date
-            after_id: @after_id
-          }
-          "Previous page"
-        }
 
-        text " "
 

@@ -71,7 +71,8 @@ make_schema = ->
     "PRIMARY KEY (id)"
   }
 
-  create_index T"topics", "category_id", "sticky", "last_post_at", "id", where: "not deleted"
+  create_index T"topics", "category_id", "sticky", "last_post_at", "id", where: "not deleted and category_id is not null"
+  create_index T"topics", "category_id", "sticky", "category_order", where: "not deleted and category_id is not null"
 
   create_table T"posts", {
     {"id", serial}

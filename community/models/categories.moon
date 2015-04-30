@@ -90,6 +90,28 @@ class Categories extends Model
       user_id: user.id
     }
 
+  get_order_ranges: =>
+    import Topics from require "models"
+
+    res = db.query "
+      select sticky, min(category_order), max(category_order)
+      from #{db.escape_identifier Topics\table_name!}
+      where category_id = ?
+      group by sticky
+    ", @id
+
+    ranges = {
+      sticky: {}
+      regular: {}
+    }
+
+    for {:sticky, :min, :max} in *res
+      r = ranges[sticky and "sticky" or "regular"]
+      r.min = min
+      r.max = max
+
+    ranges
+
   @recount: =>
     import Topics from require "models"
     db.update @table_name!, {
