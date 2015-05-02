@@ -35,7 +35,30 @@ cat2 = factory.Categories {
   membership_type: "members_only"
 }
 
-for i=1,77
+add_posts = (topic, parent_post) ->
+  base_count = if parent_post
+    5
+  else
+    22
+
+  num_posts = math.floor base_count * random_normal!
+
+  for i=1,num_posts
+    poster = rand_user!
+    post = factory.Posts {
+      user_id: poster.id
+      topic_id: topic.id
+      body: sentence math.random 8, 10
+      parent_post: parent_post
+    }
+
+    print
+    k = math.abs(random_normal! - 1)
+    if k > 0.1 * post.depth
+      print "RECURSE"
+      add_posts topic, post
+
+for i=1,4 -- 77
   topic_poster = rand_user!
   topic = factory.Topics {
     category_id: cat1.id
@@ -43,16 +66,7 @@ for i=1,77
     title: sentence math.random 2, 5
   }
 
-  posts = math.floor 22 * random_normal!
-
-  for i=1,posts
-    poster = rand_user!
-    factory.Posts {
-      user_id: poster.id
-      topic_id: topic.id
-      body: sentence math.random 8, 10
-    }
-
+  add_posts topic
 
 import Categories, Topics, CommunityUsers from require "community.models"
 Topics\recount!
