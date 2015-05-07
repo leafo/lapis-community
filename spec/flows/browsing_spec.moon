@@ -38,11 +38,10 @@ class BrowsingApp extends TestApp
 describe "browsing flow", ->
   use_test_env!
 
-
   before_each ->
     truncate_tables Users, Categories, Topics, Posts, PostVotes
 
-  for logged_in in *{true, false}
+  for logged_in in *{true, nil} -- false
     local current_user
 
     describe logged_in and "logged in" or "logged out", ->
@@ -81,6 +80,39 @@ describe "browsing flow", ->
           res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id, before: 2
           assert.truthy res.success
           assert.same 1, #res.posts
+
+        it "should get some nested posts", ->
+          topic = factory.Topics!
+
+          expected_nesting = {}
+
+          for i=1,3
+            p = factory.Posts topic_id: topic.id
+            node = {id: p.id, children: {} }
+            table.insert expected_nesting, node
+
+            for i = 1,2
+              pp = factory.Posts topic_id: topic.id, parent_post: p
+              inner_node = {id: pp.id, children: {}}
+              table.insert node.children, inner_node
+
+              ppp = factory.Posts topic_id: topic.id, parent_post: pp
+              table.insert inner_node.children, {
+                id: ppp.id, children: {}
+              }
+
+          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
+
+          assert.truthy res.posts
+          flatten = (list, accum={}) ->
+            return for p in *list
+              {
+                id: p.id
+                children: p.children and flatten(p.children) or {}
+              }
+
+          nesting = flatten res.posts
+          assert.same expected_nesting, nesting
 
       describe "category topics", ->
         it "should get empty category", ->

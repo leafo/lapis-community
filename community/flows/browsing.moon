@@ -13,6 +13,41 @@ date = require "date"
 
 PER_PAGE = 20
 
+class NestedOrderedPaginator extends OrderedPaginator
+  _select: (q, opts) =>
+    tname = db.escape_identifier @model\table_name!
+    parent_field = assert @opts.parent_field, "missing parent_field"
+    child_field = @opts.child_field or "children"
+
+    res = db.query "
+      with recursive nested as (
+        (select * from #{tname} #{q})
+        union
+        select pr.* from #{tname} pr, nested
+          where pr.#{db.escape_identifier parent_field} = nested.id
+      )
+      select * from nested
+    "
+
+    by_parent = {}
+
+    top_level = for r in *res
+      @model\load r
+
+      if pid = r[parent_field]
+        by_parent[pid] or= {}
+        table.insert by_parent[pid], r
+        continue
+
+      r
+
+    for r in *res
+      r[child_field] = by_parent[r.id]
+      if children = opts.sort and r[child_field]
+        opts.sort children
+
+    top_level
+
 class BrowsingFlow extends Flow
   expose_assigns: true
 
@@ -31,11 +66,16 @@ class BrowsingFlow extends Flow
 
     before, after = @get_before_after!
 
-    import OrderedPaginator from require "lapis.db.pagination"
-    pager = OrderedPaginator Posts, "post_number", [[
+    pager = NestedOrderedPaginator Posts, "post_number", [[
       where topic_id = ? and depth = 1
     ]], @topic.id, {
       per_page: PER_PAGE
+
+      parent_field: "parent_post_id"
+      sort: (list) ->
+        table.sort list, (a,b) ->
+          a.post_number < b.post_number
+
       prepare_results: (posts) ->
         Users\include_in posts, "user_id"
         for p in *posts
@@ -78,7 +118,6 @@ class BrowsingFlow extends Flow
 
     before, after = @get_before_after!
 
-    import OrderedPaginator from require "lapis.db.pagination"
     pager = OrderedPaginator Topics, "category_order", [[
       where category_id = ? and not deleted and not sticky
     ]], @category.id, {
