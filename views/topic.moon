@@ -18,28 +18,40 @@ class Topic extends require "widgets.base"
     hr!
 
     for post in *@posts
-      continue if post.deleted
+      @render_post post
 
-      div ->
-        u "##{post.post_number}"
-        text " "
+    @pagination!
 
-        strong post.user\name_for_display!
-        text " "
-        em post.created_at
-        em " (#{post.id})"
+  render_post: (post) =>
+    if post.deleted
+      div class: "post deleted", ->
+        em "This post has been deleted"
+      hr!
 
-        if post.parent_post_id
-          em " (parent: #{post.parent_post_id})"
+      return
 
-        if post.edits_count > 0
-          em " (#{post.edits_count} edits)"
+    div class: "post", ->
+      u "##{post.post_number}"
+      text " "
 
-        em " (+#{post.up_votes_count})"
-        em " (-#{post.down_votes_count})"
+      strong post.user\name_for_display!
+      text " "
+      em post.created_at
+      em " (#{post.id})"
 
-      p post.body
+      if post.parent_post_id
+        em " (parent: #{post.parent_post_id})"
 
+      if post.edits_count > 0
+        em " (#{post.edits_count} edits)"
+
+      em " (+#{post.up_votes_count})"
+      em " (-#{post.down_votes_count})"
+
+    p post.body
+
+    fieldset ->
+      legend "Post tools"
       if post\allowed_to_edit @current_user
         p ->
           a href: @url_for("edit_post", post_id: post.id), "Edit"
@@ -60,9 +72,12 @@ class Topic extends require "widgets.base"
               raw " &middot; "
               button value: "remove", name: "action", "Remove"
 
-      hr!
+    if post.children and post.children[1]
+      blockquote ->
+        for child in *post.children
+          @render_post child
 
-    @pagination!
+    hr!
 
 
   pagination: =>
