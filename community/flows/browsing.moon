@@ -92,9 +92,11 @@ class BrowsingFlow extends Flow
           p.topic = @topic
 
         if @current_user
+          posts_with_votes = [p for p in *posts when p.down_votes_count > 0 or p.up_votes_count > 0]
+
           import PostVotes from require "models"
 
-          PostVotes\include_in posts, "post_id", {
+          PostVotes\include_in posts_with_votes, "post_id", {
             flip: true
             where: {
               user_id: @current_user.id
