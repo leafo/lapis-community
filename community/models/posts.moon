@@ -27,10 +27,16 @@ class Posts extends Model
     else
       opts.depth = 1
 
+    number_cond = {
+      topic_id: opts.topic_id
+      depth: opts.depth
+      parent_post_id: opts.parent_post_id or db.NULL
+    }
+
     post_number = db.interpolate_query "
      (select count(*) from #{db.escape_identifier @table_name!}
-     where topic_id = ? and depth = ? and parent_post_id = ?) + 1
-    ", opts.topic_id, opts.depth, opts.parent_post_id or db.NULL
+       where #{db.encode_clause number_cond}) + 1
+    "
 
     opts.post_number = db.raw post_number
     Model.create @, opts
