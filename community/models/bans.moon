@@ -11,48 +11,19 @@ class Bans extends Model
   @relations: {
     {"banned_user", belongs_to: "Users"}
     {"banning_user", belongs_to: "Users"}
+
+    {"object", polymorphic_belongs_to: {
+      [1]: {"category", "Categories"}
+      [2]: {"topic", "Topics"}
+    }}
   }
-
-  @object_types: enum {
-    category: 1
-    topic: 2
-  }
-
-  @object_type_name_for_object: (object) =>
-    models = require "community.models"
-
-    switch object.__class
-      when models.Categories
-        "category"
-      when models.Topics
-        "topic"
-      else
-        error "unknown object: #{object.__class.__name}"
-
-  @model_for_object_type: (t) =>
-    type_name = @object_types\to_name t
-    models = require "community.models"
-
-    switch type_name
-      when "category"
-        models.Categories
-      when "topic"
-        models.Topics
-      else
-        error "no model for type #{type_name}"
 
   @create: (opts) =>
     assert opts.object, "missing object"
 
     opts.object_id = opts.object.id
-    opts.object_type = @object_types\for_db @object_type_name_for_object opts.object
+    opts.object_type = @object_type_for_object opts.object
     opts.object = nil
 
     safe_insert @, opts
 
-  get_object: =>
-    unless @object
-      model = @@model_for_object_type @object_type
-      @object = model\find @object_id
-
-    @object
