@@ -10,6 +10,10 @@ describe "topics", ->
   before_each ->
     truncate_tables Users, Categories, CategoryModerators, Topics, Posts
 
+  it "should create a topic", ->
+    factory.Topics!
+    factory.Topics category: false
+
   it "should check permissions of topic with category", ->
     category_user = factory.Users!
     category = factory.Categories user_id: category_user.id
@@ -62,4 +66,20 @@ describe "topics", ->
     assert.falsy topic\allowed_to_edit other_user
     assert.falsy topic\allowed_to_moderate other_user
 
+
+  it "should set category order", ->
+    one = factory.Topics category_id: 123
+    two = factory.Topics category_id: 123
+    three = factory.Topics category_id: 123
+
+    assert.same 1, one.category_order
+    assert.same 2, two.category_order
+    assert.same 3, three.category_order
+
+    post = factory.Posts topic_id: one.id
+    one\increment_post post
+    assert.same 4, one.category_order
+
+    four = factory.Topics category_id: 123
+    assert.same 5, four.category_order
 

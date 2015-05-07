@@ -29,6 +29,21 @@ class Topics extends Model
       where category_id = ?)
     ", category_id
 
+  @recount: =>
+    import Posts from require "models"
+    db.update @table_name!, {
+      root_posts_count: db.raw "
+        (select count(*) from #{db.escape_identifier Posts\table_name!}
+          where topic_id = #{db.escape_identifier @table_name!}.id
+          and depth = 1)
+      "
+
+      posts_count: db.raw "
+        (select count(*) from #{db.escape_identifier Posts\table_name!}
+          where topic_id = #{db.escape_identifier @table_name!}.id)
+      "
+    }
+
   allowed_to_post: (user) =>
     return false if @deleted
     return false if @locked
@@ -65,6 +80,17 @@ class Topics extends Model
     return unless user
     import TopicParticipants from require "models"
     TopicParticipants\decrement @id, user.id
+
+  increment_post: (post) =>
+    assert post.topic_id == @id, "invalid post sent to topic"
+
+    @update {
+      posts_count: db.raw "posts_count + 1"
+      root_posts_count: if post.depth == 1
+        db.raw "root_posts_count + 1"
+      last_post_at: db.format_date!
+      category_order: Topics\update_category_order_sql @category_id
+    }, timestamp: false
 
   delete: =>
     import soft_delete from require "community.helpers.models"
@@ -111,17 +137,3 @@ class Topics extends Model
     @tags = nil -- clear cache
     true
 
-  @recount: =>
-    import Posts from require "models"
-    db.update @table_name!, {
-      root_posts_count: db.raw "
-        (select count(*) from #{db.escape_identifier Posts\table_name!}
-          where topic_id = #{db.escape_identifier @table_name!}.id
-          and depth = 1)
-      "
-
-      posts_count: db.raw "
-        (select count(*) from #{db.escape_identifier Posts\table_name!}
-          where topic_id = #{db.escape_identifier @table_name!}.id)
-      "
-    }

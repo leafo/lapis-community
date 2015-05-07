@@ -56,14 +56,7 @@ class PostsFlow extends Flow
       :parent_post
     }
 
-    @topic\update {
-      posts_count: db.raw "posts_count + 1"
-      root_posts_count: if @post.depth == 1
-        db.raw "root_posts_count + 1"
-      last_post_at: db.format_date!
-      category_order: Topics\update_category_order_sql @topic.category_id
-    }, timestamp: false
-
+    @topic\increment_post @post
     CommunityUsers\for_user(@current_user)\increment "posts_count"
     @topic\increment_participant @current_user
 
