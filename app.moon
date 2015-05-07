@@ -6,6 +6,8 @@ import respond_to, capture_errors, capture_errors_json,
 import assert_valid from require "lapis.validate"
 
 class extends lapis.Application
+  layout: require "views.layout"
+
   @before_filter =>
     if id = @session.user_id
       import Users from require "models"
