@@ -14,7 +14,31 @@ date = require "date"
 PER_PAGE = 20
 
 class NestedOrderedPaginator extends OrderedPaginator
-  _select: (q, opts) =>
+  prepare_results: (items) =>
+    items = super items
+
+    parent_field = @opts.parent_field
+    child_field = @opts.child_field or "children"
+
+    by_parent = {}
+
+    -- sort and nest
+    top_level = for item in *items
+      if pid = item[parent_field]
+        by_parent[pid] or= {}
+        table.insert by_parent[pid], item
+        continue
+
+      item
+
+    for item in *items
+      item[child_field] = by_parent[item.id]
+      if children = @opts.sort and item[child_field]
+        @opts.sort children
+
+    top_level
+
+  select: (q, opts) =>
     tname = db.escape_identifier @model\table_name!
     parent_field = assert @opts.parent_field, "missing parent_field"
     child_field = @opts.child_field or "children"
@@ -29,24 +53,10 @@ class NestedOrderedPaginator extends OrderedPaginator
       select * from nested
     "
 
-    by_parent = {}
-
-    top_level = for r in *res
+    for r in *res
       @model\load r
 
-      if pid = r[parent_field]
-        by_parent[pid] or= {}
-        table.insert by_parent[pid], r
-        continue
-
-      r
-
-    for r in *res
-      r[child_field] = by_parent[r.id]
-      if children = opts.sort and r[child_field]
-        opts.sort children
-
-    top_level
+    res
 
 class BrowsingFlow extends Flow
   expose_assigns: true
