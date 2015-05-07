@@ -34,7 +34,7 @@ class Posts extends Model
     }
 
     post_number = db.interpolate_query "
-     (select count(*) from #{db.escape_identifier @table_name!}
+     (select coalesce(max(post_number), 0) from #{db.escape_identifier @table_name!}
        where #{db.encode_clause number_cond}) + 1
     "
 
