@@ -55,7 +55,6 @@ add_posts = (topic, parent_post) ->
     print
     k = math.abs(random_normal! - 1)
     if k > 0.1 * post.depth
-      print "RECURSE"
       add_posts topic, post
 
 for i=1,4 -- 77

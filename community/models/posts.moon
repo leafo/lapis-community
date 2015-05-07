@@ -29,8 +29,8 @@ class Posts extends Model
 
     post_number = db.interpolate_query "
      (select count(*) from #{db.escape_identifier @table_name!}
-     where topic_id = ? and depth = ?) + 1
-    ", opts.topic_id, opts.depth
+     where topic_id = ? and depth = ? and parent_post_id = ?) + 1
+    ", opts.topic_id, opts.depth, opts.parent_post_id or db.NULL
 
     opts.post_number = db.raw post_number
     Model.create @, opts

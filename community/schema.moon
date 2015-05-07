@@ -99,7 +99,8 @@ make_schema = ->
     "PRIMARY KEY (id)"
   }
 
-  create_index T"posts", "topic_id", "depth", "post_number", unique: true
+  create_index T"posts", "topic_id", "parent_post_id", "depth", "post_number", unique: true
+  create_index T"posts", "parent_post_id", "post_number", unique: true
 
   create_table T"post_edits", {
     {"id", serial}
