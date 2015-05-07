@@ -14,11 +14,35 @@ describe "posts", ->
     post = factory.Posts!
 
   it "should create a series of posts in same topic", ->
-    post1 = factory.Posts topic_id: 1
-    post2 = factory.Posts topic_id: 1
-    post3 = factory.Posts topic_id: 1
-    post4 = factory.Posts topic_id: 1
-    post5 = factory.Posts topic_id: 1
+    posts = for i=1,5
+      factory.Posts topic_id: 1
 
-    assert.same 5, post5.post_number
+    assert.same [i for i=1,5], [p.post_number for p in *posts]
+
+  it "should create correct post numbers for nested posts", ->
+    root1 = factory.Posts topic_id: 1
+    assert.same 1, root1.post_number
+
+    root2 = factory.Posts topic_id: 1
+    assert.same 2, root2.post_number
+
+    child1 = factory.Posts topic_id: 1, parent_post: root1
+    child2 = factory.Posts topic_id: 1, parent_post: root1
+
+    assert.same 1, child1.post_number
+    assert.same 2, child2.post_number
+
+    other_child1 = factory.Posts topic_id: 1, parent_post: root2
+    other_child2 = factory.Posts topic_id: 1, parent_post: root2
+
+    assert.same 1, other_child1.post_number
+    assert.same 2, other_child2.post_number
+
+    root3 = factory.Posts topic_id: 1
+    assert.same 3, root3.post_number
+
+    current = root3
+    for i=1,3
+      current = factory.Posts topic_id: 1, parent_post: current
+      assert.same 1, current.post_number
 
