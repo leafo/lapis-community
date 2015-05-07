@@ -93,8 +93,8 @@ CategoryMembers = (opts={}) ->
   assert models.CategoryMembers\create opts
 
 Blocks = (opts={}) ->
-  opts.blocker_id or= Users!
-  opts.blocked_id or= Users!
+  opts.blocking_user_id or= Users!.id
+  opts.blocked_user_id or= Users!.id
   assert models.Blocks\create opts
 
 Bans = (opts={}) ->

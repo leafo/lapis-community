@@ -208,13 +208,13 @@ make_schema = ->
 
   -- user blocks user
   create_table T"blocks", {
-    {"blocker_id", foreign_key}
-    {"blocked_id", foreign_key}
+    {"blocking_user_id", foreign_key}
+    {"blocked_user_id", foreign_key}
 
     {"created_at", time}
     {"updated_at", time}
 
-    "PRIMARY KEY (blocker_id, blocked_id)"
+    "PRIMARY KEY (blocking_user_id, blocked_user_id)"
   }
 
   -- user blocked from thing

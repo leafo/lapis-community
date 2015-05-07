@@ -15,17 +15,17 @@ class BlocksFlow extends Flow
 
   _assert_blocked: =>
     assert_valid @params, {
-      {"blocked_id", is_integer: true}
+      {"blocked_user_id", is_integer: true}
     }
 
-    @blocked = assert_error Users\find(@params.blocked_id), "invalid user"
+    @blocked = assert_error Users\find(@params.blocked_user_id), "invalid user"
     assert_error @blocked.user_id != @current_user.id, "invalid user"
 
   block_user: =>
     @_assert_blocked!
     Blocks\create {
-      blocker_id: @current_user.id
-      blocked_id: @blocked.id
+      blocking_user_id: @current_user.id
+      blocked_user_id: @blocked.id
     }
 
     true
@@ -33,8 +33,8 @@ class BlocksFlow extends Flow
   unblock_user: =>
     @_assert_blocked!
     block = Blocks\find {
-      blocker_id: @current_user.id
-      blocked_id: @blocked.id
+      blocking_user_id: @current_user.id
+      blocked_user_id: @blocked.id
     }
 
     block and block\delete!
