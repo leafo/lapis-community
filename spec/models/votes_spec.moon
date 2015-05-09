@@ -15,10 +15,6 @@ describe "votes", ->
     truncate_tables Users, Topics, Posts
     current_user = factory.Users!
 
-  it "should create vote for topic", ->
-    topic = factory.Topics!
-    Votes\create object: topic, user_id: current_user.id, positive: true
-
   it "should create vote for post", ->
     post = factory.Posts!
     Votes\create object: post, user_id: current_user.id, positive: false

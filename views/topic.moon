@@ -59,7 +59,7 @@ class Topic extends require "widgets.base"
           p ->
             a href: @url_for("reply_post", post_id: post.id), "Reply"
 
-            form action: @url_for("vote_post", post_id: post.id), method: "post", ->
+            form action: @url_for("vote_object", object_type: "post", object_id: post.id), method: "post", ->
               button value: "up", name: "direction", "Upvote"
               raw " &middot; "
               button value: "down", name: "direction", "Downvote"

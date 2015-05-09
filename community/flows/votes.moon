@@ -41,7 +41,7 @@ class VotesFlow extends Flow
         {"direction", one_of: {"up", "down"}}
       }
 
-      action = Votes\vote @object, @current_user, @params.direction == "up"
+      action, @vote = Votes\vote @object, @current_user, @params.direction == "up"
       if action == "insert"
         CommunityUsers\for_user(@current_user)\increment "votes_count"
 
