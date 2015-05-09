@@ -10,7 +10,6 @@ class Votes extends Model
 
     {"object", polymorphic_belongs_to: {
       [1]: {"post", "Posts"}
-      [2]: {"topic", "Topics"}
     }}
   }
 

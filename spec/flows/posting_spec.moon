@@ -16,8 +16,6 @@ import
 
 factory = require "spec.factory"
 
-import mock_request from require "lapis.spec.request"
-
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
 
@@ -58,11 +56,6 @@ class PostingApp extends TestApp
   "/delete-post": capture_errors_json =>
     res = PostsFlow(@)\delete_post!
     json: { success: res }
-
-  "/vote-post": capture_errors_json =>
-    PostsFlow(@)\vote_post!
-    json: { success: true }
-
 
 describe "posting flow", ->
   use_test_env!
@@ -191,103 +184,6 @@ describe "posting flow", ->
 
       child_post = Posts\find child_post.id
       assert.same post.id, child_post.parent_post_id
-
-
-  describe "vote post #votes", ->
-    it "should vote on a post", ->
-      post = factory.Posts!
-      res = PostingApp\get current_user, "/vote-post", {
-        post_id: post.id
-        direction: "up"
-      }
-
-      assert.same { success: true }, res
-      vote = assert unpack Votes\select!
-      assert.same post.id, vote.object_id
-      assert.same Votes.object_types.post, vote.object_type
-
-      assert.same current_user.id, vote.user_id
-      assert.same true, vote.positive
-
-      post\refresh!
-
-      assert.same 1, post.up_votes_count
-      assert.same 0, post.down_votes_count
-
-      cu = CommunityUsers\for_user(current_user)
-      assert.same 1, cu.votes_count
-
-    it "should update a vote with no changes", ->
-      post = factory.Posts!
-      res = PostingApp\get current_user, "/vote-post", {
-        post_id: post.id
-        direction: "up"
-      }
-
-      assert.same { success: true }, res
-
-      res = PostingApp\get current_user, "/vote-post", {
-        post_id: post.id
-        direction: "up"
-      }
-
-      assert.same { success: true }, res
-
-      vote = assert unpack Votes\select!
-      assert.same post.id, vote.object_id
-      assert.same Votes.object_types.post, vote.object_type
-
-      assert.same current_user.id, vote.user_id
-      assert.same true, vote.positive
-
-      post\refresh!
-
-      assert.same 1, post.up_votes_count
-      assert.same 0, post.down_votes_count
-
-      cu = CommunityUsers\for_user(current_user)
-      assert.same 1, cu.votes_count
-
-    it "should update a vote", ->
-      vote = factory.Votes user_id: current_user.id
-
-      res = PostingApp\get current_user, "/vote-post", {
-        post_id: vote.object_id
-        direction: "down"
-      }
-
-      votes = Votes\select!
-      assert.same 1, #votes
-      new_vote = unpack votes
-
-      assert.same false, new_vote.positive
-
-      post = Posts\find new_vote.object_id
-      assert.same 0, post.up_votes_count
-      assert.same 1, post.down_votes_count
-
-      -- still 0 because the factory didn't set initial value on counter
-      cu = CommunityUsers\for_user(current_user)
-      assert.same 0, cu.votes_count
-
-    it "should remove vote on post", ->
-      post = factory.Posts!
-      _, vote = Votes\vote post, current_user
-
-      res = PostingApp\get current_user, "/vote-post", {
-        post_id: vote.object_id
-        action: "remove"
-      }
-
-      assert.same 0, #Votes\select!
-
-      post\refresh!
-      assert.same 0, post.up_votes_count
-      assert.same 0, post.up_votes_count
-
-      cu = CommunityUsers\for_user current_user
-      -- number off because factory didn't sync count to use
-      assert.same -1, cu.votes_count
 
   describe "edit topic", ->
     local topic

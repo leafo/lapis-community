@@ -21,7 +21,7 @@ class PostsFlow extends Flow
     }
 
     @post = Posts\find @params.post_id
-    assert_error @post, "invalid category"
+    assert_error @post, "invalid post"
 
   new_post: require_login =>
     TopicsFlow = require "community.flows.topics"
@@ -121,29 +121,3 @@ class PostsFlow extends Flow
       topic\decrement_participant @current_user
       true
 
-  vote_post: require_login =>
-    import Votes from require "community.models"
-
-    @load_post!
-    assert_error @post\allowed_to_vote @current_user
-
-    if @params.action
-      assert_valid @params, {
-        {"action", one_of: {"remove"}}
-      }
-
-      switch @params.action
-        when "remove"
-          if Votes\unvote @post, @current_user
-            CommunityUsers\for_user(@current_user)\increment "votes_count", -1
-
-    else
-      assert_valid @params, {
-        {"direction", one_of: {"up", "down"}}
-      }
-
-      action = Votes\vote @post, @current_user, @params.direction == "up"
-      if action == "insert"
-        CommunityUsers\for_user(@current_user)\increment "votes_count"
-
-    true
