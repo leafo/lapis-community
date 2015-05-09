@@ -25,6 +25,17 @@ class TopicsFlow extends Flow
     @topic = Topics\find @params.topic_id
     assert_error @topic, "invalid topic"
 
+  write_moderation_log: (action, reason) =>
+    @load_topic!
+
+    import ModerationLogs from require "community.models"
+    ModerationLogs\create {
+      user_id: @current_user.id
+      object: @topic
+      :action
+      :reason
+    }
+
   set_tags: require_login =>
     @load_topic!
     assert_error @topic\allowed_to_moderate(@current_user), "invalid user"
@@ -71,4 +82,30 @@ class TopicsFlow extends Flow
     @load_topic!
     assert_error @topic\allowed_to_edit(@current_user), "not allowed to edit"
     @topic\delete!
+
+
+  lock_topic: require_login =>
+    @load_topic!
+    assert_error @topic\allowed_to_moderate(@current_user), "not allowed to moderate"
+
+    trim_filter @params
+    assert_valid @params, {
+      {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
+    }
+
+    assert_error not @topic.locked, "topic is already locked"
+
+    @topic\update locked: true
+    @write_moderation_log "topic.lock", @params.reason
+    true
+
+  unlock_topic: =>
+    @load_topic!
+
+    assert_error @topic\allowed_to_moderate(@current_user), "not allowed to moderate"
+    assert_error @topic.locked, "topic is not locked"
+
+    @topic\update locked: false
+    @write_moderation_log "topic.unlock"
+    true
 

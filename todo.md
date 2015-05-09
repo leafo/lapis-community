@@ -3,7 +3,6 @@
 * last post on category
 * banning: need to enforce
 * topic lock reason
-* votes on topics
 
 ## v2
 
