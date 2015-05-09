@@ -239,4 +239,39 @@ import create_table, create_index, drop_table from schema
 
       "PRIMARY KEY (object_type, object_id, banned_user_id)"
     }
+
+    create_index T"bans", "banned_user_id"
+    create_index T"bans", "banning_user_id"
+
+    create_table T"moderation_logs", {
+      {"id", serial}
+
+      {"object_type", integer}
+      {"object_id", foreign_key}
+
+      {"user_id", foreign_key}
+      {"action", varchar}
+      {"reason", text null: true}
+
+      {"created_at", time}
+      {"updated_at", time}
+
+      "PRIMARY KEY (id)"
+    }
+
+    create_index T"moderation_logs", "user_id"
+    create_index T"moderation_logs", "object_type", "object_id", "action", "id"
+
+    create_table T"moderation_log_objects", {
+      {"moderation_log_id", foreign_key}
+      {"object_type", integer}
+      {"object_id", foreign_key}
+
+      {"created_at", time}
+      {"updated_at", time}
+
+      "PRIMARY KEY (moderation_log_id, object_type, object_id)"
+    }
+
+
 }
