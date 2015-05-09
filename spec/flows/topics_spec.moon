@@ -91,3 +91,21 @@ describe "topic tags", ->
 
     assert.same 0, #ModerationLogObjects\select!
 
+
+  it "should not let random user lock topic", ->
+    res = TopicsApp\get factory.Users!, "/lock-topic", {
+      topic_id: topic.id
+    }
+
+    assert.truthy res.errors
+
+  it "should not let random user unlock topic", ->
+    topic\update locked: true
+    res = TopicsApp\get factory.Users!, "/unlock-topic", {
+      topic_id: topic.id
+    }
+
+    assert.truthy res.errors
+
+
+
