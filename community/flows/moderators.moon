@@ -7,11 +7,12 @@ import assert_valid from require "lapis.validate"
 import assert_error from require "lapis.application"
 import assert_page, require_login from require "community.helpers.app"
 
+import Users from require "models"
+
 import
-  Users
   Categories
   CategoryModerators
-  from require "models"
+  from require "community.models"
 
 class ModeratorsFlow extends Flow
   expose_assigns: true

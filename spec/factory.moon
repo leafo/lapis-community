@@ -1,4 +1,5 @@
-models = require "models"
+base_models = require "models"
+models = require "community.models"
 db = require "lapis.db"
 
 import Model from require "lapis.db.model"
@@ -20,7 +21,7 @@ Users = (opts={}) ->
   opts.community_user = nil
   opts.username or= "user-#{next_counter "username"}"
 
-  with user = assert models.Users\create opts
+  with user = assert base_models.Users\create opts
     if community_user
       CommunityUsers user_id: user.id
 

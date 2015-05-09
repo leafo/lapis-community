@@ -1,6 +1,8 @@
 import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
+import Users from require "models"
+
 import
   Categories
   CategoryModerators
@@ -10,8 +12,7 @@ import
   Posts
   TopicParticipants
   Topics
-  Users
-  from require "models"
+  from require "community.models"
 
 factory = require "spec.factory"
 

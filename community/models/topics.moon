@@ -30,7 +30,7 @@ class Topics extends Model
     ", category_id
 
   @recount: =>
-    import Posts from require "models"
+    import Posts from require "community.models"
     db.update @table_name!, {
       root_posts_count: db.raw "
         (select count(*) from #{db.escape_identifier Posts\table_name!}
@@ -67,18 +67,18 @@ class Topics extends Model
     return false unless user
     return false unless @category_id
 
-    import Categories from require "models"
+    import Categories from require "community.models"
 
     @get_category!\allowed_to_moderate user
 
   increment_participant: (user) =>
     return unless user
-    import TopicParticipants from require "models"
+    import TopicParticipants from require "community.models"
     TopicParticipants\increment @id, user.id
 
   decrement_participant: (user) =>
     return unless user
-    import TopicParticipants from require "models"
+    import TopicParticipants from require "community.models"
     TopicParticipants\decrement @id, user.id
 
   increment_post: (post) =>
@@ -97,7 +97,7 @@ class Topics extends Model
 
     if soft_delete @
       if @user_id
-        import CommunityUsers from require "models"
+        import CommunityUsers from require "community.models"
         CommunityUsers\for_user(@get_user!)\increment "topics_count", -1
       return true
 
@@ -105,13 +105,13 @@ class Topics extends Model
 
   get_tags: =>
     unless @tags
-      import TopicTags from require "models"
+      import TopicTags from require "community.models"
       @tags = TopicTags\select "where topic_id = ?", @id
 
     @tags
 
   set_tags: (tags_str) =>
-    import TopicTags from require "models"
+    import TopicTags from require "community.models"
 
     tags = TopicTags\parse tags_str
     old_tags = {tag.slug, true for tag in *@get_tags!}

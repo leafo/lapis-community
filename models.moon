@@ -1,2 +1,6 @@
 import autoload from require "lapis.util"
-autoload "models", "community.models"
+loader = autoload "models" -- , "community.models"
+
+setmetatable {}, __index: (name) =>
+  assert loader[name], "failed to find model: #{name}"
+

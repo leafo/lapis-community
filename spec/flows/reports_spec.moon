@@ -2,7 +2,8 @@ import use_test_env from require "lapis.spec"
 
 import truncate_tables from require "lapis.spec.db"
 
-import Users, Categories, Topics, Posts, PostReports from require "models"
+import Users from require "models"
+import Categories, Topics, Posts, PostReports from require "community.models"
 import TestApp from require "spec.helpers"
 
 factory = require "spec.factory"

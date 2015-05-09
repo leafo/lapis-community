@@ -9,7 +9,17 @@ prefix = "community_"
 singularize = (name)->
   name\match"^(.*)s$" or name
 
+external_models = {
+  Users: true
+}
+
 class CommunityModel extends Model
+  @get_relation_model: (name) =>
+    if external_models[name]
+      require("models")[name]
+    else
+      require("community.models")[name]
+
   @table_name: =>
     name = prefix .. underscore @__name
     @table_name = -> name

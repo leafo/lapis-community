@@ -1,7 +1,8 @@
 
 import Flow from require "lapis.flow"
 
-import Users, Blocks from require "models"
+import Users from require "models"
+import Blocks from require "community.models"
 
 import assert_error from require "lapis.application"
 import assert_valid from require "lapis.validate"

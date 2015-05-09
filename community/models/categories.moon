@@ -35,7 +35,7 @@ class Categories extends Model
       when "members_only"
         return false unless user
         return true if @allowed_to_moderate user
-        import CategoryMembers from require "models"
+        import CategoryMembers from require "community.models"
         membership = CategoryMembers\find {
           user_id: user.id
           category_id: @id
@@ -75,7 +75,7 @@ class Categories extends Model
   find_moderator: (user) =>
     return nil unless user
 
-    import CategoryModerators from require "models"
+    import CategoryModerators from require "community.models"
     CategoryModerators\find {
       category_id: @id
       user_id: user.id
@@ -83,7 +83,7 @@ class Categories extends Model
 
   find_member: (user) =>
     return nil unless user
-    import CategoryMembers from require "models"
+    import CategoryMembers from require "community.models"
 
     CategoryMembers\find {
       category_id: @id
@@ -91,7 +91,7 @@ class Categories extends Model
     }
 
   get_order_ranges: =>
-    import Topics from require "models"
+    import Topics from require "community.models"
 
     res = db.query "
       select sticky, min(category_order), max(category_order)
@@ -113,7 +113,7 @@ class Categories extends Model
     ranges
 
   @recount: =>
-    import Topics from require "models"
+    import Topics from require "community.models"
     db.update @table_name!, {
       topics_count: db.raw "
         (select count(*) from #{db.escape_identifier Topics\table_name!}

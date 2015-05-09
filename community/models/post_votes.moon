@@ -56,7 +56,7 @@ class PostVotes extends Model
     @positive and "positive" or "negative"
 
   increment: =>
-    import Posts from require "models"
+    import Posts from require "community.models"
     counter_name = @post_counter_name!
     db.update Posts\table_name!, {
       [counter_name]: db.raw "#{db.escape_identifier counter_name} + 1"
@@ -65,7 +65,7 @@ class PostVotes extends Model
     }
 
   decrement: =>
-    import Posts from require "models"
+    import Posts from require "community.models"
     counter_name = @post_counter_name!
     db.update Posts\table_name!, {
       [counter_name]: db.raw "#{db.escape_identifier counter_name} - 1"

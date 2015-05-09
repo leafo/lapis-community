@@ -4,7 +4,8 @@ import Flow from require "lapis.flow"
 import assert_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 
-import Bans, Users, Categories, Topics from require "models"
+import Users from require "models"
+import Bans, Categories, Topics from require "community.models"
 
 class BansFlow extends Flow
   expose_assigns: true

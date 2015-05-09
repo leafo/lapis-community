@@ -1,11 +1,12 @@
 import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
+import Users from require "models"
+
 import
   Categories
   CategoryModerators
-  Users
-  from require "models"
+  from require "community.models"
 
 factory = require "spec.factory"
 
@@ -234,7 +235,7 @@ describe "moderators flow", ->
     import
       Posts
       Topics
-      from require "models"
+      from require "community.models"
 
     before_each ->
       truncate_tables Posts, Topics

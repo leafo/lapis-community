@@ -6,7 +6,8 @@ import assert_valid from require "lapis.validate"
 import assert_error from require "lapis.application"
 import assert_page, require_login from require "community.helpers.app"
 
-import CategoryMembers, Users from require "models"
+import Users from require "models"
+import CategoryMembers from require "community.models"
 
 class MembersFlow extends Flow
   expose_assigns: true

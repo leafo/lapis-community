@@ -2,7 +2,7 @@
 db = require "lapis.db"
 
 import Flow from require "lapis.flow"
-import Topics, Posts, CommunityUsers from require "models"
+import Topics, Posts, CommunityUsers from require "community.models"
 
 import assert_error from require "lapis.application"
 import trim_filter from require "lapis.util"
@@ -28,7 +28,7 @@ class TopicsFlow extends Flow
   set_tags: require_login =>
     @load_topic!
     assert_error @topic\allowed_to_moderate(@current_user), "invalid user"
-    import TopicTags from require "models"
+    import TopicTags from require "community.models"
 
     @topic\set_tags @params.tags or ""
     true

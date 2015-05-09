@@ -1,7 +1,8 @@
 
 import Flow from require "lapis.flow"
 
-import Categories, Topics, Posts, Users from require "models"
+import Users from require "models"
+import Categories, Topics, Posts from require "community.models"
 import OrderedPaginator from require "lapis.db.pagination"
 
 import assert_error, yield_error from require "lapis.application"
@@ -94,7 +95,7 @@ class BrowsingFlow extends Flow
         if @current_user
           posts_with_votes = [p for p in *posts when p.down_votes_count > 0 or p.up_votes_count > 0]
 
-          import PostVotes from require "models"
+          import PostVotes from require "community.models"
 
           PostVotes\include_in posts_with_votes, "post_id", {
             flip: true

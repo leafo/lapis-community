@@ -7,7 +7,7 @@ import assert_valid from require "lapis.validate"
 
 import trim_filter from require "lapis.util"
 
-import PostReports from require "models"
+import PostReports from require "community.models"
 
 class ReportsFlow extends Flow
   new: (req) =>
@@ -20,7 +20,7 @@ class ReportsFlow extends Flow
       {"report", type: "table"}
     }
 
-    import Posts from require "models"
+    import Posts from require "community.models"
 
     @post = assert_error Posts\find(@params.post_id), "invalid post"
     @topic = @post\get_topic!

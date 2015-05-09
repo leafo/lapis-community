@@ -166,7 +166,8 @@ class extends lapis.Application
     render: true
 
   [user: "/user/:user_id"]: capture_errors_json =>
-    import Users, CommunityUsers from require "models"
+    import Users from require "models"
+    import CommunityUsers from require "community.models"
     assert_valid @params, {
       {"user_id", is_integer: true}
     }
@@ -284,7 +285,7 @@ class extends lapis.Application
   }
 
   [index: "/"]: =>
-    import Categories from require "models"
+    import Categories from require "community.models"
     @categories = Categories\select!
     render: true
 

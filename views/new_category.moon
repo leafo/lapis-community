@@ -1,4 +1,4 @@
-import Categories from require "models"
+import Categories from require "community.models"
 
 class NewCategory extends require "widgets.base"
   inner_content: =>

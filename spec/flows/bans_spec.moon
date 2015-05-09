@@ -1,6 +1,8 @@
 import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
-import Users, Bans, Categories from require "models"
+
+import Users from require "models"
+import Bans, Categories from require "community.models"
 
 import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"

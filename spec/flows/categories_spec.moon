@@ -8,7 +8,8 @@ import mock_request from require "lapis.spec.request"
 import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
 
-import Users, Categories, Posts, Topics, CategoryMembers, CategoryModerators from require "models"
+import Users from require "models"
+import Categories, Posts, Topics, CategoryMembers, CategoryModerators from require "community.models"
 
 class CategoryApp extends TestApp
   @before_filter =>

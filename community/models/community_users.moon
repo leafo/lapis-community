@@ -38,7 +38,7 @@ class CommunityUsers extends Model
 
 
   @recount: =>
-    import Topics, Posts, PostVotes from require "models"
+    import Topics, Posts, PostVotes from require "community.models"
 
     id_field = "#{db.escape_identifier @table_name!}.user_id"
 

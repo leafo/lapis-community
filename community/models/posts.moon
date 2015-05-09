@@ -69,7 +69,7 @@ class Posts extends Model
     import soft_delete from require "community.helpers.models"
 
     if soft_delete @
-      import CommunityUsers from require "models"
+      import CommunityUsers from require "community.models"
       CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
       return true
 
