@@ -4,6 +4,8 @@ schema = require "lapis.db.schema"
 import create_table, create_index, drop_table from schema
 
 make_schema = ->
+  require("community.schema").run_migrations!
+
   {
     :serial
     :varchar
