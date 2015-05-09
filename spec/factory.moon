@@ -51,15 +51,16 @@ Posts = (opts={}) ->
 
   assert models.Posts\create opts
 
-PostVotes = (opts={}) ->
+Votes = (opts={}) ->
   opts.positive = true if opts.positive == nil
 
   opts.user_id or= Users!.id
-  opts.post_id or= Posts({
-    [opts.positive and "up_votes_count" or "down_votes_count"]: 1
-  }).id
 
-  assert models.PostVotes\create opts
+  opts.object or= Posts {
+    [opts.positive and "up_votes_count" or "down_votes_count"]: 1
+  }
+
+  assert models.Votes\create opts
 
 CategoryModerators = (opts={}) ->
   opts.user_id or= Users!.id
@@ -106,5 +107,5 @@ Bans = (opts={}) ->
   assert models.Bans\create opts
 
 { :next_counter, :next_email,
-  :Users, :Categories, :Topics, :Posts, :PostVotes, :CategoryModerators,
+  :Users, :Categories, :Topics, :Posts, :Votes, :CategoryModerators,
   :PostReports, :CategoryMembers, :Blocks, :Bans }

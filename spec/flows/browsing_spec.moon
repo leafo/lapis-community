@@ -2,7 +2,7 @@ import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
 import Users from require "models"
-import Categories, Topics, Posts, PostVotes from require "community.models"
+import Categories, Topics, Posts, Votes from require "community.models"
 
 factory = require "spec.factory"
 
@@ -41,7 +41,7 @@ describe "browsing flow", ->
   use_test_env!
 
   before_each ->
-    truncate_tables Users, Categories, Topics, Posts, PostVotes
+    truncate_tables Users, Categories, Topics, Posts, Votes
 
   for logged_in in *{true, nil} -- false
     local current_user

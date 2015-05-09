@@ -8,7 +8,7 @@ import
   CategoryModerators
   CommunityUsers
   PostEdits
-  PostVotes
+  Votes
   Posts
   TopicParticipants
   Topics
@@ -70,7 +70,7 @@ describe "posting flow", ->
   local current_user
 
   before_each ->
-    truncate_tables Users, Categories, Topics, Posts, PostVotes,
+    truncate_tables Users, Categories, Topics, Posts, Votes,
       CategoryModerators, PostEdits, CommunityUsers, TopicParticipants
 
     current_user = factory.Users!
@@ -202,8 +202,10 @@ describe "posting flow", ->
       }
 
       assert.same { success: true }, res
-      vote = assert unpack PostVotes\select!
-      assert.same post.id, vote.post_id
+      vote = assert unpack Votes\select!
+      assert.same post.id, vote.object_id
+      assert.same Votes.object_types.post, vote.object_type
+
       assert.same current_user.id, vote.user_id
       assert.same true, vote.positive
 
@@ -231,8 +233,10 @@ describe "posting flow", ->
 
       assert.same { success: true }, res
 
-      vote = assert unpack PostVotes\select!
-      assert.same post.id, vote.post_id
+      vote = assert unpack Votes\select!
+      assert.same post.id, vote.object_id
+      assert.same Votes.object_types.post, vote.object_type
+
       assert.same current_user.id, vote.user_id
       assert.same true, vote.positive
 
@@ -245,20 +249,20 @@ describe "posting flow", ->
       assert.same 1, cu.votes_count
 
     it "should update a vote", ->
-      vote = factory.PostVotes user_id: current_user.id
+      vote = factory.Votes user_id: current_user.id
 
       res = PostingApp\get current_user, "/vote-post", {
-        post_id: vote.post_id
+        post_id: vote.object_id
         direction: "down"
       }
 
-      votes = PostVotes\select!
+      votes = Votes\select!
       assert.same 1, #votes
       new_vote = unpack votes
 
       assert.same false, new_vote.positive
 
-      post = Posts\find new_vote.post_id
+      post = Posts\find new_vote.object_id
       assert.same 0, post.up_votes_count
       assert.same 1, post.down_votes_count
 
@@ -267,15 +271,15 @@ describe "posting flow", ->
       assert.same 0, cu.votes_count
 
     it "should remove vote on post", ->
-      vote = factory.PostVotes user_id: current_user.id
-      post = vote\get_post!
+      post = factory.Posts!
+      _, vote = Votes\vote post, current_user
 
       res = PostingApp\get current_user, "/vote-post", {
-        post_id: vote.post_id
+        post_id: vote.object_id
         action: "remove"
       }
 
-      assert.same 0, #PostVotes\select!
+      assert.same 0, #Votes\select!
 
       post\refresh!
       assert.same 0, post.up_votes_count

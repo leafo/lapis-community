@@ -64,7 +64,7 @@ class Topic extends require "widgets.base"
               raw " &middot; "
               button value: "down", name: "direction", "Downvote"
 
-              if vote = post.post_vote
+              if vote = post.vote
                 text " You voted #{vote\name!}"
                 raw " &middot; "
                 button value: "remove", name: "action", "Remove"

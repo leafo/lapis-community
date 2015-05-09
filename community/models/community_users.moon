@@ -38,7 +38,7 @@ class CommunityUsers extends Model
 
 
   @recount: =>
-    import Topics, Posts, PostVotes from require "community.models"
+    import Topics, Posts, Votes from require "community.models"
 
     id_field = "#{db.escape_identifier @table_name!}.user_id"
 
@@ -50,7 +50,7 @@ class CommunityUsers extends Model
       "
 
       votes_count: db.raw "
-        (select count(*) from #{db.escape_identifier PostVotes\table_name!}
+        (select count(*) from #{db.escape_identifier Votes\table_name!}
           where user_id = #{id_field})
       "
 
