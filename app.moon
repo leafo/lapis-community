@@ -92,7 +92,7 @@ class extends lapis.Application
 
       @topic = @post\get_topic!
 
-      assert_error @post\allowed_to_edit(@user), "invalid post"
+      assert_error @post\allowed_to_edit(@current_user), "invalid post"
 
     GET: =>
       render: true
@@ -109,7 +109,7 @@ class extends lapis.Application
       @flow\load_post!
       @topic = @post\get_topic!
 
-      assert_error @post\allowed_to_edit(@user), "invalid post"
+      assert_error @post\allowed_to_edit(@current_user), "invalid post"
 
     GET: =>
       render: true

@@ -26,51 +26,48 @@ class Topic extends require "widgets.base"
     if post.deleted
       div class: "post deleted", ->
         em "This post has been deleted"
-      hr!
+    else
+      div class: "post", ->
+        u "##{post.post_number}"
+        text " "
 
-      return
+        strong post.user\name_for_display!
+        text " "
+        em post.created_at
+        em " (#{post.id})"
 
-    div class: "post", ->
-      u "##{post.post_number}"
-      text " "
+        if post.parent_post_id
+          em " (parent: #{post.parent_post_id})"
 
-      strong post.user\name_for_display!
-      text " "
-      em post.created_at
-      em " (#{post.id})"
+        if post.edits_count > 0
+          em " (#{post.edits_count} edits)"
 
-      if post.parent_post_id
-        em " (parent: #{post.parent_post_id})"
+        em " (+#{post.up_votes_count})"
+        em " (-#{post.down_votes_count})"
 
-      if post.edits_count > 0
-        em " (#{post.edits_count} edits)"
+      p post.body
 
-      em " (+#{post.up_votes_count})"
-      em " (-#{post.down_votes_count})"
-
-    p post.body
-
-    fieldset ->
-      legend "Post tools"
-      if post\allowed_to_edit @current_user
-        p ->
-          a href: @url_for("edit_post", post_id: post.id), "Edit"
-          raw " &middot; "
-          a href: @url_for("delete_post", post_id: post.id), "Delete"
-
-      if @current_user
-        p ->
-          a href: @url_for("reply_post", post_id: post.id), "Reply"
-
-          form action: @url_for("vote_post", post_id: post.id), method: "post", ->
-            button value: "up", name: "direction", "Upvote"
+      fieldset ->
+        legend "Post tools"
+        if post\allowed_to_edit @current_user
+          p ->
+            a href: @url_for("edit_post", post_id: post.id), "Edit"
             raw " &middot; "
-            button value: "down", name: "direction", "Downvote"
+            a href: @url_for("delete_post", post_id: post.id), "Delete"
 
-            if vote = post.post_vote
-              text " You voted #{vote\name!}"
+        if @current_user
+          p ->
+            a href: @url_for("reply_post", post_id: post.id), "Reply"
+
+            form action: @url_for("vote_post", post_id: post.id), method: "post", ->
+              button value: "up", name: "direction", "Upvote"
               raw " &middot; "
-              button value: "remove", name: "action", "Remove"
+              button value: "down", name: "direction", "Downvote"
+
+              if vote = post.post_vote
+                text " You voted #{vote\name!}"
+                raw " &middot; "
+                button value: "remove", name: "action", "Remove"
 
     if post.children and post.children[1]
       blockquote ->

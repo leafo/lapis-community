@@ -1,14 +1,12 @@
 # Core
 
 * last post on category
-* post nesting
 * banning: need to enforce
 * view counters on topics,categories, (everywhere??)
 * topic lock reason
 
 # Demo app
 
-* pagination for posts
 * reply to post (nested)
 * edit category
 * edit topic (lock, stick)
