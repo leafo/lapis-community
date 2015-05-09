@@ -63,6 +63,7 @@ upsert = (model, insert, update, cond) ->
   unless cond
     cond = { k,v for k,v in pairs insert when is_primary_key[k] }
 
+
   if model.timestamp
     time = db.format_date!
     update.updated_at = time
@@ -80,14 +81,23 @@ upsert = (model, insert, update, cond) ->
       update #{table_name}
       set #{db.encode_assigns update}
       where #{db.encode_clause cond}
-      returning 1
+      returning *
+    ),
+    inserts as (
+      insert into #{table_name} (#{table.concat insert_fields, ", "})
+      select #{table.concat insert_values, ", "}
+      where not exists(select 1 from updates)
+      returning *
     )
-    insert into #{table_name} (#{table.concat insert_fields, ", "})
-    select #{table.concat insert_values, ", "}
-    where not exists(select 1 from updates)
+    select *, 'update' as _upsert_type from updates
+    union
+    select *, 'insert' as _upsert_type from inserts
   "
 
-  res.affected_rows and res.affected_rows > 0 and "insert" or "update"
+  res = unpack res
+  upsert_type = res._upsert_type
+  res._upsert_type = nil
+  upsert_type, model\load res
 
 -- set deleted to true
 soft_delete = =>
