@@ -120,16 +120,21 @@ import create_table, create_index, drop_table from schema
 
     create_index T"post_edits", "post_id", "id", unique: true
 
-    create_table T"post_votes", {
+    create_table T"votes", {
       {"user_id", foreign_key}
-      {"post_id", foreign_key}
+
+      {"object_type", foreign_key}
+      {"object_id", foreign_key}
+
       {"positive", boolean}
 
       {"created_at", time}
       {"updated_at", time}
 
-      "PRIMARY KEY (user_id, post_id)"
+      "PRIMARY KEY (user_id, object_type, object_id)"
     }
+
+    create_index T"votes", "object_type", "object_id"
 
     create_table T"post_replies", {
       {"parent_post_id", foreign_key}

@@ -1,42 +1,60 @@
 db = require "lapis.db"
 import Model from require "community.model"
 
-class PostVotes extends Model
+class Votes extends Model
   @timestamp: true
-  @primary_key: {"user_id", "post_id"}
+  @primary_key: {"user_id", "object_type", "object_id"}
 
   @relations: {
-    {"post", belongs_to: "Posts"}
     {"user", belongs_to: "Users"}
+
+    {"object", polymorphic_belongs_to: {
+      [1]: {"post", "Posts"}
+      [2]: {"topic", "Topics"}
+    }}
   }
 
   @create: (opts={}) =>
     assert opts.user_id, "missing user id"
-    assert opts.post_id, "missing post id"
+
+    unless opts.object_id and opts.object_type
+      assert opts.object, "missing vote object"
+      opts.object_id = opts.object.id
+      opts.object_type = @object_type_for_object opts.object
+      opts.object = nil
+
+    opts.object_type = @object_types\for_db opts.object_type
     Model.create @, opts
 
-  @vote: (post, user, positive=true) =>
+  @vote: (object, user, positive=true) =>
     import upsert from require "community.helpers.models"
 
-    existing = @find user.id, post.id
+    object_type = @object_type_for_object object
+    old_vote = @find user.id, object_type, object.id
 
     params = {
-      post_id: post.id
+      :object_type
+      object_id: object.id
       user_id: user.id
       positive: not not positive
     }
 
-    action = upsert @, params
+    action, vote = upsert @, params
 
     -- decrement and increment if positive changed
-    existing\decrement! if existing
-    @load(params)\increment!
+    if action == "update" and old_vote
+      old_vote\decrement!
 
-    action
+    vote\increment!
 
-  unvote: (post, user) =>
+    action, vote
+
+  @unvote: (object, user) =>
+    object_type = @object_type_for_object object
+
     clause = {
-      post_id: post.id
+      :object_type
+      object_id: object.id
       user_id: user.id
     }
 
@@ -56,21 +74,23 @@ class PostVotes extends Model
     @positive and "positive" or "negative"
 
   increment: =>
-    import Posts from require "community.models"
+    model = @@model_for_object_type @object_type
     counter_name = @post_counter_name!
-    db.update Posts\table_name!, {
+
+    db.update model\table_name!, {
       [counter_name]: db.raw "#{db.escape_identifier counter_name} + 1"
     }, {
-      id: @post_id
+      id: @object_id
     }
 
   decrement: =>
-    import Posts from require "community.models"
+    model = @@model_for_object_type @object_type
     counter_name = @post_counter_name!
-    db.update Posts\table_name!, {
+
+    db.update model\table_name!, {
       [counter_name]: db.raw "#{db.escape_identifier counter_name} - 1"
     }, {
-      id: @post_id
+      id: @object_id
     }
 
   post_counter_name: =>

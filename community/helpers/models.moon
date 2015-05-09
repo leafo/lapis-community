@@ -51,6 +51,7 @@ safe_insert = (data, check_cond=data) =>
   else
     nil, "already exists"
 
+-- returns "update" or "insert" depending on action, the loaded model
 upsert = (model, insert, update, cond) ->
   table_name = db.escape_identifier model\table_name!
 

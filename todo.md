@@ -2,18 +2,22 @@
 
 * last post on category
 * banning: need to enforce
-* view counters on topics,categories, (everywhere??)
 * topic lock reason
+* votes on topics
+
+## v2
+
+* view counters on topics,categories, (everywhere??)
 
 # Demo app
 
-* reply to post (nested)
 * edit category
 * edit topic (lock, stick)
-* show edits (for mods only? category option?)
 * block user
 * ban user
 * report post
+
+* show edits (for mods only? category option?)
 
 # Checklist
 
