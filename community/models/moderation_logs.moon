@@ -12,6 +12,7 @@ class ModerationLogs extends Model
 
     {"object", polymorphic_belongs_to: {
       [1]: {"topic", "Topics"}
+      [2]: {"category", "Categories"}
     }}
   }
 
@@ -33,9 +34,11 @@ class ModerationLogs extends Model
 
   set_log_objects: (objects) =>
     import ModerationLogObjects from require "community.models"
+
     for o in *objects
       ModerationLogObjects\create {
-        object_type: ModerationLogObjects.object_type_for_object object
-        object_id: object
+        moderation_log_id: @id
+        object_type: ModerationLogObjects\object_type_for_object o
+        object_id: o.id
       }
 

@@ -38,7 +38,6 @@ class CategoriesFlow extends Flow
     @category = Categories\find @params.category_id
     assert_error @category, "invalid category"
 
-
   new_category: require_login =>
     assert_valid @params, {
       {"category", type: "table"}
