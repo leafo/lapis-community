@@ -13,7 +13,7 @@ class Categories extends Model
   }
 
   @relations: {
-    {"moderators", has_many: "CategoryModerators", key: "category_id", where: {accepted: true}}
+    {"moderators", has_many: "CategoryModerators", where: { accepted: true }}
     {"user", belongs_to: "Users"}
   }
 
@@ -25,8 +25,7 @@ class Categories extends Model
     Model.create @, opts
 
   allowed_to_post: (user) =>
-    return nil, "no user" unless user
-    true
+    @allowed_to_view user
 
   allowed_to_view: (user) =>
     switch @@membership_types[@membership_type]
@@ -35,14 +34,9 @@ class Categories extends Model
       when "members_only"
         return false unless user
         return true if @allowed_to_moderate user
-        import CategoryMembers from require "community.models"
-        membership = CategoryMembers\find {
-          user_id: user.id
-          category_id: @id
-          accepted: true
-        }
 
-        not not membership
+        member = @find_member user
+        member and member.accepted
 
   allowed_to_edit: (user) =>
     return nil unless user

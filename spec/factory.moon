@@ -92,6 +92,7 @@ PostReports = (opts={}) ->
 CategoryMembers = (opts={}) ->
   opts.user_id or= Users!.id
   opts.category_id or= Categories!.id
+  opts.accepted = true if opts.accepted == nil
   assert models.CategoryMembers\create opts
 
 Blocks = (opts={}) ->
