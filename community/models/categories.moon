@@ -29,7 +29,7 @@ class Categories extends Model
     @allowed_to_view user
 
   allowed_to_view: (user) =>
-    switch @@membership_types[@membership_type]
+    can_view = switch @@membership_types[@membership_type]
       when "public"
         true
       when "members_only"
@@ -38,6 +38,11 @@ class Categories extends Model
 
         member = @find_member user
         member and member.accepted
+
+    if can_view
+      return false if @find_ban user
+
+    can_view
 
   allowed_to_edit: (user) =>
     return nil unless user
@@ -84,6 +89,11 @@ class Categories extends Model
       category_id: @id
       user_id: user.id
     }
+
+  find_ban: (user) =>
+    return nil unless user
+    import Bans from require "community.models"
+    Bans\find_for_object @, user
 
   get_order_ranges: =>
     import Topics from require "community.models"
