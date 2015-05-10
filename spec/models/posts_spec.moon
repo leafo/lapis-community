@@ -48,3 +48,37 @@ describe "posts", ->
       current = factory.Posts topic_id: 1, parent_post: current
       assert.same 1, current.post_number
 
+
+  describe "with post, topic, category", ->
+    local post, topic, category
+
+    before_each ->
+      category = factory.Categories!
+      topic = factory.Topics category_id: category.id
+      post = factory.Posts topic_id: topic.id
+
+    it "should check vote status on up down", ->
+      category\update voting_type: Categories.voting_types.up_down
+      other_user = factory.Users!
+
+      assert.falsy post\allowed_to_vote nil
+      assert.truthy post\allowed_to_vote other_user, "up"
+      assert.truthy post\allowed_to_vote other_user, "down"
+
+    it "should check vote status on up", ->
+      category\update voting_type: Categories.voting_types.up
+      other_user = factory.Users!
+
+      assert.falsy post\allowed_to_vote nil
+      assert.truthy post\allowed_to_vote other_user, "up"
+      assert.falsy post\allowed_to_vote other_user, "down"
+
+    it "should check vote status on disabled", ->
+      category\update voting_type: Categories.voting_types.disabled
+      other_user = factory.Users!
+
+      assert.falsy post\allowed_to_vote nil
+      assert.falsy post\allowed_to_vote other_user, "up"
+      assert.falsy post\allowed_to_vote other_user, "down"
+
+

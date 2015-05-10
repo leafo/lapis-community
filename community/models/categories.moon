@@ -51,6 +51,16 @@ class Categories extends Model
 
     can_view
 
+  allowed_to_vote: (user, direction) =>
+    return false unless user
+    switch @voting_type
+      when @@voting_types.up_down
+        true
+      when @@voting_types.up
+        direction == "up"
+      else
+        false
+
   allowed_to_edit: (user) =>
     return nil unless user
     return true if user\is_admin!

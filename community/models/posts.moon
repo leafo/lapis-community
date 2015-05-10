@@ -44,10 +44,17 @@ class Posts extends Model
   is_topic_post: =>
     @post_number == 1 and @depth == 1
 
-  allowed_to_vote: (user) =>
+  allowed_to_vote: (user, direction) =>
     return false unless user
     return false if @deleted
-    true
+
+    topic = @get_topic!
+    category = @topic\get_category!
+
+    if category
+      category\allowed_to_vote user, direction
+    else
+      true
 
   allowed_to_edit: (user) =>
     return false unless user
