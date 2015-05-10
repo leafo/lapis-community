@@ -10,13 +10,32 @@ class Topic extends require "widgets.base"
       text " "
       text @topic.posts_count
 
+    if @topic.locked
+      fieldset ->
+        log = @topic\get_lock_log!
+        p ->
+          em "This topic is locked"
+
+        if log
+          locking_user = log\get_user!
+          p ->
+            em "Locked by #{locking_user\name_for_display!} on #{log.created_at}"
+            if log.reason
+              em ": #{log.reason}"
+
+        if @topic\allowed_to_moderate @current_user
+          form action: @url_for("unlock_topic", topic_id: @topic.id), method: "post", ->
+            button "Unlock"
+
     ul ->
-      li ->
-        a href: @url_for("new_post", topic_id: @topic.id), "Reply"
+      unless @topic.locked
+        li ->
+          a href: @url_for("new_post", topic_id: @topic.id), "Reply"
 
       if @topic\allowed_to_moderate @current_user
-        li ->
-          a href: @url_for("lock_topic", topic_id: @topic.id), "Lock"
+        unless @topic.locked
+          li ->
+            a href: @url_for("lock_topic", topic_id: @topic.id), "Lock"
 
         li ->
           a href: @url_for("stick_topic", topic_id: @topic.id), "Stick"

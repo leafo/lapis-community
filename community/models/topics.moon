@@ -149,3 +149,15 @@ class Topics extends Model
     import Bans from require "community.models"
     Bans\find_for_object @, user
 
+  get_lock_log: =>
+    return unless @locked
+
+    unless @lock_log
+      import ModerationLogs from require "community.models"
+      @lock_log = unpack ModerationLogs\select "
+        where object_type = ? and object_id = ? and action = 'topic.lock'
+        order by id desc
+        limit 1
+      ", ModerationLogs.object_types.topic, @id
+
+    @lock_log

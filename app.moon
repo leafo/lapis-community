@@ -289,8 +289,26 @@ class extends lapis.Application
       redirect_to: @url_for "category_moderators", category_id: @category.id
   }
 
-  [lock_topic: "/topic/:topic_id/lock"]: =>
-  [unlock_topic: "/topic/:topic_id/unlock"]: =>
+  [lock_topic: "/topic/:topic_id/lock"]: capture_errors_json respond_to {
+    before: =>
+      TopicsFlow = require "community.flows.topics"
+      @flow = TopicsFlow @
+      @flow\load_topic_for_moderation!
+
+    GET: =>
+      render: true
+
+    POST: =>
+      @flow\lock_topic!
+      redirect_to: @url_for "topic", topic_id: @topic.id
+  }
+
+  [unlock_topic: "/topic/:topic_id/unlock"]: capture_errors_json respond_to {
+    POST: =>
+      TopicsFlow = require "community.flows.topics"
+      TopicsFlow(@)\unlock_topic!
+      redirect_to: @url_for "topic", topic_id: @topic.id
+  }
 
   [stick_topic: "/topic/:topic_id/stick"]: =>
   [unstick_topic: "/topic/:topic_id/unstick"]: =>
