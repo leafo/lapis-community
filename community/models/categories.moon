@@ -134,6 +134,15 @@ class Categories extends Model
 
     ranges
 
+  available_vote_types: =>
+    switch @voting_type
+      when @@voting_types.up_down
+        { up: true, down: true }
+      when @@voting_types.up
+        { up: true }
+      else
+        {}
+
   @recount: =>
     import Topics from require "community.models"
     db.update @table_name!, {

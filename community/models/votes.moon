@@ -70,7 +70,7 @@ class Votes extends Model
     true
 
   name: =>
-    @positive and "positive" or "negative"
+    @positive and "up" or "down"
 
   increment: =>
     model = @@model_for_object_type @object_type
