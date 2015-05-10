@@ -28,6 +28,9 @@ import create_table, create_index, drop_table from schema
 
       {"topics_count", integer}
 
+      {"short_description", text null: true}
+      {"description", text null: true}
+
       {"membership_type", integer}
       {"voting_type", integer}
 

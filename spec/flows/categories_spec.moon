@@ -50,7 +50,11 @@ describe "categories", ->
     res = CategoryApp\get current_user, "/new-category", {
       "category[title]": "hello world"
       "category[membership_type]": "public"
+      "category[voting_type]": "disabled"
+      "category[short_description]": "This category is about something"
     }
+
+    assert.falsy res.errors
 
     assert.truthy res.success
     category = unpack Categories\select!
@@ -58,27 +62,35 @@ describe "categories", ->
 
     assert.same current_user.id, category.user_id
     assert.same "hello world", category.title
-    assert.same Categories.membership_types.public, category.membership_type
+    assert.same "This category is about something", category.short_description
+    assert.falsy category.description
 
+    assert.same Categories.membership_types.public, category.membership_type
+    assert.same Categories.voting_types.disabled, category.voting_type
 
   describe "with category", ->
     local category
 
     before_each ->
-      category = factory.Categories user_id: current_user.id
+      category = factory.Categories user_id: current_user.id, description: "okay okay"
 
     it "should edit category", ->
       res = CategoryApp\get current_user, "/edit-category", {
         category_id: category.id
         "category[title]": "The good category"
         "category[membership_type]": "members_only"
+        "category[voting_type]": "up"
+        "category[short_description]": "yeah yeah"
       }
 
       assert.same {success: true}, res
       category\refresh!
       assert.same "The good category", category.title
-      assert.same Categories.membership_types.members_only, category.membership_type
+      assert.same "yeah yeah", category.short_description
+      assert.falsy category.description
 
+      assert.same Categories.membership_types.members_only, category.membership_type
+      assert.same Categories.voting_types.up, category.voting_type
 
     it "should not let unknown user edit category", ->
       other_user = factory.Users!

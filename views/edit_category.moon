@@ -16,11 +16,21 @@ class EditCategory extends require "widgets.base"
           strong "Title"
           input type: "text", name: "category[title]", value: @category and @category.title
 
+      div ->
+        label ->
+          strong "Short description"
+          input type: "text", name: "category[short_description]", value: @category and @category.short_description
+
+      div ->
+        label ->
+          strong "Description"
+          textarea name: "category[description]", @category and @category.description
+
       strong "Membership type"
+
       @radio_buttons "category[membership_type]",
         Categories.membership_types,
         @category and @category.membership_type
-
 
       strong "Voting type"
       @radio_buttons "category[voting_type]",

@@ -5,12 +5,14 @@ import Categories, CategoryMembers from require "community.models"
 
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
-import trim_filter from require "lapis.util"
+import trim_filter, slugify from require "lapis.util"
 
 import assert_page, require_login from require "community.helpers.app"
 import filter_update from require "community.helpers.models"
 
 limits = require "community.limits"
+
+db = require "lapis.db"
 
 class CategoriesFlow extends Flow
   expose_assigns: true
@@ -48,13 +50,22 @@ class CategoriesFlow extends Flow
 
     assert_valid new_category, {
       {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
-      {"membership_type", one_of: Categories.membership_types}
+      {"short_description", optional: true, max_length: limits.MAX_TITLE_LEN}
+      {"description", optional: true, max_length: limits.MAX_BODY_LEN}
+
+      {"membership_type", one_of: Categories.membershmembership_typesip_types}
+      {"voting_type", one_of: Categories.voting_types}
     }
 
     @category = Categories\create {
       user_id: @current_user.id
       title: new_category.title
+
+      short_description: new_category.short_description
+      description: new_category.description
+
       membership_type: new_category.membership_type
+      voting_type: new_category.voting_type
     }
 
     true
@@ -67,14 +78,31 @@ class CategoriesFlow extends Flow
       {"category", exists: true, type: "table"}
     }
 
-    category_update = trim_filter @params.category, {"title", "membership_type"}
+    category_update = trim_filter @params.category, {
+      "title"
+      "membership_type"
+      "voting_type"
+      "description"
+      "short_description"
+    }
 
     assert_valid category_update, {
       {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
-      {"membership_type", one_of: Categories.membership_types}
+
+      {"short_description", optional: true, max_length: limits.MAX_TITLE_LEN}
+      {"description", optional: true, max_length: limits.MAX_BODY_LEN}
+
+      {"membership_type", one_of: Categories.membershmembership_typesip_types}
+      {"voting_type", one_of: Categories.voting_types}
     }
 
     category_update.membership_type = Categories.membership_types\for_db category_update.membership_type
+    category_update.voting_type = Categories.voting_types\for_db category_update.voting_type
+    category_update.slug = slugify category_update.title
+
+    category_update.description or= db.NULL
+    category_update.short_description or= db.NULL
+
     category_update = filter_update @category, category_update
 
     if next category_update
