@@ -25,6 +25,7 @@ class Categories extends Model
     Model.create @, opts
 
   allowed_to_post: (user) =>
+    return false unless user
     @allowed_to_view user
 
   allowed_to_view: (user) =>

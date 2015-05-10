@@ -22,6 +22,15 @@ describe "categories", ->
       category_user = factory.Users!
       category = factory.Categories user_id: category_user.id
 
+    it "should check permissions for no user", ->
+      assert.truthy category\allowed_to_view nil
+      assert.falsy category\allowed_to_post nil
+
+      assert.falsy category\allowed_to_edit nil
+      assert.falsy category\allowed_to_edit_moderators nil
+      assert.falsy category\allowed_to_edit_members nil
+      assert.falsy category\allowed_to_moderate nil
+
     it "should check permissions for owner", ->
       assert.truthy category\allowed_to_view category_user
       assert.truthy category\allowed_to_post category_user
@@ -85,5 +94,4 @@ describe "categories", ->
       assert.truthy category\allowed_to_moderate category_user
       assert.truthy category\allowed_to_moderate admin_user
       assert.truthy category\allowed_to_moderate mod_user
-
 
