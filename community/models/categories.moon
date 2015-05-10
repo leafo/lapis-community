@@ -21,6 +21,7 @@ class Categories extends Model
   @relations: {
     {"moderators", has_many: "CategoryModerators", where: { accepted: true }}
     {"user", belongs_to: "Users"}
+    {"last_topic", belongs_to: "Topics"}
   }
 
   @create: (opts={}) =>
@@ -30,6 +31,12 @@ class Categories extends Model
     opts.slug or= slugify opts.title
 
     Model.create @, opts
+
+  @preload_last_topics: (categories) =>
+    import Topics from require "community.models"
+    Topics\include_in categories, "last_topic_id", {
+      as: "last_topic"
+    }
 
   allowed_to_post: (user) =>
     return false unless user
@@ -142,6 +149,17 @@ class Categories extends Model
         { up: true }
       else
         {}
+
+  update_last_topic: =>
+    import Topics from require "community.models"
+
+    @update {
+      last_topic_id: db.raw db.interpolate_query "(
+        select id from #{db.escape_identifier Topics\table_name!} where category_id = ? and not deleted
+        order by category_order desc
+        limit 1
+      )", @id
+    }
 
   @recount: =>
     import Topics from require "community.models"

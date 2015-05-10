@@ -26,6 +26,8 @@ import create_table, create_index, drop_table from schema
       {"user_id", foreign_key null: true}
       {"parent_category_id", foreign_key null: true}
 
+      {"last_topic_id", foreign_key null: true}
+
       {"topics_count", integer}
 
       {"short_description", text null: true}

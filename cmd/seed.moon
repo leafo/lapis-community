@@ -78,8 +78,11 @@ for i=1,1
 
   add_posts topic
 
-
 import Categories, Topics, CommunityUsers from require "community.models"
+
 Topics\recount!
 Categories\recount!
 CommunityUsers\recount!
+
+for c in *Categories\select!
+  c\update_last_topic!

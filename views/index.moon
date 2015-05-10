@@ -29,6 +29,7 @@ class Index extends require "widgets.base"
           td "Type"
           td "Topics count"
           td "Creator"
+          td "Last topic"
 
       for cat in *@categories
         tr ->
@@ -40,6 +41,10 @@ class Index extends require "widgets.base"
           td ->
             if user = cat\get_user!
               a href: @url_for("user", user_id: user.id), user\name_for_display!
+
+          td ->
+            if topic = cat\get_last_topic!
+              a href: @url_for("topic", topic_id: topic.id), topic.title
 
     unless next @categories
       p -> em "There are no categories"
