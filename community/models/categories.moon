@@ -12,6 +12,12 @@ class Categories extends Model
     members_only: 2
   }
 
+  @voting_types: enum {
+    up_down: 1
+    up: 2
+    disabled: 3
+  }
+
   @relations: {
     {"moderators", has_many: "CategoryModerators", where: { accepted: true }}
     {"user", belongs_to: "Users"}
@@ -19,7 +25,8 @@ class Categories extends Model
 
   @create: (opts={}) =>
     assert opts.title, "missing title"
-    opts.membership_type = @@membership_types\for_db opts.membership_type or "public"
+    opts.membership_type = @membership_types\for_db opts.membership_type or "public"
+    opts.voting_type = @voting_types\for_db opts.voting_type or "up_down"
     opts.slug or= slugify opts.title
 
     Model.create @, opts

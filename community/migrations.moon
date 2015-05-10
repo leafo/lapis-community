@@ -29,6 +29,7 @@ import create_table, create_index, drop_table from schema
       {"topics_count", integer}
 
       {"membership_type", integer}
+      {"voting_type", integer}
 
       {"created_at", time}
       {"updated_at", time}

@@ -33,6 +33,7 @@ cat2 = factory.Categories {
   user_id: leafo.id
   title: "Lee's zone"
   membership_type: "members_only"
+  voting_type: "up"
 }
 
 add_posts = (topic, parent_post) ->
@@ -66,6 +67,17 @@ for i=1,4 -- 77
   }
 
   add_posts topic
+
+for i=1,1
+  topic_poster = rand_user!
+  topic = factory.Topics {
+    category_id: cat2.id
+    user_id: topic_poster.id
+    title: sentence math.random 2, 5
+  }
+
+  add_posts topic
+
 
 import Categories, Topics, CommunityUsers from require "community.models"
 Topics\recount!

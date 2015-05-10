@@ -17,19 +17,15 @@ class EditCategory extends require "widgets.base"
           input type: "text", name: "category[title]", value: @category and @category.title
 
       strong "Membership type"
+      @radio_buttons "category[membership_type]",
+        Categories.membership_types,
+        @category and @category.membership_type
 
-      for mtype in *Categories.membership_types
-        div ->
-          label ->
-            input {
-              type: "radio"
-              name: "category[membership_type]"
-              value: mtype
-              checked: (@category and @category.membership_type == Categories.membership_types[mtype]) and "checked" or nil
-            }
 
-            text " "
-            text mtype
+      strong "Voting type"
+      @radio_buttons "category[voting_type]",
+        Categories.voting_types,
+        @category and @category.voting_type
 
       button ->
         if @editing
@@ -37,4 +33,15 @@ class EditCategory extends require "widgets.base"
         else
           text "New category"
 
+  radio_buttons: (name, enum, val) =>
+    for key in *enum
+      div ->
+        label ->
+          input {
+            type: "radio"
+            name: name
+            value: key
+            checked: enum[key] == val and "checked" or nil
+          }
 
+          text " #{key}"
