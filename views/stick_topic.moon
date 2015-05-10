@@ -1,7 +1,7 @@
-class LockTopic extends require "widgets.base"
+class StickTopic extends require "widgets.base"
   inner_content: =>
     p ->
-      text "Lock topic "
+      text "Stick topic "
       a href: @url_for("topic", topic_id: @topic.id), @topic.title
       text "?"
 
@@ -12,4 +12,5 @@ class LockTopic extends require "widgets.base"
 
       br!
 
-      button "Lock topic"
+      button "Stick topic"
+

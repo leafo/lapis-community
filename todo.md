@@ -3,7 +3,7 @@
 * last post on category
 * set lock/sticky on topic creation
 * voting modes for category (up/down, up only)
-* preload blocks on view
+* category description
 
 ## v2
 
@@ -12,11 +12,8 @@
 # Demo app
 
 * edit category
-* edit topic (lock, stick)
-* block user
 * ban user
 * report post
-
 * show edits (for mods only? category option?)
 
 # Checklist

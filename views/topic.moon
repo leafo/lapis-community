@@ -16,16 +16,23 @@ class Topic extends require "widgets.base"
         p ->
           em "This topic is locked"
 
-        if log
-          locking_user = log\get_user!
-          p ->
-            em "Locked by #{locking_user\name_for_display!} on #{log.created_at}"
-            if log.reason
-              em ": #{log.reason}"
+        @moderation_log_data log
 
         if @topic\allowed_to_moderate @current_user
           form action: @url_for("unlock_topic", topic_id: @topic.id), method: "post", ->
             button "Unlock"
+
+    if @topic.sticky
+      fieldset ->
+        log = @topic\get_sticky_log!
+        p ->
+          em "This topic is sticky"
+
+        @moderation_log_data log
+
+        if @topic\allowed_to_moderate @current_user
+          form action: @url_for("unstick_topic", topic_id: @topic.id), method: "post", ->
+            button "Unstick"
 
     ul ->
       unless @topic.locked
@@ -37,8 +44,9 @@ class Topic extends require "widgets.base"
           li ->
             a href: @url_for("lock_topic", topic_id: @topic.id), "Lock"
 
-        li ->
-          a href: @url_for("stick_topic", topic_id: @topic.id), "Stick"
+        unless @topic.sticky
+          li ->
+            a href: @url_for("stick_topic", topic_id: @topic.id), "Stick"
 
     @pagination!
     hr!
@@ -132,4 +140,13 @@ class Topic extends require "widgets.base"
         }
         "Previous page"
       }
+
+
+  moderation_log_data: (log) =>
+    return unless log
+    log_user = log\get_user!
+    p ->
+      em "By #{log_user\name_for_display!} on #{log.created_at}"
+      if log.reason
+        em ": #{log.reason}"
 

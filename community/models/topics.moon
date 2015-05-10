@@ -149,15 +149,30 @@ class Topics extends Model
     import Bans from require "community.models"
     Bans\find_for_object @, user
 
+  find_recent_log: (action) =>
+    import ModerationLogs from require "community.models"
+    unpack ModerationLogs\select "
+      where object_type = ? and object_id = ? and action = ?
+      order by id desc
+      limit 1
+    ", ModerationLogs.object_types.topic, @id, action
+
+  -- most recent log entry for locking
   get_lock_log: =>
     return unless @locked
 
     unless @lock_log
-      import ModerationLogs from require "community.models"
-      @lock_log = unpack ModerationLogs\select "
-        where object_type = ? and object_id = ? and action = 'topic.lock'
-        order by id desc
-        limit 1
-      ", ModerationLogs.object_types.topic, @id
+      @lock_log = @find_recent_log "topic.lock"
 
     @lock_log
+
+  -- most recent log entry for sticking
+  get_sticky_log: =>
+    return unless @sticky
+
+    unless @sticky_log
+      import ModerationLogs from require "community.models"
+      @sticky_log = @find_recent_log "topic.stick"
+
+    @sticky_log
+

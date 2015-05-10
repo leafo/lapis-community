@@ -310,9 +310,27 @@ class extends lapis.Application
       redirect_to: @url_for "topic", topic_id: @topic.id
   }
 
-  [stick_topic: "/topic/:topic_id/stick"]: =>
-  [unstick_topic: "/topic/:topic_id/unstick"]: =>
+  [stick_topic: "/topic/:topic_id/stick"]: capture_errors_json respond_to {
+    before: =>
+      TopicsFlow = require "community.flows.topics"
+      @flow = TopicsFlow @
+      @flow\load_topic_for_moderation!
 
+    GET: =>
+      render: true
+
+    POST: =>
+      @flow\stick_topic!
+      redirect_to: @url_for "topic", topic_id: @topic.id
+  }
+
+  [unstick_topic: "/topic/:topic_id/unstick"]: capture_errors_json respond_to {
+    POST: =>
+      TopicsFlow = require "community.flows.topics"
+      TopicsFlow(@)\unstick_topic!
+      redirect_to: @url_for "topic", topic_id: @topic.id
+
+  }
 
   [block_user: "/block/:blocked_user_id"]: capture_errors_json respond_to {
     POST: =>
