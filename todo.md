@@ -6,8 +6,6 @@
 * set lock/sticky on topic creation
 * voting modes for category (up/down, up only)
 
-* write moderation log for banning
-
 ## v2
 
 * view counters on topics,categories, (everywhere??)

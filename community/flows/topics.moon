@@ -25,6 +25,10 @@ class TopicsFlow extends Flow
     @topic = Topics\find @params.topic_id
     assert_error @topic, "invalid topic"
 
+  load_topic_for_moderation: =>
+    @load_topic!
+    assert_error @topic\allowed_to_moderate(@current_user), "invalid user"
+
   write_moderation_log: (action, reason) =>
     @load_topic!
 
@@ -38,8 +42,7 @@ class TopicsFlow extends Flow
     }
 
   set_tags: require_login =>
-    @load_topic!
-    assert_error @topic\allowed_to_moderate(@current_user), "invalid user"
+    @load_topic_for_moderation!
     import TopicTags from require "community.models"
 
     @topic\set_tags @params.tags or ""
@@ -86,8 +89,7 @@ class TopicsFlow extends Flow
 
 
   lock_topic: require_login =>
-    @load_topic!
-    assert_error @topic\allowed_to_moderate(@current_user), "not allowed to moderate"
+    @load_topic_for_moderation!
 
     trim_filter @params
     assert_valid @params, {
@@ -101,9 +103,8 @@ class TopicsFlow extends Flow
     true
 
   unlock_topic: =>
-    @load_topic!
+    @load_topic_for_moderation!
 
-    assert_error @topic\allowed_to_moderate(@current_user), "not allowed to moderate"
     assert_error @topic.locked, "topic is not locked"
 
     @topic\update locked: false
