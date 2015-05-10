@@ -24,7 +24,7 @@ class BlocksApp extends TestApp
     @flow\unblock_user!
     json: {success: true}
 
-describe "topic tags", ->
+describe "blocks", ->
   use_test_env!
 
   local current_user

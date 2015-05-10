@@ -29,8 +29,15 @@ class TopicsApp extends TestApp
     @flow\unlock_topic!
     json: { success: true }
 
+  "/stick-topic": capture_errors_json =>
+    @flow\stick_topic!
+    json: { success: true }
 
-describe "topic tags", ->
+  "/unstick-topic": capture_errors_json =>
+    @flow\unstick_topic!
+    json: { success: true }
+
+describe "topics", ->
   use_test_env!
 
   local current_user, topic
@@ -51,61 +58,100 @@ describe "topic tags", ->
     assert.truthy res.success
     assert.same 3, #topic\get_tags!
 
-  it "should lock topic", ->
-    res = TopicsApp\get current_user, "/lock-topic", {
-      topic_id: topic.id
-      reason: "this topic is stupid"
-    }
+  describe "lock", ->
+    it "should lock topic", ->
+      res = TopicsApp\get current_user, "/lock-topic", {
+        topic_id: topic.id
+        reason: "this topic is stupid"
+      }
 
-    assert.truthy res.success
+      assert.truthy res.success
 
-    logs = ModerationLogs\select!
-    assert.same 1, #logs
-    log = unpack logs
+      logs = ModerationLogs\select!
+      assert.same 1, #logs
+      log = unpack logs
 
-    assert.same current_user.id, log.user_id
-    assert.same ModerationLogs.object_types.topic, log.object_type
-    assert.same topic.id, log.object_id
-    assert.same "topic.lock", log.action
-    assert.same "this topic is stupid", log.reason
-    assert.same topic.category_id, log.category_id
+      assert.same current_user.id, log.user_id
+      assert.same ModerationLogs.object_types.topic, log.object_type
+      assert.same topic.id, log.object_id
+      assert.same "topic.lock", log.action
+      assert.same "this topic is stupid", log.reason
+      assert.same topic.category_id, log.category_id
 
-    assert.same 0, #ModerationLogObjects\select!
+      assert.same 0, #ModerationLogObjects\select!
 
-  it "should unlock topic", ->
-    topic\update locked: true
+    it "should unlock topic", ->
+      topic\update locked: true
 
-    res = TopicsApp\get current_user, "/unlock-topic", {
-      topic_id: topic.id
-    }
+      res = TopicsApp\get current_user, "/unlock-topic", {
+        topic_id: topic.id
+      }
 
-    assert.truthy res.success
+      assert.truthy res.success
 
-    logs = ModerationLogs\select!
-    assert.same 1, #logs
-    log = unpack logs
+      logs = ModerationLogs\select!
+      assert.same 1, #logs
+      log = unpack logs
 
-    assert.same current_user.id, log.user_id
-    assert.same ModerationLogs.object_types.topic, log.object_type
-    assert.same topic.id, log.object_id
-    assert.same "topic.unlock", log.action
-    assert.same topic.category_id, log.category_id
+      assert.same current_user.id, log.user_id
+      assert.same ModerationLogs.object_types.topic, log.object_type
+      assert.same topic.id, log.object_id
+      assert.same "topic.unlock", log.action
+      assert.same topic.category_id, log.category_id
 
-    assert.same 0, #ModerationLogObjects\select!
+      assert.same 0, #ModerationLogObjects\select!
 
+    it "should not let random user lock topic", ->
+      res = TopicsApp\get factory.Users!, "/lock-topic", {
+        topic_id: topic.id
+      }
 
-  it "should not let random user lock topic", ->
-    res = TopicsApp\get factory.Users!, "/lock-topic", {
-      topic_id: topic.id
-    }
+      assert.truthy res.errors
 
-    assert.truthy res.errors
+    it "should not let random user unlock topic", ->
+      topic\update locked: true
+      res = TopicsApp\get factory.Users!, "/unlock-topic", {
+        topic_id: topic.id
+      }
 
-  it "should not let random user unlock topic", ->
-    topic\update locked: true
-    res = TopicsApp\get factory.Users!, "/unlock-topic", {
-      topic_id: topic.id
-    }
+      assert.truthy res.errors
 
-    assert.truthy res.errors
+  describe "stick #ddd", ->
+    it "should stick topic", ->
+      res = TopicsApp\get current_user, "/stick-topic", {
+        topic_id: topic.id
+        reason: " this topic is great and important "
+      }
 
+      assert.truthy res.success
+
+      logs = ModerationLogs\select!
+      assert.same 1, #logs
+      log = unpack logs
+
+      assert.same current_user.id, log.user_id
+      assert.same ModerationLogs.object_types.topic, log.object_type
+      assert.same topic.id, log.object_id
+      assert.same "topic.stick", log.action
+      assert.same "this topic is great and important", log.reason
+      assert.same topic.category_id, log.category_id
+
+      assert.same 0, #ModerationLogObjects\select!
+
+    it "should unstick topic", ->
+      topic\update sticky: true
+      res = TopicsApp\get current_user, "/unstick-topic", {
+        topic_id: topic.id
+      }
+
+      logs = ModerationLogs\select!
+      assert.same 1, #logs
+      log = unpack logs
+
+      assert.same current_user.id, log.user_id
+      assert.same ModerationLogs.object_types.topic, log.object_type
+      assert.same topic.id, log.object_id
+      assert.same "topic.unstick", log.action
+      assert.same topic.category_id, log.category_id
+
+      assert.same 0, #ModerationLogObjects\select!

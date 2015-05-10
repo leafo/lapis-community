@@ -111,3 +111,24 @@ class TopicsFlow extends Flow
     @write_moderation_log "topic.unlock"
     true
 
+  stick_topic: =>
+    @load_topic_for_moderation!
+    assert_error not @topic.sticky, "topic is already sticky"
+
+    trim_filter @params
+    assert_valid @params, {
+      {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
+    }
+
+    @topic\update sticky: true
+    @write_moderation_log "topic.stick", @params.reason
+    true
+
+  unstick_topic: =>
+    @load_topic_for_moderation!
+    assert_error @topic.sticky, "topic is not sticky"
+
+    @topic\update sticky: false
+    @write_moderation_log "topic.unstick"
+    true
+
