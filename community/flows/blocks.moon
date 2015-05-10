@@ -14,16 +14,16 @@ class BlocksFlow extends Flow
     super req
     assert @current_user, "missing current user for blocks flow"
 
-  _assert_blocked: =>
+  load_blocked_user: =>
     assert_valid @params, {
       {"blocked_user_id", is_integer: true}
     }
 
     @blocked = assert_error Users\find(@params.blocked_user_id), "invalid user"
-    assert_error @blocked.user_id != @current_user.id, "invalid user"
+    assert_error @blocked.id != @current_user.id, "you can not block yourself"
 
   block_user: =>
-    @_assert_blocked!
+    @load_blocked_user!
     Blocks\create {
       blocking_user_id: @current_user.id
       blocked_user_id: @blocked.id
@@ -32,7 +32,7 @@ class BlocksFlow extends Flow
     true
 
   unblock_user: =>
-    @_assert_blocked!
+    @load_blocked_user!
     block = Blocks\find {
       blocking_user_id: @current_user.id
       blocked_user_id: @blocked.id

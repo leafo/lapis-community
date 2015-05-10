@@ -22,7 +22,7 @@ class BansFlow extends Flow
     }
 
     @banned = assert_error Users\find(@params.banned_user_id), "invalid user"
-    assert_error @banned.id != @current_user.id, "invalid user"
+    assert_error @banned.id != @current_user.id, "you can not ban yourself"
 
   load_object: =>
     return if @object
