@@ -30,7 +30,7 @@ CommunityUsers = (opts={}) ->
   assert models.CommunityUsers\create opts
 
 Categories = (opts={}) ->
-  opts.name or= "category-#{next_counter "category"}"
+  opts.title or= "category-#{next_counter "category"}"
   assert models.Categories\create opts
 
 Topics = (opts={}) ->

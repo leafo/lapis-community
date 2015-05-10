@@ -1,6 +1,6 @@
 class Category extends require "widgets.base"
   inner_content: =>
-    h1 @category.name
+    h1 @category.title
     if @user
       p ->
         text "Created by "

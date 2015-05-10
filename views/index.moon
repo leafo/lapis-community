@@ -33,7 +33,7 @@ class Index extends require "widgets.base"
       for cat in *@categories
         tr ->
           td ->
-            a href: @url_for("category", category_id: cat.id), cat.name
+            a href: @url_for("category", category_id: cat.id), cat.title
 
           td Categories.membership_types[cat.membership_type]
           td cat.topics_count

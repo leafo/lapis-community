@@ -4,7 +4,7 @@ class CategoryAcceptMember extends require "widgets.base"
       text "Join the community "
 
       a href: @url_for("category", category_id: @category.id),
-        @category.name
+        @category.title
 
     form method: "post", ->
       button "Accept"

@@ -47,13 +47,13 @@ class CategoriesFlow extends Flow
     trim_filter new_category
 
     assert_valid new_category, {
-      {"name", exists: true, max_length: limits.MAX_TITLE_LEN}
+      {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
       {"membership_type", one_of: Categories.membership_types}
     }
 
     @category = Categories\create {
       user_id: @current_user.id
-      name: new_category.name
+      title: new_category.title
       membership_type: new_category.membership_type
     }
 
@@ -67,10 +67,10 @@ class CategoriesFlow extends Flow
       {"category", exists: true, type: "table"}
     }
 
-    category_update = trim_filter @params.category, {"name", "membership_type"}
+    category_update = trim_filter @params.category, {"title", "membership_type"}
 
     assert_valid category_update, {
-      {"name", exists: true, max_length: limits.MAX_TITLE_LEN}
+      {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
       {"membership_type", one_of: Categories.membership_types}
     }
 

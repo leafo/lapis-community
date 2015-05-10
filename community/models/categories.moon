@@ -18,9 +18,9 @@ class Categories extends Model
   }
 
   @create: (opts={}) =>
-    assert opts.name, "missing name"
+    assert opts.title, "missing title"
     opts.membership_type = @@membership_types\for_db opts.membership_type or "public"
-    opts.slug or= slugify opts.name
+    opts.slug or= slugify opts.title
 
     Model.create @, opts
 

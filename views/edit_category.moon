@@ -4,7 +4,7 @@ class EditCategory extends require "widgets.base"
   inner_content: =>
     h1 ->
       if @editing
-        text "Editing category: #{@category.name}"
+        text "Editing category: #{@category.title}"
       else
         text "New category"
 
@@ -14,7 +14,7 @@ class EditCategory extends require "widgets.base"
       div ->
         label ->
           strong "Title"
-          input type: "text", name: "category[name]", value: @category and @category.name
+          input type: "text", name: "category[title]", value: @category and @category.title
 
       strong "Membership type"
 

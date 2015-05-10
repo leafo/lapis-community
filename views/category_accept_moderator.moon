@@ -5,7 +5,7 @@ class CategoryAcceptModerator extends require "widgets.base"
     h2 ->
       text "Accept moderator position for "
       a href: @url_for("category", category_id: @category.id),
-        @category.name
+        @category.title
 
     form method: "post", ->
       button "Accept"

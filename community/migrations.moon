@@ -21,7 +21,7 @@ import create_table, create_index, drop_table from schema
   [1]: ->
     create_table T"categories", {
       {"id", serial}
-      {"name", varchar}
+      {"title", varchar}
       {"slug", varchar}
       {"user_id", foreign_key null: true}
       {"parent_category_id", foreign_key null: true}

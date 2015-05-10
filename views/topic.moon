@@ -1,7 +1,7 @@
 class Topic extends require "widgets.base"
   inner_content: =>
     if @topic.category_id
-      a href: @url_for("category", category_id: @topic\get_category!.id), @topic\get_category!.name
+      a href: @url_for("category", category_id: @topic\get_category!.id), @topic\get_category!.title
 
     h1 @topic.title
 

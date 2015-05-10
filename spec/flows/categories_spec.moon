@@ -48,7 +48,7 @@ describe "categories", ->
 
   it "should create category", ->
     res = CategoryApp\get current_user, "/new-category", {
-      "category[name]": "hello world"
+      "category[title]": "hello world"
       "category[membership_type]": "public"
     }
 
@@ -57,7 +57,7 @@ describe "categories", ->
     assert.truthy category
 
     assert.same current_user.id, category.user_id
-    assert.same "hello world", category.name
+    assert.same "hello world", category.title
     assert.same Categories.membership_types.public, category.membership_type
 
 
@@ -70,13 +70,13 @@ describe "categories", ->
     it "should edit category", ->
       res = CategoryApp\get current_user, "/edit-category", {
         category_id: category.id
-        "category[name]": "The good category"
+        "category[title]": "The good category"
         "category[membership_type]": "members_only"
       }
 
       assert.same {success: true}, res
       category\refresh!
-      assert.same "The good category", category.name
+      assert.same "The good category", category.title
       assert.same Categories.membership_types.members_only, category.membership_type
 
 
@@ -84,7 +84,7 @@ describe "categories", ->
       other_user = factory.Users!
       res = CategoryApp\get other_user, "/edit-category", {
         category_id: category.id
-        "category[name]": "The good category"
+        "category[title]": "The good category"
         "category[membership_type]": "members_only"
       }
 

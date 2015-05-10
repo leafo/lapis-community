@@ -25,13 +25,13 @@ rand_user = -> pick_one leafo, lee, adam, fart
 
 cat1 = factory.Categories {
   user_id: leafo.id
-  name: "Leafo's category"
+  title: "Leafo's category"
   membership_type: "public"
 }
 
 cat2 = factory.Categories {
   user_id: leafo.id
-  name: "Lee's zone"
+  title: "Lee's zone"
   membership_type: "members_only"
 }
 
