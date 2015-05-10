@@ -9,10 +9,12 @@ class Category extends require "widgets.base"
     ul ->
       li ->
         a href: @url_for("new_topic", category_id: @category.id), "New topic"
-      li ->
-        a href: @url_for("category_moderators", category_id: @category.id), "Moderators"
-      li ->
-        a href: @url_for("category_members", category_id: @category.id), "Members"
+
+      if @category\allowed_to_moderate @current_user
+        li ->
+          a href: @url_for("category_moderators", category_id: @category.id), "Moderators"
+        li ->
+          a href: @url_for("category_members", category_id: @category.id), "Members"
 
     h3 "Topics"
 

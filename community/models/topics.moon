@@ -45,6 +45,7 @@ class Topics extends Model
     }
 
   allowed_to_post: (user) =>
+    return false unless user
     return false if @deleted
     @allowed_to_view user
 

@@ -58,25 +58,31 @@ class extends lapis.Application
       redirect_to: @url_for "index"
   }
 
-  [new_topic: "/category/:category_id/new-topic"]: capture_errors respond_to {
+  [new_topic: "/category/:category_id/new-topic"]: capture_errors_json respond_to {
     before: =>
       CategoriesFlow = require "community.flows.categories"
       CategoriesFlow(@)\load_category!
+      assert_error @category\allowed_to_post(@current_user), "not allowed to post"
 
-    GET:  =>
+    GET: =>
       render: true
 
-    POST:  =>
+    POST: capture_errors =>
       TopicsFlow = require "community.flows.topics"
       TopicsFlow(@)\new_topic!
       redirect_to: @url_for "category", category_id: @category.id
   }
 
-  [new_post: "/topic/:topic_id/new-post"]: capture_errors respond_to {
+  [new_post: "/topic/:topic_id/new-post"]: capture_errors_json respond_to {
+    before: =>
+      TopicsFlow = require "community.flows.topics"
+      TopicsFlow(@)\load_topic!
+      assert_error @topic\allowed_to_post(@current_user), "not allowed to post"
+
     GET: =>
       render: true
 
-    POST: =>
+    POST: capture_errors =>
       PostsFlow = require "community.flows.posts"
       PostsFlow(@)\new_post!
       redirect_to: @url_for "topic", topic_id: @topic.id

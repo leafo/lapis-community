@@ -8,6 +8,7 @@
 ## v2
 
 * view counters on topics,categories, (everywhere??)
+* post quick responses (helpful, funny, etc)
 
 # Demo app
 
@@ -20,9 +21,5 @@
 
 * check for missing indexes
 * check n+1 queries on browsers
-* remove schema.moon and turn into migration
 
-# Other
-
-* post quick responses (helpful, funny, etc)
 
