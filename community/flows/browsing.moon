@@ -134,6 +134,21 @@ class BrowsingFlow extends Flow
 
     @before = nil if @before == 1
 
+  preload_topics: (topics) =>
+    Users\include_in topics, "user_id"
+    topics
+
+  -- TODO: there is no pagination here yet
+  sticky_category_topics: =>
+    pager = OrderedPaginator Topics, "category_order", [[
+      where category_id = ? and not deleted and sticky
+    ]], @category.id, {
+      per_page: PER_PAGE
+      prepare_results: @\preload_topics
+    }
+
+    @sticky_topics = pager\get_page!
+
   category_topics: =>
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
@@ -145,9 +160,7 @@ class BrowsingFlow extends Flow
       where category_id = ? and not deleted and not sticky
     ]], @category.id, {
       per_page: PER_PAGE
-      prepare_results: (topics) ->
-        Users\include_in topics, "user_id"
-        topics
+      prepare_results: @\preload_topics
     }
 
     if after

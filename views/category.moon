@@ -21,6 +21,13 @@ class Category extends require "widgets.base"
       text " "
       text @category.topics_count
 
+
+    if @sticky_topics and next @sticky_topics
+      @render_topics @sticky_topics
+
+    @render_topics @topics
+
+  render_topics: (topics) =>
     element "table", border: "1", ->
       thead ->
         tr ->
@@ -33,7 +40,7 @@ class Category extends require "widgets.base"
           td "Posted"
           td "Last post"
 
-      for topic in *@topics
+      for topic in *topics
         tr ->
           td ->
             if topic.locked

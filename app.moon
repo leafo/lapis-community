@@ -161,7 +161,11 @@ class extends lapis.Application
 
   [category: "/category/:category_id"]: capture_errors_json =>
     BrowsingFlow = require "community.flows.browsing"
-    BrowsingFlow(@)\category_topics!
+    @flow = BrowsingFlow(@)
+
+    @flow\category_topics!
+    @flow\sticky_category_topics!
+
     @user = @category\get_user!
     render: true
 
