@@ -26,7 +26,6 @@ class Bans extends Model
       banned_user_id: user.id
     }
 
-
   @create: (opts) =>
     assert opts.object, "missing object"
 

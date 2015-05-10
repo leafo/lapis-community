@@ -2,7 +2,7 @@ import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
 import Users from require "models"
-import Categories, CategoryModerators, CategoryMembers, Topics, Posts from require "community.models"
+import Categories, CategoryModerators, CategoryMembers, Topics, Posts, Bans from require "community.models"
 
 factory = require "spec.factory"
 
@@ -10,7 +10,7 @@ describe "topics", ->
   use_test_env!
 
   before_each ->
-    truncate_tables Users, Categories, CategoryModerators, CategoryMembers, Topics, Posts
+    truncate_tables Users, Categories, CategoryModerators, CategoryMembers, Topics, Posts, Bans
 
   it "should create a topic", ->
     factory.Topics!
@@ -87,7 +87,6 @@ describe "topics", ->
     assert.falsy topic\allowed_to_edit other_user
     assert.falsy topic\allowed_to_moderate other_user
 
-
   it "should set category order", ->
     one = factory.Topics category_id: 123
     two = factory.Topics category_id: 123
@@ -103,4 +102,15 @@ describe "topics", ->
 
     four = factory.Topics category_id: 123
     assert.same 5, four.category_order
+
+  it "should check permission for banned user", ->
+    topic = factory.Topics!
+    banned_user = factory.Users!
+
+    assert.falsy topic\find_ban banned_user
+    factory.Bans object: topic, banned_user_id: banned_user.id
+    assert.truthy topic\find_ban banned_user
+
+    assert.falsy topic\allowed_to_view banned_user
+    assert.falsy topic\allowed_to_post banned_user
 

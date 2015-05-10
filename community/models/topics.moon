@@ -46,21 +46,20 @@ class Topics extends Model
 
   allowed_to_post: (user) =>
     return false if @deleted
-    return false if @locked
-    return nil, "no user" unless user
-
-    if @category_id
-      @get_category!\allowed_to_post user
-    else
-      true
+    @allowed_to_view user
 
   allowed_to_view: (user) =>
     return false if @deleted
 
-    if @category_id
+    can_view = if @category_id
       @get_category!\allowed_to_view user
     else
       true
+
+    if can_view
+      return false if @find_ban user
+
+    can_view
 
   allowed_to_edit: (user) =>
     return false if @deleted
@@ -144,4 +143,9 @@ class Topics extends Model
 
     @tags = nil -- clear cache
     true
+
+  find_ban: (user) =>
+    return nil unless user
+    import Bans from require "community.models"
+    Bans\find_for_object @, user
 

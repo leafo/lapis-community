@@ -110,5 +110,3 @@ describe "categories", ->
       assert.falsy category\allowed_to_edit_members banned_user
       assert.falsy category\allowed_to_moderate banned_user
 
-
-
