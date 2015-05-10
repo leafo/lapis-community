@@ -1,10 +1,9 @@
 # Core
 
-* make topic sticky
 * last post on category
-* banning: need to enforce
 * set lock/sticky on topic creation
 * voting modes for category (up/down, up only)
+* preload blocks on view
 
 ## v2
 

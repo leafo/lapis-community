@@ -289,6 +289,12 @@ class extends lapis.Application
       redirect_to: @url_for "category_moderators", category_id: @category.id
   }
 
+  [lock_topic: "/topic/:topic_id/lock"]: =>
+  [unlock_topic: "/topic/:topic_id/unlock"]: =>
+
+  [stick_topic: "/topic/:topic_id/stick"]: =>
+  [unstick_topic: "/topic/:topic_id/unstick"]: =>
+
   [index: "/"]: =>
     import Categories from require "community.models"
     @categories = Categories\select!

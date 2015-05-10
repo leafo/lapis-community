@@ -11,8 +11,15 @@ class Topic extends require "widgets.base"
       text @topic.posts_count
 
     ul ->
-      a href: @url_for("new_post", topic_id: @topic.id), "Reply"
+      li ->
+        a href: @url_for("new_post", topic_id: @topic.id), "Reply"
 
+      if @topic\allowed_to_moderate @current_user
+        li ->
+          a href: @url_for("lock_topic", topic_id: @topic.id), "Lock"
+
+        li ->
+          a href: @url_for("stick_topic", topic_id: @topic.id), "Stick"
 
     @pagination!
     hr!
