@@ -93,6 +93,8 @@ class BrowsingFlow extends Flow
         for p in *posts
           p.topic = @topic
 
+        Posts\preload_mentioned_users posts
+
         if @current_user
           posts_with_votes = [p for p in *posts when p.down_votes_count > 0 or p.up_votes_count > 0]
 

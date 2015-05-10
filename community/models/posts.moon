@@ -41,6 +41,53 @@ class Posts extends Model
     opts.post_number = db.raw post_number
     Model.create @, opts
 
+  @preload_mentioned_users: (posts) =>
+    import Users from require "models"
+    all_usernames = {}
+    usernames_by_post = {}
+
+    for post in *posts
+      usernames = @_parse_usernames post.body
+      if next usernames
+        usernames_by_post[post.id] = usernames
+        for u in *usernames
+          table.insert all_usernames, u
+
+    users = Users\find_all all_usernames, key: "username"
+    users_by_username = {u.username, u for u in *users}
+
+    for post in *posts
+      post.mentioned_users = for uname in *usernames_by_post[post.id] or {}
+        continue unless users_by_username[uname]
+        users_by_username[uname]
+
+    posts
+
+  @_parse_usernames: (body) =>
+    [username for username in body\gmatch "@([%w-_]+)"]
+
+  get_mentioned_users: =>
+    unless @mentioned_users
+      usernames = @@_parse_usernames @body
+      import Users from require "models"
+      @mentioned_users = Users\find_all usernames, key: "username"
+
+    @mentioned_users
+
+  filled_body: (r) =>
+    body = @body
+
+    if m = @get_mentioned_users!
+      mentions_by_username = {u.username, u for u in *m}
+      import escape from require "lapis.html"
+
+      body = body\gsub "@([%w-_]+)", (username) ->
+        user = mentions_by_username[username]
+        return "@#{username}" unless user
+        "<a href='#{escape r\build_url r\url_for user}'>@#{escape user\name_for_display!}</a>"
+
+    body
+
   is_topic_post: =>
     @post_number == 1 and @depth == 1
 

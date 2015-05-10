@@ -1,9 +1,6 @@
 # Core
 
 * last post on category
-* voting modes for category (up/down, up only)
-* category description
-* mentions
 
 ## v2
 
@@ -15,6 +12,7 @@
 * ban user
 * report post
 * show edits (for mods only? category option?)
+* show mentions
 
 # Checklist
 

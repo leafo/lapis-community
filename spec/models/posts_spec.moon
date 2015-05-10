@@ -81,4 +81,31 @@ describe "posts", ->
       assert.falsy post\allowed_to_vote other_user, "up"
       assert.falsy post\allowed_to_vote other_user, "down"
 
+  it "should get mentions for post", ->
+    factory.Users username: "mentioned_person"
+    post = factory.Posts body: "hello @mentioned_person how are you doing @mentioned_person I am @nonexist"
+    assert.same {"mentioned_person"}, [u.username for u in *post\get_mentioned_users!]
+
+  it "should preload mentions for many posts #ddd", ->
+    factory.Users username: "mentioned_person1"
+    factory.Users username: "mentioned_person2"
+
+    posts = {
+      factory.Posts body: "hello @mentioned_person1 how are you doing @nonexist"
+      factory.Posts body: "this is @mentioned_person2 how are you doing"
+      factory.Posts body: "this is @mentioned_person2 how are you @mentioned_person1"
+      factory.Posts body: "this is @nothing"
+    }
+
+    Posts\preload_mentioned_users posts
+
+    usernames = for post in *posts
+      [u.username for u in *post.mentioned_users]
+
+
+    assert.same {"mentioned_person1"}, usernames[1]
+    assert.same {"mentioned_person2"}, usernames[2]
+    assert.same {"mentioned_person2", "mentioned_person1"}, usernames[3]
+    assert.same {}, usernames[4]
+
 
