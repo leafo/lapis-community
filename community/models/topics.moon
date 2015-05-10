@@ -48,11 +48,19 @@ class Topics extends Model
     return false if @deleted
     return false if @locked
     return nil, "no user" unless user
-    true
+
+    if @category_id
+      @get_category!\allowed_to_post user
+    else
+      true
 
   allowed_to_view: (user) =>
     return false if @deleted
-    true
+
+    if @category_id
+      @get_category!\allowed_to_view user
+    else
+      true
 
   allowed_to_edit: (user) =>
     return false if @deleted
