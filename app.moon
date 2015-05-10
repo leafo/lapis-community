@@ -295,6 +295,19 @@ class extends lapis.Application
   [stick_topic: "/topic/:topic_id/stick"]: =>
   [unstick_topic: "/topic/:topic_id/unstick"]: =>
 
+
+  [block_user: "/block/:blocked_user_id"]: capture_errors_json respond_to {
+    POST: =>
+      BlocksFlow = require "community.flows.blocks"
+      json: { success: BlocksFlow(@)\block_user! }
+  }
+
+  [unblock_user: "/unblock/:blocked_user_id"]: capture_errors_json respond_to {
+    POST: =>
+      BlocksFlow = require "community.flows.blocks"
+      json: { success: BlocksFlow(@)\unblock_user! }
+  }
+
   [index: "/"]: =>
     import Categories from require "community.models"
     @categories = Categories\select!

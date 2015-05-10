@@ -33,6 +33,12 @@ class Topic extends require "widgets.base"
     if post.deleted
       div class: "post deleted", ->
         em "This post has been deleted"
+    elseif post.block
+      div class: "post deleted", ->
+        em "You have blocked this user (#{post.user\name_for_display!})"
+        form action: @url_for("unblock_user", blocked_user_id: post.user_id), method: "post", ->
+          button "Unblock"
+
     else
       div class: "post", ->
         u "##{post.post_number}"
@@ -65,6 +71,9 @@ class Topic extends require "widgets.base"
         if @current_user
           p ->
             a href: @url_for("reply_post", post_id: post.id), "Reply"
+
+            form action: @url_for("block_user", blocked_user_id: post.user_id), method: "post", ->
+              button "Block"
 
             form action: @url_for("vote_object", object_type: "post", object_id: post.id), method: "post", ->
               button value: "up", name: "direction", "Upvote"
