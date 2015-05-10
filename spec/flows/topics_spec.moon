@@ -68,6 +68,7 @@ describe "topic tags", ->
     assert.same topic.id, log.object_id
     assert.same "topic.lock", log.action
     assert.same "this topic is stupid", log.reason
+    assert.same topic.category_id, log.category_id
 
     assert.same 0, #ModerationLogObjects\select!
 
@@ -88,6 +89,7 @@ describe "topic tags", ->
     assert.same ModerationLogs.object_types.topic, log.object_type
     assert.same topic.id, log.object_id
     assert.same "topic.unlock", log.action
+    assert.same topic.category_id, log.category_id
 
     assert.same 0, #ModerationLogObjects\select!
 
@@ -106,6 +108,4 @@ describe "topic tags", ->
     }
 
     assert.truthy res.errors
-
-
 

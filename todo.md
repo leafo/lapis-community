@@ -1,8 +1,12 @@
 # Core
 
+* make topic sticky
 * last post on category
 * banning: need to enforce
-* topic lock reason
+* set lock/sticky on topic creation
+* voting modes for category (up/down, up only)
+
+* write moderation log for banning
 
 ## v2
 

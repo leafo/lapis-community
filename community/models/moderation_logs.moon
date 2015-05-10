@@ -7,6 +7,7 @@ class ModerationLogs extends Model
 
   @relations: {
     {"user", belongs_to: "Users"}
+    {"category", belongs_to: "Categories"}
     {"log_objects", has_many: "ModerationLogObjects"}
 
     {"object", polymorphic_belongs_to: {

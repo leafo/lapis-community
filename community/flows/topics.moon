@@ -32,6 +32,7 @@ class TopicsFlow extends Flow
     ModerationLogs\create {
       user_id: @current_user.id
       object: @topic
+      category_id: @topic.category_id
       :action
       :reason
     }

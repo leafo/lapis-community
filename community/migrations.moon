@@ -246,6 +246,8 @@ import create_table, create_index, drop_table from schema
     create_table T"moderation_logs", {
       {"id", serial}
 
+      {"category_id", foreign_key null: true}
+
       {"object_type", integer}
       {"object_id", foreign_key}
 
@@ -261,6 +263,7 @@ import create_table, create_index, drop_table from schema
 
     create_index T"moderation_logs", "user_id"
     create_index T"moderation_logs", "object_type", "object_id", "action", "id"
+    create_index T"moderation_logs", "category_id", "id", where: "category_id is not null"
 
     create_table T"moderation_log_objects", {
       {"moderation_log_id", foreign_key}
