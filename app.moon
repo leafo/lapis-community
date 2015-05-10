@@ -58,6 +58,22 @@ class extends lapis.Application
       redirect_to: @url_for "index"
   }
 
+  [edit_category: "/category/:category_id/edit"]: capture_errors_json respond_to {
+    before: =>
+      CategoriesFlow = require "community.flows.categories"
+      @flow = CategoriesFlow @
+      @flow\load_category!
+      assert_error @category\allowed_to_edit(@current_user), "invalid user"
+      @editing = true
+
+    GET: =>
+      render: true
+
+    POST: capture_errors =>
+      @flow\edit_category @
+      redirect_to: @url_for "category", category_id: @category.id
+  }
+
   [new_topic: "/category/:category_id/new-topic"]: capture_errors_json respond_to {
     before: =>
       CategoriesFlow = require "community.flows.categories"

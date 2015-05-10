@@ -7,6 +7,11 @@ class Layout extends html.Widget
       body ->
         div ->
           text "Logged in as: #{@current_user and @current_user.username}"
+
+
+          text " - "
+          a href: @url_for("index"), "Home"
+
         hr!
 
         @content_for "inner"

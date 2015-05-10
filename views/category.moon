@@ -10,6 +10,10 @@ class Category extends require "widgets.base"
       li ->
         a href: @url_for("new_topic", category_id: @category.id), "New topic"
 
+      if @category\allowed_to_edit @current_user
+        li ->
+          a href: @url_for("edit_category", category_id: @category.id), "Edit category"
+
       if @category\allowed_to_moderate @current_user
         li ->
           a href: @url_for("category_moderators", category_id: @category.id), "Moderators"

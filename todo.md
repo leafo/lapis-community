@@ -12,7 +12,6 @@
 
 # Demo app
 
-* edit category
 * ban user
 * report post
 * show edits (for mods only? category option?)
