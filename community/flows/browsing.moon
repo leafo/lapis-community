@@ -7,6 +7,7 @@ import OrderedPaginator from require "lapis.db.pagination"
 
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
+import uniqify from require "lapis.util"
 
 db = require "lapis.db"
 
@@ -95,13 +96,21 @@ class BrowsingFlow extends Flow
         if @current_user
           posts_with_votes = [p for p in *posts when p.down_votes_count > 0 or p.up_votes_count > 0]
 
-          import Votes from require "community.models"
+          import Blocks, Votes from require "community.models"
 
           Votes\include_in posts_with_votes, "object_id", {
             flip: true
             where: {
               object_type: Votes.object_types.post
               user_id: @current_user.id
+            }
+          }
+
+          Blocks\include_in posts, "blocked_user_id", {
+            flip: true
+            local_key: "user_id"
+            where: {
+              blocking_user_id: @current_user.id
             }
           }
 
