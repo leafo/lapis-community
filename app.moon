@@ -59,7 +59,7 @@ class extends lapis.Application
   }
 
   [new_topic: "/category/:category_id/new-topic"]: capture_errors respond_to {
-    before_filter: =>
+    before: =>
       CategoriesFlow = require "community.flows.categories"
       CategoriesFlow(@)\load_category!
 

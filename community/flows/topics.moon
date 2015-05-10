@@ -53,6 +53,9 @@ class TopicsFlow extends Flow
     CategoriesFlow(@)\load_category!
     assert_error @category\allowed_to_post @current_user
 
+
+    moderator = @category\allowed_to_moderate @current_user
+
     assert_valid @params, {
       {"topic", type: "table"}
     }
@@ -63,11 +66,20 @@ class TopicsFlow extends Flow
       {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
     }
 
+    sticky = false
+    locked = false
+
+    if moderator
+      sticky = not not new_topic.sticky
+      locked = not not new_topic.locked
+
     @topic = Topics\create {
       user_id: @current_user.id
       category_id: @category.id
       title: new_topic.title
       posts_count: 1
+      :sticky
+      :locked
     }
 
     @post = Posts\create {

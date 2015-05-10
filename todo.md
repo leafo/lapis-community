@@ -1,9 +1,9 @@
 # Core
 
 * last post on category
-* set lock/sticky on topic creation
 * voting modes for category (up/down, up only)
 * category description
+* mentions
 
 ## v2
 

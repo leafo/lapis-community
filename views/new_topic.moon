@@ -14,4 +14,15 @@ class NewTopic extends require "widgets.base"
           strong "Body"
           textarea name: "topic[body]"
 
+      if @category\allowed_to_moderate @current_user
+        div ->
+          label ->
+            input type: "checkbox", name: "topic[sticky]"
+            text " Sticky"
+
+        div ->
+          label ->
+            input type: "checkbox", name: "topic[locked]"
+            text " Locked"
+
       button "New topic"
