@@ -127,6 +127,12 @@ describe "posting flow", ->
       tps = TopicParticipants\select "where topic_id = ?", topic.id
       assert.same 1, #tps
 
+      category\refresh!
+      assert.same topic.id, category.last_topic_id
+
+      -- first post doesn't get put in last_post_id...
+      assert.same nil, topic.last_post_id
+
   describe "new post", ->
     local topic
 
@@ -156,6 +162,11 @@ describe "posting flow", ->
       -- 1 less because factory didn't seed topic participants
       tps = TopicParticipants\select "where topic_id = ?", topic.id
       assert.same 1, #tps
+
+      -- although this is the first post, there is no circumstance where the
+      -- first post would normally get posted thoruhg /new-post, so we assume
+      -- last_post_id is set
+      assert.same post.id, topic.last_post_id
 
     it "should post two posts", ->
       for i=1,2
@@ -375,6 +386,8 @@ describe "posting flow", ->
       tps = TopicParticipants\select "where topic_id = ?", topic.id
       assert.same 0, #tps
 
+      topic\refresh!
+      assert.same nil, topic.last_post_id
 
     it "should delete primary post", ->
       post = factory.Posts {
@@ -399,5 +412,4 @@ describe "posting flow", ->
       }
 
       assert.same {errors: {"not allowed to edit"}}, res
-
 

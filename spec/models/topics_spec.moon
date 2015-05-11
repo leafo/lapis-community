@@ -116,10 +116,17 @@ describe "topics", ->
 
   it "should refresh last post id", ->
     topic = factory.Topics!
+    factory.Posts topic_id: topic.id -- first
     post = factory.Posts topic_id: topic.id
     factory.Posts topic_id: topic.id, deleted: true
 
     topic\refresh_last_post!
-
     assert.same post.id, topic.last_post_id
+
+  it "should refresh last post id to nil if there's only 1 post", ->
+    topic = factory.Topics!
+    factory.Posts topic_id: topic.id -- first
+
+    topic\refresh_last_post!
+    assert.same nil, topic.last_post_id
 

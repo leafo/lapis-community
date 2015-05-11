@@ -116,7 +116,7 @@ describe "topics", ->
 
       assert.truthy res.errors
 
-  describe "stick #ddd", ->
+  describe "stick", ->
     it "should stick topic", ->
       res = TopicsApp\get current_user, "/stick-topic", {
         topic_id: topic.id

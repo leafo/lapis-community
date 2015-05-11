@@ -106,8 +106,9 @@ class Topics extends Model
     @update {
       last_post_id: db.raw db.interpolate_query "(
         select id from #{db.escape_identifier Posts\table_name!}
-        where topic_id = ? and not deleted
+        where topic_id = ? and not deleted and (depth != 1 or post_number != 1)
         order by id desc
+        limit 1
       )", @id
     }, timestamp: false
 
