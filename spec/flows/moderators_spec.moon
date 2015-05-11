@@ -229,28 +229,6 @@ describe "moderators flow", ->
       assert.truthy res.success
       assert.same {}, CategoryModerators\select!
 
-  -- TODO: this is model spec not flow spec
-  describe "moderator permissions", ->
-    local mod
-    import
-      Posts
-      Topics
-      from require "community.models"
-
-    before_each ->
-      truncate_tables Posts, Topics
-      mod = factory.CategoryModerators user_id: current_user.id
-
-    it "should let moderator edit post in category", ->
-      topic = factory.Topics category_id: mod.category_id
-      post = factory.Posts topic_id: topic.id
-
-      assert.truthy post\allowed_to_edit current_user
-
-    it "should not let moderator edit post other category", ->
-      post = factory.Posts!
-      assert.falsy post\allowed_to_edit current_user
-
 
   describe "show moderators", ->
     it "should get moderators when there are none", ->
