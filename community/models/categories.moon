@@ -150,7 +150,7 @@ class Categories extends Model
       else
         {}
 
-  update_last_topic: =>
+  refresh_last_topic: =>
     import Topics from require "community.models"
 
     @update {
@@ -160,6 +160,19 @@ class Categories extends Model
         limit 1
       )", @id
     }
+
+  increment_from_topic: (topic) =>
+    assert topic.category_id == @id
+
+    @update {
+      topics_count: db.raw "topics_count + 1"
+      last_topic_id: topic.id
+    }, timestamp: false
+
+  increment_from_post: (post) =>
+    @update {
+      last_topic_id: post.topic_id
+    }, timestamp: false
 
   @recount: =>
     import Topics from require "community.models"

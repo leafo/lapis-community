@@ -1,3 +1,4 @@
+-- TODO: move this to respetive category/topic specs
 import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 

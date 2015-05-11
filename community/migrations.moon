@@ -63,6 +63,8 @@ import create_table, create_index, drop_table from schema
       {"title", varchar null: true}
       {"slug", varchar null: true}
 
+      {"last_post_id", foreign_key null: true}
+
       {"locked", boolean}
       {"sticky", boolean}
       {"deleted", boolean}
@@ -74,12 +76,10 @@ import create_table, create_index, drop_table from schema
 
       {"created_at", time}
       {"updated_at", time}
-      {"last_post_at", time}
 
       "PRIMARY KEY (id)"
     }
 
-    create_index T"topics", "category_id", "sticky", "last_post_at", "id", where: "not deleted and category_id is not null"
     create_index T"topics", "category_id", "sticky", "category_order", where: "not deleted and category_id is not null"
 
     create_table T"posts", {

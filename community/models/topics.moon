@@ -15,7 +15,6 @@ class Topics extends Model
     if opts.title
       opts.slug or= slugify opts.title
 
-    opts.last_post_at or= db.format_date!
     opts.category_order = @update_category_order_sql opts.category_id
 
     Model.create @, opts
@@ -89,14 +88,14 @@ class Topics extends Model
     import TopicParticipants from require "community.models"
     TopicParticipants\decrement @id, user.id
 
-  increment_post: (post) =>
+  increment_from_post: (post) =>
     assert post.topic_id == @id, "invalid post sent to topic"
 
     @update {
       posts_count: db.raw "posts_count + 1"
       root_posts_count: if post.depth == 1
         db.raw "root_posts_count + 1"
-      last_post_at: db.format_date!
+      last_post_id: post.id
       category_order: Topics\update_category_order_sql @category_id
     }, timestamp: false
 

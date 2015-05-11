@@ -97,7 +97,7 @@ describe "topics", ->
     assert.same 3, three.category_order
 
     post = factory.Posts topic_id: one.id
-    one\increment_post post
+    one\increment_from_post post
     assert.same 4, one.category_order
 
     four = factory.Topics category_id: 123

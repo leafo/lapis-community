@@ -56,7 +56,11 @@ class PostsFlow extends Flow
       :parent_post
     }
 
-    @topic\increment_post @post
+    @topic\increment_from_post @post
+
+    if category = @topic\get_category!
+      category\increment_from_post @post
+
     CommunityUsers\for_user(@current_user)\increment "posts_count"
     @topic\increment_participant @current_user
 

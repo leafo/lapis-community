@@ -88,7 +88,8 @@ class TopicsFlow extends Flow
       body: new_topic.body
     }
 
-    @category\update { topics_count: db.raw "topics_count + 1" }, timestamp: false
+    @category\increment_from_topic @topic
+
     CommunityUsers\for_user(@current_user)\increment "topics_count"
     @topic\increment_participant @current_user
 

@@ -69,8 +69,7 @@ class Category extends require "widgets.base"
           td tostring topic.posts_count
 
           td topic.created_at
-          td topic.last_post_at
-
+          td "TODO"
 
     p ->
       cat_opts = {category_id: @category.id }

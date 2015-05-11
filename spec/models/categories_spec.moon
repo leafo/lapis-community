@@ -111,14 +111,14 @@ describe "categories", ->
       assert.falsy category\allowed_to_moderate banned_user
 
     it "should update last topic to nothing", ->
-      category\update_last_topic!
+      category\refresh_last_topic!
       assert.falsy category.last_topic_id
 
     it "should update last topic with a topic", ->
       topic = factory.Topics category_id: category.id
       factory.Topics category_id: category.id, deleted: true
 
-      category\update_last_topic!
+      category\refresh_last_topic!
 
       assert.same category.last_topic_id, topic.id
 

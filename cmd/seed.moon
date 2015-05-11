@@ -85,4 +85,4 @@ Categories\recount!
 CommunityUsers\recount!
 
 for c in *Categories\select!
-  c\update_last_topic!
+  c\refresh_last_topic!
