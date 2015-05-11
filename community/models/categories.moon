@@ -159,7 +159,7 @@ class Categories extends Model
         order by category_order desc
         limit 1
       )", @id
-    }
+    }, timestamp: false
 
   increment_from_topic: (topic) =>
     assert topic.category_id == @id

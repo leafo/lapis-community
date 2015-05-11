@@ -109,6 +109,7 @@ import create_table, create_index, drop_table from schema
 
     create_index T"posts", "topic_id", "parent_post_id", "depth", "post_number", unique: true
     create_index T"posts", "parent_post_id", "post_number", unique: true
+    create_index T"posts", "topic_id", "id", where: "not deleted" -- for fetching latest post from topic
 
     create_table T"post_edits", {
       {"id", serial}

@@ -114,3 +114,12 @@ describe "topics", ->
     assert.falsy topic\allowed_to_view banned_user
     assert.falsy topic\allowed_to_post banned_user
 
+  it "should refresh last post id", ->
+    topic = factory.Topics!
+    post = factory.Posts topic_id: topic.id
+    factory.Posts topic_id: topic.id, deleted: true
+
+    topic\refresh_last_post!
+
+    assert.same post.id, topic.last_post_id
+

@@ -99,6 +99,19 @@ class Topics extends Model
       category_order: Topics\update_category_order_sql @category_id
     }, timestamp: false
 
+
+  refresh_last_post: =>
+    import Posts from require "community.models"
+
+    @update {
+      last_post_id: db.raw db.interpolate_query "(
+        select id from #{db.escape_identifier Posts\table_name!}
+        where topic_id = ? and not deleted
+        order by id desc
+      )", @id
+    }, timestamp: false
+
+
   delete: =>
     import soft_delete from require "community.helpers.models"
 
