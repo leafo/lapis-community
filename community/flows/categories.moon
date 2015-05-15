@@ -53,7 +53,7 @@ class CategoriesFlow extends Flow
       {"short_description", optional: true, max_length: limits.MAX_TITLE_LEN}
       {"description", optional: true, max_length: limits.MAX_BODY_LEN}
 
-      {"membership_type", one_of: Categories.membershmembership_typesip_types}
+      {"membership_type", one_of: Categories.membership_types}
       {"voting_type", one_of: Categories.voting_types}
     }
 
@@ -92,7 +92,7 @@ class CategoriesFlow extends Flow
       {"short_description", optional: true, max_length: limits.MAX_TITLE_LEN}
       {"description", optional: true, max_length: limits.MAX_BODY_LEN}
 
-      {"membership_type", one_of: Categories.membershmembership_typesip_types}
+      {"membership_type", one_of: Categories.membership_types}
       {"voting_type", one_of: Categories.voting_types}
     }
 
