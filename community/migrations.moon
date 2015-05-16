@@ -285,5 +285,30 @@ import create_table, create_index, drop_table from schema
       "PRIMARY KEY (moderation_log_id, object_type, object_id)"
     }
 
+    create_table T"category_groups", {
+      {"id", serial}
+
+      {"title", varchar null: true}
+      {"user_id", foreign_key null: true}
+
+      {"categories_count", integer}
+
+      {"created_at", time}
+      {"updated_at", time}
+
+      "PRIMARY KEY (id)"
+    }
+
+    create_table T"category_group_categories", {
+      {"category_group_id", foreign_key}
+      {"category_id", foreign_key}
+
+      {"created_at", time}
+      {"updated_at", time}
+
+      "PRIMARY KEY (category_group_id, category_id)"
+    }
+
+    create_index T"category_group_categories", "category_id", unique: true
 
 }

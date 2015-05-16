@@ -5,7 +5,7 @@ class CommunityUsers extends Model
   @timestamp: true
   @primary_key: "user_id"
 
-  -- just so it can be users
+  -- just so it can be community_users and not community_community_users
   @table_name: =>
     import prefix_table from require "community.model"
     name = prefix_table "users"
