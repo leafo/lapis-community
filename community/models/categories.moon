@@ -48,9 +48,14 @@ class Categories extends Model
 
   allowed_to_post: (user) =>
     return false unless user
+    return false if @archived
+    return false if @hidden
+
     @allowed_to_view user
 
   allowed_to_view: (user) =>
+    return false if @hidden
+
     can_view = switch @@membership_types[@membership_type]
       when "public"
         true

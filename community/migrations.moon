@@ -36,6 +36,9 @@ import create_table, create_index, drop_table from schema
       {"membership_type", integer}
       {"voting_type", integer}
 
+      {"archived", boolean}
+      {"hidden", boolean}
+
       {"created_at", time}
       {"updated_at", time}
 

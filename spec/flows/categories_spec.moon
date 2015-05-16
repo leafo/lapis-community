@@ -51,6 +51,7 @@ describe "categories", ->
       "category[membership_type]": "public"
       "category[voting_type]": "disabled"
       "category[short_description]": "This category is about something"
+      "category[hidden]": "on"
     }
 
     assert.falsy res.errors
@@ -63,6 +64,9 @@ describe "categories", ->
     assert.same "hello world", category.title
     assert.same "This category is about something", category.short_description
     assert.falsy category.description
+
+    assert.falsy category.archived
+    assert.truthy category.hidden
 
     assert.same Categories.membership_types.public, category.membership_type
     assert.same Categories.voting_types.disabled, category.voting_type
@@ -80,6 +84,7 @@ describe "categories", ->
         "category[membership_type]": "members_only"
         "category[voting_type]": "up"
         "category[short_description]": "yeah yeah"
+        "category[archived]": "on"
       }
 
       assert.same {success: true}, res
@@ -87,6 +92,8 @@ describe "categories", ->
       assert.same "The good category", category.title
       assert.same "yeah yeah", category.short_description
       assert.falsy category.description
+      assert.truthy category.archived
+      assert.falsy category.hidden
 
       assert.same Categories.membership_types.members_only, category.membership_type
       assert.same Categories.voting_types.up, category.voting_type

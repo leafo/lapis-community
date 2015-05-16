@@ -63,6 +63,9 @@ class CategoriesFlow extends Flow
 
       membership_type: new_category.membership_type
       voting_type: new_category.voting_type
+
+      archived: not not new_category.archived
+      hidden: not not new_category.hidden
     }
 
     true
@@ -81,6 +84,8 @@ class CategoriesFlow extends Flow
       "voting_type"
       "description"
       "short_description"
+      "archived"
+      "hidden"
     }
 
     assert_valid category_update, {
@@ -92,6 +97,9 @@ class CategoriesFlow extends Flow
       {"membership_type", one_of: Categories.membership_types}
       {"voting_type", one_of: Categories.voting_types}
     }
+
+    category_update.archived = not not category_update.archived
+    category_update.hidden = not not category_update.hidden
 
     category_update.membership_type = Categories.membership_types\for_db category_update.membership_type
     category_update.voting_type = Categories.voting_types\for_db category_update.voting_type
