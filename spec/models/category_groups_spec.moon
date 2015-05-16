@@ -56,3 +56,18 @@ describe "categories", ->
 
       group\remove_category category
 
+    it "should set categories", ->
+      category1 = factory.Categories!
+      category2 = factory.Categories!
+
+      group\add_category category1
+
+      group\set_categories { category2 }
+
+      cats = {cgc.category_id, true for cgc in *CategoryGroupCategories\select!}
+
+      assert.same {
+        [category2.id]: true
+      }, cats
+
+
