@@ -30,7 +30,7 @@ CommunityUsers = (opts={}) ->
   assert models.CommunityUsers\create opts
 
 Categories = (opts={}) ->
-  opts.title or= "category-#{next_counter "category"}"
+  opts.title or= "Category #{next_counter "category"}"
   assert models.Categories\create opts
 
 Topics = (opts={}) ->
@@ -110,6 +110,10 @@ Bans = (opts={}) ->
   opts.banning_user_id or= Users!.id
   assert models.Bans\create opts
 
+CategoryGroups = (opts={}) ->
+  opts.title or= "Category group #{next_counter "category-group"}"
+  assert models.CategoryGroups\create opts
+
 { :next_counter, :next_email,
   :Users, :Categories, :Topics, :Posts, :Votes, :Moderators,
-  :PostReports, :CategoryMembers, :Blocks, :Bans }
+  :PostReports, :CategoryMembers, :Blocks, :Bans, :CategoryGroups }
