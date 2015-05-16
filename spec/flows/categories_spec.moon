@@ -9,7 +9,7 @@ import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
 
 import Users from require "models"
-import Categories, Posts, Topics, CategoryMembers, CategoryModerators from require "community.models"
+import Categories, Posts, Topics, CategoryMembers, Moderators from require "community.models"
 
 class CategoryApp extends TestApp
   @before_filter =>
@@ -43,7 +43,7 @@ describe "categories", ->
   local current_user
 
   before_each ->
-    truncate_tables Users, Categories, Posts, Topics, CategoryMembers, CategoryModerators
+    truncate_tables Users, Categories, Posts, Topics, CategoryMembers, Moderators
     current_user = factory.Users!
 
   it "should create category", ->

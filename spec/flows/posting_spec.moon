@@ -6,7 +6,7 @@ import Users from require "models"
 
 import
   Categories
-  CategoryModerators
+  Moderators
   CommunityUsers
   PostEdits
   Votes
@@ -65,7 +65,7 @@ describe "posting flow", ->
 
   before_each ->
     truncate_tables Users, Categories, Topics, Posts, Votes,
-      CategoryModerators, PostEdits, CommunityUsers, TopicParticipants
+      Moderators, PostEdits, CommunityUsers, TopicParticipants
 
     current_user = factory.Users!
 
@@ -325,9 +325,9 @@ describe "posting flow", ->
       post = factory.Posts!
       topic = post\get_topic!
 
-      factory.CategoryModerators {
+      factory.Moderators {
         user_id: current_user.id
-        category_id: topic.category_id
+        object: topic\get_category!
       }
 
       res = PostingApp\get current_user, "/edit-post", {

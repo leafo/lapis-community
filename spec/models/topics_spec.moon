@@ -2,7 +2,7 @@ import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
 import Users from require "models"
-import Categories, CategoryModerators, CategoryMembers, Topics, Posts, Bans from require "community.models"
+import Categories, Moderators, CategoryMembers, Topics, Posts, Bans from require "community.models"
 
 factory = require "spec.factory"
 
@@ -10,7 +10,7 @@ describe "topics", ->
   use_test_env!
 
   before_each ->
-    truncate_tables Users, Categories, CategoryModerators, CategoryMembers, Topics, Posts, Bans
+    truncate_tables Users, Categories, Moderators, CategoryMembers, Topics, Posts, Bans
 
   it "should create a topic", ->
     factory.Topics!
@@ -35,7 +35,7 @@ describe "topics", ->
     assert.falsy topic\allowed_to_edit other_user
     assert.falsy topic\allowed_to_moderate other_user
 
-    mod = factory.CategoryModerators category_id: topic.category_id
+    mod = factory.Moderators object: topic\get_category!
     mod_user = mod\get_user!
 
     assert.truthy topic\allowed_to_post mod_user
