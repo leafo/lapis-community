@@ -11,13 +11,13 @@ class CategoryGroups extends Model
     {"category_group_categories", has_many: "CategoryGroupCategories"}
   }
 
-  allowed_to_edit_moderators: (user) =>
-    return false unless user
+  allowed_to_moderate: (user) =>
+    return nil unless user
     return true if user\is_admin!
     return true if user.id == @user_id
 
     if mod = @find_moderator user
-      return true if mod.accepted and mod.admin
+      return true if mod.accepted
 
     false
 

@@ -2,7 +2,7 @@ import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
 import Users from require "models"
-import Categories, Moderators, CategoryMembers, Bans from require "community.models"
+import Categories, Moderators, CategoryMembers, Bans, CategoryGroups, CategoryGroupCategories from require "community.models"
 
 factory = require "spec.factory"
 
@@ -10,7 +10,7 @@ describe "categories", ->
   use_test_env!
 
   before_each ->
-    truncate_tables Users, Categories, Moderators, CategoryMembers, Bans
+    truncate_tables Users, Categories, Moderators, CategoryMembers, Bans, CategoryGroups, CategoryGroupCategories
 
   it "should create a category", ->
     factory.Categories!
@@ -94,6 +94,17 @@ describe "categories", ->
       assert.truthy category\allowed_to_moderate category_user
       assert.truthy category\allowed_to_moderate admin_user
       assert.truthy category\allowed_to_moderate mod_user
+
+    it "should check moderation permissions for category in group #ddd", ->
+      group = factory.CategoryGroups!
+      group\add_category category
+
+      mod_user = factory.Users!
+      factory.Moderators user_id: mod_user.id, object: group
+
+      assert.falsy category\allowed_to_edit mod_user
+      assert.falsy category\allowed_to_edit_moderators mod_user
+      assert.true category\allowed_to_moderate mod_user
 
     it "should check permissions for banned user", ->
       banned_user = factory.Users!
