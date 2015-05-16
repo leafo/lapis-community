@@ -17,9 +17,6 @@ db = require "lapis.db"
 class CategoriesFlow extends Flow
   expose_assigns: true
 
-  new: (req) =>
-    super req
-
   moderators_flow: =>
     @load_category!
     ModeratorsFlow = require "community.flows.moderators"
