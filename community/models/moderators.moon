@@ -10,6 +10,7 @@ class Moderators extends Model
   @relations: {
     {"object", polymorphic_belongs_to: {
       [1]: {"category", "Categories"}
+      [2]: {"category_group", "CategoryGroups"}
     }}
 
     {"user", belongs_to: "Users"}

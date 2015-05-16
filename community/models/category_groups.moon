@@ -11,6 +11,26 @@ class CategoryGroups extends Model
     {"category_group_categories", has_many: "CategoryGroupCategories"}
   }
 
+  allowed_to_edit_moderators: (user) =>
+    return false unless user
+    return true if user\is_admin!
+    return true if user.id == @user_id
+
+    if mod = @find_moderator user
+      return true if mod.accepted and mod.admin
+
+    false
+
+  find_moderator: (user) =>
+    return nil unless user
+
+    import Moderators from require "community.models"
+    Moderators\find {
+      object_type: Moderators.object_types.category_group
+      object_id: @id
+      user_id: user.id
+    }
+
   get_categories_paginated: (opts={}) =>
     import Categories from require "community.models"
 

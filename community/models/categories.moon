@@ -99,8 +99,12 @@ class Categories extends Model
     return nil unless user
     return true if user\is_admin!
     return true if user.id == @user_id
+
     if mod = @find_moderator user
       return true if mod.accepted
+
+    if group = @get_category_group!
+      return true if group\allowed_to_moderate user
 
     false
 
