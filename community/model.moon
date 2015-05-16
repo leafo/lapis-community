@@ -2,12 +2,9 @@
 db = require "lapis.db"
 import Model from require "lapis.db.model"
 
-import underscore from require "lapis.util"
+import underscore, singularize from require "lapis.util"
 
 prefix = "community_"
-
-singularize = (name)->
-  name\match"^(.*)s$" or name
 
 external_models = {
   Users: true
