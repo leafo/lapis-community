@@ -105,7 +105,6 @@ describe "moderators flow", ->
 
       assert.same {"already moderator"}, res.errors
 
-
     it "should not existing moderator", ->
       category = factory.Categories user_id: current_user.id
       mod = factory.Moderators { object: category }

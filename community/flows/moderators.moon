@@ -96,14 +96,17 @@ class ModeratorsFlow extends Flow
     @moderators = @pager\get_page @page
     @moderators
 
+  get_pending_moderator: =>
+    unless @pending_moderator
+      @load_object!
+      mod = Moderators\find_for_object_user @object, @current_user
+      @pending_moderator = mod and not mod.accepted and mod
+
+    @pending_moderator
+
   accept_moderator_position: require_login =>
-    @load_object!
-
-    mod = Moderators\find_for_object_user @object, @current_user
-
-    assert_error mod and not mod.accepted, "invalid moderator"
+    mod = assert_error @get_pending_moderator!, "invalid moderator"
     mod\update accepted: true
-
     true
 
 
