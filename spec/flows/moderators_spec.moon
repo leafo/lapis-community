@@ -75,6 +75,49 @@ describe "moderators flow", ->
       assert.same category.id, mod.object_id
       assert.same Moderators.object_types.category, mod.object_type
 
+    it "should not let category owner add self", ->
+      category = factory.Categories user_id: current_user.id
+
+      res = ModeratorsApp\get current_user, "/add-moderator", {
+        object_type: "category"
+        object_id: category.id
+        user_id: current_user.id
+      }
+
+      assert.truthy res.errors
+
+    it "should not add owner", ->
+      owner = factory.Users!
+      category = factory.Categories user_id: owner.id
+
+      factory.Moderators {
+        object: category
+        user_id: current_user.id
+        admin: true
+      }
+
+      other_user = factory.Users!
+      res = ModeratorsApp\get current_user, "/add-moderator", {
+        object_type: "category"
+        object_id: category.id
+        user_id: owner.id
+      }
+
+      assert.same {"already moderator"}, res.errors
+
+
+    it "should not existing moderator", ->
+      category = factory.Categories user_id: current_user.id
+      mod = factory.Moderators { object: category }
+
+      res = ModeratorsApp\get current_user, "/add-moderator", {
+        object_type: "category"
+        object_id: category.id
+        user_id: mod.user_id
+      }
+
+      assert.same {"already moderator"}, res.errors
+
     it "should let category admin add moderator", ->
       category = factory.Categories!
       factory.Moderators {

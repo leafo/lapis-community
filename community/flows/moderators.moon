@@ -59,7 +59,8 @@ class ModeratorsFlow extends Flow
     assert_error @object\allowed_to_edit_moderators(@current_user),
       "invalid moderatable object"
 
-    assert_error not @moderator, "already moderator"
+    assert_error not @object\allowed_to_moderate(@user, true),
+      "already moderator"
 
     Moderators\create {
       user_id: @user.id

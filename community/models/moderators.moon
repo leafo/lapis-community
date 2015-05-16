@@ -6,6 +6,7 @@ class Moderators extends Model
 
   -- all moderatable objects must implement the following methods:
   -- \allowed_to_edit_moderators(user)
+  -- \allowed_to_moderate(user, ignore_admin)
 
   @relations: {
     {"object", polymorphic_belongs_to: {
