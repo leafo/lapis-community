@@ -150,9 +150,11 @@ import create_table, create_index, drop_table from schema
       "PRIMARY KEY (parent_post_id, child_post_id)"
     }
 
-    create_table T"category_moderators", {
+    create_table T"moderators", {
       {"user_id", foreign_key}
-      {"category_id", foreign_key}
+      {"object_type", foreign_key}
+      {"object_id", foreign_key}
+
       {"admin", boolean}
 
       {"accepted", boolean}
@@ -160,10 +162,10 @@ import create_table, create_index, drop_table from schema
       {"created_at", time}
       {"updated_at", time}
 
-      "PRIMARY KEY (user_id, category_id)"
+      "PRIMARY KEY (user_id, object_type, object_id)"
     }
 
-    create_index T"category_moderators", "category_id", "created_at"
+    create_index T"moderators", "object_type", "object_id", "created_at"
 
     create_table T"post_reports", {
       {"id", serial}

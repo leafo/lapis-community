@@ -19,7 +19,10 @@ class Categories extends Model
   }
 
   @relations: {
-    {"moderators", has_many: "CategoryModerators", where: { accepted: true }}
+    -- TODO: don't hardcode 1
+    -- TODO: rename to accepted_moderators
+    {"moderators", has_many: "Moderators", where: { accepted: true, object_type: 1}}
+
     {"user", belongs_to: "Users"}
     {"last_topic", belongs_to: "Topics"}
   }
@@ -99,9 +102,10 @@ class Categories extends Model
   find_moderator: (user) =>
     return nil unless user
 
-    import CategoryModerators from require "community.models"
-    CategoryModerators\find {
-      category_id: @id
+    import Moderators from require "community.models"
+    Moderators\find {
+      object_type: Moderators.object_types.category
+      object_id: @id
       user_id: user.id
     }
 

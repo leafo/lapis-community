@@ -62,11 +62,13 @@ Votes = (opts={}) ->
 
   assert models.Votes\create opts
 
-CategoryModerators = (opts={}) ->
+Moderators = (opts={}) ->
   opts.user_id or= Users!.id
-  opts.category_id or= Categories!.id
+  unless opts.object
+    opts.object = Categories!.id
+
   opts.accepted = true if opts.accepted == nil
-  assert models.CategoryModerators\create opts
+  assert models.Moderators\create opts
 
 PostReports = (opts={}) ->
   if opts.category_id
@@ -108,5 +110,5 @@ Bans = (opts={}) ->
   assert models.Bans\create opts
 
 { :next_counter, :next_email,
-  :Users, :Categories, :Topics, :Posts, :Votes, :CategoryModerators,
+  :Users, :Categories, :Topics, :Posts, :Votes, :Moderators,
   :PostReports, :CategoryMembers, :Blocks, :Bans }

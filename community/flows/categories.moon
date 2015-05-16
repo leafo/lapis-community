@@ -23,7 +23,7 @@ class CategoriesFlow extends Flow
   moderators_flow: =>
     @load_category!
     ModeratorsFlow = require "community.flows.moderators"
-    ModeratorsFlow @, @
+    ModeratorsFlow @, @category
 
   members_flow: =>
     @load_category!
