@@ -3,8 +3,6 @@ import truncate_tables from require "lapis.spec.db"
 
 factory = require "spec.factory"
 
-import mock_request from require "lapis.spec.request"
-
 import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
 
@@ -12,8 +10,9 @@ import Users from require "models"
 import Categories, Posts, Topics, CategoryMembers, Moderators from require "community.models"
 
 class CategoryApp extends TestApp
+  @require_user!
+
   @before_filter =>
-    @current_user = Users\find assert @params.current_user_id, "missing user id"
     CategoriesFlow = require "community.flows.categories"
     @flow = CategoriesFlow @
 
