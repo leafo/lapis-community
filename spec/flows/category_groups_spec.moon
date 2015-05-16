@@ -20,6 +20,14 @@ class CategoryGroupApp extends TestApp
     @flow\show_categories!
     json: {success: true, categories: @categories }
 
+  "/new": capture_errors_json =>
+    @flow\new_category_group!
+    json: {success: true, categories: @categories }
+
+  "/edit": capture_errors_json =>
+    @flow\edit_category_group!
+    json: {success: true, categories: @categories }
+
 describe "category groups flow", ->
   use_test_env!
 
@@ -39,4 +47,32 @@ describe "category groups flow", ->
 
     assert.falsy res.errors
     assert.same 1, #res.categories
+
+
+  it "should create new category group", ->
+    res = CategoryGroupApp\get current_user, "/new", {
+      "category_group[title]": ""
+    }
+
+    assert.falsy res.errors
+    assert.same 1, #CategoryGroups\select!
+
+  it "should edit category group", ->
+    group = factory.CategoryGroups {
+      user_id: current_user.id
+      description: "yeah"
+    }
+
+    res = CategoryGroupApp\get current_user, "/edit", {
+      category_group_id: group.id
+      "category_group[rules]": "follow the rules!"
+    }
+
+    assert.falsy res.errors
+    assert.same 1, #CategoryGroups\select!
+
+    group\refresh!
+
+    assert.same "follow the rules!", group.rules
+    assert.falsy group.description
 

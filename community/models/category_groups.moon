@@ -21,6 +21,12 @@ class CategoryGroups extends Model
 
     false
 
+  allowed_to_edit: (user) =>
+    return nil unless user
+    return true if user\is_admin!
+    return true if user.id == @user_id
+    false
+
   find_moderator: (user) =>
     return nil unless user
 

@@ -297,6 +297,9 @@ import create_table, create_index, drop_table from schema
 
       {"categories_count", integer}
 
+      {"description", text null: true}
+      {"rules", text null: true}
+
       {"created_at", time}
       {"updated_at", time}
 
