@@ -71,3 +71,19 @@ describe "categories", ->
       }, cats
 
 
+    it "should get categories", ->
+      category1 = factory.Categories!
+      category2 = factory.Categories!
+      category3 = factory.Categories!
+
+      group\add_category category1
+      group\add_category category2
+
+      categories = group\get_categories_paginated!\get_all!
+      category_ids = {c.id, true for c in *categories}
+      assert.same {
+        [category1.id]: true
+        [category2.id]: true
+      }, category_ids
+
+

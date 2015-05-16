@@ -11,6 +11,24 @@ class CategoryGroups extends Model
     {"category_group_categories", has_many: "CategoryGroupCategories"}
   }
 
+  get_categories_paginated: (opts={}) =>
+    import Categories from require "community.models"
+
+    fields = opts.fields
+    prepare_results = opts.prepare_results
+
+    opts.prepare_results = (cgcs)->
+      Categories\include_in cgcs, "category_id", :fields
+      categories = [cgc.category for cgc in *cgcs]
+
+      if prepare_results
+        prepare_results categories
+
+      categories
+
+    opts.fields = nil
+    @get_category_group_categories_paginated opts
+
   set_categories: (categories) =>
     import Categories from require "community.models"
 
