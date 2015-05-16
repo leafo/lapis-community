@@ -23,6 +23,7 @@ class Categories extends Model
     -- TODO: rename to accepted_moderators
     {"moderators", has_many: "Moderators", where: { accepted: true, object_type: 1}}
 
+    {"category_group_category", has_one: "CategoryGroupCategories"}
     {"user", belongs_to: "Users"}
     {"last_topic", belongs_to: "Topics"}
   }
@@ -40,6 +41,10 @@ class Categories extends Model
     Topics\include_in categories, "last_topic_id", {
       as: "last_topic"
     }
+
+  get_category_group: =>
+    if cgc = @get_category_group_category!
+      cgc\get_category_group!
 
   allowed_to_post: (user) =>
     return false unless user

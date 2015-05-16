@@ -11,7 +11,7 @@ class CategoryGroupCategories extends Model
 
   @relations: {
     {"category_group", belongs_to: "CategoryGroups"}
-    {"category", belongs_to: "Category"}
+    {"category", belongs_to: "Categories"}
   }
 
   @create: safe_insert

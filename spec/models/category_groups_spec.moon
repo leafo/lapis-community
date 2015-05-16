@@ -41,6 +41,9 @@ describe "categories", ->
       group\refresh!
       assert.same 1, group.categories_count
 
+      c_group = category\get_category_group!
+      assert.same group.id, c_group.id
+
     it "should remove a category from group", ->
       category = factory.Categories!
       group\add_category category
