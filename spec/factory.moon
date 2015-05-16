@@ -64,8 +64,9 @@ Votes = (opts={}) ->
 
 Moderators = (opts={}) ->
   opts.user_id or= Users!.id
+
   unless opts.object
-    opts.object = Categories!.id
+    opts.object = Categories!
 
   opts.accepted = true if opts.accepted == nil
   assert models.Moderators\create opts

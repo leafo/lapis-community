@@ -18,7 +18,6 @@ class Moderators extends Model
 
   @create: (opts={}) =>
     assert opts.user_id, "missing user_id"
-
     assert opts.object, "missing object"
 
     opts.object_id = opts.object.id

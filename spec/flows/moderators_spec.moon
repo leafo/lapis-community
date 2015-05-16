@@ -5,7 +5,7 @@ import Users from require "models"
 
 import
   Categories
-  CategoryModerators
+  Moderators
   from require "community.models"
 
 factory = require "spec.factory"
@@ -15,18 +15,14 @@ import mock_request from require "lapis.spec.request"
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
 
-writer = (fn) ->
-  (...) =>
-    res = { fn @, ... }
-    @write unpack res if next res
-
 import TestApp from require "spec.helpers"
 
 class ModeratorsApp extends TestApp
-  @before_filter writer capture_errors_json =>
-    @current_user = Users\find assert @params.current_user_id, "missing current user id"
-    CategoriesFlow = require "community.flows.categories"
-    @flow = CategoriesFlow(@)\moderators_flow!
+  @require_user!
+
+  @before_filter =>
+    ModeratorsFlow = require "community.flows.moderators"
+    @flow = ModeratorsFlow @
 
   "/add-moderator": capture_errors_json =>
     @flow\add_moderator!
@@ -50,7 +46,7 @@ describe "moderators flow", ->
   local current_user
 
   before_each ->
-    truncate_tables Users, CategoryModerators, Categories
+    truncate_tables Users, Moderators, Categories
 
     current_user = factory.Users!
   
@@ -64,34 +60,38 @@ describe "moderators flow", ->
       other_user = factory.Users!
 
       res = ModeratorsApp\get current_user, "/add-moderator", {
-        category_id: category.id
+        object_type: "category"
+        object_id: category.id
         user_id: other_user.id
       }
 
-      assert.truthy res.success
-      mod = assert unpack CategoryModerators\select!
+      assert.falsy res.errors
+
+      mod = assert unpack Moderators\select!
       assert.same false, mod.accepted
       assert.same false, mod.admin
 
       assert.same other_user.id, mod.user_id
-      assert.same category.id, mod.category_id
+      assert.same category.id, mod.object_id
+      assert.same Moderators.object_types.category, mod.object_type
 
     it "should let category admin add moderator", ->
       category = factory.Categories!
-      factory.CategoryModerators {
-        category_id: category.id
+      factory.Moderators {
+        object: category
         user_id: current_user.id
         admin: true
       }
 
       other_user = factory.Users!
       res = ModeratorsApp\get current_user, "/add-moderator", {
-        category_id: category.id
+        object_type: "category"
+        object_id: category.id
         user_id: other_user.id
       }
 
-      assert.truthy res.success
-      mod = assert unpack CategoryModerators\select [[
+      assert.falsy res.errors
+      mod = assert unpack Moderators\select [[
         where user_id != ?
       ]], current_user.id
 
@@ -99,30 +99,33 @@ describe "moderators flow", ->
       assert.same false, mod.admin
 
       assert.same other_user.id, mod.user_id
-      assert.same category.id, mod.category_id
+      assert.same category.id, mod.object_id
+      assert.same Moderators.object_types.category, mod.object_type
 
     it "should not let stranger add moderator", ->
       category = factory.Categories!
       other_user = factory.Users!
 
       res = ModeratorsApp\get current_user, "/add-moderator", {
-        category_id: category.id
+        object_type: "category"
+        object_id: category.id
         user_id: other_user.id
       }
 
       assert.truthy res.errors
-      assert.same {}, CategoryModerators\select!
+      assert.same {}, Moderators\select!
 
     it "should not let non-admin moderator add moderator", ->
       category = factory.Categories!
-      factory.CategoryModerators {
-        category_id: category.id
+      factory.Moderators {
+        object: category
         user_id: current_user.id
       }
 
       other_user = factory.Users!
       res = ModeratorsApp\get current_user, "/add-moderator", {
-        category_id: category.id
+        object_type: "category"
+        object_id: category.id
         user_id: other_user.id
       }
 
@@ -135,10 +138,11 @@ describe "moderators flow", ->
 
     it "should not let stranger remove moderator", ->
       category = factory.Categories!
-      mod = factory.CategoryModerators category_id: category.id
+      mod = factory.Moderators object: category
 
       res = ModeratorsApp\get current_user, "/remove-moderator", {
-        category_id: mod.category_id
+        object_type: "category"
+        object_id: mod.object_id
         user_id: mod.user_id
       }
 
@@ -146,49 +150,53 @@ describe "moderators flow", ->
 
     it "should let category owner remove moderator", ->
       category = factory.Categories user_id: current_user.id
-      mod = factory.CategoryModerators category_id: category.id
+      mod = factory.Moderators object: category
 
       res = ModeratorsApp\get current_user, "/remove-moderator", {
-        category_id: mod.category_id
+        object_type: "category"
+        object_id: mod.object_id
         user_id: mod.user_id
       }
 
-      assert.truthy res.success
-      assert.same {}, CategoryModerators\select!
+      assert.falsy res.errors
+      assert.same {}, Moderators\select!
 
     it "should let category admin remove moderator", ->
       category = factory.Categories!
-      factory.CategoryModerators {
-        category_id: category.id
+      factory.Moderators {
+        object: category
         user_id: current_user.id
         admin: true
       }
 
-      mod = factory.CategoryModerators category_id: category.id
+      mod = factory.Moderators object: category
       res = ModeratorsApp\get current_user, "/remove-moderator", {
-        category_id: mod.category_id
+        object_type: "category"
+        object_id: mod.object_id
         user_id: mod.user_id
       }
 
-      assert.truthy res.success
+      assert.falsy res.errors
 
     it "should let (non admin/owner) moderator remove self", ->
-      mod = factory.CategoryModerators user_id: current_user.id
+      mod = factory.Moderators user_id: current_user.id
 
       res = ModeratorsApp\get current_user, "/remove-moderator", {
-        category_id: mod.category_id
+        object_type: "category"
+        object_id: mod.object_id
         user_id: mod.user_id
       }
 
-      assert.truthy res.success
-      assert.same {}, CategoryModerators\select!
+      assert.falsy res.errors
+      assert.same {}, Moderators\select!
 
     it "should not let non-admin moderator remove moderator", ->
-      factory.CategoryModerators user_id: current_user.id
-      mod = factory.CategoryModerators!
+      factory.Moderators user_id: current_user.id
+      mod = factory.Moderators!
 
       res = ModeratorsApp\get current_user, "/remove-moderator", {
-        category_id: mod.category_id
+        object_type: "category"
+        object_id: mod.object_id
         user_id: mod.user_id
       }
 
@@ -196,10 +204,11 @@ describe "moderators flow", ->
 
   describe "accept_moderator_position", ->
     it "should do nothing for stranger", ->
-      mod = factory.CategoryModerators accepted: false
+      mod = factory.Moderators accepted: false
 
       res = ModeratorsApp\get current_user, "/accept-mod", {
-        category_id: mod.category_id
+        object_type: "category"
+        object_id: mod.object_id
       }
 
       assert.truthy res.errors
@@ -208,48 +217,54 @@ describe "moderators flow", ->
       assert.same false, mod.accepted
 
     it "should accept moderator position", ->
-      mod = factory.CategoryModerators accepted: false, user_id: current_user.id
+      mod = factory.Moderators accepted: false, user_id: current_user.id
+
       res = ModeratorsApp\get current_user, "/accept-mod", {
-        category_id: mod.category_id
+        object_type: "category"
+        object_id: mod.object_id
       }
 
-      assert.truthy res.success
+      assert.falsy res.errors
       mod\refresh!
       assert.same true, mod.accepted
 
     it "should reject moderator position", ->
-      mod = factory.CategoryModerators accepted: false, user_id: current_user.id
+      mod = factory.Moderators accepted: false, user_id: current_user.id
 
       res = ModeratorsApp\get current_user, "/remove-moderator", {
-        category_id: mod.category_id
+        object_type: "category"
+        object_id: mod.object_id
+
         user_id: mod.user_id
         current_user_id: current_user.id
       }
 
-      assert.truthy res.success
-      assert.same {}, CategoryModerators\select!
+      assert.falsy res.errors
+      assert.same {}, Moderators\select!
 
 
   describe "show moderators", ->
     it "should get moderators when there are none", ->
       category = factory.Categories!
       res = ModeratorsApp\get current_user, "/show-mods", {
-        category_id: category.id
+        object_type: "category"
+        object_id: category.id
       }
 
       assert.same {success: true, moderators: {}}, res
 
     it "should get moderators when there are some", ->
       category = factory.Categories!
-      factory.CategoryModerators! -- unrelated mod
+      factory.Moderators! -- unrelated mod
 
       for i=1,2
-        factory.CategoryModerators category_id: category.id
+        factory.Moderators object: category
 
       res = ModeratorsApp\get current_user, "/show-mods", {
-        category_id: category.id
+        object_type: "category"
+        object_id: category.id
       }
 
-      assert.truthy res.success
+      assert.falsy res.errors
       assert.same 2, #res.moderators
 

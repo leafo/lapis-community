@@ -79,6 +79,7 @@ class ModeratorsFlow extends Flow
     @moderator\delete!
 
   show_moderators: =>
+    @load_object!
     assert_page @
 
     @pager = Moderators\paginated "
