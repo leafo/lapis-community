@@ -130,7 +130,6 @@ class Topic extends require "widgets.base"
 
     hr!
 
-
   pagination: =>
     topic_opts = { topic_id: @topic.id }
 

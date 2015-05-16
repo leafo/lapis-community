@@ -18,7 +18,6 @@ setmetatable {}, __index: (model_name) =>
 
   fname = loadkit.make_loader("lua") override_module
   custom_model = if fname
-    print "Found override: #{fname}"
     assert(loadfile(fname)) base_model
 
   @[model_name] = custom_model or base_model
