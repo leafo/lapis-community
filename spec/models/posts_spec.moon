@@ -86,7 +86,7 @@ describe "posts", ->
     post = factory.Posts body: "hello @mentioned_person how are you doing @mentioned_person I am @nonexist"
     assert.same {"mentioned_person"}, [u.username for u in *post\get_mentioned_users!]
 
-  it "should preload mentions for many posts #ddd", ->
+  it "should preload mentions for many posts", ->
     factory.Users username: "mentioned_person1"
     factory.Users username: "mentioned_person2"
 

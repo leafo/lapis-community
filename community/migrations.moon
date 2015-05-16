@@ -32,6 +32,7 @@ import create_table, create_index, drop_table from schema
 
       {"short_description", text null: true}
       {"description", text null: true}
+      {"rules", text null: true}
 
       {"membership_type", integer}
       {"voting_type", integer}

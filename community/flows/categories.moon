@@ -37,48 +37,12 @@ class CategoriesFlow extends Flow
     @category = Categories\find @params.category_id
     assert_error @category, "invalid category"
 
-  new_category: require_login =>
+  validate_params: =>
     assert_valid @params, {
       {"category", type: "table"}
     }
 
-    new_category = @params.category
-    trim_filter new_category
-
-    assert_valid new_category, {
-      {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
-      {"short_description", optional: true, max_length: limits.MAX_TITLE_LEN}
-      {"description", optional: true, max_length: limits.MAX_BODY_LEN}
-
-      {"membership_type", one_of: Categories.membership_types}
-      {"voting_type", one_of: Categories.voting_types}
-    }
-
-    @category = Categories\create {
-      user_id: @current_user.id
-      title: new_category.title
-
-      short_description: new_category.short_description
-      description: new_category.description
-
-      membership_type: new_category.membership_type
-      voting_type: new_category.voting_type
-
-      archived: not not new_category.archived
-      hidden: not not new_category.hidden
-    }
-
-    true
-
-  edit_category: require_login =>
-    @load_category!
-    assert_error @category\allowed_to_edit(@current_user), "invalid category"
-
-    assert_valid @params, {
-      {"category", exists: true, type: "table"}
-    }
-
-    category_update = trim_filter @params.category, {
+    category_params = trim_filter @params.category, {
       "title"
       "membership_type"
       "voting_type"
@@ -86,9 +50,10 @@ class CategoriesFlow extends Flow
       "short_description"
       "archived"
       "hidden"
+      "rules"
     }
 
-    assert_valid category_update, {
+    assert_valid category_params, {
       {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
 
       {"short_description", optional: true, max_length: limits.MAX_TITLE_LEN}
@@ -98,20 +63,33 @@ class CategoriesFlow extends Flow
       {"voting_type", one_of: Categories.voting_types}
     }
 
-    category_update.archived = not not category_update.archived
-    category_update.hidden = not not category_update.hidden
+    category_params.archived = not not category_params.archived
+    category_params.hidden = not not category_params.hidden
 
-    category_update.membership_type = Categories.membership_types\for_db category_update.membership_type
-    category_update.voting_type = Categories.voting_types\for_db category_update.voting_type
-    category_update.slug = slugify category_update.title
+    category_params.membership_type = Categories.membership_types\for_db category_params.membership_type
+    category_params.voting_type = Categories.voting_types\for_db category_params.voting_type
+    category_params.slug = slugify category_params.title
 
-    category_update.description or= db.NULL
-    category_update.short_description or= db.NULL
+    category_params.description or= db.NULL
+    category_params.short_description or= db.NULL
+    category_params.rules or= db.NULL
 
-    category_update = filter_update @category, category_update
+    category_params
 
-    if next category_update
-      @category\update category_update
+  new_category: require_login =>
+    create_params = @validate_params!
+    create_params.user_id = @current_user.id
+    @category = Categories\create create_params
+    true
+
+  edit_category: require_login =>
+    @load_category!
+    assert_error @category\allowed_to_edit(@current_user), "invalid category"
+
+    update_params = @validate_params!
+    update_params = filter_update @category, update_params
+
+    @category\update update_params
 
     true
 

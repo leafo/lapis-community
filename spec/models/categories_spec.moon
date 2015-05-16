@@ -95,7 +95,7 @@ describe "categories", ->
       assert.truthy category\allowed_to_moderate admin_user
       assert.truthy category\allowed_to_moderate mod_user
 
-    it "should check moderation permissions for category in group #ddd", ->
+    it "should check moderation permissions for category in group", ->
       group = factory.CategoryGroups!
       group\add_category category
 

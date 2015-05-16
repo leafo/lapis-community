@@ -89,6 +89,7 @@ describe "categories", ->
 
       assert.same {success: true}, res
       category\refresh!
+
       assert.same "The good category", category.title
       assert.same "yeah yeah", category.short_description
       assert.falsy category.description
