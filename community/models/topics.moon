@@ -195,3 +195,17 @@ class Topics extends Model
       category\available_vote_types!
     else
       { down: true, up: true }
+
+  set_seen: (user) =>
+    return unless user
+    return unless @last_post_id
+
+    import upsert from require "community.helpers.models"
+    import UserTopicLastSeens from require "community.models"
+
+    upsert UserTopicLastSeens, {
+      user_id: user.id
+      topic_id: @id
+      post_id: @last_post_id
+    }
+

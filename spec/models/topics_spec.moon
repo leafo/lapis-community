@@ -2,7 +2,7 @@ import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
 import Users from require "models"
-import Categories, Moderators, CategoryMembers, Topics, Posts, Bans from require "community.models"
+import Categories, Moderators, CategoryMembers, Topics, Posts, Bans, UserTopicLastSeens from require "community.models"
 
 factory = require "spec.factory"
 
@@ -10,7 +10,7 @@ describe "topics", ->
   use_test_env!
 
   before_each ->
-    truncate_tables Users, Categories, Moderators, CategoryMembers, Topics, Posts, Bans
+    truncate_tables Users, Categories, Moderators, CategoryMembers, Topics, Posts, Bans, UserTopicLastSeens
 
   it "should create a topic", ->
     factory.Topics!
@@ -129,4 +129,38 @@ describe "topics", ->
 
     topic\refresh_last_post!
     assert.same nil, topic.last_post_id
+
+  it "should not mark for no last post", ->
+    user = factory.Users!
+    topic = factory.Topics!
+    topic\set_seen user
+
+  it "should not mark for no last post #ddd", ->
+    user = factory.Users!
+    topic = factory.Topics!
+    post = factory.Posts topic_id: topic.id
+    topic\increment_from_post post
+
+    topic\set_seen user
+    last_seen = unpack UserTopicLastSeens\select!
+    assert.same user.id, last_seen.user_id
+    assert.same topic.id, last_seen.topic_id
+    assert.same post.id, last_seen.post_id
+
+    -- noop
+    topic\set_seen user
+
+    -- update
+
+    post2 = factory.Posts topic_id: topic.id
+    topic\increment_from_post post2
+
+    topic\set_seen user
+
+    assert.same 1, UserTopicLastSeens\count!
+    last_seen = unpack UserTopicLastSeens\select!
+
+    assert.same user.id, last_seen.user_id
+    assert.same topic.id, last_seen.topic_id
+    assert.same post2.id, last_seen.post_id
 

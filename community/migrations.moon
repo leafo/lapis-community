@@ -318,4 +318,11 @@ import create_table, create_index, drop_table from schema
 
     create_index T"category_group_categories", "category_id", unique: true
 
+    create_table T"user_topic_last_seens", {
+      {"user_id", foreign_key}
+      {"topic_id", foreign_key}
+      {"post_id", foreign_key}
+
+      "PRIMARY KEY (user_id, topic_id)"
+    }
 }
