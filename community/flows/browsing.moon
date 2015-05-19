@@ -71,7 +71,7 @@ class BrowsingFlow extends Flow
 
     tonumber(@params.before), tonumber(@params.after)
 
-  topic_posts: =>
+  topic_posts: (mark_seen=true) =>
     TopicsFlow = require "community.flows.topics"
     TopicsFlow(@)\load_topic!
     assert_error @topic\allowed_to_view(@current_user), "not allowed to view"
@@ -135,6 +135,16 @@ class BrowsingFlow extends Flow
       p.post_number
 
     @before = nil if @before == 1
+
+    if mark_seen and @current_user
+      import UserTopicLastSeens from require "community.models"
+      last_seen = UserTopicLastSeens\find {
+        user_id: @current_user.id
+        topic_id: @topic.id
+      }
+
+      if not last_seen or last_seen.post_id != @topic.last_post_id
+        @topic\set_seen @user
 
   preload_topics: (topics) =>
     Users\include_in topics, "user_id"
