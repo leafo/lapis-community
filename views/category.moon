@@ -69,7 +69,12 @@ class Category extends require "widgets.base"
           td tostring topic.posts_count
 
           td topic.created_at
-          td "TODO"
+          td ->
+            if last_post = topic.last_post
+              text "by "
+              a href: @url_for("user", user_id: last_post.user.id), last_post.user\name_for_display!
+              text " on "
+              text last_post.created_at
 
     p ->
       cat_opts = {category_id: @category.id }

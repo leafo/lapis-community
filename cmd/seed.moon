@@ -86,3 +86,6 @@ CommunityUsers\recount!
 
 for c in *Categories\select!
   c\refresh_last_topic!
+
+for t in *Topics\select!
+  t\refresh_last_post!

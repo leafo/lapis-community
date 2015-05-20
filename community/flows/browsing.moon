@@ -147,7 +147,15 @@ class BrowsingFlow extends Flow
         @topic\set_seen @user
 
   preload_topics: (topics) =>
-    Users\include_in topics, "user_id"
+    Posts\include_in topics, "last_post_id"
+
+    with_users = [t for t in *topics]
+    for t in *topics
+      if t.last_post
+        table.insert with_users, t.last_post
+
+    Users\include_in with_users, "user_id"
+
     topics
 
   -- TODO: there is no pagination here yet
