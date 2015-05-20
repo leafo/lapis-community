@@ -1,4 +1,25 @@
 
+-- bulk_increment Things, "views_count", {{id1, 2}, {id2, 2023}}
+bulk_increment = (model, column, tuples)->
+  db = require "lapis.db"
+
+  table_escaped = db.escape_identifier model\table_name!
+  column_escaped = db.escape_identifier column
+
+  buffer = {
+    "update #{table_escaped} set #{column_escaped} = #{column_escaped} + increments.amount"
+    "(#{column_escaped}) FROM (VALUES ("
+  }
+
+  for t in *tuples
+    table.insert buffer, db.escape_literal db.list t
+    table.insert buffer, ", "
+
+  buffer[#buffer] = nil
+
+  table.insert buffer, ") as increments (id, amount) where increments.id = #{table_escaped}"
+  table.concat buffer
+
 class AsyncCounter
   SLEEP: 0.01
   MAX_TRIES: 10 -- 0.45 seconds to bust
@@ -64,4 +85,4 @@ class AsyncCounter
 
           @dict\delete key
 
-{ :AsyncCounter }
+{ :AsyncCounter, :bulk_increment }
