@@ -144,7 +144,7 @@ class BrowsingFlow extends Flow
       }
 
       if not last_seen or last_seen.post_id != @topic.last_post_id
-        @topic\set_seen @user
+        @topic\set_seen @current_user
 
   preload_topics: (topics) =>
     Posts\include_in topics, "last_post_id"
@@ -155,6 +155,10 @@ class BrowsingFlow extends Flow
         table.insert with_users, t.last_post
 
     Users\include_in with_users, "user_id"
+
+    if @current_user
+      import UserTopicLastSeens from require "community.models"
+      UserTopicLastSeens\include_in topics, "topic_id", flip: true, where: { user_id: @current_user.id }
 
     topics
 

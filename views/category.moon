@@ -60,8 +60,8 @@ class Category extends require "widgets.base"
 
           td ->
             text "(#{topic.category_order}) "
-
-            a href: @url_for("topic", topic_id: topic.id), topic.title
+            (topic\has_unread(@current_user) and strong or span) ->
+              a href: @url_for("topic", topic_id: topic.id), topic.title
 
           td ->
             a href: @url_for("user", user_id: topic.user.id), topic.user\name_for_display!
@@ -70,6 +70,12 @@ class Category extends require "widgets.base"
 
           td topic.created_at
           td ->
+            if seen = topic.user_topic_last_seen
+              text "(seen #{seen.post_id}) "
+
+            text topic.last_post_id
+            text  " "
+
             if last_post = topic.last_post
               text "by "
               a href: @url_for("user", user_id: last_post.user.id), last_post.user\name_for_display!

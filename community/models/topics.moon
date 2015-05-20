@@ -209,3 +209,9 @@ class Topics extends Model
       post_id: @last_post_id
     }
 
+  -- this assumes UserTopicLastSeens has been preloaded
+  has_unread: (user) =>
+    return unless user
+    return unless @user_topic_last_seen
+    @user_topic_last_seen.post_id < @last_post_id
+
