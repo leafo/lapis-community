@@ -25,8 +25,9 @@ class AsyncCounter
       i += 1
 
       if @dict\add(@lock_key, true, 30) or i == @MAX_TRIES
-        pcall fn
+        success, err = pcall fn
         @dict\delete @lock_key
+        assert success, err
         break
 
       ngx.sleep @SLEEP * i
@@ -47,7 +48,7 @@ class AsyncCounter
       @dict\incr key, amount
       print "INCREMENTED #{key}"
 
-      success, err = @dict\add @flush_key
+      success, err = @dict\add @flush_key, true
       print "ADDING #{@flush_key}: #{success}"
       if success
         print "setting timer for #{@FLUSH_TIME}"
@@ -62,6 +63,7 @@ class AsyncCounter
 
   sync: =>
     @with_lock ->
+      @dict\delete @flush_key
       for key in *@dict\get_keys!
         t, id = key\match "(%w+):(%d+)"
         if t

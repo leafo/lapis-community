@@ -6,6 +6,10 @@ config "development", ->
     database: "community"
   }
 
+  community {
+    view_counter_dict: "view_counters"
+  }
+
 config "test", ->
   postgres {
     backend: "pgmoon"

@@ -76,6 +76,8 @@ import create_table, create_index, drop_table from schema
       {"posts_count", integer}
       {"root_posts_count", integer}
 
+      {"views_count", integer}
+
       {"category_order", integer}
 
       {"created_at", time}

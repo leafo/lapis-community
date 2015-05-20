@@ -71,10 +71,25 @@ class BrowsingFlow extends Flow
 
     tonumber(@params.before), tonumber(@params.after)
 
+  view_counter: =>
+    config = require("lapis.config").get!
+    return unless config.community
+    dict_name = config.community.view_counter_dict
+    import AsyncCounter from require "community.helpers.counters"
+
+    AsyncCounter dict_name, {
+      sync_types: {
+        topic: Topics\update_views_count
+      }
+    }
+
   topic_posts: (mark_seen=true) =>
     TopicsFlow = require "community.flows.topics"
     TopicsFlow(@)\load_topic!
     assert_error @topic\allowed_to_view(@current_user), "not allowed to view"
+
+    if view_counter = @view_counter!
+      view_counter\increment "topic:#{@topic.id}"
 
     before, after = @get_before_after!
 

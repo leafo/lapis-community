@@ -43,6 +43,11 @@ class Topics extends Model
       "
     }
 
+  @update_views_count: (id, amount) =>
+    db.update @table_name!, {
+      views_count: db.raw db.interpolate_query "views_count + ?", amount
+    }, { :id }
+
   allowed_to_post: (user) =>
     return false unless user
     return false if @deleted
