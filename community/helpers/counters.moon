@@ -33,7 +33,7 @@ class AsyncCounter
       ngx.sleep @SLEEP * i
 
     if i == @MAX_TRIES
-      busted_count_key = "#{@lock_key}"
+      busted_count_key = "#{@lock_key}_busted"
       @dict\add busted_count_key, 0
       @dict\incr busted_count_key, 1
 
@@ -43,23 +43,14 @@ class AsyncCounter
     return unless @dict
 
     @with_lock ->
-      print "incrementing #{key}"
       @dict\add key, 0
       @dict\incr key, amount
-      print "INCREMENTED #{key}"
 
-      success, err = @dict\add @flush_key, true
-      print "ADDING #{@flush_key}: #{success}"
-      if success
-        print "setting timer for #{@FLUSH_TIME}"
+      if @dict\add @flush_key, true
         ngx.timer.at @FLUSH_TIME, ->
-          print "running flush timer"
           @sync!
           import run_after_dispatch from require "lapis.nginx.context"
           run_after_dispatch! -- manually release resources since we are in new context
-          print "finished flush timer"
-      else
-        print "failed to add flush key: #{err}"
 
   sync: =>
     @with_lock ->
@@ -68,7 +59,6 @@ class AsyncCounter
         t, id = key\match "(%w+):(%d+)"
         if t
           incr = @dict\get key
-          print "syncing #{key}"
           if sync = @sync_types[t]
             sync tonumber(id), incr, @
 
