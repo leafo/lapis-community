@@ -44,6 +44,7 @@ class Category extends require "widgets.base"
           td "Poster"
           td "Posts"
           td "Posted"
+          td "Views"
           td "Last post"
 
       for topic in *topics
@@ -69,6 +70,8 @@ class Category extends require "widgets.base"
           td tostring topic.posts_count
 
           td topic.created_at
+          td topic.views_count
+
           td ->
             if seen = topic.user_topic_last_seen
               text "(seen #{seen.post_id}) "
