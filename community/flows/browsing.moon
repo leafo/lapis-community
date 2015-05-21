@@ -79,7 +79,9 @@ class BrowsingFlow extends Flow
 
     AsyncCounter dict_name, {
       sync_types: {
-        topic: Topics\update_views_count
+        topic: (updates) ->
+          import bulk_increment from require "community.helpers.counters"
+          bulk_increment Topics, "views_count", updates
       }
     }
 

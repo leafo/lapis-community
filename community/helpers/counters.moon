@@ -24,7 +24,7 @@ bulk_increment = (model, column, tuples)->
 class AsyncCounter
   SLEEP: 0.01
   MAX_TRIES: 10 -- 0.45 seconds to bust
-  FLUSH_TIME: 10 -- in seconds
+  FLUSH_TIME: 5 -- in seconds
 
   lock_key: "counter_lock"
   flush_key: "counter_flush"
@@ -75,15 +75,19 @@ class AsyncCounter
           run_after_dispatch! -- manually release resources since we are in new context
 
   sync: =>
+    bulk_updates = {}
     @with_lock ->
       @dict\delete @flush_key
       for key in *@dict\get_keys!
         t, id = key\match "(%w+):(%d+)"
         if t
+          bulk_updates[t] or= {}
           incr = @dict\get key
-          if sync = @sync_types[t]
-            sync tonumber(id), incr, @
-
+          table.insert bulk_updates[t], {tonumber(id), incr}
           @dict\delete key
+
+    for t, updates in pairs bulk_updates
+      if sync = @sync_types[t]
+        sync updates
 
 { :AsyncCounter, :bulk_increment }
