@@ -7,8 +7,9 @@ bulk_increment = (model, column, tuples)->
   column_escaped = db.escape_identifier column
 
   buffer = {
-    "update #{table_escaped} set #{column_escaped} = #{column_escaped} + increments.amount"
-    "(#{column_escaped}) FROM (VALUES ("
+    "UPDATE #{table_escaped} "
+    "SET #{column_escaped} = #{column_escaped} + increments.amount "
+    "FROM (VALUES "
   }
 
   for t in *tuples
@@ -17,8 +18,8 @@ bulk_increment = (model, column, tuples)->
 
   buffer[#buffer] = nil
 
-  table.insert buffer, ") as increments (id, amount) where increments.id = #{table_escaped}"
-  table.concat buffer
+  table.insert buffer, ") AS increments (id, amount) WHERE increments.id = #{table_escaped}.id"
+  db.query table.concat buffer
 
 class AsyncCounter
   SLEEP: 0.01
