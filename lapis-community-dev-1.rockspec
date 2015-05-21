@@ -31,6 +31,7 @@ build = {
 		["community.flows.topics"] = "community/flows/topics.lua",
 		["community.flows.votes"] = "community/flows/votes.lua",
 		["community.helpers.app"] = "community/helpers/app.lua",
+		["community.helpers.counters"] = "community/helpers/counters.lua",
 		["community.helpers.models"] = "community/helpers/models.lua",
 		["community.limits"] = "community/limits.lua",
 		["community.migrations"] = "community/migrations.lua",
@@ -53,6 +54,7 @@ build = {
 		["community.models.topic_participants"] = "community/models/topic_participants.lua",
 		["community.models.topic_tags"] = "community/models/topic_tags.lua",
 		["community.models.topics"] = "community/models/topics.lua",
+		["community.models.user_topic_last_seens"] = "community/models/user_topic_last_seens.lua",
 		["community.models.votes"] = "community/models/votes.lua",
 		["community.schema"] = "community/schema.lua",
   }
