@@ -4,7 +4,6 @@
 
 ## v2
 
-* view counters on topics,categories, (everywhere??)
 * post quick responses (helpful, funny, etc)
 
 # Demo app
@@ -18,5 +17,5 @@
 
 * check for missing indexes
 * check n+1 queries on browsers
-
+* caches for permission checks, avoid n+1 queries
 

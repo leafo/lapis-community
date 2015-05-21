@@ -75,13 +75,16 @@ class BrowsingFlow extends Flow
     config = require("lapis.config").get!
     return unless config.community
     dict_name = config.community.view_counter_dict
-    import AsyncCounter from require "community.helpers.counters"
+
+    import AsyncCounter, bulk_increment from require "community.helpers.counters"
 
     AsyncCounter dict_name, {
       sync_types: {
         topic: (updates) ->
-          import bulk_increment from require "community.helpers.counters"
           bulk_increment Topics, "views_count", updates
+
+        category: (updates) ->
+          bulk_increment Categories, "views_count", updates
       }
     }
 
@@ -194,6 +197,9 @@ class BrowsingFlow extends Flow
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
     assert_error @category\allowed_to_view(@current_user), "not allowed to view"
+
+    if view_counter = @view_counter!
+      view_counter\increment "category:#{@category.id}"
 
     before, after = @get_before_after!
 
