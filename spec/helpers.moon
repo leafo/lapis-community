@@ -8,7 +8,7 @@ import Application from require "lapis"
 assert = require "luassert"
 
 class TestApp extends Application
-  @require_user: ->
+  @require_user: =>
     @before_filter =>
       @current_user = Users\find assert @params.current_user_id, "missing user id"
 
