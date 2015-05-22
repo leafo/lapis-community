@@ -1,6 +1,8 @@
 # Core
 
 * callbacks
+* need a special kind of topic that can have no posts (for comments)
+* bookmarks
 
 ## v2
 

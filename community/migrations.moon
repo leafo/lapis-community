@@ -328,4 +328,16 @@ import create_table, create_index, drop_table from schema
 
       "PRIMARY KEY (user_id, topic_id)"
     }
+    
+    create_table T"bookmarks", {
+      {"user_id", foreign_key}
+      {"object_type", integer}
+      {"object_id", foreign_key}
+
+      {"created_at", time}
+      {"updated_at", time}
+
+      "PRIMARY KEY (user_id, object_type, object_id)"
+    }
+
 }
