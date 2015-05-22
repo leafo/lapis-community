@@ -114,6 +114,12 @@ CategoryGroups = (opts={}) ->
   opts.title or= "Category group #{next_counter "category-group"}"
   assert models.CategoryGroups\create opts
 
+Bookmarks = (opts={}) ->
+  opts.object_type or= "topic"
+  opts.object_id or= Topics!.id
+  opts.user_id or= Users!.id
+  assert models.Bookmarks\create opts
+
 { :next_counter, :next_email,
-  :Users, :Categories, :Topics, :Posts, :Votes, :Moderators,
-  :PostReports, :CategoryMembers, :Blocks, :Bans, :CategoryGroups }
+  :Users, :Categories, :Topics, :Posts, :Votes, :Moderators, :PostReports,
+  :CategoryMembers, :Blocks, :Bans, :CategoryGroups, :Bookmarks }

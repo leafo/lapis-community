@@ -340,4 +340,7 @@ import create_table, create_index, drop_table from schema
       "PRIMARY KEY (user_id, object_type, object_id)"
     }
 
+    create_index T"bookmarks", "user_id", "created_at"
+
+
 }
