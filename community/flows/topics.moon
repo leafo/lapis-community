@@ -100,7 +100,6 @@ class TopicsFlow extends Flow
     assert_error @topic\allowed_to_edit(@current_user), "not allowed to edit"
     @topic\delete!
 
-
   lock_topic: require_login =>
     @load_topic_for_moderation!
 

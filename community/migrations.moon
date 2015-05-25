@@ -72,6 +72,7 @@ import create_table, create_index, drop_table from schema
 
       {"locked", boolean}
       {"sticky", boolean}
+      {"permanent", boolean}
       {"deleted", boolean}
 
       {"posts_count", integer}

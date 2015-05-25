@@ -19,7 +19,7 @@ class EditPost extends require "widgets.base"
       if @parent_post
         input type: "hidden", name: "parent_post_id", value: @parent_post.id
 
-      if @editing and @post\is_topic_post!
+      if @editing and @post\is_topic_post! and not @topic.permanent
         div ->
           label ->
             strong "Title"

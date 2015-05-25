@@ -97,7 +97,7 @@ class PostsFlow extends Flow
         last_edited_at: db.format_date!
       }
 
-    if @post\is_topic_post!
+    if @post\is_topic_post! and not @topic.permanent
       assert_valid post_update, {
         {"title", optional: true, max_length: limits.MAX_TITLE_LEN}
       }
@@ -114,8 +114,9 @@ class PostsFlow extends Flow
     @load_post!
     assert_error @post\allowed_to_edit(@current_user), "not allowed to edit"
 
-    if @post\is_topic_post!
-      @topic = @post\get_topic!
+    @topic = @post\get_topic!
+
+    if @post\is_topic_post! and not @topic.permanent
       TopicsFlow = require "community.flows.topics"
       TopicsFlow(@)\delete_topic!
       return true
