@@ -119,9 +119,16 @@ class Topics extends Model
     if soft_delete @
       @update { deleted_at: db.format_date! }, timestamp: false
 
+      import CommunityUsers, Categories from require "community.models"
+
       if @user_id
-        import CommunityUsers from require "community.models"
         CommunityUsers\for_user(@get_user!)\increment "topics_count", -1
+
+      if @category_id
+        Categories\load(id: @category_id)\update {
+          deleted_topics_count: db.raw "deleted_topics_count + 1"
+        }, timestamp: false
+
       return true
 
     false

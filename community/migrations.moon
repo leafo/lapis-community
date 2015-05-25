@@ -29,6 +29,8 @@ import create_table, create_index, drop_table from schema
       {"last_topic_id", foreign_key null: true}
 
       {"topics_count", integer}
+      {"deleted_topics_count", integer}
+
       {"views_count", integer}
 
       {"short_description", text null: true}
@@ -76,6 +78,7 @@ import create_table, create_index, drop_table from schema
       {"deleted", boolean}
 
       {"posts_count", integer}
+      {"deleted_posts_count", integer}
       {"root_posts_count", integer}
 
       {"views_count", integer}

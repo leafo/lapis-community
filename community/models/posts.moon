@@ -124,8 +124,13 @@ class Posts extends Model
 
     if soft_delete @
       @update { deleted_at: db.format_date! }, timestamp: false
-      import CommunityUsers from require "community.models"
+      import CommunityUsers, Topics from require "community.models"
       CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
+
+      Topics\load(id: @topic_id)\update {
+        deleted_posts_count: db.raw "deleted_posts_count + 1"
+      }, timestamp: false
+
       return true
 
   false
