@@ -123,6 +123,7 @@ class Posts extends Model
     import soft_delete from require "community.helpers.models"
 
     if soft_delete @
+      @update { deleted_at: db.format_date! }, timestamp: false
       import CommunityUsers from require "community.models"
       CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
       return true

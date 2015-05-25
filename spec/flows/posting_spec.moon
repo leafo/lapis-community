@@ -380,6 +380,7 @@ describe "posting flow", ->
       assert.truthy res.success
       post\refresh!
       assert.truthy post.deleted
+      assert.truthy post.deleted_at
 
       assert.same -1, CommunityUsers\for_user(current_user).posts_count
 
