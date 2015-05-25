@@ -81,6 +81,8 @@ import create_table, create_index, drop_table from schema
 
       {"category_order", integer}
 
+      {"deleted_at", time null: true}
+
       {"created_at", time}
       {"updated_at", time}
 
@@ -108,7 +110,7 @@ import create_table, create_index, drop_table from schema
       {"edits_count", integer}
       {"last_edited_at", time null: true}
 
-      {"deleted_at", time}
+      {"deleted_at", time null: true}
 
       {"created_at", time}
       {"updated_at", time}

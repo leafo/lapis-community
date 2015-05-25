@@ -117,6 +117,8 @@ class Topics extends Model
     import soft_delete from require "community.helpers.models"
 
     if soft_delete @
+      @update { deleted_at: db.format_date! }, timestamp: false
+
       if @user_id
         import CommunityUsers from require "community.models"
         CommunityUsers\for_user(@get_user!)\increment "topics_count", -1

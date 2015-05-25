@@ -211,6 +211,7 @@ describe "posting flow", ->
       assert.truthy res.success
       topic\refresh!
       assert.truthy topic.deleted
+      assert.truthy topic.deleted_at
 
       assert.same -1, CommunityUsers\for_user(current_user).topics_count
 
@@ -403,6 +404,7 @@ describe "posting flow", ->
 
       topic\refresh!
       assert.truthy topic.deleted
+      assert.truthy topic.deleted_at
 
     it "should not delete unrelated post", ->
       other_user = factory.Users!
