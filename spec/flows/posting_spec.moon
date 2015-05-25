@@ -391,7 +391,7 @@ describe "posting flow", ->
       topic\refresh!
       assert.same nil, topic.last_post_id
 
-    it "should delete primary post", ->
+    it "should delete primary post, deleting topic", ->
       post = factory.Posts {
         user_id: current_user.id
       }
@@ -406,6 +406,28 @@ describe "posting flow", ->
       assert.truthy topic.deleted
       assert.truthy topic.deleted_at
 
+
+    it "should delete primary post of permanent topic, keep topic", ->
+      topic = factory.Topics {
+        user_id: current_user.id
+        permanent: true
+      }
+
+      post = factory.Posts {
+        topic_id: topic.id
+        user_id: current_user.id
+      }
+
+      Topics\recount id: topic.id
+
+      res = PostingApp\get current_user, "/delete-post", {
+        post_id: post.id
+      }
+
+      topic\refresh!
+      assert.falsy topic.deleted
+      assert.same 1, topic.posts_count
+    
     it "should not delete unrelated post", ->
       other_user = factory.Users!
       post = factory.Posts user_id: current_user.id

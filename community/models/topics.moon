@@ -28,7 +28,7 @@ class Topics extends Model
       where category_id = ?)
     ", category_id
 
-  @recount: =>
+  @recount: (where) =>
     import Posts from require "community.models"
     db.update @table_name!, {
       root_posts_count: db.raw "
@@ -41,7 +41,7 @@ class Topics extends Model
         (select count(*) from #{db.escape_identifier Posts\table_name!}
           where topic_id = #{db.escape_identifier @table_name!}.id)
       "
-    }
+    }, where
 
   allowed_to_post: (user) =>
     return false unless user
