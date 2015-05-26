@@ -29,7 +29,6 @@ class PostReports extends Model
 
     opts.reason = @reasons\for_db opts.reason
 
-    assert opts.body, "missing body"
     assert opts.post_id, "missing post_id"
     assert opts.user_id, "missing user_id"
 
