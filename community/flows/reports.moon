@@ -9,6 +9,8 @@ import trim_filter from require "lapis.util"
 
 import PostReports from require "community.models"
 
+limits = require "community.limits"
+
 class ReportsFlow extends Flow
   expose_assigns: true
 
@@ -29,28 +31,32 @@ class ReportsFlow extends Flow
     assert_error @post\allowed_to_report(@current_user),
       "invalid post"
 
-  new_report: =>
+
+  validate_params: =>
+    @load_post!
+
     assert_valid @params, {
       {"report", type: "table"}
     }
 
-    @load_post!
+    params = trim_filter @params.report, {
+      "reason", "body"
+    }
 
-    report = trim_filter @params.report
-    assert_valid report, {
+    assert_valid params, {
       {"reason", one_of: PostReports.reasons}
-      {"body", optional: true, max_length: 1024*5}
+      {"body", optional: true, max_length: limits.MAX_BODY_LEN}
     }
 
-    @report = PostReports\create {
-      user_id: @current_user.id
-      post_id: @post.id
-      category_id: @topic.category_id
-      reason: report.reason
-      body: report.body
-    }
+    params.reason = PostReports.reasons\for_db params.reason
+    params
 
-
+  new_report: =>
+    create_params = @validate_params!
+    create_params.user_id = @current_user.id
+    create_params.post_id = @post.id
+    create_params.category_id = @topic.category_id
+    @report = PostReports\create create_params
     true
 
   update_report: =>
