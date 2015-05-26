@@ -188,6 +188,8 @@ import create_table, create_index, drop_table from schema
       {"post_id", foreign_key}
       {"user_id", foreign_key}
 
+      {"moderating_user_id", foreign_key null: true}
+
       {"status", integer}
 
       {"reason", integer}

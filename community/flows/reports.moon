@@ -78,16 +78,19 @@ class ReportsFlow extends Flow
     }
 
     @report = assert_error PostReports\find(@params.report_id)
-    @category = @report\get_category!
-    assert_error @category\allowed_to_moderate(@current_user), "invaild category"
+    topic = @report\get_post!\get_topic!
+
+    assert_error topic\allowed_to_moderate(@current_user), "invalid report"
 
     report = trim_filter @params.report
-
     assert_valid report, {
       {"status", one_of: PostReports.statuses}
     }
 
-    @report\update status: PostReports.statuses\for_db report.status
+    @report\update {
+      status: PostReports.statuses\for_db report.status
+      moderating_user_id: @current_user.id
+    }
     true
 
 

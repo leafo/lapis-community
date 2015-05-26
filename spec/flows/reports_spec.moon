@@ -112,7 +112,7 @@ describe "reports", ->
       assert.same "I am updating my report", report.body
       assert.same PostReports.reasons.spam, report.reason
 
-  describe "update_report", ->
+  describe "moderate_report", ->
     it "should fail with no params", ->
       res = ReportingApp\get current_user, "/moderate-report", {}
       assert.truthy res.errors
@@ -129,5 +129,5 @@ describe "reports", ->
       assert.truthy res.success
       report\refresh!
       assert.same PostReports.statuses.resolved, report.status
-
+      assert.same current_user.id, report.moderating_user_id
 
