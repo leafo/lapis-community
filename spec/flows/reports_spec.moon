@@ -131,3 +131,17 @@ describe "reports", ->
       assert.same PostReports.statuses.resolved, report.status
       assert.same current_user.id, report.moderating_user_id
 
+    it "should not let unrelated user update report", ->
+      report = factory.PostReports!
+
+      res = ReportingApp\get current_user, "/moderate-report", {
+        report_id: report.id
+        "report[status]": "resolved"
+      }
+
+      assert.truthy res.errors
+      assert.falsy res.success
+
+      report\refresh!
+      assert.same PostReports.statuses.pending, report.status
+
