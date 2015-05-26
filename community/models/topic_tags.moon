@@ -7,7 +7,7 @@ class TopicTags extends Model
   @primary_key: {"topic_id", "slug"}
   @timestamp: true
 
-  @releations: {
+  @relations: {
     {"topic", belongs_to: "Topic"}
   }
 

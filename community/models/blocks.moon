@@ -6,7 +6,7 @@ class Blocks extends Model
   @primary_key: {"blocking_user_id", "blocked_user_id"}
   @timestamp: true
 
-  @releations: {
+  @relations: {
     {"blocking_user", belongs_to: "Users"}
     {"blocked_user", belongs_to: "Users"}
   }
