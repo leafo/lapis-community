@@ -13,6 +13,7 @@ import
   Posts
   TopicParticipants
   Topics
+  ActivityLogs
   from require "community.models"
 
 factory = require "spec.factory"
@@ -64,8 +65,8 @@ describe "posting flow", ->
   local current_user
 
   before_each ->
-    truncate_tables Users, Categories, Topics, Posts, Votes,
-      Moderators, PostEdits, CommunityUsers, TopicParticipants
+    truncate_tables Users, Categories, Topics, Posts, Votes, Moderators,
+      PostEdits, CommunityUsers, TopicParticipants, ActivityLogs
 
     current_user = factory.Users!
 
@@ -168,6 +169,13 @@ describe "posting flow", ->
       -- last_post_id is set
       assert.same post.id, topic.last_post_id
 
+      assert.same 1, ActivityLogs\count!
+      log = unpack ActivityLogs\select!
+      assert.same current_user.id, log.user_id
+      assert.same post.id, log.object_id
+      assert.same ActivityLogs.object_types.post, log.object_type
+      assert.same "create", log\action_name!
+
     it "should post two posts", ->
       for i=1,2
         PostingApp\get current_user, "/new-post", {
@@ -236,6 +244,13 @@ describe "posting flow", ->
       assert.truthy res.success
       post\refresh!
       assert.same "the new body", post.body
+
+      assert.same 1, ActivityLogs\count!
+      log = unpack ActivityLogs\select!
+      assert.same current_user.id, log.user_id
+      assert.same post.id, log.object_id
+      assert.same ActivityLogs.object_types.post, log.object_type
+      assert.same "edit", log\action_name!
 
     it "should edit post and title", ->
       post = factory.Posts user_id: current_user.id
@@ -390,6 +405,13 @@ describe "posting flow", ->
 
       topic\refresh!
       assert.same nil, topic.last_post_id
+
+      assert.same 1, ActivityLogs\count!
+      log = unpack ActivityLogs\select!
+      assert.same current_user.id, log.user_id
+      assert.same post.id, log.object_id
+      assert.same ActivityLogs.object_types.post, log.object_type
+      assert.same "delete", log\action_name!
 
     it "should delete primary post, deleting topic", ->
       post = factory.Posts {
