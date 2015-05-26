@@ -134,6 +134,14 @@ describe "posting flow", ->
       -- first post doesn't get put in last_post_id...
       assert.same nil, topic.last_post_id
 
+      assert.same 1, ActivityLogs\count!
+      log = unpack ActivityLogs\select!
+      assert.same current_user.id, log.user_id
+      assert.same topic.id, log.object_id
+      assert.same ActivityLogs.object_types.topic, log.object_type
+      assert.same "create", log\action_name!
+
+
   describe "new post", ->
     local topic
 
@@ -222,6 +230,13 @@ describe "posting flow", ->
       assert.truthy topic.deleted_at
 
       assert.same -1, CommunityUsers\for_user(current_user).topics_count
+
+      assert.same 1, ActivityLogs\count!
+      log = unpack ActivityLogs\select!
+      assert.same current_user.id, log.user_id
+      assert.same topic.id, log.object_id
+      assert.same ActivityLogs.object_types.topic, log.object_type
+      assert.same "delete", log\action_name!
 
     it "should not allow unrelated user to delete topic", ->
       other_user = factory.Users!
@@ -427,6 +442,13 @@ describe "posting flow", ->
       topic\refresh!
       assert.truthy topic.deleted
       assert.truthy topic.deleted_at
+
+      assert.same 1, ActivityLogs\count!
+      log = unpack ActivityLogs\select!
+      assert.same current_user.id, log.user_id
+      assert.same topic.id, log.object_id
+      assert.same ActivityLogs.object_types.topic, log.object_type
+      assert.same "delete", log\action_name!
 
 
     it "should delete primary post of permanent topic, keep topic", ->

@@ -2,7 +2,7 @@
 db = require "lapis.db"
 
 import Flow from require "lapis.flow"
-import Topics, Posts, CommunityUsers from require "community.models"
+import Topics, Posts, CommunityUsers, ActivityLogs from require "community.models"
 
 import assert_error from require "lapis.application"
 import trim_filter from require "lapis.util"
@@ -93,12 +93,26 @@ class TopicsFlow extends Flow
     CommunityUsers\for_user(@current_user)\increment "topics_count"
     @topic\increment_participant @current_user
 
+    ActivityLogs\create {
+      user_id: @current_user.id
+      object: @topic
+      action: "create"
+    }
+
     true
 
+  -- this isn't used under most circumstances as deleting root post deletes topic
   delete_topic: require_login =>
     @load_topic!
     assert_error @topic\allowed_to_edit(@current_user), "not allowed to edit"
-    @topic\delete!
+    if @topic\delete!
+      ActivityLogs\create {
+        user_id: @current_user.id
+        object: @topic
+        action: "delete"
+      }
+
+      true
 
   lock_topic: require_login =>
     @load_topic_for_moderation!
