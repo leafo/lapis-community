@@ -352,5 +352,21 @@ import create_table, create_index, drop_table from schema
 
     create_index T"bookmarks", "user_id", "created_at"
 
+    create_table T"activity_logs", {
+      {"id", serial}
+      {"user_id", foreign_key}
 
+      {"object_type", integer}
+      {"object_id", foreign_key}
+
+      {"action", integer}
+      {"data", text null: true}
+
+      {"created_at", time}
+      {"updated_at", time}
+
+      "PRIMARY KEY (id)"
+    }
+
+    create_index T"activity_logs", "user_id", "id"
 }

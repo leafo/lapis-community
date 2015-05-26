@@ -3,7 +3,6 @@ import Model from require "community.model"
 
 class ModerationLogs extends Model
   @timestamp: true
-  @primary_key: {"id"}
 
   @relations: {
     {"user", belongs_to: "Users"}
