@@ -359,6 +359,8 @@ import create_table, create_index, drop_table from schema
       {"object_type", integer}
       {"object_id", foreign_key}
 
+      {"publishable", boolean}
+
       {"action", integer}
       {"data", text null: true}
 

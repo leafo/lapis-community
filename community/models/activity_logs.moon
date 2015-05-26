@@ -26,6 +26,7 @@ class ActivityLogs extends Model
     {"object", polymorphic_belongs_to: {
       [1]: {"topic", "Topics"}
       [2]: {"post", "Posts"}
+      [3]: {"category", "Categories"}
     }}
   }
 
@@ -35,7 +36,7 @@ class ActivityLogs extends Model
 
     object = assert opts.object, "missing object"
     opts.object = nil
-    opts.object_id = object.id
+    opts.object_id = assert object.id, "object does not have id"
     opts.object_type = @object_type_for_object object
 
     type_name = @object_types\to_name opts.object_type
