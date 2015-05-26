@@ -71,7 +71,7 @@ class ReportsFlow extends Flow
 
     true
 
-  update_report: =>
+  moderate_report: =>
     assert_valid @params, {
       {"report_id", is_integer: true}
       {"report", type: "table"}

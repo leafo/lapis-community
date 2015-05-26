@@ -23,8 +23,8 @@ class ReportingApp extends TestApp
     @flow\update_or_create_report!
     json: { success: true }
 
-  "/update-report": capture_errors_json =>
-    @flow\update_report!
+  "/moderate-report": capture_errors_json =>
+    @flow\moderate_report!
     json: { success: true }
 
 describe "reports", ->
@@ -114,14 +114,14 @@ describe "reports", ->
 
   describe "update_report", ->
     it "should fail with no params", ->
-      res = ReportingApp\get current_user, "/update-report", {}
+      res = ReportingApp\get current_user, "/moderate-report", {}
       assert.truthy res.errors
 
     it "should update report", ->
       category = factory.Categories user_id: current_user.id
       report = factory.PostReports category_id: category.id
 
-      res = ReportingApp\get current_user, "/update-report", {
+      res = ReportingApp\get current_user, "/moderate-report", {
         report_id: report.id
         "report[status]": "resolved"
       }
