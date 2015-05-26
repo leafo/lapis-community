@@ -24,6 +24,10 @@ class BlocksApp extends TestApp
     @flow\unblock_user!
     json: {success: true}
 
+  "/show-blocks": capture_errors_json =>
+    blocks = @flow\show_blocks!
+    json: { success: true, :blocks }
+
 describe "blocks", ->
   use_test_env!
 
@@ -73,4 +77,15 @@ describe "blocks", ->
       blocked_user_id: other_user.id
     }
 
+  describe "show blocks", ->
+    it "should get blocks when there are none", ->
+      res = BlocksApp\get current_user, "/show-blocks"
+      assert.same {success: true, blocks: {}}, res
+
+    it "should get blocks when there are some", ->
+      for i=1,2
+        factory.Blocks blocking_user_id: current_user.id
+
+      res = BlocksApp\get current_user, "/show-blocks"
+      assert.same 2, #res.blocks
 

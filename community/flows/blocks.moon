@@ -6,6 +6,7 @@ import Blocks from require "community.models"
 
 import assert_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
+import assert_page, require_login from require "community.helpers.app"
 
 class BlocksFlow extends Flow
   expose_assigns: true
@@ -13,6 +14,22 @@ class BlocksFlow extends Flow
   new: (req) =>
     super req
     assert @current_user, "missing current user for blocks flow"
+
+  show_blocks: =>
+    assert_page @
+
+    @pager = Blocks\paginated "
+      where blocking_user_id = ?
+      order by created_at desc
+    ", @current_user.id, {
+      per_page: 40
+      prepare_results: (blocks) ->
+        Users\include_in blocks, "blocked_user_id"
+        blocks
+    }
+
+    @blocks = @pager\get_page @page
+    @blocks
 
   load_blocked_user: =>
     return if @blocked
