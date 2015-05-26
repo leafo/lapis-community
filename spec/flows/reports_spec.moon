@@ -3,7 +3,7 @@ import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
 import Users from require "models"
-import Categories, Topics, Posts, PostReports from require "community.models"
+import Categories, Topics, Posts, PostReports, ModerationLogs from require "community.models"
 import TestApp from require "spec.helpers"
 
 factory = require "spec.factory"
@@ -33,7 +33,7 @@ describe "reports", ->
   local current_user
 
   before_each ->
-    truncate_tables Users, Categories, Topics, Posts, PostReports
+    truncate_tables Users, Categories, Topics, Posts, PostReports, ModerationLogs
     current_user = factory.Users!
 
   describe "report", ->
@@ -130,6 +130,15 @@ describe "reports", ->
       report\refresh!
       assert.same PostReports.statuses.resolved, report.status
       assert.same current_user.id, report.moderating_user_id
+
+      assert.same 1, ModerationLogs\count!
+
+      log = unpack ModerationLogs\select!
+      assert.same category.id, log.category_id
+      assert.same current_user.id, log.user_id
+      assert.same report.id, log.object_id
+      assert.same ModerationLogs.object_types.post_report, log.object_type
+      assert.same "report.status(resolved)", log.action
 
     it "should not let unrelated user update report", ->
       report = factory.PostReports!

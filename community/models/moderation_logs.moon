@@ -13,6 +13,7 @@ class ModerationLogs extends Model
     {"object", polymorphic_belongs_to: {
       [1]: {"topic", "Topics"}
       [2]: {"category", "Categories"}
+      [3]: {"post_report", "PostReports"}
     }}
   }
 

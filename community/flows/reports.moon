@@ -91,6 +91,16 @@ class ReportsFlow extends Flow
       status: PostReports.statuses\for_db report.status
       moderating_user_id: @current_user.id
     }
+
+    import ModerationLogs from require "community.models"
+
+    ModerationLogs\create {
+      user_id: @current_user.id
+      object: @report
+      category_id: @report.category_id
+      action: "report.status(#{report.status})"
+    }
+
     true
 
 
