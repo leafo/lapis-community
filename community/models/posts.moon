@@ -134,3 +134,13 @@ class Posts extends Model
       return true
 
   false
+
+  allowed_to_report: (user) =>
+    return false unless user
+    return false if user.id == @user_id
+    return false unless @allowed_to_view user
+    true
+
+  allowed_to_view: (user) =>
+    @get_topic!\allowed_to_view user
+

@@ -13,7 +13,9 @@ class PostReports extends Model
 
   @reasons: enum {
     other: 1
-    offensive: 2
+    off_topic: 2
+    spam: 3
+    offensive: 4
   }
 
   @relations: {

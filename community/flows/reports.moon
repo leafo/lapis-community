@@ -10,22 +10,31 @@ import trim_filter from require "lapis.util"
 import PostReports from require "community.models"
 
 class ReportsFlow extends Flow
+  expose_assigns: true
+
   new: (req) =>
     super req
     assert @current_user, "missing current user for reports flow"
 
-  new_report: =>
+  load_post: =>
     assert_valid @params, {
       {"post_id", is_integer: true}
+    }
+
+    PostsFlow = require "community.flows.posts"
+    PostsFlow(@)\load_post!
+
+    @topic = @post\get_topic!
+
+    assert_error @post\allowed_to_report(@current_user),
+      "invalid post"
+
+  new_report: =>
+    assert_valid @params, {
       {"report", type: "table"}
     }
 
-    import Posts from require "community.models"
-
-    @post = assert_error Posts\find(@params.post_id), "invalid post"
-    @topic = @post\get_topic!
-    assert_error @topic\allowed_to_view @current_user
-    assert_error @post.user_id != @current_user_id, "invalid post"
+    @load_post!
 
     report = trim_filter @params.report
     assert_valid report, {
@@ -40,6 +49,7 @@ class ReportsFlow extends Flow
       reason: report.reason
       body: report.body
     }
+
 
     true
 
