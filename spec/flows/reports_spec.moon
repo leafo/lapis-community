@@ -41,6 +41,18 @@ describe "reports", ->
       res = ReportingApp\get current_user, "/new-report", {}
       assert.truthy res.errors
 
+    it "should not report be created for own post", ->
+      post = factory.Posts user_id: current_user.id
+
+      res = ReportingApp\get current_user, "/new-report", {
+        post_id: post.id
+        "report[reason]": "other"
+        "report[body]": "this is the problem"
+      }
+
+      assert.truthy res.errors
+      assert.same 0, PostReports\count!
+
     it "should create a new report", ->
       post = factory.Posts!
 
