@@ -1,7 +1,6 @@
 # Core
 
 * callbacks
-* activity log
 
 ## v2
 
