@@ -125,7 +125,7 @@ class PostsFlow extends Flow
       topic = @post\get_topic!
       topic\decrement_participant @current_user
 
-      if @post.id = topic.last_post_id
+      if @post.id == topic.last_post_id
         topic\refresh_last_post!
 
       true
