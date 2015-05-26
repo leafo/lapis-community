@@ -1,7 +1,7 @@
 import Flow from require "lapis.flow"
 
 import Users from require "models"
-import Categories, CategoryMembers from require "community.models"
+import Categories, CategoryMembers, ActivityLogs from require "community.models"
 
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
@@ -80,6 +80,13 @@ class CategoriesFlow extends Flow
     create_params = @validate_params!
     create_params.user_id = @current_user.id
     @category = Categories\create create_params
+
+    ActivityLogs\create {
+      user_id: @current_user.id
+      object: @category
+      action: "create"
+    }
+
     true
 
   edit_category: require_login =>
@@ -90,6 +97,12 @@ class CategoriesFlow extends Flow
     update_params = filter_update @category, update_params
 
     @category\update update_params
+
+    ActivityLogs\create {
+      user_id: @current_user.id
+      object: @category
+      action: "edit"
+    }
 
     true
 

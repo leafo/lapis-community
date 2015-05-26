@@ -15,7 +15,12 @@ class ActivityLogs extends Model
       create: 1
       delete: 2
       edit: 3
-      vote: 3
+      vote: 4
+    }
+
+    category: enum {
+      create: 1
+      edit: 2
     }
   }
 

@@ -7,7 +7,9 @@ import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
 
 import Users from require "models"
-import Categories, Posts, Topics, CategoryMembers, Moderators from require "community.models"
+import
+  Categories, Posts, Topics, CategoryMembers, Moderators, ActivityLogs
+  from require "community.models"
 
 class CategoryApp extends TestApp
   @require_user!
@@ -42,7 +44,8 @@ describe "categories", ->
   local current_user
 
   before_each ->
-    truncate_tables Users, Categories, Posts, Topics, CategoryMembers, Moderators
+    truncate_tables Users, Categories, Posts, Topics, CategoryMembers,
+      Moderators, ActivityLogs
     current_user = factory.Users!
 
   it "should create category", ->
@@ -71,6 +74,14 @@ describe "categories", ->
     assert.same Categories.membership_types.public, category.membership_type
     assert.same Categories.voting_types.disabled, category.voting_type
 
+    assert.same 1, ActivityLogs\count!
+    log = unpack ActivityLogs\select!
+    assert.same current_user.id, log.user_id
+    assert.same category.id, log.object_id
+    assert.same ActivityLogs.object_types.category, log.object_type
+    assert.same "create", log\action_name!
+
+
   describe "with category", ->
     local category
 
@@ -98,6 +109,13 @@ describe "categories", ->
 
       assert.same Categories.membership_types.members_only, category.membership_type
       assert.same Categories.voting_types.up, category.voting_type
+
+      assert.same 1, ActivityLogs\count!
+      log = unpack ActivityLogs\select!
+      assert.same current_user.id, log.user_id
+      assert.same category.id, log.object_id
+      assert.same ActivityLogs.object_types.category, log.object_type
+      assert.same "edit", log\action_name!
 
     it "should not let unknown user edit category", ->
       other_user = factory.Users!
