@@ -32,6 +32,11 @@ class ReportsFlow extends Flow
     assert_error @post\allowed_to_report(@current_user),
       "invalid post"
 
+    -- get existing report
+    @report = PostReports\find {
+      user_id: @current_user.id
+      post_id: @post.id
+    }
 
   validate_params: =>
     @load_post!
@@ -54,11 +59,6 @@ class ReportsFlow extends Flow
 
   update_or_create_report: =>
     @load_post!
-    @report = PostReports\find {
-      user_id: @current_user.id
-      post_id: @post.id
-    }
-
     params = @validate_params!
 
     if @report

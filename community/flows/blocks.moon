@@ -15,6 +15,8 @@ class BlocksFlow extends Flow
     assert @current_user, "missing current user for blocks flow"
 
   load_blocked_user: =>
+    return if @blocked
+
     assert_valid @params, {
       {"blocked_user_id", is_integer: true}
     }
