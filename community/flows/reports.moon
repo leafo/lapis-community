@@ -4,6 +4,7 @@ import Flow from require "lapis.flow"
 db = require "lapis.db"
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
+import filter_update from require "community.helpers.models"
 
 import trim_filter from require "lapis.util"
 
@@ -51,12 +52,23 @@ class ReportsFlow extends Flow
     params.reason = PostReports.reasons\for_db params.reason
     params
 
-  new_report: =>
-    create_params = @validate_params!
-    create_params.user_id = @current_user.id
-    create_params.post_id = @post.id
-    create_params.category_id = @topic.category_id
-    @report = PostReports\create create_params
+  update_or_create_report: =>
+    @load_post!
+    @report = PostReports\find {
+      user_id: @current_user.id
+      post_id: @post.id
+    }
+
+    params = @validate_params!
+
+    if @report
+      @report\update filter_update @report, params
+    else
+      params.user_id = @current_user.id
+      params.post_id = @post.id
+      params.category_id = @topic.category_id
+      @report = PostReports\create params
+
     true
 
   update_report: =>

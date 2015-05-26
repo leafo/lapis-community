@@ -20,7 +20,7 @@ class ReportingApp extends TestApp
     @flow = ReportsFlow @
 
   "/new-report": capture_errors_json =>
-    @flow\new_report!
+    @flow\update_or_create_report!
     json: { success: true }
 
   "/update-report": capture_errors_json =>
