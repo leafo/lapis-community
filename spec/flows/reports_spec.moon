@@ -19,7 +19,7 @@ class ReportingApp extends TestApp
     ReportsFlow = require "community.flows.reports"
     @flow = ReportsFlow @
 
-  "/new-report": capture_errors_json =>
+  "/report": capture_errors_json =>
     @flow\update_or_create_report!
     json: { success: true }
 
@@ -36,15 +36,15 @@ describe "reports", ->
     truncate_tables Users, Categories, Topics, Posts, PostReports
     current_user = factory.Users!
 
-  describe "new_report", ->
+  describe "report", ->
     it "should fail to create report", ->
-      res = ReportingApp\get current_user, "/new-report", {}
+      res = ReportingApp\get current_user, "/report", {}
       assert.truthy res.errors
 
     it "should not report be created for own post", ->
       post = factory.Posts user_id: current_user.id
 
-      res = ReportingApp\get current_user, "/new-report", {
+      res = ReportingApp\get current_user, "/report", {
         post_id: post.id
         "report[reason]": "other"
         "report[body]": "this is the problem"
@@ -56,7 +56,7 @@ describe "reports", ->
     it "should create a new report", ->
       post = factory.Posts!
 
-      res = ReportingApp\get current_user, "/new-report", {
+      res = ReportingApp\get current_user, "/report", {
         post_id: post.id
         "report[reason]": "other"
         "report[body]": "this is the problem"
@@ -79,7 +79,7 @@ describe "reports", ->
       topic = factory.Topics category: false
       post = factory.Posts topic_id: topic.id
 
-      res = ReportingApp\get current_user, "/new-report", {
+      res = ReportingApp\get current_user, "/report", {
         post_id: post.id
         "report[reason]": "other"
         "report[body]": "please report"
@@ -93,6 +93,24 @@ describe "reports", ->
       report = unpack reports
       assert.same nil, report.category_id
       assert.same post.id, report.post_id
+
+    it "should update existing report #ddd", ->
+      report = factory.PostReports user_id: current_user.id
+
+      res = ReportingApp\get current_user, "/report", {
+        post_id: report.post_id
+        "report[reason]": "spam"
+        "report[body]": "I am updating my report"
+      }
+
+      assert.falsy res.errors
+      assert.truthy res.success
+
+      assert.same 1, PostReports\count!
+      report\refresh!
+
+      assert.same "I am updating my report", report.body
+      assert.same PostReports.reasons.spam, report.reason
 
   describe "update_report", ->
     it "should fail with no params", ->
