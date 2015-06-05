@@ -75,6 +75,16 @@ describe "reports", ->
       assert.same PostReports.reasons.other, report.reason
       assert.same "this is the problem", report.body
 
+    it "creates new report without body", ->
+      post = factory.Posts!
+
+      res = ReportingApp\get current_user, "/report", {
+        post_id: post.id
+        "report[reason]": "other"
+      }
+
+      assert.falsy res.errors
+
     it "should create new report for post in topic without category", ->
       topic = factory.Topics category: false
       post = factory.Posts topic_id: topic.id

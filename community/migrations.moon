@@ -193,7 +193,7 @@ import create_table, create_index, drop_table from schema
       {"status", integer}
 
       {"reason", integer}
-      {"body", text}
+      {"body", text null: true}
 
       {"created_at", time}
       {"updated_at", time}
