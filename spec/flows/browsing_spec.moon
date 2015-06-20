@@ -21,13 +21,20 @@ class BrowsingApp extends TestApp
 
   "/topic-posts": capture_errors_json =>
     @flow\topic_posts!
-    json: { posts: @posts, success: true, before: @before, after: @after }
+    json: {
+      success: true
+      posts: @posts
+      before: @before
+      after: @after
+    }
 
   "/category-topics": capture_errors_json =>
     @flow\category_topics!
     json: {
       success: true
       topics: @topics
+      before: @before
+      after: @after
     }
 
 describe "browsing flow", ->
@@ -149,19 +156,49 @@ describe "browsing flow", ->
           assert.same expected_nesting, nesting
 
       describe "category topics", ->
-        it "should get empty category", ->
+        it "gets empty category", ->
           category = factory.Categories!
           res = BrowsingApp\get current_user, "/category-topics", category_id: category.id
           assert.truthy res.success
           assert.same 0, #res.topics
 
-        it "should get some topics", ->
+        it "gets some topics", ->
           category = factory.Categories!
           for i=1,4
-            factory.Topics category_id: category.id
+            topic = factory.Topics category_id: category.id
+            category\increment_from_topic topic
 
           res = BrowsingApp\get current_user, "/category-topics", category_id: category.id
 
           assert.truthy res.success
           assert.same 4, #res.topics
+          assert.falsy res.before
+          assert.falsy res.after
+
+        it "sets pagination for category", ->
+          category = factory.Categories!
+          limits = require "community.limits"
+
+          for i=1,limits.TOPICS_PER_PAGE + 1
+            topic = factory.Topics category_id: category.id
+            category\increment_from_topic topic
+
+          res = BrowsingApp\get current_user, "/category-topics", category_id: category.id
+
+          assert.truthy res.success
+          assert.same 20, #res.topics
+          assert.same 2, res.before
+          assert.falsy res.after
+
+          res = BrowsingApp\get current_user, "/category-topics", {
+            category_id: category.id
+            before: res.before
+          }
+
+          assert.truthy res.success
+          assert.same 1, #res.topics
+          assert.same nil, res.before
+          assert.same 1, res.after
+
+
 
