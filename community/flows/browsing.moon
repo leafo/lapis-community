@@ -12,8 +12,7 @@ import uniqify from require "lapis.util"
 db = require "lapis.db"
 
 date = require "date"
-
-PER_PAGE = 20
+limits = require "community.limits"
 
 class NestedOrderedPaginator extends OrderedPaginator
   prepare_results: (items) =>
@@ -101,7 +100,7 @@ class BrowsingFlow extends Flow
     pager = NestedOrderedPaginator Posts, "post_number", [[
       where topic_id = ? and depth = 1
     ]], @topic.id, {
-      per_page: PER_PAGE
+      per_page: limits.POSTS_PER_PAGE
 
       parent_field: "parent_post_id"
       sort: (list) ->
@@ -187,7 +186,7 @@ class BrowsingFlow extends Flow
     pager = OrderedPaginator Topics, "category_order", [[
       where category_id = ? and not deleted and sticky
     ]], @category.id, {
-      per_page: PER_PAGE
+      per_page: limits.TOPICS_PER_PAGE
       prepare_results: @\preload_topics
     }
 
@@ -206,7 +205,7 @@ class BrowsingFlow extends Flow
     pager = OrderedPaginator Topics, "category_order", [[
       where category_id = ? and not deleted and not sticky
     ]], @category.id, {
-      per_page: PER_PAGE
+      per_page: limits.TOPICS_PER_PAGE
       prepare_results: @\preload_topics
     }
 
