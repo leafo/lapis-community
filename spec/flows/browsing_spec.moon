@@ -90,6 +90,7 @@ describe "browsing flow", ->
 
           res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
           assert.falsy res.after
+          assert.falsy res.before
 
           -- one more to push it over the limit
           p = factory.Posts topic_id: topic.id
@@ -97,6 +98,17 @@ describe "browsing flow", ->
 
           res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
           assert.same 20, res.after
+          assert.falsy res.before
+
+
+          for i=1,3
+            p = factory.Posts topic_id: topic.id
+            topic\increment_from_post p
+
+          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id, after: res.after
+          assert.same 21, res.before
+          assert.falsy res.after
+          assert.same 4, #res.posts
 
 
         it "should get some nested posts", ->
