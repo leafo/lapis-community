@@ -21,20 +21,13 @@ class BrowsingApp extends TestApp
 
   "/topic-posts": capture_errors_json =>
     @flow\topic_posts!
-    json: { posts: @posts, success: true }
+    json: { posts: @posts, success: true, before: @before, after: @after }
 
   "/category-topics": capture_errors_json =>
     @flow\category_topics!
     json: {
       success: true
       topics: @topics
-      next_page: {
-        after_date: @after_date
-        after_id: @after_id
-
-        before_date: @before_date
-        before_id: @before_id
-      }
     }
 
 describe "browsing flow", ->
@@ -59,7 +52,8 @@ describe "browsing flow", ->
         it "should get some posts", ->
           topic = factory.Topics!
           for i=1,3
-            factory.Posts topic_id: topic.id
+            post = factory.Posts topic_id: topic.id
+            topic\increment_from_post post
 
           res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
           assert.truthy res.success
@@ -68,20 +62,42 @@ describe "browsing flow", ->
         it "should get paginated posts with after", ->
           topic = factory.Topics!
           for i=1,3
-            factory.Posts topic_id: topic.id
+            post = factory.Posts topic_id: topic.id
+            topic\increment_from_post post
 
           res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id, after: 1
           assert.truthy res.success
           assert.same 2, #res.posts
+          assert.same 2, res.before
 
         it "should get paginated posts with before", ->
           topic = factory.Topics!
           for i=1,3
-            factory.Posts topic_id: topic.id
+            post = factory.Posts topic_id: topic.id
+            topic\increment_from_post post
 
           res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id, before: 2
           assert.truthy res.success
           assert.same 1, #res.posts
+
+        it "sets pagination on posts", ->
+          limits = require "community.limits"
+          topic = factory.Topics!
+
+          for i=1,limits.POSTS_PER_PAGE
+            p = factory.Posts topic_id: topic.id
+            topic\increment_from_post p
+
+          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
+          assert.falsy res.after
+
+          -- one more to push it over the limit
+          p = factory.Posts topic_id: topic.id
+          topic\increment_from_post p
+
+          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
+          assert.same 20, res.after
+
 
         it "should get some nested posts", ->
           topic = factory.Topics!
@@ -90,15 +106,19 @@ describe "browsing flow", ->
 
           for i=1,3
             p = factory.Posts topic_id: topic.id
+            topic\increment_from_post p
+
             node = {id: p.id, children: {} }
             table.insert expected_nesting, node
 
             for i = 1,2
               pp = factory.Posts topic_id: topic.id, parent_post: p
+              topic\increment_from_post pp
               inner_node = {id: pp.id, children: {}}
               table.insert node.children, inner_node
 
               ppp = factory.Posts topic_id: topic.id, parent_post: pp
+              topic\increment_from_post ppp
               table.insert inner_node.children, {
                 id: ppp.id, children: {}
               }
