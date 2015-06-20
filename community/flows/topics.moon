@@ -77,7 +77,6 @@ class TopicsFlow extends Flow
       user_id: @current_user.id
       category_id: @category.id
       title: new_topic.title
-      posts_count: 1
       :sticky
       :locked
     }
@@ -88,6 +87,7 @@ class TopicsFlow extends Flow
       body: new_topic.body
     }
 
+    @topic\increment_from_post @post, update_category_order: false
     @category\increment_from_topic @topic
 
     CommunityUsers\for_user(@current_user)\increment "topics_count"

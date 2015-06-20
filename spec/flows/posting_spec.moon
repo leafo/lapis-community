@@ -131,8 +131,10 @@ describe "posting flow", ->
       category\refresh!
       assert.same topic.id, category.last_topic_id
 
-      -- first post doesn't get put in last_post_id...
-      assert.same nil, topic.last_post_id
+      assert.same post.id, topic.last_post_id
+
+      assert.same 1, topic.root_posts_count
+      assert.same 1, topic.posts_count
 
       assert.same 1, ActivityLogs\count!
       log = unpack ActivityLogs\select!
@@ -146,6 +148,7 @@ describe "posting flow", ->
     local topic
 
     before_each ->
+      -- note this isn't a full topic, it has no first post
       topic = factory.Topics!
 
     it "should post a new post", ->

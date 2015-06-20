@@ -88,15 +88,18 @@ class Topics extends Model
     import TopicParticipants from require "community.models"
     TopicParticipants\decrement @id, user.id
 
-  increment_from_post: (post) =>
+  increment_from_post: (post, opts) =>
     assert post.topic_id == @id, "invalid post sent to topic"
+
+    category_order = unless opts and opts.update_category_order == false
+      Topics\update_category_order_sql @category_id
 
     @update {
       posts_count: db.raw "posts_count + 1"
       root_posts_count: if post.depth == 1
         db.raw "root_posts_count + 1"
       last_post_id: post.id
-      category_order: Topics\update_category_order_sql @category_id
+      :category_order
     }, timestamp: false
 
 
