@@ -5,13 +5,15 @@ import assert_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 import trim_filter from require "lapis.util"
 
+import assert_page, require_login from require "community.helpers.app"
+
 import Users from require "models"
 import Bans, Categories, Topics from require "community.models"
 
 class BansFlow extends Flow
   expose_assigns: true
 
-  new: (req) =>
+  new: (req, @object) =>
     super req
     assert @current_user, "missing current user for bans flow"
 
@@ -96,3 +98,20 @@ class BansFlow extends Flow
       @write_moderation_log "#{@params.object_type}.unban", nil, { @banned }
 
     true
+
+  show_bans: =>
+    @load_object!
+    assert_page @
+
+    @pager = Bans\paginated [[
+      where object_type = ? and object_id = ?
+      order by created_at desc
+    ]], Bans\object_type_for_object(@object), @object.id, {
+      per_page: 20
+      prepare_results: (bans) ->
+        bans
+    }
+
+    @bans = @pager\get_page @page
+    @bans
+

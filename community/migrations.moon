@@ -268,6 +268,7 @@ import create_table, create_index, drop_table from schema
 
     create_index T"bans", "banned_user_id"
     create_index T"bans", "banning_user_id"
+    create_index T"bans", "object_type", "object_id", "created_at"
 
     create_table T"moderation_logs", {
       {"id", serial}

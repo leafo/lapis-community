@@ -27,6 +27,11 @@ class CategoriesFlow extends Flow
     MembersFlow = require "community.flows.members"
     MembersFlow @, @
 
+  bans_flow: =>
+    @load_category!
+    BansFlow = require "community.flows.bans"
+    BansFlow @, @category
+
   load_category: =>
     return if @category
 

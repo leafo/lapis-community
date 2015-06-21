@@ -24,6 +24,10 @@ class BansApp extends TestApp
     @flow\unban!
     json: { success: true }
 
+  "/show-bans": capture_errors_json =>
+    @flow\show_bans!
+    json: { success: true, bans: @bans }
+
 
 describe "bans", ->
   use_test_env!
@@ -114,6 +118,28 @@ describe "bans", ->
       assert.same "category.unban", log.action
 
       assert_log_contains_user log, other_user
+
+    it "shows bans when there are no bans", ->
+      res = BansApp\get current_user, "/show-bans", {
+        object_type: "category"
+        object_id: category.id
+      }
+
+      assert.falsy res.errors
+      assert.same {}, res.bans
+
+    it "shows bans", ->
+      for i=1,2
+        factory.Bans object: category
+
+      res = BansApp\get current_user, "/show-bans", {
+        object_type: "category"
+        object_id: category.id
+      }
+
+      assert.falsy res.errors
+      assert.same 2, #res.bans
+
 
   describe "with topic", ->
     local topic
