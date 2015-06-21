@@ -116,6 +116,8 @@ class BansFlow extends Flow
     ]], Bans\object_type_for_object(@object), @object.id, {
       per_page: 20
       prepare_results: (bans) ->
+        Users\include_in bans, "banned_user_id"
+        Users\include_in bans, "banning_user_id"
         bans
     }
 
