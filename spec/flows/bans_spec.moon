@@ -17,11 +17,11 @@ class BansApp extends TestApp
     @flow = BansFlow @
 
   "/ban": capture_errors_json =>
-    @flow\ban!
+    @flow\create_ban!
     json: { success: true }
 
   "/unban": capture_errors_json =>
-    @flow\unban!
+    @flow\delete_ban!
     json: { success: true }
 
   "/show-bans": capture_errors_json =>
@@ -105,6 +105,7 @@ describe "bans", ->
         banned_user_id: other_user.id
       }
 
+      assert.falsy res.errors
       assert.same 0, #Bans\select!
 
       logs = ModerationLogs\select!
@@ -191,6 +192,8 @@ describe "bans", ->
         object_id: topic.id
         banned_user_id: other_user.id
       }
+
+      assert.falsy res.errors
 
       assert.same 0, #Bans\select!
 

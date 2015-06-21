@@ -40,6 +40,19 @@ class BansFlow extends Flow
     assert_error @object, "invalid ban object"
     assert_error @object\allowed_to_moderate(@current_user), "invalid permissions"
 
+  load_ban: =>
+    return if @ban != nil
+
+    @load_banned_user!
+    @load_object!
+
+    @ban = Bans\find {
+      object_type: Bans\object_type_for_object @object
+      object_id: @object.id
+      banned_user_id: @banned.id
+    }
+
+    @ban or= false
 
   write_moderation_log: (action, reason, log_objects) =>
     @load_object!
@@ -61,7 +74,7 @@ class BansFlow extends Flow
       :log_objects
     }
 
-  ban: =>
+  create_ban: =>
     @load_banned_user!
     @load_object!
 
@@ -84,17 +97,11 @@ class BansFlow extends Flow
 
     true
 
-  unban: =>
-    @load_banned_user!
-    @load_object!
+  delete_ban: =>
+    @load_ban!
+    assert_error @ban, "invalid ban"
 
-    ban = Bans\find {
-      object_type: Bans.object_types\for_db @params.object_type
-      object_id: @object.id
-      banned_user_id: @banned.id
-    }
-
-    if ban and ban\delete!
+    if @ban and @ban\delete!
       @write_moderation_log "#{@params.object_type}.unban", nil, { @banned }
 
     true
