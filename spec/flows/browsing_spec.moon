@@ -19,6 +19,13 @@ class BrowsingApp extends TestApp
     Browsing = require "community.flows.browsing"
     @flow = Browsing @
 
+  "/post": capture_errors_json =>
+    @flow\post_single!
+    json: {
+      success: true
+      post: @post
+    }
+
   "/topic-posts": capture_errors_json =>
     @flow\topic_posts!
     json: {
@@ -199,6 +206,48 @@ describe "browsing flow", ->
           assert.same 1, #res.topics
           assert.same nil, res.before
           assert.same 1, res.after
+
+      describe "post", ->
+        it "gets post with no nested content", ->
+          post = factory.Posts!
+
+          res = BrowsingApp\get current_user, "/post", {
+            post_id: post.id
+          }
+
+          assert.same post.id, res.post.id
+          assert.same {}, res.post.children
+          assert.truthy res.post.user
+          assert.truthy res.post.topic
+
+        it "gets post with nested content #ddd", ->
+          p = factory.Posts!
+          topic = p\get_topic!
+          topic\increment_from_post p
+
+          pp1 = factory.Posts topic_id: topic.id, parent_post: p
+          topic\increment_from_post pp1
+          pp2 = factory.Posts topic_id: topic.id, parent_post: p
+          topic\increment_from_post pp2
+
+          ppp1 = factory.Posts topic_id: topic.id, parent_post: pp1
+          topic\increment_from_post ppp1
+
+          res = BrowsingApp\get current_user, "/post", {
+            post_id: p.id
+          }
+
+
+          assert.same p.id, res.post.id
+          assert.truthy res.post.user
+          assert.truthy res.post.topic
+
+          assert.same {pp1.id, pp2.id}, [child.id for child in *res.post.children]
+
+          for child in *res.post.children
+            assert.same p.id, child.parent_post_id
+            assert.truthy child.user
+            assert.truthy child.topic
 
 
 

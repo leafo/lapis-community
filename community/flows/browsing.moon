@@ -28,7 +28,11 @@ class NestedOrderedPaginator extends OrderedPaginator
       if pid = item[parent_field]
         by_parent[pid] or= {}
         table.insert by_parent[pid], item
-        continue
+
+      if @opts.is_top_level_item
+        continue unless @opts.is_top_level_item item
+      else
+        continue if item[parent_field]
 
       item
 
@@ -107,35 +111,7 @@ class BrowsingFlow extends Flow
         table.sort list, (a,b) ->
           a.post_number < b.post_number
 
-      prepare_results: (posts) ->
-        Users\include_in posts, "user_id"
-        for p in *posts
-          p.topic = @topic
-
-        Posts\preload_mentioned_users posts
-
-        if @current_user
-          posts_with_votes = [p for p in *posts when p.down_votes_count > 0 or p.up_votes_count > 0]
-
-          import Blocks, Votes from require "community.models"
-
-          Votes\include_in posts_with_votes, "object_id", {
-            flip: true
-            where: {
-              object_type: Votes.object_types.post
-              user_id: @current_user.id
-            }
-          }
-
-          Blocks\include_in posts, "blocked_user_id", {
-            flip: true
-            local_key: "user_id"
-            where: {
-              blocking_user_id: @current_user.id
-            }
-          }
-
-        posts
+      prepare_results: @\preload_posts
     }
 
     if before
@@ -180,6 +156,36 @@ class BrowsingFlow extends Flow
       UserTopicLastSeens\include_in topics, "topic_id", flip: true, where: { user_id: @current_user.id }
 
     topics
+
+  preload_posts: (posts) =>
+    Users\include_in posts, "user_id"
+    for p in *posts
+      p.topic = @topic
+
+    Posts\preload_mentioned_users posts
+
+    if @current_user
+      posts_with_votes = [p for p in *posts when p.down_votes_count > 0 or p.up_votes_count > 0]
+
+      import Blocks, Votes from require "community.models"
+
+      Votes\include_in posts_with_votes, "object_id", {
+        flip: true
+        where: {
+          object_type: Votes.object_types.post
+          user_id: @current_user.id
+        }
+      }
+
+      Blocks\include_in posts, "blocked_user_id", {
+        flip: true
+        local_key: "user_id"
+        where: {
+          blocking_user_id: @current_user.id
+        }
+      }
+
+    posts
 
   -- TODO: there is no pagination here yet
   sticky_category_topics: =>
@@ -231,3 +237,42 @@ class BrowsingFlow extends Flow
 
     @topics
 
+  -- this is like getting topic posts but with a single root post
+  post_single: =>
+    PostsFlow = require "community.flows.posts"
+    PostsFlow(@)\load_post!
+    @topic = @post\get_topic!
+
+    assert_error @post\allowed_to_view(@current_user), "not allowed to view"
+
+    local all_posts
+
+    pager = NestedOrderedPaginator Posts, "post_number", [[
+      where parent_post_id = ?
+    ]], @post.id, {
+      per_page: limits.POSTS_PER_PAGE
+
+      parent_field: "parent_post_id"
+
+      sort: (list) ->
+        table.sort list, (a,b) ->
+          a.post_number < b.post_number
+
+      is_top_level_item: (post) ->
+        post.parent_post_id == @post.id
+
+      prepare_results: (posts) ->
+        all_posts = [p for p in *posts]
+        posts
+    }
+
+    children = pager\get_page!
+
+    if all_posts
+      table.insert all_posts, @post
+    else
+      all_posts = { @post }
+
+    @preload_posts all_posts
+    @post.children = children
+    true
