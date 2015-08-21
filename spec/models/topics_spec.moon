@@ -50,6 +50,14 @@ describe "topics", ->
     assert.truthy topic\allowed_to_edit category_user
     assert.truthy topic\allowed_to_moderate category_user
 
+  it "doesn't allow posts in locked topics", ->
+    category_user = factory.Users!
+    category = factory.Categories user_id: category_user.id
+
+    topic = factory.Topics category_id: category.id, locked: true
+    user = topic\get_user!
+
+    assert.falsy topic\allowed_to_post category_user
 
   it "should check permissions of topic with members only category", ->
     category_user = factory.Users!

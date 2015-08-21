@@ -46,6 +46,8 @@ class Topics extends Model
   allowed_to_post: (user) =>
     return false unless user
     return false if @deleted
+    return false if @locked
+
     @allowed_to_view user
 
   allowed_to_view: (user) =>
