@@ -196,6 +196,11 @@ class extends lapis.Application
     BrowsingFlow(@)\topic_posts!
     render: true
 
+  [post: "/post/:post_id"]: capture_errors_json =>
+    BrowsingFlow = require "community.flows.browsing"
+    BrowsingFlow(@)\post_single!
+    render: true
+
   [user: "/user/:user_id"]: capture_errors_json =>
     import Users from require "models"
     import CommunityUsers from require "community.models"
