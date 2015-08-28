@@ -47,7 +47,7 @@ class Posts extends Model
         opts.parent_post = nil
 
     if parent
-      assert parent.topic_id == opts.topic_id, "invalid parent"
+      assert parent.topic_id == opts.topic_id, "invalid parent (#{parent.topic_id } != #{opts.topic_id})"
       opts.depth = parent.depth + 1
       opts.parent_post_id = parent.id
     else
