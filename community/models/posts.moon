@@ -177,10 +177,20 @@ class Posts extends Model
       targets[user.id] or= {"mention", user.id}
 
     if parent = @get_parent_post!
-      targets[parent.user_id] = {"parent", parent\get_user!}
+      targets[parent.user_id] = {"reply", parent\get_user!}
 
     topic = @get_topic!
-    targets[topic.user_id] or= {"topic", topic\get_user!}
+    targets[topic.user_id] or= {"post", topic\get_user!, topic}
+
+    if category = @is_topic_post! and topic\get_category!
+      if category.user_id
+        category_user = category\get_user!
+        targets[category_user.id] or= {"topic", category_user, category}
+
+      category_group = category\get_category_group!
+      if category_group and category_group.user_id
+        category_group_user = category_group\get_user!
+        targets[category_group_user.id] or= {"topic", category_group_user, category_group}
 
     -- don't notify poster of own post
     targets[@user_id] = nil

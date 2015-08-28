@@ -122,7 +122,7 @@ describe "posts", ->
       topic\increment_from_post post
 
       for {kind, user} in *post\notification_target_users!
-        assert.same "topic", kind
+        assert.same "post", kind
         assert.same topic.user_id,user.id
 
     it "gets targets for post in topic reply", ->
@@ -134,6 +134,48 @@ describe "posts", ->
       topic\increment_from_post post
 
       for {kind, user} in *post\notification_target_users!
-        assert.same "parent", kind
+        assert.same "reply", kind
         assert.same topic.user_id,user.id
 
+    it "gets target for category owner", ->
+      category_user = factory.Users!
+      category = factory.Categories user_id: category_user.id
+      topic = factory.Topics category_id: category.id
+      post = factory.Posts topic_id: topic.id, user_id: topic.user_id
+
+      tuples = post\notification_target_users!
+      assert.same 1, #tuples
+
+      tuple = unpack tuples
+
+      assert.same "topic", tuple[1]
+      assert.same category_user.id, tuple[2].id
+      assert Categories == tuple[3].__class
+      assert.same category.id, tuple[3].id
+
+    it "gets target for category group owner owner", ->
+      import CategoryGroupCategories, CategoryGroups from require "community.models"
+      truncate_tables CategoryGroupCategories, CategoryGroups
+
+      category_group_user = factory.Users!
+      group = factory.CategoryGroups user_id: category_group_user.id
+      category = factory.Categories!
+
+      CategoryGroupCategories\create {
+        category_id: category.id
+        category_group_id: group.id
+      }
+
+      topic = factory.Topics category_id: category.id
+      post = factory.Posts topic_id: topic.id, user_id: topic.user_id
+
+      tuples = post\notification_target_users!
+      assert.same 1, #tuples
+
+      tuple = unpack tuples
+
+      assert.same "topic", tuple[1]
+      assert.same category_group_user.id, tuple[2].id
+
+      assert CategoryGroups == tuple[3].__class
+      assert.same group.id, tuple[3].id
