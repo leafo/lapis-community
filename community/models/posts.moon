@@ -170,7 +170,7 @@ class Posts extends Model
   allowed_to_view: (user) =>
     @get_topic!\allowed_to_view user
 
-  notification_targets: =>
+  notification_targets: (extra_targets) =>
     targets = {}
 
     for user in *@get_mentioned_users!
@@ -191,6 +191,11 @@ class Posts extends Model
       if category_group
         for target_user in *category_group\notification_target_users!
           targets[target_user.id] or= {"topic", target_user, category_group}
+
+    if extra_targets
+      for t in *extra_targets
+        user = t[2]
+        targets[user.id] or= t
 
     -- don't notify poster of own post
     targets[@user_id] = nil
