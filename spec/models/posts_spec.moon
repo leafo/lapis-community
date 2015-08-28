@@ -108,4 +108,32 @@ describe "posts", ->
     assert.same {"mentioned_person2", "mentioned_person1"}, usernames[3]
     assert.same {}, usernames[4]
 
+  describe "mention targets #ddd", ->
+    it "gets no targets for first post", ->
+      post = factory.Posts!
+      assert.same {}, post\notification_target_users!
+
+    it "gets targets for post in topic", ->
+      root = factory.Posts!
+      topic = root\get_topic!
+      topic\increment_from_post root
+
+      post = factory.Posts topic_id: topic.id
+      topic\increment_from_post post
+
+      for {kind, user} in *post\notification_target_users!
+        assert.same "topic", kind
+        assert.same topic.user_id,user.id
+
+    it "gets targets for post in topic reply", ->
+      root = factory.Posts!
+      topic = root\get_topic!
+      topic\increment_from_post root
+
+      post = factory.Posts parent_post_id: root.id, topic_id: topic.id
+      topic\increment_from_post post
+
+      for {kind, user} in *post\notification_target_users!
+        assert.same "parent", kind
+        assert.same topic.user_id,user.id
 

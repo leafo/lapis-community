@@ -32,6 +32,7 @@ class Posts extends Model
   @relations: {
     {"topic", belongs_to: "Topics"}
     {"user", belongs_to: "Users"}
+    {"parent_post", belongs_to: "Posts"}
   }
 
   @create: (opts={}) =>
@@ -168,4 +169,21 @@ class Posts extends Model
 
   allowed_to_view: (user) =>
     @get_topic!\allowed_to_view user
+
+  notification_target_users: =>
+    targets = {}
+
+    for user in *@get_mentioned_users!
+      targets[user.id] or= {"mention", user.id}
+
+    if parent = @get_parent_post!
+      targets[parent.user_id] = {"parent", parent\get_user!}
+
+    topic = @get_topic!
+    targets[topic.user_id] or= {"topic", topic\get_user!}
+
+    -- don't notify poster of own post
+    targets[@user_id] = nil
+
+    [v for _, v in pairs targets]
 
