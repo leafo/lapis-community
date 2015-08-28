@@ -185,12 +185,12 @@ class Posts extends Model
 
     if category = @is_topic_post! and topic\get_category!
       for target_user in *category\notification_target_users!
-        targets[target_user.id] or= {"topic", target_user, category}
+        targets[target_user.id] or= {"topic", target_user, category, topic}
 
       category_group = category\get_category_group!
       if category_group
         for target_user in *category_group\notification_target_users!
-          targets[target_user.id] or= {"topic", target_user, category_group}
+          targets[target_user.id] or= {"topic", target_user, category_group, topic}
 
     if extra_targets
       for t in *extra_targets
