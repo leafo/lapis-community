@@ -255,3 +255,6 @@ class Topics extends Model
     return unless @user_topic_last_seen
     @user_topic_last_seen.post_id < @last_post_id
 
+  notification_target_users: =>
+    { @get_user! }
+

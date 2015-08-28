@@ -226,3 +226,5 @@ class Categories extends Model
       "
     }
 
+  notification_target_users: =>
+    { @get_user! }

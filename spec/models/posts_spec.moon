@@ -111,7 +111,7 @@ describe "posts", ->
   describe "mention targets #ddd", ->
     it "gets no targets for first post", ->
       post = factory.Posts!
-      assert.same {}, post\notification_target_users!
+      assert.same {}, post\notification_targets!
 
     it "gets targets for post in topic", ->
       root = factory.Posts!
@@ -121,7 +121,7 @@ describe "posts", ->
       post = factory.Posts topic_id: topic.id
       topic\increment_from_post post
 
-      for {kind, user} in *post\notification_target_users!
+      for {kind, user} in *post\notification_targets!
         assert.same "post", kind
         assert.same topic.user_id,user.id
 
@@ -133,7 +133,7 @@ describe "posts", ->
       post = factory.Posts parent_post_id: root.id, topic_id: topic.id
       topic\increment_from_post post
 
-      for {kind, user} in *post\notification_target_users!
+      for {kind, user} in *post\notification_targets!
         assert.same "reply", kind
         assert.same topic.user_id,user.id
 
@@ -143,7 +143,7 @@ describe "posts", ->
       topic = factory.Topics category_id: category.id
       post = factory.Posts topic_id: topic.id, user_id: topic.user_id
 
-      tuples = post\notification_target_users!
+      tuples = post\notification_targets!
       assert.same 1, #tuples
 
       tuple = unpack tuples
@@ -169,7 +169,7 @@ describe "posts", ->
       topic = factory.Topics category_id: category.id
       post = factory.Posts topic_id: topic.id, user_id: topic.user_id
 
-      tuples = post\notification_target_users!
+      tuples = post\notification_targets!
       assert.same 1, #tuples
 
       tuple = unpack tuples

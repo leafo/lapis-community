@@ -119,5 +119,7 @@ class CategoryGroups extends Model
       @update categories_count: db.raw "categories_count - 1"
       true
 
+  notification_target_users: =>
+    { @get_user! }
 
 

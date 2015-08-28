@@ -170,7 +170,7 @@ class Posts extends Model
   allowed_to_view: (user) =>
     @get_topic!\allowed_to_view user
 
-  notification_target_users: =>
+  notification_targets: =>
     targets = {}
 
     for user in *@get_mentioned_users!
@@ -180,17 +180,17 @@ class Posts extends Model
       targets[parent.user_id] = {"reply", parent\get_user!}
 
     topic = @get_topic!
-    targets[topic.user_id] or= {"post", topic\get_user!, topic}
+    for target_user in *topic\notification_target_users!
+      targets[target_user.id] or= {"post", target_user, topic}
 
     if category = @is_topic_post! and topic\get_category!
-      if category.user_id
-        category_user = category\get_user!
-        targets[category_user.id] or= {"topic", category_user, category}
+      for target_user in *category\notification_target_users!
+        targets[target_user.id] or= {"topic", target_user, category}
 
       category_group = category\get_category_group!
-      if category_group and category_group.user_id
-        category_group_user = category_group\get_user!
-        targets[category_group_user.id] or= {"topic", category_group_user, category_group}
+      if category_group
+        for target_user in *category_group\notification_target_users!
+          targets[target_user.id] or= {"topic", target_user, category_group}
 
     -- don't notify poster of own post
     targets[@user_id] = nil
