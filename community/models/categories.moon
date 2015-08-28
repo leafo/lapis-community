@@ -4,6 +4,31 @@ import Model from require "community.model"
 
 import slugify from require "lapis.util"
 
+-- Generated schema dump: (do not edit)
+--
+-- CREATE TABLE community_categories (
+--   id integer NOT NULL,
+--   title character varying(255) NOT NULL,
+--   slug character varying(255) NOT NULL,
+--   user_id integer,
+--   parent_category_id integer,
+--   last_topic_id integer,
+--   topics_count integer DEFAULT 0 NOT NULL,
+--   deleted_topics_count integer DEFAULT 0 NOT NULL,
+--   views_count integer DEFAULT 0 NOT NULL,
+--   short_description text,
+--   description text,
+--   rules text,
+--   membership_type integer DEFAULT 0 NOT NULL,
+--   voting_type integer DEFAULT 0 NOT NULL,
+--   archived boolean DEFAULT false NOT NULL,
+--   hidden boolean DEFAULT false NOT NULL,
+--   created_at timestamp without time zone NOT NULL,
+--   updated_at timestamp without time zone NOT NULL
+-- );
+-- ALTER TABLE ONLY community_categories
+--   ADD CONSTRAINT community_categories_pkey PRIMARY KEY (id);
+--
 class Categories extends Model
   @timestamp: true
 

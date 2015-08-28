@@ -4,6 +4,22 @@ import Model from require "community.model"
 
 import safe_insert from require "community.helpers.models"
 
+-- Generated schema dump: (do not edit)
+--
+-- CREATE TABLE community_bans (
+--   object_type integer DEFAULT 0 NOT NULL,
+--   object_id integer NOT NULL,
+--   banned_user_id integer NOT NULL,
+--   reason text,
+--   banning_user_id integer,
+--   created_at timestamp without time zone NOT NULL,
+--   updated_at timestamp without time zone NOT NULL
+-- );
+-- ALTER TABLE ONLY community_bans
+--   ADD CONSTRAINT community_bans_pkey PRIMARY KEY (object_type, object_id, banned_user_id);
+-- CREATE INDEX community_bans_banned_user_id_idx ON community_bans USING btree (banned_user_id);
+-- CREATE INDEX community_bans_banning_user_id_idx ON community_bans USING btree (banning_user_id);
+--
 class Bans extends Model
   @timestamp: true
   @primary_key: {"object_type", "object_id", "banned_user_id"}

@@ -1,6 +1,20 @@
 db = require "lapis.db"
 import Model from require "community.model"
 
+-- Generated schema dump: (do not edit)
+--
+-- CREATE TABLE community_votes (
+--   user_id integer NOT NULL,
+--   object_type integer NOT NULL,
+--   object_id integer NOT NULL,
+--   positive boolean DEFAULT false NOT NULL,
+--   created_at timestamp without time zone NOT NULL,
+--   updated_at timestamp without time zone NOT NULL
+-- );
+-- ALTER TABLE ONLY community_votes
+--   ADD CONSTRAINT community_votes_pkey PRIMARY KEY (user_id, object_type, object_id);
+-- CREATE INDEX community_votes_object_type_object_id_idx ON community_votes USING btree (object_type, object_id);
+--
 class Votes extends Model
   @timestamp: true
   @primary_key: {"user_id", "object_type", "object_id"}

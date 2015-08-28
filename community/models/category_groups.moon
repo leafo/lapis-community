@@ -3,6 +3,21 @@ db = require "lapis.db"
 import enum from require "lapis.db.model"
 import Model from require "community.model"
 
+-- Generated schema dump: (do not edit)
+--
+-- CREATE TABLE community_category_groups (
+--   id integer NOT NULL,
+--   title character varying(255),
+--   user_id integer,
+--   categories_count integer DEFAULT 0 NOT NULL,
+--   description text,
+--   rules text,
+--   created_at timestamp without time zone NOT NULL,
+--   updated_at timestamp without time zone NOT NULL
+-- );
+-- ALTER TABLE ONLY community_category_groups
+--   ADD CONSTRAINT community_category_groups_pkey PRIMARY KEY (id);
+--
 class CategoryGroups extends Model
   @timestamp: true
 

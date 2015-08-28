@@ -1,6 +1,16 @@
 db = require "lapis.db"
 import Model from require "community.model"
 
+-- Generated schema dump: (do not edit)
+--
+-- CREATE TABLE community_user_topic_last_seens (
+--   user_id integer NOT NULL,
+--   topic_id integer NOT NULL,
+--   post_id integer NOT NULL
+-- );
+-- ALTER TABLE ONLY community_user_topic_last_seens
+--   ADD CONSTRAINT community_user_topic_last_seens_pkey PRIMARY KEY (user_id, topic_id);
+--
 class UserTopicLastSeens extends Model
   @primary_key: {"user_id", "topic_id"}
 

@@ -3,6 +3,32 @@ db = require "lapis.db"
 import Model from require "community.model"
 import slugify from require "lapis.util"
 
+-- Generated schema dump: (do not edit)
+--
+-- CREATE TABLE community_topics (
+--   id integer NOT NULL,
+--   category_id integer,
+--   user_id integer,
+--   title character varying(255),
+--   slug character varying(255),
+--   last_post_id integer,
+--   locked boolean DEFAULT false NOT NULL,
+--   sticky boolean DEFAULT false NOT NULL,
+--   permanent boolean DEFAULT false NOT NULL,
+--   deleted boolean DEFAULT false NOT NULL,
+--   posts_count integer DEFAULT 0 NOT NULL,
+--   deleted_posts_count integer DEFAULT 0 NOT NULL,
+--   root_posts_count integer DEFAULT 0 NOT NULL,
+--   views_count integer DEFAULT 0 NOT NULL,
+--   category_order integer DEFAULT 0 NOT NULL,
+--   deleted_at timestamp without time zone,
+--   created_at timestamp without time zone NOT NULL,
+--   updated_at timestamp without time zone NOT NULL
+-- );
+-- ALTER TABLE ONLY community_topics
+--   ADD CONSTRAINT community_topics_pkey PRIMARY KEY (id);
+-- CREATE INDEX community_topics_category_id_sticky_category_order_idx ON community_topics USING btree (category_id, sticky, category_order) WHERE ((NOT deleted) AND (category_id IS NOT NULL));
+--
 class Topics extends Model
   @timestamp: true
 

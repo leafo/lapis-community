@@ -2,6 +2,18 @@
 db = require "lapis.db"
 import Model from require "community.model"
 
+-- Generated schema dump: (do not edit)
+--
+-- CREATE TABLE community_topic_participants (
+--   topic_id integer NOT NULL,
+--   user_id integer NOT NULL,
+--   posts_count integer DEFAULT 0 NOT NULL,
+--   created_at timestamp without time zone NOT NULL,
+--   updated_at timestamp without time zone NOT NULL
+-- );
+-- ALTER TABLE ONLY community_topic_participants
+--   ADD CONSTRAINT community_topic_participants_pkey PRIMARY KEY (topic_id, user_id);
+--
 class TopicParticipants extends Model
   @primary_key: {"topic_id", "user_id"}
   @timestamp: true

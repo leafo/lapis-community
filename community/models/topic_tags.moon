@@ -3,6 +3,18 @@ import Model from require "community.model"
 
 import concat from table
 
+-- Generated schema dump: (do not edit)
+--
+-- CREATE TABLE community_topic_tags (
+--   topic_id integer NOT NULL,
+--   slug character varying(255) NOT NULL,
+--   label character varying(255) NOT NULL,
+--   created_at timestamp without time zone NOT NULL,
+--   updated_at timestamp without time zone NOT NULL
+-- );
+-- ALTER TABLE ONLY community_topic_tags
+--   ADD CONSTRAINT community_topic_tags_pkey PRIMARY KEY (topic_id, slug);
+--
 class TopicTags extends Model
   @primary_key: {"topic_id", "slug"}
   @timestamp: true
