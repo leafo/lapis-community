@@ -226,13 +226,13 @@ describe "bans", ->
       assert_log_contains_user log, other_user
 
   -- flow is created as a sub flow of category flow
-  describe "cateogry bans flow", ->
+  describe "cateogry bans flow #ddd", ->
     local category
 
     before_each ->
       category = factory.Categories user_id: current_user.id
 
-    it "bans user #ddd", ->
+    it "bans user", ->
       banned_user = factory.Users!
 
       res = CategoryBansApp\get current_user, "/#{category.id}/ban", {
@@ -247,4 +247,21 @@ describe "bans", ->
 
       for log in *ModerationLogs\select!
         assert.same category.id, log.category_id
+
+    it "unbans user", ->
+      banned_user = factory.Users!
+      factory.Bans object: category, banned_user_id: banned_user.id
+
+      res = CategoryBansApp\get current_user, "/#{category.id}/unban", {
+        banned_user_id: banned_user.id
+      }
+
+      assert.same {success: true}, res
+
+      assert.same 0, Bans\count!
+
+
+      for log in *ModerationLogs\select!
+        assert.same category.id, log.category_id
+
 
