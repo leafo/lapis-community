@@ -28,6 +28,21 @@ class BansApp extends TestApp
     @flow\show_bans!
     json: { success: true, bans: @bans }
 
+class CategoryBansApp extends TestApp
+  @require_user!
+
+  @before_filter =>
+    CategoriesFlow = require "community.flows.categories"
+    @flow = CategoriesFlow @
+    @bans_flow = @flow\bans_flow!
+
+  "/:category_id/ban": capture_errors_json =>
+    @bans_flow\create_ban!
+    json: { success: true }
+
+  "/:category_id/unban": capture_errors_json =>
+    @bans_flow\delete_ban!
+    json: { success: true }
 
 describe "bans", ->
   use_test_env!
@@ -210,4 +225,26 @@ describe "bans", ->
 
       assert_log_contains_user log, other_user
 
+  -- flow is created as a sub flow of category flow
+  describe "cateogry bans flow", ->
+    local category
+
+    before_each ->
+      category = factory.Categories user_id: current_user.id
+
+    it "bans user #ddd", ->
+      banned_user = factory.Users!
+
+      res = CategoryBansApp\get current_user, "/#{category.id}/ban", {
+        banned_user_id: banned_user.id
+        reason: [[ this user ]]
+      }
+
+      assert.same {success: true}, res
+      ban = unpack Bans\select!
+
+      assert.same banned_user.id, ban.banned_user_id
+
+      for log in *ModerationLogs\select!
+        assert.same category.id, log.category_id
 

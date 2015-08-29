@@ -59,11 +59,13 @@ class BansFlow extends Flow
 
     import ModerationLogs from require "community.models"
 
-    category_id = switch @params.object_type
-      when "category"
+    category_id = switch Bans\object_type_for_object @object
+      when Bans.object_types.category
         @object.id
-      when "topic"
+      when Bans.object_types.topic
         @object.category_id
+      else
+        error "no category id for ban moderation log"
 
     ModerationLogs\create {
       user_id: @current_user.id
