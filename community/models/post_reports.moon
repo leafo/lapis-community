@@ -10,6 +10,7 @@ import Model from require "community.model"
 --   category_id integer,
 --   post_id integer NOT NULL,
 --   user_id integer NOT NULL,
+--   category_report_number integer DEFAULT 0 NOT NULL,
 --   moderating_user_id integer,
 --   status integer DEFAULT 0 NOT NULL,
 --   reason integer DEFAULT 0 NOT NULL,
@@ -20,7 +21,7 @@ import Model from require "community.model"
 -- ALTER TABLE ONLY community_post_reports
 --   ADD CONSTRAINT community_post_reports_pkey PRIMARY KEY (id);
 -- CREATE INDEX community_post_reports_category_id_id_idx ON community_post_reports USING btree (category_id, id) WHERE (category_id IS NOT NULL);
--- CREATE INDEX community_post_reports_post_id_id_idx ON community_post_reports USING btree (post_id, id);
+-- CREATE INDEX community_post_reports_post_id_id_status_idx ON community_post_reports USING btree (post_id, id, status);
 --
 class PostReports extends Model
   @timestamp: true

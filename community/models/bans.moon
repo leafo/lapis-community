@@ -19,6 +19,7 @@ import safe_insert from require "community.helpers.models"
 --   ADD CONSTRAINT community_bans_pkey PRIMARY KEY (object_type, object_id, banned_user_id);
 -- CREATE INDEX community_bans_banned_user_id_idx ON community_bans USING btree (banned_user_id);
 -- CREATE INDEX community_bans_banning_user_id_idx ON community_bans USING btree (banning_user_id);
+-- CREATE INDEX community_bans_object_type_object_id_created_at_idx ON community_bans USING btree (object_type, object_id, created_at);
 --
 class Bans extends Model
   @timestamp: true
