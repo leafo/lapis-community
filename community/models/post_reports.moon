@@ -40,6 +40,8 @@ class PostReports extends Model
   @relations: {
     {"category", belongs_to: "Categories"}
     {"post", belongs_to: "Posts"}
+    {"user", belongs_to: "Users"}
+    {"moderating_user", belongs_to: "Users"}
   }
 
   @create: (opts={}) =>

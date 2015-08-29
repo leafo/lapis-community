@@ -90,13 +90,14 @@ class ReportsFlow extends Flow
       where category_id = ?
       #{next(filter) and "and " .. db.encode_clause(filter) or ""}
     ", category.id, prepare_results: (reports) ->
-      import Posts from require "community.models"
+      import Posts, Topics from require "community.models"
       import Users from require "models"
 
       for report in *reports
         report.category = category
 
       Posts\include_in reports, "post_id"
+      Topics\include_in [r.post for r in *reports], "topic_id"
 
       Users\include_in reports, "user_id"
       Users\include_in reports, "moderating_user_id"
