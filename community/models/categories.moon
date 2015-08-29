@@ -87,9 +87,7 @@ class Categories extends Model
       when "members_only"
         return false unless user
         return true if @allowed_to_moderate user
-
-        member = @find_member user
-        member and member.accepted
+        @is_member user
 
     if can_view
       return false if @find_ban user
@@ -147,6 +145,10 @@ class Categories extends Model
       object_id: @id
       user_id: user.id
     }
+
+  is_member: (user) =>
+    member = @find_member user
+    member and member.accepted
 
   find_member: (user) =>
     return nil unless user
