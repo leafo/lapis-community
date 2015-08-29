@@ -42,6 +42,11 @@ class CategoriesFlow extends Flow
     @category = Categories\find @params.category_id
     assert_error @category, "invalid category"
 
+  reports: =>
+    @load_category!
+    ReportsFlow = require "community.flows.reports"
+    ReportsFlow(@)\show_reports @category
+
   moderation_logs: =>
     @load_category!
     assert_error @category\allowed_to_moderate(@current_user), "invalid category"
