@@ -27,6 +27,18 @@ class ReportingApp extends TestApp
     @flow\moderate_report!
     json: { success: true }
 
+  "/show": capture_errors_json =>
+    CategoriesFlow = require "community.flows.categories"
+    CategoriesFlow(@)\load_category!
+    @flow\show_reports @category
+
+    json: {
+      page: @page
+      reports: @reports
+      success: true
+    }
+
+
 describe "reports", ->
   use_test_env!
 
@@ -104,7 +116,7 @@ describe "reports", ->
       assert.same nil, report.category_id
       assert.same post.id, report.post_id
 
-    it "should update existing report #ddd", ->
+    it "should update existing report", ->
       report = factory.PostReports user_id: current_user.id
 
       res = ReportingApp\get current_user, "/report", {
@@ -163,4 +175,39 @@ describe "reports", ->
 
       report\refresh!
       assert.same PostReports.statuses.pending, report.status
+
+  describe "show_reports", ->
+    local category
+
+    before_each ->
+      category = factory.Categories user_id: current_user.id
+
+
+    it "doesn't let unrelated user view reports", ->
+      other_user = factory.Users!
+
+      res = ReportingApp\get other_user, "/show", {
+        category_id: category.id
+      }
+
+      assert.same {errors: {"invalid category"}}, res
+
+
+    it "shows empty reports", ->
+      res = ReportingApp\get current_user, "/show", {
+        category_id: category.id
+      }
+
+      assert.same {}, res.reports
+
+    it "shows reports #ddd", ->
+      report = factory.PostReports category_id: category.id
+      other_report = factory.PostReports category_id: factory.Categories!.id
+
+      res = ReportingApp\get current_user, "/show", {
+        category_id: category.id
+      }
+
+      for r in *res.reports
+        assert.same category.id, r.category_id
 

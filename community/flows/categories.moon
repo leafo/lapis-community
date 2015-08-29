@@ -52,6 +52,7 @@ class CategoriesFlow extends Flow
       where category_id = ? order by id desc
     ", @category.id, prepare_results: (logs) ->
       ModerationLogs\preload_objects logs
+      Users\include_in logs, "user_id"
       logs
 
     @moderation_logs = @pager\get_page @page

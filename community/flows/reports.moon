@@ -8,6 +8,8 @@ import filter_update from require "community.helpers.models"
 
 import trim_filter from require "lapis.util"
 
+import assert_page, require_login from require "community.helpers.app"
+
 import PostReports from require "community.models"
 
 limits = require "community.limits"
@@ -69,6 +71,28 @@ class ReportsFlow extends Flow
       params.category_id = @topic.category_id
       @report = PostReports\create params
 
+    true
+
+  show_reports: (category) =>
+    assert category, "missing report object"
+    assert_error category\allowed_to_moderate(@current_user), "invalid category"
+    assert_page @
+
+    @pager = PostReports\paginated "
+      where category_id = ?
+    ", category.id, prepare_results: (reports) ->
+      import Posts from require "community.models"
+      import Users from require "models"
+
+      for report in *reports
+        report.category = category
+
+      Posts\include_in reports, "post_id"
+
+      Users\include_in reports, "user_id"
+      Users\include_in reports, "moderating_user_id"
+
+    @reports = @pager\get_page!
     true
 
   moderate_report: =>

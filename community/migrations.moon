@@ -201,7 +201,7 @@ import create_table, create_index, drop_table from schema
       "PRIMARY KEY (id)"
     }
 
-    create_index T"post_reports", "post_id", "id"
+    create_index T"post_reports", "post_id", "id", "status"
     create_index T"post_reports", "category_id", "id", where: "category_id is not null"
 
     create_table T"users", {
