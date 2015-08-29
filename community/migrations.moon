@@ -187,6 +187,7 @@ import create_table, create_index, drop_table from schema
       {"category_id", foreign_key null: true} -- denormalized
       {"post_id", foreign_key}
       {"user_id", foreign_key}
+      {"category_report_number", integer}
 
       {"moderating_user_id", foreign_key null: true}
 

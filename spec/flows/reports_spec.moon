@@ -134,6 +134,16 @@ describe "reports", ->
       assert.same "I am updating my report", report.body
       assert.same PostReports.reasons.spam, report.reason
 
+    it "increments report count for category", ->
+      r1 = factory.PostReports category_id: 1
+      r2 = factory.PostReports category_id: 1
+
+      r3 = factory.PostReports category_id: 2
+
+      assert.same 1, r1.category_report_number
+      assert.same 2, r2.category_report_number
+      assert.same 1, r3.category_report_number
+
   describe "moderate_report", ->
     it "should fail with no params", ->
       res = ReportingApp\get current_user, "/moderate-report", {}

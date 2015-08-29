@@ -1,4 +1,5 @@
 
+db = require "lapis.db"
 import enum from require "lapis.db.model"
 import Model from require "community.model"
 
@@ -49,6 +50,16 @@ class PostReports extends Model
     opts.status = @statuses\for_db opts.status
 
     opts.reason = @reasons\for_db opts.reason
+
+    tname = @table_name!
+
+    if opts.category_id
+      opts.category_report_number = db.raw db.interpolate_query "
+        coalesce(
+          (select category_report_number
+            from #{db.escape_identifier tname} where category_id = ? order by id desc limit 1
+          ), 0) + 1
+      ", opts.category_id
 
     assert opts.post_id, "missing post_id"
     assert opts.user_id, "missing user_id"
