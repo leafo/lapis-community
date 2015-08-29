@@ -78,8 +78,17 @@ class ReportsFlow extends Flow
     assert_error category\allowed_to_moderate(@current_user), "invalid category"
     assert_page @
 
+    assert_valid @params, {
+      {"status", one_of: PostReports.statuses, optional: true}
+    }
+
+    filter = {
+      status: @params.status and PostReports.statuses\for_db @params.status
+    }
+
     @pager = PostReports\paginated "
       where category_id = ?
+      #{next(filter) and "and " .. db.encode_clause(filter) or ""}
     ", category.id, prepare_results: (reports) ->
       import Posts from require "community.models"
       import Users from require "models"

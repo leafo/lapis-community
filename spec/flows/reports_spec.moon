@@ -200,7 +200,15 @@ describe "reports", ->
 
       assert.same {}, res.reports
 
-    it "shows reports #ddd", ->
+    it "shows reports with status", ->
+      res = ReportingApp\get current_user, "/show", {
+        category_id: category.id
+        status: "ignored"
+      }
+
+      assert.same {}, res.reports
+
+    it "shows reports", ->
       report = factory.PostReports category_id: category.id
       other_report = factory.PostReports category_id: factory.Categories!.id
 
