@@ -226,7 +226,7 @@ describe "bans", ->
       assert_log_contains_user log, other_user
 
   -- flow is created as a sub flow of category flow
-  describe "cateogry bans flow #ddd", ->
+  describe "cateogry bans flow", ->
     local category
 
     before_each ->

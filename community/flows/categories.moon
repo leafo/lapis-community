@@ -42,6 +42,20 @@ class CategoriesFlow extends Flow
     @category = Categories\find @params.category_id
     assert_error @category, "invalid category"
 
+  moderation_logs: =>
+    @load_category!
+    assert_error @category\allowed_to_moderate(@current_user), "invalid category"
+
+    assert_page @
+    import ModerationLogs from require "community.models"
+    @pager = ModerationLogs\paginated "
+      where category_id = ? order by id desc
+    ", @category.id, prepare_results: (logs) ->
+      ModerationLogs\preload_objects logs
+      logs
+
+    @moderation_logs = @pager\get_page @page
+
   validate_params: =>
     assert_valid @params, {
       {"category", type: "table"}

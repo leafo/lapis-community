@@ -8,7 +8,8 @@ import capture_errors_json from require "lapis.application"
 
 import Users from require "models"
 import
-  Categories, Posts, Topics, CategoryMembers, Moderators, ActivityLogs
+  Categories, Posts, Topics, CategoryMembers, Moderators, ActivityLogs,
+    ModerationLogs, ModerationLogObjects
   from require "community.models"
 
 class CategoryApp extends TestApp
@@ -38,6 +39,15 @@ class CategoryApp extends TestApp
     @flow\members_flow!\accept_member!
     json: { success: true }
 
+  "/moderation-logs": capture_errors_json =>
+    @flow\moderation_logs!
+    json: {
+      success: true
+      page: @page
+      moderation_logs: @moderation_logs
+    }
+
+
 describe "categories", ->
   use_test_env!
 
@@ -45,7 +55,8 @@ describe "categories", ->
 
   before_each ->
     truncate_tables Users, Categories, Posts, Topics, CategoryMembers,
-      Moderators, ActivityLogs
+      Moderators, ActivityLogs, ModerationLogs, ModerationLogObjects
+
     current_user = factory.Users!
 
   it "should create category", ->
@@ -173,4 +184,34 @@ describe "categories", ->
       }
 
       assert.same { errors: {"no pending membership"} }, res
+
+  describe "moderation_logs", ->
+    local category
+
+    before_each ->
+      category = factory.Categories user_id: current_user.id
+
+    it "gets moderation log", ->
+      ModerationLogs\create {
+        category_id: category.id
+        object: category
+        user_id: current_user.id
+        action: "did.something"
+      }
+
+      res = CategoryApp\get current_user, "/moderation-logs", {
+        category_id: category.id
+      }
+
+      assert.truthy res.moderation_logs
+      assert.same 1, #res.moderation_logs
+
+    it "doesn't get moderation log for unrelated user", ->
+      other_user = factory.Users!
+      res = CategoryApp\get other_user, "/moderation-logs", {
+        category_id: category.id
+      }
+
+      assert.same {errors: {"invalid category"}}, res
+
 
