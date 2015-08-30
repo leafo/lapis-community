@@ -24,7 +24,6 @@ class VotesFlow extends Flow
 
   vote: require_login =>
     @load_object!
-    assert_error @object\allowed_to_vote(@current_user), "not allowed to vote"
 
     if @params.action
       assert_valid @params, {
@@ -33,6 +32,9 @@ class VotesFlow extends Flow
 
       switch @params.action
         when "remove"
+          assert_error @object\allowed_to_vote(@current_user, "remove"),
+            "not allowed to unvote"
+
           if Votes\unvote @object, @current_user
             CommunityUsers\for_user(@current_user)\increment "votes_count", -1
 
@@ -41,6 +43,7 @@ class VotesFlow extends Flow
         {"direction", one_of: {"up", "down"}}
       }
 
+      assert_error @object\allowed_to_vote(@current_user, @params.direction), "not allowed to vote"
       action, @vote = Votes\vote @object, @current_user, @params.direction == "up"
       if action == "insert"
         CommunityUsers\for_user(@current_user)\increment "votes_count"

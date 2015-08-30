@@ -96,6 +96,8 @@ class Categories extends Model
 
   allowed_to_vote: (user, direction) =>
     return false unless user
+    return true if direction == "remove"
+
     switch @voting_type
       when @@voting_types.up_down
         true
