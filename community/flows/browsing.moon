@@ -238,9 +238,11 @@ class BrowsingFlow extends Flow
     @topics
 
   -- this is like getting topic posts but with a single root post
-  post_single: =>
+  post_single: (post) =>
+    @post or= post
     PostsFlow = require "community.flows.posts"
     PostsFlow(@)\load_post!
+
     @topic = @post\get_topic!
 
     assert_error @post\allowed_to_view(@current_user), "not allowed to view"
