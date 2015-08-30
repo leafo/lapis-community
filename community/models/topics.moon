@@ -258,3 +258,9 @@ class Topics extends Model
   notification_target_users: =>
     { @get_user! }
 
+  find_latest_root_post: =>
+    import Posts from require "community.models"
+    unpack Posts\select "
+      where topic_id = ? and depth = 1 order by post_number desc limit 1
+    ", @id
+
