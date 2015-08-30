@@ -24,7 +24,7 @@ class VotesFlow extends Flow
 
   vote: require_login =>
     @load_object!
-    assert_error @object\allowed_to_vote @current_user
+    assert_error @object\allowed_to_vote(@current_user), "not allowed to vote"
 
     if @params.action
       assert_valid @params, {
