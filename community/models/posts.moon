@@ -202,3 +202,22 @@ class Posts extends Model
 
     [v for _, v in pairs targets]
 
+  find_ancestor_posts: =>
+    return {} if @depth == 1
+    tname = db.escape_identifier @@table_name!
+
+    res = db.query "
+      with recursive nested as (
+        (select * from #{tname} where id = ?)
+        union
+        select pr.* from #{tname} pr, nested
+          where pr.id = nested.parent_post_id
+      )
+      select * from nested
+    ", @parent_post_id
+
+    for post in *res
+      @@load post
+
+    res
+

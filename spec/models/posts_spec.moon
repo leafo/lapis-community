@@ -179,3 +179,32 @@ describe "posts", ->
 
       assert CategoryGroups == tuple[3].__class
       assert.same group.id, tuple[3].id
+
+  it "gets ancestors of post", ->
+    assert.same {}, factory.Posts!\find_ancestor_posts!
+
+  it "gets ancestors of nested post", ->
+    parent = factory.Posts!
+    post = factory.Posts {
+      topic_id: parent.topic_id
+      parent_post_id: parent.id
+    }
+
+    assert.same {parent.id},
+      [p.id for p in *post\find_ancestor_posts!]
+
+  it "gets ancestors of many nested post", ->
+    post = factory.Posts!
+    ids = for i=1,5
+      with post.id
+        post = factory.Posts {
+          topic_id: post.topic_id
+          parent_post_id: post.id
+        }
+
+    ids = [ids[i] for i=#ids,1,-1]
+
+    assert.same ids,
+      [p.id for p in *post\find_ancestor_posts!]
+
+
