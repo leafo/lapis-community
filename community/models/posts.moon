@@ -219,5 +219,12 @@ class Posts extends Model
     for post in *res
       @@load post
 
+    table.sort res, (a,b) ->
+      a.depth > b.depth
+
     res
+
+  find_root_ancestor: =>
+    ancestors = @find_ancestor_posts!
+    ancestors[#ancestors]
 

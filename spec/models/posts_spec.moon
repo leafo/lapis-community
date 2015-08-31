@@ -193,7 +193,7 @@ describe "posts", ->
     assert.same {parent.id},
       [p.id for p in *post\find_ancestor_posts!]
 
-  it "gets ancestors of many nested post", ->
+  it "gets ancestors of many nested post in deep first", ->
     post = factory.Posts!
     ids = for i=1,5
       with post.id
@@ -204,7 +204,21 @@ describe "posts", ->
 
     ids = [ids[i] for i=#ids,1,-1]
 
-    assert.same ids,
-      [p.id for p in *post\find_ancestor_posts!]
+    ancestors = post\find_ancestor_posts!
 
+    assert.same ids, [p.id for p in *ancestors]
+    assert.same [i for i=5,1,-1], [p.depth for p in *ancestors]
+
+  it "gets root ancestor", ->
+    post = factory.Posts!
+    root_post = post
+    for i=1,5
+      post = factory.Posts {
+        topic_id: post.topic_id
+        parent_post_id: post.id
+      }
+
+    ancestor = post\find_root_ancestor!
+    assert.same root_post.id, ancestor.id
+    assert.same 1, ancestor.depth
 
