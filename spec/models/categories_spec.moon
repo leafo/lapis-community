@@ -133,3 +133,38 @@ describe "categories", ->
 
       assert.same category.last_topic_id, topic.id
 
+    describe "get_order_ranges", ->
+      it "gets empty order range", ->
+        assert.same {regular: {}, sticky: {}}, category\get_order_ranges!
+
+      it "gets order range with one topic", ->
+        topic = factory.Topics category_id: category.id
+        assert.same {
+          regular: {min: 1, max: 1}
+          sticky: {}
+        }, category\get_order_ranges!
+
+      it "gets order range with a few topics", ->
+        topic = factory.Topics category_id: category.id
+
+        for i=1,3
+          factory.Topics category_id: category.id
+
+        topic\increment_from_post factory.Posts topic_id: topic.id
+
+        assert.same {
+          regular: {min: 2, max: 5}
+          sticky: {}
+        }, category\get_order_ranges!
+
+      it "gets order range with deleted topics", ->
+        topic = factory.Topics category_id: category.id
+        factory.Topics category_id: category.id
+        topic\delete!
+
+        assert.same {
+          regular: {min: 2, max: 2}
+          sticky: {}
+        }, category\get_order_ranges!
+
+

@@ -172,7 +172,7 @@ class Categories extends Model
     res = db.query "
       select sticky, min(category_order), max(category_order)
       from #{db.escape_identifier Topics\table_name!}
-      where category_id = ?
+      where category_id = ? and not deleted
       group by sticky
     ", @id
 
