@@ -65,13 +65,13 @@ class ReportsFlow extends Flow
 
     if @report
       @report\update filter_update @report, params
+      "update"
     else
       params.user_id = @current_user.id
       params.post_id = @post.id
       params.category_id = @topic.category_id
       @report = PostReports\create params
-
-    true
+      "create"
 
   show_reports: (category) =>
     assert category, "missing report object"

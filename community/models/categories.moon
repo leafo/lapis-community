@@ -46,7 +46,7 @@ class Categories extends Model
   @relations: {
     -- TODO: don't hardcode 1
     -- TODO: rename to accepted_moderators
-    {"moderators", has_many: "Moderators", where: { accepted: true, object_type: 1}}
+    {"moderators", has_many: "Moderators", key: "object_id", where: { accepted: true, object_type: 1}}
 
     {"category_group_category", has_one: "CategoryGroupCategories"}
     {"user", belongs_to: "Users"}
