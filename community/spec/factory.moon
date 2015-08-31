@@ -1,4 +1,3 @@
-base_models = require "models"
 models = require "community.models"
 db = require "lapis.db"
 
@@ -16,14 +15,9 @@ next_email = ->
 
 local *
 
-Users = (opts={}) ->
-  community_user = opts.community_user
-  opts.community_user = nil
-  opts.username or= "user-#{next_counter "username"}"
-
-  with user = assert base_models.Users\create opts
-    if community_user
-      CommunityUsers user_id: user.id
+-- use the Users factory in the current project
+Users = (...)->
+  require("spec.factory").Users ...
 
 CommunityUsers = (opts={}) ->
   opts.user_id or= Users!.id
@@ -121,5 +115,5 @@ Bookmarks = (opts={}) ->
   assert models.Bookmarks\create opts
 
 { :next_counter, :next_email,
-  :Users, :Categories, :Topics, :Posts, :Votes, :Moderators, :PostReports,
+  :Categories, :Topics, :Posts, :Votes, :Moderators, :PostReports,
   :CategoryMembers, :Blocks, :Bans, :CategoryGroups, :Bookmarks }
