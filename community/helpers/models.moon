@@ -114,18 +114,21 @@ soft_delete = =>
 
 -- 1 arg
 memoize1 = (fn) ->
+  NIL = {}
   cache = setmetatable {}, __mode: "k"
 
   (arg, more) =>
     error "memoize1 function recieved second argument" if more
+    key = if arg == nil then NIL else arg
 
-    cache_value = cache[arg]
+    cache_value = cache[key]
 
     if cache_value
       return unpack cache_value
 
     res = { fn @, arg }
-    cache[arg] = res
+
+    cache[key] = res
     unpack res
 
 { :upsert, :safe_insert, :filter_update, :soft_delete, :memoize1 }
