@@ -60,6 +60,7 @@ build = {
     ["community.models.user_topic_last_seens"] = "community/models/user_topic_last_seens.lua",
     ["community.models.votes"] = "community/models/votes.lua",
     ["community.schema"] = "community/schema.lua",
+    ["community.spec.factory"] = "community/spec/factory.lua",
   }
 }
 
