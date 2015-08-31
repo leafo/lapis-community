@@ -2,6 +2,7 @@ db = require "lapis.db"
 
 import Model from require "community.model"
 import slugify from require "lapis.util"
+import memoize1 from require "community.helpers.models"
 
 -- Generated schema dump: (do not edit)
 --
@@ -76,7 +77,7 @@ class Topics extends Model
 
     @allowed_to_view user
 
-  allowed_to_view: (user) =>
+  allowed_to_view: memoize1 (user) =>
     return false if @deleted
 
     can_view = if @category_id
@@ -89,7 +90,7 @@ class Topics extends Model
 
     can_view
 
-  allowed_to_edit: (user) =>
+  allowed_to_edit: memoize1 (user) =>
     return false if @deleted
     return false unless user
     return true if user.id == @user_id
@@ -98,7 +99,7 @@ class Topics extends Model
 
     false
 
-  allowed_to_moderate: (user) =>
+  allowed_to_moderate: memoize1 (user) =>
     return false unless user
     return false unless @category_id
 

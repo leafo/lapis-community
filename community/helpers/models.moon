@@ -1,6 +1,7 @@
 
 db = require "lapis.db"
 
+import next, unpack, ipairs, pairs from _G
 import insert, concat from table
 
 -- remove fields that haven't changed
@@ -85,8 +86,8 @@ upsert = (model, insert, update, cond) ->
       returning *
     ),
     inserts as (
-      insert into #{table_name} (#{table.concat insert_fields, ", "})
-      select #{table.concat insert_values, ", "}
+      insert into #{table_name} (#{concat insert_fields, ", "})
+      select #{concat insert_values, ", "}
       where not exists(select 1 from updates)
       returning *
     )
@@ -111,4 +112,20 @@ soft_delete = =>
 
   res.affected_rows and res.affected_rows > 0
 
-{ :upsert, :safe_insert, :filter_update, :soft_delete }
+-- 1 arg
+memoize1 = (fn) ->
+  cache = setmetatable {}, __mode: "k"
+
+  (arg, more) =>
+    error "memoize1 function recieved second argument" if more
+
+    cache_value = cache[arg]
+
+    if cache_value
+      return unpack cache_value
+
+    res = { fn @, arg }
+    cache[arg] = res
+    unpack res
+
+{ :upsert, :safe_insert, :filter_update, :soft_delete, :memoize1 }
