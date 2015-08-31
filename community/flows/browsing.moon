@@ -228,12 +228,12 @@ class BrowsingFlow extends Flow
     @after = if t = @topics[1]
       t.category_order
 
-    @after = nil if max and @after >= max
+    @after = nil if max and @after and @after >= max
 
     @before = if t = @topics[#@topics]
       t.category_order
 
-    @before = nil if min and @before <= min
+    @before = nil if min and @before and @before <= min
 
     @topics
 
