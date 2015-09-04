@@ -143,7 +143,8 @@ class Posts extends Model
 
   allowed_to_reply: (user) =>
     return false unless user
-    true
+    topic = @get_topic!
+    topic\allowed_to_post user
 
   delete: =>
     import soft_delete from require "community.helpers.models"

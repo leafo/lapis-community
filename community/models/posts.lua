@@ -84,7 +84,8 @@ do
       if not (user) then
         return false
       end
-      return true
+      local topic = self:get_topic()
+      return topic:allowed_to_post(user)
     end,
     delete = function(self)
       local soft_delete
