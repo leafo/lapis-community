@@ -1,0 +1,208 @@
+local Flow
+Flow = require("lapis.flow").Flow
+local Topics, Posts, PostEdits, CommunityUsers, ActivityLogs
+do
+  local _obj_0 = require("community.models")
+  Topics, Posts, PostEdits, CommunityUsers, ActivityLogs = _obj_0.Topics, _obj_0.Posts, _obj_0.PostEdits, _obj_0.CommunityUsers, _obj_0.ActivityLogs
+end
+local db = require("lapis.db")
+local assert_error
+assert_error = require("lapis.application").assert_error
+local assert_valid
+assert_valid = require("lapis.validate").assert_valid
+local trim_filter, slugify
+do
+  local _obj_0 = require("lapis.util")
+  trim_filter, slugify = _obj_0.trim_filter, _obj_0.slugify
+end
+local require_login
+require_login = require("community.helpers.app").require_login
+local limits = require("community.limits")
+local PostsFlow
+do
+  local _parent_0 = Flow
+  local _base_0 = {
+    expose_assigns = true,
+    load_post = function(self)
+      if self.post then
+        return 
+      end
+      assert_valid(self.params, {
+        {
+          "post_id",
+          is_integer = true
+        }
+      })
+      self.post = Posts:find(self.params.post_id)
+      return assert_error(self.post, "invalid post")
+    end,
+    new_post = require_login(function(self)
+      local TopicsFlow = require("community.flows.topics")
+      TopicsFlow(self):load_topic()
+      assert_error(self.topic:allowed_to_post(self.current_user))
+      trim_filter(self.params)
+      assert_valid(self.params, {
+        {
+          "parent_post_id",
+          optional = true,
+          is_integer = true
+        },
+        {
+          "post",
+          type = "table"
+        }
+      })
+      local new_post = trim_filter(self.params.post)
+      assert_valid(new_post, {
+        {
+          "body",
+          exists = true,
+          max_length = limits.MAX_BODY_LEN
+        }
+      })
+      local parent_post
+      do
+        local pid = self.params.parent_post_id
+        if pid then
+          parent_post = Posts:find(pid)
+        end
+      end
+      if parent_post then
+        assert_error(parent_post.topic_id == self.topic.id, "topic id mismatch (" .. tostring(parent_post.topic_id) .. " != " .. tostring(self.topic.id) .. ")")
+        assert_error(parent_post:allowed_to_reply(self.current_user), "can't reply to post")
+      end
+      self.post = Posts:create({
+        user_id = self.current_user.id,
+        topic_id = self.topic.id,
+        body = new_post.body,
+        parent_post = parent_post
+      })
+      self.topic:increment_from_post(self.post)
+      do
+        local category = self.topic:get_category()
+        if category then
+          category:increment_from_post(self.post)
+        end
+      end
+      CommunityUsers:for_user(self.current_user):increment("posts_count")
+      self.topic:increment_participant(self.current_user)
+      ActivityLogs:create({
+        user_id = self.current_user.id,
+        object = self.post,
+        action = "create"
+      })
+      return true
+    end),
+    edit_post = require_login(function(self)
+      self:load_post()
+      assert_error(self.post:allowed_to_edit(self.current_user), "not allowed to edit")
+      assert_valid(self.params, {
+        {
+          "post",
+          type = "table"
+        }
+      })
+      self.topic = self.post:get_topic()
+      local post_update = trim_filter(self.params.post)
+      assert_valid(post_update, {
+        {
+          "body",
+          exists = true,
+          max_length = limits.MAX_BODY_LEN
+        },
+        {
+          "reason",
+          optional = true,
+          max_length = limits.MAX_BODY_LEN
+        }
+      })
+      if self.post.body ~= post_update.body then
+        PostEdits:create({
+          user_id = self.current_user.id,
+          body_before = self.post.body,
+          reason = post_update.reason,
+          post_id = self.post.id
+        })
+        self.post:update({
+          body = post_update.body,
+          edits_count = db.raw("edits_count + 1"),
+          last_edited_at = db.format_date()
+        })
+      end
+      if self.post:is_topic_post() and not self.topic.permanent then
+        assert_valid(post_update, {
+          {
+            "title",
+            optional = true,
+            max_length = limits.MAX_TITLE_LEN
+          }
+        })
+        if post_update.title then
+          self.topic:update({
+            title = post_update.title,
+            slug = slugify(post_update.title)
+          })
+        end
+      end
+      ActivityLogs:create({
+        user_id = self.current_user.id,
+        object = self.post,
+        action = "edit"
+      })
+      return true
+    end),
+    delete_post = require_login(function(self)
+      self:load_post()
+      assert_error(self.post:allowed_to_edit(self.current_user), "not allowed to edit")
+      self.topic = self.post:get_topic()
+      if self.post:is_topic_post() and not self.topic.permanent then
+        local TopicsFlow = require("community.flows.topics")
+        TopicsFlow(self):delete_topic()
+        return true
+      end
+      if self.post:delete() then
+        local topic = self.post:get_topic()
+        topic:decrement_participant(self.current_user)
+        if self.post.id == topic.last_post_id then
+          topic:refresh_last_post()
+        end
+        ActivityLogs:create({
+          user_id = self.current_user.id,
+          object = self.post,
+          action = "delete"
+        })
+        return true
+      end
+    end)
+  }
+  _base_0.__index = _base_0
+  setmetatable(_base_0, _parent_0.__base)
+  local _class_0 = setmetatable({
+    __init = function(self, ...)
+      return _parent_0.__init(self, ...)
+    end,
+    __base = _base_0,
+    __name = "PostsFlow",
+    __parent = _parent_0
+  }, {
+    __index = function(cls, name)
+      local val = rawget(_base_0, name)
+      if val == nil then
+        return _parent_0[name]
+      else
+        return val
+      end
+    end,
+    __call = function(cls, ...)
+      local _self_0 = setmetatable({}, _base_0)
+      cls.__init(_self_0, ...)
+      return _self_0
+    end
+  })
+  _base_0.__class = _class_0
+  if _parent_0.__inherited then
+    _parent_0.__inherited(_parent_0, _class_0)
+  end
+  PostsFlow = _class_0
+  return _class_0
+end

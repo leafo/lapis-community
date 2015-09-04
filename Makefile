@@ -1,5 +1,5 @@
 
-.PHONY: clean_test test local count
+.PHONY: clean_test test local count build
 
 clean_test:
 	-dropdb -U postgres community_test
@@ -24,7 +24,10 @@ lint:
 count:
 	wc -l $$(git ls-files | grep 'scss$$\|moon$$\|coffee$$\|md$$\|conf$$') | sort -n | tail
 
-local:
+build:
+	moonc community
 	tup upd
+
+local: build
 	luarocks make --local lapis-community-dev-1.rockspec
 
