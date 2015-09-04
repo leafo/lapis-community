@@ -41,6 +41,7 @@ class CategoriesFlow extends Flow
 
     @category = Categories\find @params.category_id
     assert_error @category, "invalid category"
+    assert_error @category\allowed_to_view(@current_user), "invalid category"
 
   reports: =>
     @load_category!
