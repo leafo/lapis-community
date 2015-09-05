@@ -133,9 +133,11 @@ describe "posts", ->
       post = factory.Posts parent_post_id: root.id, topic_id: topic.id
       topic\increment_from_post post
 
-      for {kind, user} in *post\notification_targets!
+      for {kind, user, parent} in *post\notification_targets!
         assert.same "reply", kind
-        assert.same topic.user_id,user.id
+        assert.same topic.user_id, user.id
+        assert parent.__class == Posts
+        assert.same root.id, parent.id
 
     it "gets target for category owner", ->
       category_user = factory.Users!

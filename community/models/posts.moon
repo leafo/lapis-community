@@ -178,7 +178,7 @@ class Posts extends Model
       targets[user.id] or= {"mention", user.id}
 
     if parent = @get_parent_post!
-      targets[parent.user_id] = {"reply", parent\get_user!}
+      targets[parent.user_id] = {"reply", parent\get_user!, parent}
 
     topic = @get_topic!
     for target_user in *topic\notification_target_users!

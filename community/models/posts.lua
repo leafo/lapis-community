@@ -142,7 +142,8 @@ do
         if parent then
           targets[parent.user_id] = {
             "reply",
-            parent:get_user()
+            parent:get_user(),
+            parent
           }
         end
       end
