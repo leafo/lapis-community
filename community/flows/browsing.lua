@@ -325,7 +325,7 @@ do
           end
         end)()
       })
-      self.sticky_topics = pager:get_page()
+      self.sticky_topics = pager:before()
     end,
     category_topics = function(self)
       local CategoriesFlow = require("community.flows.categories")

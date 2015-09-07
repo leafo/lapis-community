@@ -196,7 +196,7 @@ class BrowsingFlow extends Flow
       prepare_results: @\preload_topics
     }
 
-    @sticky_topics = pager\get_page!
+    @sticky_topics = pager\before!
 
   category_topics: =>
     CategoriesFlow = require "community.flows.categories"
