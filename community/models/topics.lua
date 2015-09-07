@@ -281,6 +281,18 @@ do
       local Posts
       Posts = require("community.models").Posts
       return unpack(Posts:select("\n      where topic_id = ? and depth = 1 order by post_number desc limit 1\n    ", self.id))
+    end,
+    get_topic_post = function(self)
+      if not (self.topic_post) then
+        local Posts
+        Posts = require("community.models").Posts
+        self.topic_post = Posts:find({
+          topic_id = self.id,
+          depth = 1,
+          post_number = 1
+        })
+      end
+      return self.topic_post
     end
   }
   _base_0.__index = _base_0

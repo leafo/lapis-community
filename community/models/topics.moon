@@ -265,3 +265,11 @@ class Topics extends Model
       where topic_id = ? and depth = 1 order by post_number desc limit 1
     ", @id
 
+  get_topic_post: =>
+    unless @topic_post
+      import Posts from require "community.models"
+      @topic_post = Posts\find topic_id: @id, depth: 1, post_number: 1
+
+    @topic_post
+
+
