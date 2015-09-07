@@ -18,8 +18,17 @@ describe "posts", ->
 
   it "hard deletes a post", ->
     post = factory.Posts!
-    print "Deleting post #{post.id}"
     post\hard_delete!
+
+  describe "has_replies", ->
+    it "with no replies", ->
+      post = factory.Posts!
+      assert.same false, post\has_replies!
+
+    it "with replies", ->
+      post = factory.Posts!
+      factory.Posts topic_id: post.topic_id, parent_post_id: post.id
+      assert.same true, post\has_replies!
 
   it "should create a series of posts in same topic", ->
     posts = for i=1,5

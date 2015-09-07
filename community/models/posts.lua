@@ -263,6 +263,11 @@ do
     find_root_ancestor = function(self)
       local ancestors = self:find_ancestor_posts()
       return ancestors[#ancestors]
+    end,
+    has_replies = function(self)
+      return not not unpack(Posts:select("where parent_post_id = ?", self.id, {
+        fields = "1"
+      }))
     end
   }
   _base_0.__index = _base_0

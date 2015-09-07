@@ -270,3 +270,5 @@ class Posts extends Model
     ancestors = @find_ancestor_posts!
     ancestors[#ancestors]
 
+  has_replies: =>
+    not not unpack Posts\select "where parent_post_id = ?", @id, fields: "1"
