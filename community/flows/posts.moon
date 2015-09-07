@@ -7,6 +7,7 @@ import assert_valid from require "lapis.validate"
 import trim_filter, slugify from require "lapis.util"
 
 import require_login from require "community.helpers.app"
+import is_empty_html from require "community.helpers.html"
 
 limits = require "community.limits"
 
@@ -36,8 +37,10 @@ class PostsFlow extends Flow
 
     new_post = trim_filter @params.post
     assert_valid new_post, {
-      {"body", exists: true, max_length: limits.MAX_BODY_LEN}
+      {"body", type: "string", exists: true, max_length: limits.MAX_BODY_LEN}
     }
+
+    assert_error not is_empty_html(new_post.body), "body must be provided"
 
     parent_post = if pid = @params.parent_post_id
       Posts\find pid
@@ -87,6 +90,8 @@ class PostsFlow extends Flow
       {"body", exists: true, max_length: limits.MAX_BODY_LEN}
       {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
     }
+
+    assert_error not is_empty_html(post_update.body), "body must be provided"
 
     -- only if the body is different
     if @post.body != post_update.body

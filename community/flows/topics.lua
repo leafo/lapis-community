@@ -14,6 +14,8 @@ local assert_valid
 assert_valid = require("lapis.validate").assert_valid
 local require_login
 require_login = require("community.helpers.app").require_login
+local is_empty_html
+is_empty_html = require("community.helpers.html").is_empty_html
 local limits = require("community.limits")
 local TopicsFlow
 do
@@ -80,6 +82,7 @@ do
           max_length = limits.MAX_TITLE_LEN
         }
       })
+      assert_error(not is_empty_html(new_topic.body), "missing body")
       local sticky = false
       local locked = false
       if moderator then

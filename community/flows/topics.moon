@@ -9,6 +9,7 @@ import trim_filter from require "lapis.util"
 import assert_valid from require "lapis.validate"
 
 import require_login from require "community.helpers.app"
+import is_empty_html from require "community.helpers.html"
 
 limits = require "community.limits"
 
@@ -65,6 +66,8 @@ class TopicsFlow extends Flow
       {"body", exists: true, max_length: limits.MAX_BODY_LEN}
       {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
     }
+
+    assert_error not is_empty_html(new_topic.body), "body must be provided"
 
     sticky = false
     locked = false

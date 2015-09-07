@@ -33,6 +33,7 @@ build = {
     ["community.flows.votes"] = "community/flows/votes.lua",
     ["community.helpers.app"] = "community/helpers/app.lua",
     ["community.helpers.counters"] = "community/helpers/counters.lua",
+    ["community.helpers.html"] = "community/helpers/html.lua",
     ["community.helpers.models"] = "community/helpers/models.lua",
     ["community.limits"] = "community/limits.lua",
     ["community.migrations"] = "community/migrations.lua",

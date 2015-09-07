@@ -94,6 +94,16 @@ describe "posting flow", ->
 
       assert.same { "body must be provided" }, res.errors
 
+    it "should fail with empty html body", ->
+      res = PostingApp\get current_user, "/new-topic", {
+        current_user_id: current_user.id
+        category_id: factory.Categories!.id
+        "topic[title]": "hello"
+        "topic[body]": " <ol><li>   </ol>"
+      }
+
+      assert.same { "body must be provided" }, res.errors
+
     it "should post a new topic", ->
       category = factory.Categories!
 

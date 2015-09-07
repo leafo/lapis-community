@@ -17,6 +17,8 @@ do
 end
 local require_login
 require_login = require("community.helpers.app").require_login
+local is_empty_html
+is_empty_html = require("community.helpers.html").is_empty_html
 local limits = require("community.limits")
 local PostsFlow
 do
@@ -56,10 +58,12 @@ do
       assert_valid(new_post, {
         {
           "body",
+          type = "string",
           exists = true,
           max_length = limits.MAX_BODY_LEN
         }
       })
+      assert_error(not is_empty_html(new_post.body), "missing body")
       local parent_post
       do
         local pid = self.params.parent_post_id
@@ -116,6 +120,7 @@ do
           max_length = limits.MAX_BODY_LEN
         }
       })
+      assert_error(not is_empty_html(post_update.body), "missing body")
       if self.post.body ~= post_update.body then
         PostEdits:create({
           user_id = self.current_user.id,
