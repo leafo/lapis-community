@@ -6,6 +6,8 @@ import Categories, Moderators, CategoryMembers, Topics, Posts, Bans, UserTopicLa
 
 factory = require "spec.factory"
 
+import Model from require "lapis.db.model"
+
 describe "topics", ->
   use_test_env!
 
@@ -143,7 +145,7 @@ describe "topics", ->
     topic = factory.Topics!
     topic\set_seen user
 
-  it "should not mark for no last post #ddd", ->
+  it "should not mark for no last post", ->
     user = factory.Users!
     topic = factory.Topics!
     post = factory.Posts topic_id: topic.id
@@ -171,4 +173,47 @@ describe "topics", ->
     assert.same user.id, last_seen.user_id
     assert.same topic.id, last_seen.topic_id
     assert.same post2.id, last_seen.post_id
+
+  describe "renumber_posts #ddd", ->
+    it "renumbers root posts", ->
+      topic = factory.Topics!
+      p1 = factory.Posts topic_id: topic.id
+      p2 = factory.Posts topic_id: topic.id
+
+      p2_1 = factory.Posts topic_id: topic.id, parent_post_id: p2.id
+      p2_2 = factory.Posts topic_id: topic.id, parent_post_id: p2.id
+      p2_3 = factory.Posts topic_id: topic.id, parent_post_id: p2.id
+
+      p3 = factory.Posts topic_id: topic.id
+      Model.delete p1
+
+      topic\renumber_posts!
+
+      posts = Posts\select "where depth = 1 order by post_number"
+      assert.same {1,2}, [p.post_number for p in *posts]
+
+      posts = Posts\select "where depth = 2 order by post_number"
+      assert.same {1,2,3}, [p.post_number for p in *posts]
+
+    it "renumbers nested posts posts", ->
+      topic = factory.Topics!
+      p1 = factory.Posts topic_id: topic.id
+      p1_1 = factory.Posts topic_id: topic.id, parent_post_id: p1.id
+
+      p2 = factory.Posts topic_id: topic.id
+      p2_1 = factory.Posts topic_id: topic.id, parent_post_id: p2.id
+      p2_2 = factory.Posts topic_id: topic.id, parent_post_id: p2.id
+      p2_3 = factory.Posts topic_id: topic.id, parent_post_id: p2.id
+
+      p3 = factory.Posts topic_id: topic.id
+
+      Model.delete p2_2
+
+      topic\renumber_posts p2
+
+      posts = Posts\select "where depth = 1 order by post_number"
+      assert.same {1,2,3}, [p.post_number for p in *posts]
+
+      posts = Posts\select "where parent_post_id = ? order by post_number", p2.id
+      assert.same {1,2}, [p.post_number for p in *posts]
 

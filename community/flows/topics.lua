@@ -82,7 +82,7 @@ do
           max_length = limits.MAX_TITLE_LEN
         }
       })
-      assert_error(not is_empty_html(new_topic.body), "missing body")
+      assert_error(not is_empty_html(new_topic.body), "body must be provided")
       local sticky = false
       local locked = false
       if moderator then

@@ -272,4 +272,30 @@ class Topics extends Model
 
     @topic_post
 
+  renumber_posts: (parent_post) =>
+    import Posts from require "community.models"
+    cond = if parent_post
+      assert parent_post.topic_id == @id, "expecting"
+      {
+        parent_post_id: parent_post.id
+      }
+    else
+      {
+        topic_id: @id
+        parent_post_id: db.NULL
+        depth: 1
+      }
+
+    tbl = db.escape_identifier Posts\table_name!
+
+    db.query "
+      update #{tbl} as posts set post_number = new_number from (
+        select id, row_number() over () as new_number
+        from #{tbl}
+        where #{db.encode_clause cond}
+        order by post_number asc
+      ) foo
+      where posts.id = foo.id and posts.post_number != new_number
+    "
+
 
