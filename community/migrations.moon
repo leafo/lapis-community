@@ -158,13 +158,6 @@ import create_table, create_index, drop_table from schema
 
     create_index T"votes", "object_type", "object_id"
 
-    create_table T"post_replies", {
-      {"parent_post_id", foreign_key}
-      {"child_post_id", foreign_key}
-
-      "PRIMARY KEY (parent_post_id, child_post_id)"
-    }
-
     create_table T"moderators", {
       {"user_id", foreign_key}
       {"object_type", foreign_key}
