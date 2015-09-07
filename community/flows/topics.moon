@@ -101,16 +101,21 @@ class TopicsFlow extends Flow
 
     true
 
-  -- this isn't used under most circumstances as deleting root post deletes topic
+  -- this is called indirectly through delete post
   delete_topic: require_login =>
     @load_topic!
     assert_error @topic\allowed_to_edit(@current_user), "not allowed to edit"
+
     if @topic\delete!
       ActivityLogs\create {
         user_id: @current_user.id
         object: @topic
         action: "delete"
       }
+
+      -- if we're a moderator then write to moderation log
+      if @topic\allowed_to_moderate @current_user
+        @write_moderation_log "topic.delete", @params.reason
 
       true
 

@@ -120,6 +120,9 @@ do
           object = self.topic,
           action = "delete"
         })
+        if self.topic:allowed_to_moderate(self.current_user) then
+          self:write_moderation_log("topic.delete", self.params.reason)
+        end
         return true
       end
     end),
