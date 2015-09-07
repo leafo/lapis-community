@@ -112,6 +112,50 @@ do
         return true
       end
     end,
+    hard_delete = function(self)
+      if not (Model.delete(self)) then
+        return 
+      end
+      local CommunityUsers, ModerationLogs, PostEdits, PostReports, Votes, ActivityLogs
+      do
+        local _obj_0 = require("community.models")
+        CommunityUsers, ModerationLogs, PostEdits, PostReports, Votes, ActivityLogs = _obj_0.CommunityUsers, _obj_0.ModerationLogs, _obj_0.PostEdits, _obj_0.PostReports, _obj_0.Votes, _obj_0.ActivityLogs
+      end
+      CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
+      local topic = self:get_topic()
+      topic:renumber_posts(self:get_parent_post())
+      if topic.last_post_id == self.id then
+        topic:refresh_last_post()
+      end
+      db.delete(ModerationLogs:table_name(), {
+        object_type = ModerationLogs.object_types.post_report,
+        object_id = db.list({
+          db.raw(db.interpolate_query("\n          select id from " .. tostring(db.escape_identifier(PostReports:table_name())) .. "\n          where post_id = ?\n        ", self.id))
+        })
+      })
+      local _list_0 = {
+        PostEdits,
+        PostReports
+      }
+      for _index_0 = 1, #_list_0 do
+        local model = _list_0[_index_0]
+        db.delete(model:table_name(), {
+          post_id = self.id
+        })
+      end
+      local _list_1 = {
+        Votes,
+        ActivityLogs
+      }
+      for _index_0 = 1, #_list_1 do
+        local model = _list_1[_index_0]
+        db.delete(model:table_name(), {
+          object_type = model.object_types.post,
+          object_id = self.id
+        })
+      end
+      return true
+    end,
     allowed_to_report = function(self, user)
       if not (user) then
         return false

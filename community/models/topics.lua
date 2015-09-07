@@ -293,6 +293,25 @@ do
         })
       end
       return self.topic_post
+    end,
+    renumber_posts = function(self, parent_post)
+      local Posts
+      Posts = require("community.models").Posts
+      local cond
+      if parent_post then
+        assert(parent_post.topic_id == self.id, "expecting")
+        cond = {
+          parent_post_id = parent_post.id
+        }
+      else
+        cond = {
+          topic_id = self.id,
+          parent_post_id = db.NULL,
+          depth = 1
+        }
+      end
+      local tbl = db.escape_identifier(Posts:table_name())
+      return db.query("\n      update " .. tostring(tbl) .. " as posts set post_number = new_number from (\n        select id, row_number() over () as new_number\n        from " .. tostring(tbl) .. "\n        where " .. tostring(db.encode_clause(cond)) .. "\n        order by post_number asc\n      ) foo\n      where posts.id = foo.id and posts.post_number != new_number\n    ")
     end
   }
   _base_0.__index = _base_0

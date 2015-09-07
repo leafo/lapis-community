@@ -297,5 +297,3 @@ class Topics extends Model
       ) foo
       where posts.id = foo.id and posts.post_number != new_number
     "
-
-

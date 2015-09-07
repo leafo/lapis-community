@@ -162,6 +162,47 @@ class Posts extends Model
 
   false
 
+  hard_delete: =>
+    return unless Model.delete @
+
+    import
+      CommunityUsers
+      ModerationLogs
+      PostEdits
+      PostReports
+      Votes
+      ActivityLogs
+      from require "community.models"
+
+    CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
+
+    topic = @get_topic!
+    topic\renumber_posts @get_parent_post!
+
+    if topic.last_post_id == @id
+      topic\refresh_last_post!
+
+    db.delete ModerationLogs\table_name!, {
+      object_type: ModerationLogs.object_types.post_report
+      object_id: db.list {
+        db.raw db.interpolate_query "
+          select id from #{db.escape_identifier PostReports\table_name!}
+          where post_id = ?
+        ", @id
+      }
+    }
+
+    for model in *{PostEdits, PostReports}
+      db.delete model\table_name!, post_id: @id
+
+    for model in *{Votes, ActivityLogs}
+      db.delete model\table_name!, {
+        object_type: model.object_types.post
+        object_id: @id
+      }
+
+    true
+
   allowed_to_report: (user) =>
     return false unless user
     return false if user.id == @user_id

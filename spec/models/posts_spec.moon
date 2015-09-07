@@ -12,8 +12,14 @@ describe "posts", ->
   before_each ->
     truncate_tables Users, Categories, Topics, Posts
 
-  it "should create a post", ->
+  it "deletes a post", ->
     post = factory.Posts!
+    post\delete!
+
+  it "hard deletes a post", ->
+    post = factory.Posts!
+    print "Deleting post #{post.id}"
+    post\hard_delete!
 
   it "should create a series of posts in same topic", ->
     posts = for i=1,5
@@ -108,7 +114,7 @@ describe "posts", ->
     assert.same {"mentioned_person2", "mentioned_person1"}, usernames[3]
     assert.same {}, usernames[4]
 
-  describe "mention targets #ddd", ->
+  describe "mention targets", ->
     it "gets no targets for first post", ->
       post = factory.Posts!
       assert.same {}, post\notification_targets!
