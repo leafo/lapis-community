@@ -152,7 +152,7 @@ class Posts extends Model
     -- older than 10 mins or has replies
     delta = date.diff date(true), date(@created_at)
 
-    if delta\spanminutes! > 10 or @has_replies!
+    if delta\spanminutes! > 10 or @has_replies! or @has_next_post!
       return @soft_delete!
 
     @hard_delete!
