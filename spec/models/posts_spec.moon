@@ -67,7 +67,7 @@ describe "posts", ->
       post\delete!
       assert.same nil, (Posts\find post.id)
 
-    it "soft delets for posts with next post", ->
+    it "soft deletes for posts with next post", ->
       factory.Posts topic_id: post.topic_id
       post\delete!
       post\refresh!
