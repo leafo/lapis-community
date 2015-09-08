@@ -197,6 +197,8 @@ class Posts extends Model
 
     topic\update {
       posts_count: db.raw "posts_count - 1"
+      root_posts_count: if @depth == 1
+        db.raw "root_posts_count - 1"
     }, timestamp: false
 
     db.delete ModerationLogs\table_name!, {

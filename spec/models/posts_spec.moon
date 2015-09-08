@@ -61,7 +61,17 @@ describe "posts", ->
       assert.same true, post.deleted
 
     it "hard deletes a post", ->
+      topic = post\get_topic!
+      topic\increment_from_post post
+
+      assert.same 1, topic.root_posts_count
+      assert.same 1, topic.posts_count
+
       post\hard_delete!
+      topic\refresh!
+
+      assert.same 0, topic.root_posts_count
+      assert.same 0, topic.posts_count
 
     it "hard deletes young post with no replies", ->
       post\delete!

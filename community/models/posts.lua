@@ -139,7 +139,12 @@ do
         topic:refresh_last_post()
       end
       topic:update({
-        posts_count = db.raw("posts_count - 1")
+        posts_count = db.raw("posts_count - 1"),
+        root_posts_count = (function()
+          if self.depth == 1 then
+            return db.raw("root_posts_count - 1")
+          end
+        end)()
       }, {
         timestamp = false
       })
