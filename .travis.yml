@@ -13,6 +13,7 @@ install:
   - sudo luarocks install luabitop
   - sudo luarocks install date
   - moonc schema.moon
+  - moonc config.moon
   - make clean_test
   # - cat $(which busted) | sed 's/\/usr\/bin\/lua/.\/luajit/' > busted
   # - chmod +x busted
