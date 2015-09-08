@@ -126,6 +126,9 @@ do
   local _parent_0 = Flow
   local _base_0 = {
     expose_assigns = true,
+    throttle_view_count = function(self, key)
+      return false
+    end,
     get_before_after = function(self)
       assert_valid(self.params, {
         {
@@ -173,7 +176,10 @@ do
       do
         local view_counter = self:view_counter()
         if view_counter then
-          view_counter:increment("topic:" .. tostring(self.topic.id))
+          local key = "topic:" .. tostring(self.topic.id)
+          if not (self:throttle_view_count(key)) then
+            view_counter:increment(key)
+          end
         end
       end
       local before, after = self:get_before_after()
@@ -334,7 +340,10 @@ do
       do
         local view_counter = self:view_counter()
         if view_counter then
-          view_counter:increment("category:" .. tostring(self.category.id))
+          local key = "category:" .. tostring(self.category.id)
+          if not (self:throttle_view_count(key)) then
+            view_counter:increment(key)
+          end
         end
       end
       local before, after = self:get_before_after()

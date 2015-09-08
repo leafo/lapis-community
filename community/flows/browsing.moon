@@ -66,6 +66,9 @@ class NestedOrderedPaginator extends OrderedPaginator
 class BrowsingFlow extends Flow
   expose_assigns: true
 
+  throttle_view_count: (key) =>
+    false
+
   get_before_after: =>
     assert_valid @params, {
       {"before", optional: true, is_integer: true}
@@ -97,7 +100,9 @@ class BrowsingFlow extends Flow
     assert_error @topic\allowed_to_view(@current_user), "not allowed to view"
 
     if view_counter = @view_counter!
-      view_counter\increment "topic:#{@topic.id}"
+      key = "topic:#{@topic.id}"
+      unless @throttle_view_count key
+        view_counter\increment key
 
     before, after = @get_before_after!
 
@@ -204,7 +209,9 @@ class BrowsingFlow extends Flow
     assert_error @category\allowed_to_view(@current_user), "not allowed to view"
 
     if view_counter = @view_counter!
-      view_counter\increment "category:#{@category.id}"
+      key = "category:#{@category.id}"
+      unless @throttle_view_count key
+        view_counter\increment key
 
     before, after = @get_before_after!
 
