@@ -289,7 +289,8 @@ do
         self.topic_post = Posts:find({
           topic_id = self.id,
           depth = 1,
-          post_number = 1
+          post_number = 1,
+          parent_post_id = db.NULL
         })
       end
       return self.topic_post

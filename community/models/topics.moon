@@ -144,7 +144,6 @@ class Topics extends Model
       )", @id
     }, timestamp: false
 
-
   delete: =>
     import soft_delete from require "community.helpers.models"
 
@@ -268,7 +267,12 @@ class Topics extends Model
   get_topic_post: =>
     unless @topic_post
       import Posts from require "community.models"
-      @topic_post = Posts\find topic_id: @id, depth: 1, post_number: 1
+      @topic_post = Posts\find {
+        topic_id: @id
+        depth: 1
+        post_number: 1
+        parent_post_id: db.NULL
+      }
 
     @topic_post
 
