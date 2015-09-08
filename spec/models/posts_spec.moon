@@ -4,6 +4,8 @@ import truncate_tables from require "lapis.spec.db"
 import Users from require "models"
 import Categories, Topics, Posts from require "community.models"
 
+db = require "lapis.db"
+
 factory = require "spec.factory"
 
 describe "posts", ->
@@ -30,6 +32,31 @@ describe "posts", ->
       factory.Posts topic_id: post.topic_id, parent_post_id: post.id
       assert.same true, post\has_replies!
 
+  describe "has_next_post", ->
+    it "singular post", ->
+      post = factory.Posts!
+      assert.same false, post\has_next_post!
+
+    it "with reply", ->
+      post = factory.Posts!
+      factory.Posts topic_id: post.topic_id, parent_post_id: post.id
+      assert.same false, post\has_next_post!
+
+    it "with series", ->
+      p1 = factory.Posts!
+      p2 = factory.Posts topic_id: p1.topic_id
+      assert.same true, p1\has_next_post!
+
+    it "with children", ->
+      p1 = factory.Posts!
+      p1_1 = factory.Posts parent_post_id: p1.id, topic_id: p1.topic_id
+      p2 = factory.Posts topic_id: p1.topic_id
+      p2_1 = factory.Posts parent_post_id: p2.id, topic_id: p1.topic_id
+      p2_2 = factory.Posts parent_post_id: p2.id, topic_id: p1.topic_id
+
+      assert.same true, p2_1\has_next_post!
+      assert.same false, p2_2\has_next_post!
+      assert.same false, p1_1\has_next_post!
   it "should create a series of posts in same topic", ->
     posts = for i=1,5
       factory.Posts topic_id: 1

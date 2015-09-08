@@ -271,4 +271,18 @@ class Posts extends Model
     ancestors[#ancestors]
 
   has_replies: =>
-    not not unpack Posts\select "where parent_post_id = ?", @id, fields: "1"
+    not not unpack Posts\select "where parent_post_id = ? and not deleted limit 1", @id, fields: "1"
+
+  -- post next in the same depth/parent
+  has_next_post: =>
+    clause = db.encode_clause {
+      topic_id: @topic_id
+      parent_post_id: @parent_post_id or db.NULL
+      depth: @depth
+    }
+
+    not not unpack Posts\select "
+      where #{clause} and post_number > ?
+      limit 1
+    ", @post_number, fields: "1"
+
