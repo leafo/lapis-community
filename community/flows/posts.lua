@@ -165,17 +165,20 @@ do
         TopicsFlow(self):delete_topic()
         return true
       end
-      if self.post:delete() then
+      local deleted, kind = self.post:delete()
+      if deleted then
         local topic = self.post:get_topic()
         topic:decrement_participant(self.current_user)
         if self.post.id == topic.last_post_id then
           topic:refresh_last_post()
         end
-        ActivityLogs:create({
-          user_id = self.current_user.id,
-          object = self.post,
-          action = "delete"
-        })
+        if not (kind == "hard") then
+          ActivityLogs:create({
+            user_id = self.current_user.id,
+            object = self.post,
+            action = "delete"
+          })
+        end
         return true
       end
     end)

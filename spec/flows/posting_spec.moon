@@ -513,7 +513,7 @@ describe "posting flow", ->
 
       topic\refresh!
       assert.falsy topic.deleted
-      assert.same 1, topic.posts_count
+      assert.same 0, topic.posts_count
     
     it "should not delete unrelated post", ->
       other_user = factory.Users!

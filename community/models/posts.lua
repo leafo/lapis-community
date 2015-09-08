@@ -88,12 +88,16 @@ do
       local topic = self:get_topic()
       return topic:allowed_to_post(user)
     end,
-    delete = function(self)
+    should_soft_delete = function(self)
       local delta = date.diff(date(true), date(self.created_at))
-      if delta:spanminutes() > 10 or self:has_replies() or self:has_next_post() then
-        return self:soft_delete()
+      return delta:spanminutes() > 10 or self:has_replies() or self:has_next_post()
+    end,
+    delete = function(self)
+      if self:should_soft_delete() then
+        return self:soft_delete(), "soft"
+      else
+        return self:hard_delete(), "hard"
       end
-      return self:hard_delete()
     end,
     soft_delete = function(self)
       local soft_delete
@@ -135,6 +139,11 @@ do
       if topic.last_post_id == self.id then
         topic:refresh_last_post()
       end
+      topic:update({
+        posts_count = db.raw("posts_count - 1")
+      }, {
+        timestamp = false
+      })
       db.delete(ModerationLogs:table_name(), {
         object_type = ModerationLogs.object_types.post_report,
         object_id = db.list({

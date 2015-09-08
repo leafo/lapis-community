@@ -148,14 +148,16 @@ class Posts extends Model
     topic = @get_topic!
     topic\allowed_to_post user
 
-  delete: =>
+  should_soft_delete: =>
     -- older than 10 mins or has replies
     delta = date.diff date(true), date(@created_at)
+    delta\spanminutes! > 10 or @has_replies! or @has_next_post!
 
-    if delta\spanminutes! > 10 or @has_replies! or @has_next_post!
-      return @soft_delete!, "soft"
-
-    @hard_delete!, "hard"
+  delete: =>
+    if @should_soft_delete!
+      @soft_delete!, "soft"
+    else
+      @hard_delete!, "hard"
 
   soft_delete: =>
     import soft_delete from require "community.helpers.models"
@@ -192,6 +194,10 @@ class Posts extends Model
 
     if topic.last_post_id == @id
       topic\refresh_last_post!
+
+    topic\update {
+      posts_count: db.raw "posts_count - 1"
+    }, timestamp: false
 
     db.delete ModerationLogs\table_name!, {
       object_type: ModerationLogs.object_types.post_report
