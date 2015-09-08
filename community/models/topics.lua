@@ -60,6 +60,9 @@ do
       if not (user) then
         return false
       end
+      if user:is_admin() then
+        return true
+      end
       if not (self.category_id) then
         return false
       end

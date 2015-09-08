@@ -101,6 +101,7 @@ class Topics extends Model
 
   allowed_to_moderate: memoize1 (user) =>
     return false unless user
+    return true if user\is_admin!
     return false unless @category_id
 
     import Categories from require "community.models"
