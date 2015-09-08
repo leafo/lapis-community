@@ -1,6 +1,8 @@
 db = require "lapis.db"
 import Model from require "community.model"
 
+date = require "date"
+
 -- Generated schema dump: (do not edit)
 --
 -- CREATE TABLE community_posts (
@@ -147,6 +149,15 @@ class Posts extends Model
     topic\allowed_to_post user
 
   delete: =>
+    -- older than 10 mins or has replies
+    delta = date.diff date(true), date(@created_at)
+
+    if delta\spanminutes! > 10 or @has_replies!
+      return @soft_delete!
+
+    @hard_delete!
+
+  soft_delete: =>
     import soft_delete from require "community.helpers.models"
 
     if soft_delete @
@@ -163,7 +174,7 @@ class Posts extends Model
   false
 
   hard_delete: =>
-    return unless Model.delete @
+    return false unless Model.delete @
 
     import
       CommunityUsers

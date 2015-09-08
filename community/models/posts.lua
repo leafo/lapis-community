@@ -1,6 +1,7 @@
 local db = require("lapis.db")
 local Model
 Model = require("community.model").Model
+local date = require("date")
 local Posts
 do
   local _parent_0 = Model
@@ -88,6 +89,13 @@ do
       return topic:allowed_to_post(user)
     end,
     delete = function(self)
+      local delta = date.diff(date(true), date(self.created_at))
+      if delta:spanminutes() > 10 or self:has_replies() then
+        return self:soft_delete()
+      end
+      return self:hard_delete()
+    end,
+    soft_delete = function(self)
       local soft_delete
       soft_delete = require("community.helpers.models").soft_delete
       if soft_delete(self) then
@@ -114,7 +122,7 @@ do
     end,
     hard_delete = function(self)
       if not (Model.delete(self)) then
-        return 
+        return false
       end
       local CommunityUsers, ModerationLogs, PostEdits, PostReports, Votes, ActivityLogs
       do
@@ -265,7 +273,17 @@ do
       return ancestors[#ancestors]
     end,
     has_replies = function(self)
-      return not not unpack(Posts:select("where parent_post_id = ?", self.id, {
+      return not not unpack(Posts:select("where parent_post_id = ? and not deleted limit 1", self.id, {
+        fields = "1"
+      }))
+    end,
+    has_next_post = function(self)
+      local clause = db.encode_clause({
+        topic_id = self.topic_id,
+        parent_post_id = self.parent_post_id or db.NULL,
+        depth = self.depth
+      })
+      return not not unpack(Posts:select("\n      where " .. tostring(clause) .. " and post_number > ?\n      limit 1\n    ", self.post_number, {
         fields = "1"
       }))
     end

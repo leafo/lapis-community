@@ -14,14 +14,6 @@ describe "posts", ->
   before_each ->
     truncate_tables Users, Categories, Topics, Posts
 
-  it "deletes a post", ->
-    post = factory.Posts!
-    post\delete!
-
-  it "hard deletes a post", ->
-    post = factory.Posts!
-    post\hard_delete!
-
   describe "has_replies", ->
     it "with no replies", ->
       post = factory.Posts!
@@ -57,6 +49,39 @@ describe "posts", ->
       assert.same true, p2_1\has_next_post!
       assert.same false, p2_2\has_next_post!
       assert.same false, p1_1\has_next_post!
+
+  describe "delete", ->
+    local post
+    before_each ->
+      post = factory.Posts!
+
+    it "soft deletes a post", ->
+      post\soft_delete!
+      post\refresh!
+      assert.same true, post.deleted
+
+    it "hard deletes a post", ->
+      post\hard_delete!
+
+    it "hard deletes young post with no replies", ->
+      post\delete!
+      assert.same nil, (Posts\find post.id)
+
+    it "soft deletes post with replies", ->
+      factory.Posts topic_id: post.topic_id, parent_post_id: post.id
+      post\delete!
+      post\refresh!
+      assert.same true, post.deleted
+
+    it "soft deletes old post", ->
+      post\update {
+        created_at: db.raw "now() at time zone 'utc' - '1.5 hours'::interval"
+      }
+
+      post\delete!
+      post\refresh!
+      assert.same true, post.deleted
+
   it "should create a series of posts in same topic", ->
     posts = for i=1,5
       factory.Posts topic_id: 1
