@@ -92,12 +92,11 @@ do
       local delta = date.diff(date(true), date(self.created_at))
       return delta:spanminutes() > 10 or self:has_replies() or self:has_next_post()
     end,
-    delete = function(self)
-      if self:should_soft_delete() then
-        return self:soft_delete(), "soft"
-      else
+    delete = function(self, force)
+      if force ~= "soft" and (force == "hard" or not self:should_soft_delete()) then
         return self:hard_delete(), "hard"
       end
+      return self:soft_delete(), "soft"
     end,
     soft_delete = function(self)
       local soft_delete
