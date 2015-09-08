@@ -138,7 +138,11 @@ class PostsFlow extends Flow
       TopicsFlow(@)\delete_topic!
       return true
 
-    deleted, kind = @post\delete!
+    mode = if @topic\allowed_to_moderate @current_user
+      if @params.hard
+        "hard"
+
+    deleted, kind = @post\delete mode
 
     if deleted
       topic = @post\get_topic!

@@ -165,7 +165,13 @@ do
         TopicsFlow(self):delete_topic()
         return true
       end
-      local deleted, kind = self.post:delete()
+      local mode
+      if self.topic:allowed_to_moderate(self.current_user) then
+        if self.params.hard then
+          mode = "hard"
+        end
+      end
+      local deleted, kind = self.post:delete(mode)
       if deleted then
         local topic = self.post:get_topic()
         topic:decrement_participant(self.current_user)
