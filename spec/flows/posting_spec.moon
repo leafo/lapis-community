@@ -407,12 +407,14 @@ describe "posting flow", ->
       assert.same "the new body", post2.body
       assert.same before_title, topic.title
 
-    it "should delete post", ->
+    it "softs delete post with replies", ->
       -- creates second post
       post = factory.Posts {
         user_id: current_user.id
         topic_id: factory.Posts(user_id: current_user.id).topic_id
       }
+
+      factory.Posts topic_id: post.topic_id, parent_post_id: post.id
 
       topic = post\get_topic!
       topic\increment_participant current_user
@@ -440,6 +442,34 @@ describe "posting flow", ->
       assert.same post.id, log.object_id
       assert.same ActivityLogs.object_types.post, log.object_type
       assert.same "delete", log\action_name!
+
+
+    it "should hard delete post", ->
+      -- creates second post
+      post = factory.Posts {
+        user_id: current_user.id
+        topic_id: factory.Posts(user_id: current_user.id).topic_id
+      }
+
+      topic = post\get_topic!
+      topic\increment_participant current_user
+
+      res = PostingApp\get current_user, "/delete-post", {
+        post_id: post.id
+      }
+
+      assert.truthy res.success
+      assert.same nil, (Posts\find post.id)
+
+      assert.same -1, CommunityUsers\for_user(current_user).posts_count
+
+      tps = TopicParticipants\select "where topic_id = ?", topic.id
+      assert.same 0, #tps
+
+      topic\refresh!
+      assert.same nil, topic.last_post_id
+
+      assert.same 0, ActivityLogs\count!
 
     it "should delete primary post, deleting topic", ->
       post = factory.Posts {

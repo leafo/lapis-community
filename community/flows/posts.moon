@@ -138,18 +138,21 @@ class PostsFlow extends Flow
       TopicsFlow(@)\delete_topic!
       return true
 
-    if @post\delete!
+    deleted, kind = @post\delete!
+
+    if deleted
       topic = @post\get_topic!
       topic\decrement_participant @current_user
 
       if @post.id == topic.last_post_id
         topic\refresh_last_post!
 
-      ActivityLogs\create {
-        user_id: @current_user.id
-        object: @post
-        action: "delete"
-      }
+      unless kind == "hard"
+        ActivityLogs\create {
+          user_id: @current_user.id
+          object: @post
+          action: "delete"
+        }
 
       true
 

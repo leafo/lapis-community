@@ -153,9 +153,9 @@ class Posts extends Model
     delta = date.diff date(true), date(@created_at)
 
     if delta\spanminutes! > 10 or @has_replies! or @has_next_post!
-      return @soft_delete!
+      return @soft_delete!, "soft"
 
-    @hard_delete!
+    @hard_delete!, "hard"
 
   soft_delete: =>
     import soft_delete from require "community.helpers.models"
