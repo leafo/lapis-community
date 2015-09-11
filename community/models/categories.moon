@@ -81,18 +81,20 @@ class Categories extends Model
   allowed_to_view: (user) =>
     return false if @hidden
 
-    can_view = switch @@membership_types[@membership_type]
+    switch @@membership_types[@membership_type]
       when "public"
-        true
+        nil
       when "members_only"
         return false unless user
         return true if @allowed_to_moderate user
-        @is_member user
+        return false unless @is_member user
 
-    if can_view
-      return false if @find_ban user
+    return false if @find_ban user
 
-    can_view
+    if category_group = @get_category_group!
+      return false unless category_group\allowed_to_view user
+
+    true
 
   allowed_to_vote: (user, direction) =>
     return false unless user

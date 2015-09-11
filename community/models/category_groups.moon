@@ -39,11 +39,23 @@ class CategoryGroups extends Model
 
     false
 
+  allowed_to_view: (user) =>
+    return true if @allowed_to_edit user
+    return false if @find_ban user
+    true
+
+
   allowed_to_edit: (user) =>
     return nil unless user
     return true if user\is_admin!
     return true if user.id == @user_id
     false
+
+  find_ban: (user) =>
+    return nil unless user
+    import Bans from require "community.models"
+    Bans\find_for_object @, user
+
 
   find_moderator: (user) =>
     return nil unless user

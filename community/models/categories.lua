@@ -33,10 +33,9 @@ do
       if self.hidden then
         return false
       end
-      local can_view
       local _exp_0 = self.__class.membership_types[self.membership_type]
       if "public" == _exp_0 then
-        can_view = true
+        local _ = nil
       elseif "members_only" == _exp_0 then
         if not (user) then
           return false
@@ -44,14 +43,22 @@ do
         if self:allowed_to_moderate(user) then
           return true
         end
-        can_view = self:is_member(user)
-      end
-      if can_view then
-        if self:find_ban(user) then
+        if not (self:is_member(user)) then
           return false
         end
       end
-      return can_view
+      if self:find_ban(user) then
+        return false
+      end
+      do
+        local category_group = self:get_category_group()
+        if category_group then
+          if not (category_group:allowed_to_view(user)) then
+            return false
+          end
+        end
+      end
+      return true
     end,
     allowed_to_vote = function(self, user, direction)
       if not (user) then

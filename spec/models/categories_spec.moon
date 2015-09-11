@@ -121,6 +121,14 @@ describe "categories", ->
       assert.falsy category\allowed_to_edit_members banned_user
       assert.falsy category\allowed_to_moderate banned_user
 
+      group_banned_user = factory.Users!
+      group = factory.CategoryGroups!
+      group\add_category category
+      factory.Bans object: group, banned_user_id: group_banned_user.id
+
+      assert.falsy category\allowed_to_view group_banned_user
+      assert.falsy category\allowed_to_post group_banned_user
+
     it "should update last topic to nothing", ->
       category\refresh_last_topic!
       assert.falsy category.last_topic_id

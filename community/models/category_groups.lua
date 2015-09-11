@@ -30,6 +30,15 @@ do
       end
       return false
     end,
+    allowed_to_view = function(self, user)
+      if self:allowed_to_edit(user) then
+        return true
+      end
+      if self:find_ban(user) then
+        return false
+      end
+      return true
+    end,
     allowed_to_edit = function(self, user)
       if not (user) then
         return nil
@@ -41,6 +50,14 @@ do
         return true
       end
       return false
+    end,
+    find_ban = function(self, user)
+      if not (user) then
+        return nil
+      end
+      local Bans
+      Bans = require("community.models").Bans
+      return Bans:find_for_object(self, user)
     end,
     find_moderator = function(self, user)
       if not (user) then
