@@ -60,6 +60,8 @@ class BansFlow extends Flow
     import ModerationLogs from require "community.models"
 
     category_id = switch Bans\object_type_for_object @object
+      when Bans.object_types.category_group
+        nil -- TODO: need a way to write moderation logs for category groups
       when Bans.object_types.category
         @object.id
       when Bans.object_types.topic

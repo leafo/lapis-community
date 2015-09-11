@@ -32,6 +32,7 @@ class Bans extends Model
     {"object", polymorphic_belongs_to: {
       [1]: {"category", "Categories"}
       [2]: {"topic", "Topics"}
+      [3]: {"category_groups", "CategoryGroup"}
     }}
   }
 

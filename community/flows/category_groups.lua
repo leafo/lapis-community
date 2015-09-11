@@ -22,6 +22,11 @@ do
   local _parent_0 = Flow
   local _base_0 = {
     expose_assigns = true,
+    bans_flow = function(self)
+      self:load_category_group()
+      local BansFlow = require("community.flows.bans")
+      return BansFlow(self, self.category_group)
+    end,
     load_category_group = function(self)
       if self.category_group then
         return 

@@ -15,6 +15,11 @@ limits = require "community.limits"
 class CategoryGroupsFlow extends Flow
   expose_assigns: true
 
+  bans_flow: =>
+    @load_category_group!
+    BansFlow = require "community.flows.bans"
+    BansFlow @, @category_group
+
   load_category_group: =>
     return if @category_group
 

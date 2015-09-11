@@ -71,7 +71,9 @@ do
       ModerationLogs = require("community.models").ModerationLogs
       local category_id
       local _exp_0 = Bans:object_type_for_object(self.object)
-      if Bans.object_types.category == _exp_0 then
+      if Bans.object_types.category_group == _exp_0 then
+        category_id = nil
+      elseif Bans.object_types.category == _exp_0 then
         category_id = self.object.id
       elseif Bans.object_types.topic == _exp_0 then
         category_id = self.object.category_id

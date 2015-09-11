@@ -59,6 +59,10 @@ do
         [2] = {
           "topic",
           "Topics"
+        },
+        [2] = {
+          "category_groups",
+          "CategoryGroup"
         }
       }
     }
