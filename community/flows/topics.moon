@@ -16,6 +16,11 @@ limits = require "community.limits"
 class TopicsFlow extends Flow
   expose_assigns: true
 
+  bans_flow: =>
+    @load_topic!
+    BansFlow = require "community.flows.bans"
+    BansFlow @, @topic
+
   load_topic: =>
     return if @topic
 
