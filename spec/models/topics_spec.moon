@@ -174,7 +174,7 @@ describe "topics", ->
     assert.same topic.id, last_seen.topic_id
     assert.same post2.id, last_seen.post_id
 
-  describe "renumber_posts #ddd", ->
+  describe "renumber_posts", ->
     it "renumbers root posts", ->
       topic = factory.Topics!
       p1 = factory.Posts topic_id: topic.id

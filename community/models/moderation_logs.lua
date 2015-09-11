@@ -73,6 +73,10 @@ do
         [3] = {
           "post_report",
           "PostReports"
+        },
+        [2] = {
+          "category_group",
+          "CategoryGroups"
         }
       }
     }

@@ -220,7 +220,7 @@ describe "browsing flow", ->
           assert.truthy res.post.user
           assert.truthy res.post.topic
 
-        it "gets post with nested content #ddd", ->
+        it "gets post with nested content", ->
           p = factory.Posts!
           topic = p\get_topic!
           topic\increment_from_post p

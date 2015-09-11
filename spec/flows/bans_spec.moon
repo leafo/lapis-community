@@ -2,7 +2,7 @@ import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
 import Users from require "models"
-import Bans, Categories, ModerationLogs, ModerationLogObjects from require "community.models"
+import Bans, Categories, ModerationLogs, ModerationLogObjects, CategoryGroups from require "community.models"
 
 import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
@@ -224,6 +224,48 @@ describe "bans", ->
       assert.same "topic.unban", log.action
 
       assert_log_contains_user log, other_user
+
+  describe "with category group", ->
+    local category_group
+
+    before_each ->
+      truncate_tables CategoryGroups
+      category_group = factory.CategoryGroups user_id: current_user.id
+
+    it "bans user from category group", ->
+      user = factory.Users!
+
+      res = BansApp\get current_user, "/ban", {
+        object_type: "category_group"
+        object_id: category_group.id
+        banned_user_id: user.id
+        reason: "get rid of this thing"
+      }
+
+      assert.true res.success
+
+      bans = Bans\select!
+      assert.same 1, #bans
+      ban = unpack bans
+
+      assert.same user.id, ban.banned_user_id
+      assert.same current_user.id, ban.banning_user_id
+      assert.same category_group.id, ban.object_id
+      assert.same Bans.object_types.category_group, ban.object_type
+
+    it "unbans user from category group", ->
+      user = factory.Users!
+      factory.Bans object: category_group, banned_user_id: user.id
+
+      res = BansApp\get current_user, "/unban", {
+        object_type: "category_group"
+        object_id: category_group.id
+        banned_user_id: user.id
+      }
+
+      assert.true res.success
+      assert.same 0, Bans\count!
+
 
   -- flow is created as a sub flow of category flow
   describe "cateogry bans flow", ->

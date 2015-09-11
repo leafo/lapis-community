@@ -60,9 +60,9 @@ do
           "topic",
           "Topics"
         },
-        [2] = {
-          "category_groups",
-          "CategoryGroup"
+        [3] = {
+          "category_group",
+          "CategoryGroups"
         }
       }
     }
