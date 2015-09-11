@@ -32,7 +32,7 @@ class ModerationLogs extends Model
       [1]: {"topic", "Topics"}
       [2]: {"category", "Categories"}
       [3]: {"post_report", "PostReports"}
-      [2]: {"category_group", "CategoryGroups"}
+      [4]: {"category_group", "CategoryGroups"}
     }}
   }
 

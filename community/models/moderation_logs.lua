@@ -74,7 +74,7 @@ do
           "post_report",
           "PostReports"
         },
-        [2] = {
+        [4] = {
           "category_group",
           "CategoryGroups"
         }
