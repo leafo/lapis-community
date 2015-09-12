@@ -139,7 +139,7 @@ class BrowsingFlow extends Flow
         next_before = nil if next_before == 1
 
         @next_page = { after: next_after } if next_after
-        @prev_page = { before: next_before } if next_before
+        @prev_page = { before: next_before > limits.POSTS_PER_PAGE + 1 and next_before or nil } if next_before
 
       when "desc"
         if after

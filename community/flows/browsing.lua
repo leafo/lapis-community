@@ -246,7 +246,7 @@ do
         end
         if next_before then
           self.prev_page = {
-            before = next_before
+            before = next_before > limits.POSTS_PER_PAGE + 1 and next_before or nil
           }
         end
       elseif "desc" == _exp_0 then
