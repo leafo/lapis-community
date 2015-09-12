@@ -23,11 +23,13 @@ describe "categories", ->
     before_each ->
       group = factory.CategoryGroups!
 
-    it "should add a category to a group", ->
+    it "adds a category to a group", ->
       category = factory.Categories!
       group\add_category category
 
       assert.same 1, group.categories_count
+      category\refresh!
+      assert.same 1, category.category_groups_count
 
       gs = group\get_category_group_categories_paginated!\get_page!
 
@@ -41,10 +43,13 @@ describe "categories", ->
       group\refresh!
       assert.same 1, group.categories_count
 
+      category\refresh!
+      assert.same 1, category.category_groups_count
+
       c_group = category\get_category_group!
       assert.same group.id, c_group.id
 
-    it "should remove a category from group", ->
+    it "removes a category from group", ->
       category = factory.Categories!
       group\add_category category
 
@@ -54,12 +59,15 @@ describe "categories", ->
       group\refresh!
       assert.same 0, group.categories_count
 
+      category\refresh!
+      assert.same 0, category.category_groups_count
+
       gs = group\get_category_group_categories_paginated!\get_page!
       assert.same {}, gs
 
       group\remove_category category
 
-    it "should set categories", ->
+    it "sets categories", ->
       category1 = factory.Categories!
       category2 = factory.Categories!
 
@@ -74,7 +82,7 @@ describe "categories", ->
       }, cats
 
 
-    it "should get categories", ->
+    it "gets categories", ->
       category1 = factory.Categories!
       category2 = factory.Categories!
       category3 = factory.Categories!

@@ -126,6 +126,10 @@ class CategoryGroups extends Model
 
     if group_category
       @update categories_count: db.raw "categories_count + 1"
+      category\update {
+        category_groups_count: db.raw "category_groups_count + 1"
+      }, timestamp: false
+
       true
 
   remove_category: (category) =>
@@ -138,9 +142,13 @@ class CategoryGroups extends Model
 
     if group_category and group_category\delete!
       @update categories_count: db.raw "categories_count - 1"
+
+      category\update {
+        category_groups_count: db.raw "category_groups_count - 1"
+      }, timestamp: false
+
       true
 
   notification_target_users: =>
     { @get_user! }
-
 

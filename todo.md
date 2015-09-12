@@ -2,8 +2,6 @@
 
 Membership type and votiing type should be nullable to take ancestor's value
 
-add category_group_count to categories so we can avoid fetching group if it doesn't exist
-
 # Core
 
 * callbacks

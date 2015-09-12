@@ -159,6 +159,11 @@ do
         self:update({
           categories_count = db.raw("categories_count + 1")
         })
+        category:update({
+          category_groups_count = db.raw("category_groups_count + 1")
+        }, {
+          timestamp = false
+        })
         return true
       end
     end,
@@ -172,6 +177,11 @@ do
       if group_category and group_category:delete() then
         self:update({
           categories_count = db.raw("categories_count - 1")
+        })
+        category:update({
+          category_groups_count = db.raw("category_groups_count - 1")
+        }, {
+          timestamp = false
         })
         return true
       end
