@@ -33,7 +33,7 @@ do
       if self.hidden then
         return false
       end
-      local _exp_0 = self.__class.membership_types[self.membership_type]
+      local _exp_0 = self.__class.membership_types[self:get_membership_type()]
       if "public" == _exp_0 then
         local _ = nil
       elseif "members_only" == _exp_0 then
@@ -216,6 +216,18 @@ do
       end
       return ranges
     end,
+    get_voting_type = function(self)
+      do
+        local t = self.voting_type
+        if t then
+          return t
+        elseif self.parent_category_id then
+          return self:get_parent_category():get_voting_type()
+        else
+          return self.__class.voting_types[self.__class.default_voting_type]
+        end
+      end
+    end,
     available_vote_types = function(self)
       local _exp_0 = self.voting_type
       if self.__class.voting_types.up_down == _exp_0 then
@@ -229,6 +241,18 @@ do
         }
       else
         return { }
+      end
+    end,
+    get_membership_type = function(self)
+      do
+        local t = self.membership_type
+        if t then
+          return t
+        elseif self.parent_category_id then
+          return self:get_parent_category():get_membership_type()
+        else
+          return self.__class.membership_types[self.__class.default_membership_type]
+        end
       end
     end,
     refresh_last_topic = function(self)
@@ -283,6 +307,9 @@ do
         }
       end
     end,
+    get_parent_category = function(self)
+      return self:get_ancestors()[1]
+    end,
     get_ancestors = function(self)
       if not (self.parent_category_id) then
         return { }
@@ -331,10 +358,12 @@ do
   _base_0.__class = _class_0
   local self = _class_0
   self.timestamp = true
+  self.default_membership_type = "public"
   self.membership_types = enum({
     public = 1,
     members_only = 2
   })
+  self.default_voting_type = "up_down"
   self.voting_types = enum({
     up_down = 1,
     up = 2,
@@ -367,10 +396,15 @@ do
     if opts == nil then
       opts = { }
     end
-    assert(opts.title, "missing title")
-    opts.membership_type = self.membership_types:for_db(opts.membership_type or "public")
-    opts.voting_type = self.voting_types:for_db(opts.voting_type or "up_down")
-    opts.slug = opts.slug or slugify(opts.title)
+    if opts.membership_type then
+      opts.membership_type = self.membership_types:for_db(opts.membership_type)
+    end
+    if opts.voting_type then
+      opts.voting_type = self.voting_types:for_db(opts.voting_type)
+    end
+    if opts.title then
+      opts.slug = opts.slug or slugify(opts.title)
+    end
     return Model.create(self, opts)
   end
   self.preload_last_topics = function(self, categories)

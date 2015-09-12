@@ -33,11 +33,13 @@ import slugify from require "lapis.util"
 class Categories extends Model
   @timestamp: true
 
+  @default_membership_type: "public"
   @membership_types: enum {
     public: 1
     members_only: 2
   }
 
+  @default_voting_type: "up_down"
   @voting_types: enum {
     up_down: 1
     up: 2
@@ -55,10 +57,14 @@ class Categories extends Model
   }
 
   @create: (opts={}) =>
-    assert opts.title, "missing title"
-    opts.membership_type = @membership_types\for_db opts.membership_type or "public"
-    opts.voting_type = @voting_types\for_db opts.voting_type or "up_down"
-    opts.slug or= slugify opts.title
+    if opts.membership_type
+      opts.membership_type = @membership_types\for_db opts.membership_type
+
+    if opts.voting_type
+      opts.voting_type = @voting_types\for_db opts.voting_type
+
+    if opts.title
+      opts.slug or= slugify opts.title
 
     Model.create @, opts
 
@@ -82,7 +88,7 @@ class Categories extends Model
   allowed_to_view: (user) =>
     return false if @hidden
 
-    switch @@membership_types[@membership_type]
+    switch @@membership_types[@get_membership_type!]
       when "public"
         nil
       when "members_only"
@@ -210,6 +216,14 @@ class Categories extends Model
 
     ranges
 
+  get_voting_type: =>
+    if t = @voting_type
+      t
+    elseif @parent_category_id
+      @get_parent_category!\get_voting_type!
+    else
+      @@voting_types[@@default_voting_type]
+
   available_vote_types: =>
     switch @voting_type
       when @@voting_types.up_down
@@ -218,6 +232,14 @@ class Categories extends Model
         { up: true }
       else
         {}
+
+  get_membership_type: =>
+    if t = @membership_type
+      t
+    elseif @parent_category_id
+      @get_parent_category!\get_membership_type!
+    else
+      @@membership_types[@@default_membership_type]
 
   refresh_last_topic: =>
     import Topics from require "community.models"
@@ -262,6 +284,9 @@ class Categories extends Model
       ids
     else
       { @id }
+
+  get_parent_category: =>
+    @get_ancestors![1]
 
   get_ancestors: =>
     return {} unless @parent_category_id

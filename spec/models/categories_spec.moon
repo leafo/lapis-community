@@ -141,6 +141,12 @@ describe "categories", ->
 
       assert.same category.last_topic_id, topic.id
 
+    it "gets voting type", ->
+      assert.same Categories.voting_types.up_down, category\get_voting_type!
+
+    it "gets membership_type type", ->
+      assert.same Categories.membership_types.public, category\get_membership_type!
+
     describe "ancestors", ->
       it "gets ancestors with no ancestors", ->
         assert.same {}, category\get_ancestors!
@@ -194,6 +200,22 @@ describe "categories", ->
 
           found = deep\find_member user, accepted: true
           assert.same found.user_id, user.id
+
+        it "gets default voting type", ->
+          assert.same Categories.voting_types.up_down, category\get_voting_type!
+
+        it "gets default membership_type type", ->
+          assert.same Categories.membership_types.public, category\get_membership_type!
+
+        it "gets ancestor voting type", ->
+          category\update voting_type: Categories.voting_types.disabled
+          mid\update voting_type: Categories.voting_types.up
+          assert.same Categories.voting_types.up, deep\get_voting_type!
+
+        it "gets ancestor membership type", ->
+          category\update membership_type: Categories.membership_types.public
+          mid\update membership_type: Categories.membership_types.members_only
+          assert.same Categories.membership_types.members_only, deep\get_membership_type!
 
     describe "get_order_ranges", ->
       it "gets empty order range", ->

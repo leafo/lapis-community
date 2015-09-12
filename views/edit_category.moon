@@ -30,12 +30,12 @@ class EditCategory extends require "widgets.base"
 
       @radio_buttons "category[membership_type]",
         Categories.membership_types,
-        @category and @category.membership_type
+        @category and @category\get_membership_type!
 
       strong "Voting type"
       @radio_buttons "category[voting_type]",
         Categories.voting_types,
-        @category and @category.voting_type
+        @category and @category\get_voting_type!
 
       button ->
         if @editing
