@@ -113,6 +113,7 @@ class TopicsFlow extends Flow
   delete_topic: require_login =>
     @load_topic!
     assert_error @topic\allowed_to_edit(@current_user), "not allowed to edit"
+    assert_error not @topic.permanent, "can't delete permanent topic"
 
     if @topic\delete!
       ActivityLogs\create {

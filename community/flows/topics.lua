@@ -122,6 +122,7 @@ do
     delete_topic = require_login(function(self)
       self:load_topic()
       assert_error(self.topic:allowed_to_edit(self.current_user), "not allowed to edit")
+      assert_error(not self.topic.permanent, "can't delete permanent topic")
       if self.topic:delete() then
         ActivityLogs:create({
           user_id = self.current_user.id,
