@@ -99,11 +99,12 @@ do
         return true
       end
       do
-        local mod = self:find_moderator(user)
+        local mod = self:find_moderator(user, {
+          accepted = true,
+          admin = true
+        })
         if mod then
-          if mod.accepted and mod.admin then
-            return true
-          end
+          return true
         end
       end
       return false
@@ -128,11 +129,11 @@ do
         return true
       end
       do
-        local mod = self:find_moderator(user)
+        local mod = self:find_moderator(user, {
+          accepted = true
+        })
         if mod then
-          if mod.accepted then
-            return true
-          end
+          return true
         end
       end
       do
@@ -145,17 +146,23 @@ do
       end
       return false
     end,
-    find_moderator = function(self, user)
+    find_moderator = function(self, user, clause)
       if not (user) then
         return nil
       end
       local Moderators
       Moderators = require("community.models").Moderators
-      return Moderators:find({
+      local opts = {
         object_type = Moderators.object_types.category,
-        object_id = self.id,
+        object_id = self.parent_category_id and db.list(self:get_category_ids()) or self.id,
         user_id = user.id
-      })
+      }
+      if clause then
+        for k, v in pairs(clause) do
+          opts[k] = v
+        end
+      end
+      return Moderators:find(opts)
     end,
     is_member = function(self, user)
       local member = self:find_member(user)
@@ -242,6 +249,28 @@ do
       return {
         self:get_user()
       }
+    end,
+    get_category_ids = function(self)
+      if self.parent_category_id then
+        return {
+          self.id,
+          unpack((function()
+            local _accum_0 = { }
+            local _len_0 = 1
+            local _list_0 = self:get_ancestors()
+            for _index_0 = 1, #_list_0 do
+              local c = _list_0[_index_0]
+              _accum_0[_len_0] = c.id
+              _len_0 = _len_0 + 1
+            end
+            return _accum_0
+          end)())
+        }
+      else
+        return {
+          self.id
+        }
+      end
     end,
     get_ancestors = function(self)
       if not (self.parent_category_id) then

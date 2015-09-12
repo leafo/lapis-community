@@ -145,10 +145,19 @@ describe "categories", ->
       it "gets ancestors with no ancestors", ->
         assert.same {}, category\get_ancestors!
 
-      it "gets ancestors with ancestors", ->
-        mid = factory.Categories parent_category_id: category.id
-        deep = factory.Categories parent_category_id: mid.id
-        assert.same {mid.id, category.id}, [c.id for c in *deep\get_ancestors!]
+      describe "with hierarchy", ->
+        local mid, deep
+        before_each ->
+          mid = factory.Categories parent_category_id: category.id
+          deep = factory.Categories parent_category_id: mid.id
+
+        it "gets ancestors with ancestors", ->
+          assert.same {mid.id, category.id}, [c.id for c in *deep\get_ancestors!]
+
+        it "searches ancestors for moderators", ->
+          user = factory.Users!
+          mod = deep\find_moderator user, accepted: true, admin: true
+          assert.same nil, mod
 
     describe "get_order_ranges", ->
       it "gets empty order range", ->

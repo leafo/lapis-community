@@ -118,8 +118,8 @@ class Categories extends Model
     return nil unless user
     return true if user\is_admin!
     return true if user.id == @user_id
-    if mod = @find_moderator user
-      return true if mod.accepted and mod.admin
+    if mod = @find_moderator user, accepted: true, admin: true
+      return true
 
     false
 
@@ -132,29 +132,37 @@ class Categories extends Model
     return true if not ignore_admin and user\is_admin!
     return true if user.id == @user_id
 
-    if mod = @find_moderator user
-      return true if mod.accepted
+    if mod = @find_moderator user, accepted: true
+      return true
 
     if group = @get_category_group!
       return true if group\allowed_to_moderate user
 
     false
 
-  find_moderator: (user) =>
+  find_moderator: (user, clause) =>
     return nil unless user
 
     import Moderators from require "community.models"
-    Moderators\find {
+
+    opts = {
       object_type: Moderators.object_types.category
-      object_id: @id
+      object_id: @parent_category_id and db.list(@get_category_ids!) or @id
       user_id: user.id
     }
+
+    if clause
+      for k,v in pairs clause
+        opts[k] = v
+
+    Moderators\find opts
 
   is_member: (user) =>
     member = @find_member user
     member and member.accepted
 
   find_member: (user) =>
+    -- TODO: make this hierarchy aware
     return nil unless user
     import CategoryMembers from require "community.models"
 
@@ -234,6 +242,12 @@ class Categories extends Model
 
   notification_target_users: =>
     { @get_user! }
+
+  get_category_ids: =>
+    if @parent_category_id
+      { @id, unpack [c.id for c in *@get_ancestors!] }
+    else
+      { @id }
 
   get_ancestors: =>
     return {} unless @parent_category_id

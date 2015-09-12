@@ -1,3 +1,13 @@
+# category ancestors
+
+Moderators should be ancestor aware
+Members should be ancestor aware
+Bans should be ancestor aware
+
+Membership type and votiing type should be nullable to take ancestor's value
+
+add category_group_count to categories so we can avoid fetching group if it doesn't exist
+
 # Core
 
 * callbacks
