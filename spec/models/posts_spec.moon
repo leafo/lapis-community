@@ -246,10 +246,7 @@ describe "posts", ->
       group = factory.CategoryGroups user_id: category_group_user.id
       category = factory.Categories!
 
-      CategoryGroupCategories\create {
-        category_id: category.id
-        category_group_id: group.id
-      }
+      group\add_category category
 
       topic = factory.Topics category_id: category.id
       post = factory.Posts topic_id: topic.id, user_id: topic.user_id

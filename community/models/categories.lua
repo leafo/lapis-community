@@ -10,6 +10,9 @@ do
   local _parent_0 = Model
   local _base_0 = {
     get_category_group = function(self)
+      if not (self.category_groups_count and self.category_groups_count > 0) then
+        return 
+      end
       do
         local cgc = self:get_category_group_category()
         if cgc then

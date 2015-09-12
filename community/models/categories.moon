@@ -75,6 +75,8 @@ class Categories extends Model
     }
 
   get_category_group: =>
+    return unless @category_groups_count and @category_groups_count > 0
+    -- TODO: this doesn't support multiple
     if cgc = @get_category_group_category!
       cgc\get_category_group!
 

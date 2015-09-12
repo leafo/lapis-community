@@ -1,7 +1,5 @@
 # category ancestors
 
-Membership type and votiing type should be nullable to take ancestor's value
-
 # Core
 
 * callbacks
