@@ -1,7 +1,7 @@
 db = require "lapis.db.postgres"
 schema = require "lapis.db.schema"
 
-import create_table, create_index, drop_table from schema
+import create_table, create_index, drop_table, add_column from schema
 {prefix_table: T} = require "community.model"
 
 {
@@ -14,8 +14,8 @@ import create_table, create_index, drop_table from schema
   :boolean
   :numeric
   :double
+  :enum
 } = schema.types
-
 
 {
   [1]: ->
@@ -366,4 +366,24 @@ import create_table, create_index, drop_table from schema
     }
 
     create_index T"activity_logs", "user_id", "id"
+
+  [2]: ->
+    db.query "alter table #{T"categories"}
+      alter column membership_type drop default,
+      alter column voting_type drop default,
+
+      alter column membership_type drop not null,
+      alter column voting_type drop not null,
+
+      alter column title drop not null,
+      alter column slug drop not null
+    "
+
+    add_column T"categories", "category_groups_count", integer
+    db.update T"categories", {
+      category_groups_count: db.raw "(
+        select count(*) from #{T"category_group_categories"}
+        where category_id = id
+      )"
+    }
 }

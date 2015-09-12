@@ -180,5 +180,6 @@ return {
   Blocks = Blocks,
   Bans = Bans,
   CategoryGroups = CategoryGroups,
-  Bookmarks = Bookmarks
+  Bookmarks = Bookmarks,
+  CommunityUsers = CommunityUsers
 }

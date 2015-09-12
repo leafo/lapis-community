@@ -116,4 +116,5 @@ Bookmarks = (opts={}) ->
 
 { :next_counter, :next_email,
   :Categories, :Topics, :Posts, :Votes, :Moderators, :PostReports,
-  :CategoryMembers, :Blocks, :Bans, :CategoryGroups, :Bookmarks }
+  :CategoryMembers, :Blocks, :Bans, :CategoryGroups, :Bookmarks,
+  :CommunityUsers }

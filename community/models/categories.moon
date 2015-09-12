@@ -8,8 +8,8 @@ import slugify from require "lapis.util"
 --
 -- CREATE TABLE community_categories (
 --   id integer NOT NULL,
---   title character varying(255) NOT NULL,
---   slug character varying(255) NOT NULL,
+--   title character varying(255),
+--   slug character varying(255),
 --   user_id integer,
 --   parent_category_id integer,
 --   last_topic_id integer,
@@ -19,8 +19,8 @@ import slugify from require "lapis.util"
 --   short_description text,
 --   description text,
 --   rules text,
---   membership_type integer DEFAULT 0 NOT NULL,
---   voting_type integer DEFAULT 0 NOT NULL,
+--   membership_type integer,
+--   voting_type integer,
 --   archived boolean DEFAULT false NOT NULL,
 --   hidden boolean DEFAULT false NOT NULL,
 --   created_at timestamp without time zone NOT NULL,

@@ -1,13 +1,13 @@
 local db = require("lapis.db.postgres")
 local schema = require("lapis.db.schema")
-local create_table, create_index, drop_table
-create_table, create_index, drop_table = schema.create_table, schema.create_index, schema.drop_table
+local create_table, create_index, drop_table, add_column
+create_table, create_index, drop_table, add_column = schema.create_table, schema.create_index, schema.drop_table, schema.add_column
 local T
 T = require("community.model").prefix_table
-local serial, varchar, text, time, integer, foreign_key, boolean, numeric, double
+local serial, varchar, text, time, integer, foreign_key, boolean, numeric, double, enum
 do
   local _obj_0 = schema.types
-  serial, varchar, text, time, integer, foreign_key, boolean, numeric, double = _obj_0.serial, _obj_0.varchar, _obj_0.text, _obj_0.time, _obj_0.integer, _obj_0.foreign_key, _obj_0.boolean, _obj_0.numeric, _obj_0.double
+  serial, varchar, text, time, integer, foreign_key, boolean, numeric, double, enum = _obj_0.serial, _obj_0.varchar, _obj_0.text, _obj_0.time, _obj_0.integer, _obj_0.foreign_key, _obj_0.boolean, _obj_0.numeric, _obj_0.double, _obj_0.enum
 end
 return {
   [1] = function()
@@ -792,5 +792,12 @@ return {
       "PRIMARY KEY (id)"
     })
     return create_index(T("activity_logs"), "user_id", "id")
+  end,
+  [2] = function()
+    db.query("alter table " .. tostring(T("categories")) .. "\n      alter column membership_type drop default,\n      alter column voting_type drop default,\n\n      alter column membership_type drop not null,\n      alter column voting_type drop not null,\n\n      alter column title drop not null,\n      alter column slug drop not null\n    ")
+    add_column(T("categories"), "category_groups_count", integer)
+    return db.update(T("categories"), {
+      category_groups_count = db.raw("(\n        select count(*) from " .. tostring(T("category_group_categories")) .. "\n        where category_id = id\n      )")
+    })
   end
 }
