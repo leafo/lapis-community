@@ -174,7 +174,12 @@ class Categories extends Model
   find_ban: (user) =>
     return nil unless user
     import Bans from require "community.models"
-    Bans\find_for_object @, user
+
+    Bans\find {
+      object_type: Bans.object_types.category
+      object_id: @parent_category_id and db.list(@get_category_ids!) or @id
+      banned_user_id: user.id
+    }
 
   get_order_ranges: =>
     import Topics from require "community.models"

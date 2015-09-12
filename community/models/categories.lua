@@ -185,7 +185,11 @@ do
       end
       local Bans
       Bans = require("community.models").Bans
-      return Bans:find_for_object(self, user)
+      return Bans:find({
+        object_type = Bans.object_types.category,
+        object_id = self.parent_category_id and db.list(self:get_category_ids()) or self.id,
+        banned_user_id = user.id
+      })
     end,
     get_order_ranges = function(self)
       local Topics
