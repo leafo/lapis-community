@@ -439,23 +439,35 @@ do
       end
       local ranges = self.category:get_order_ranges()
       local min, max = ranges.regular.min, ranges.regular.max
+      local next_after
       do
         local t = self.topics[1]
         if t then
-          self.after = t.category_order
+          next_after = t.category_order
         end
       end
-      if max and self.after and self.after >= max then
-        self.after = nil
+      if max and next_after and next_after >= max then
+        next_after = nil
       end
+      local next_before
       do
         local t = self.topics[#self.topics]
         if t then
-          self.before = t.category_order
+          next_before = t.category_order
         end
       end
-      if min and self.before and self.before <= min then
-        self.before = nil
+      if min and next_before and next_before <= min then
+        next_before = nil
+      end
+      if next_before then
+        self.next_page = {
+          before = next_before
+        }
+      end
+      if next_after then
+        self.prev_page = {
+          after = next_after
+        }
       end
       return self.topics
     end,

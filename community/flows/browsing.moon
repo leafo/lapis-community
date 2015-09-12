@@ -260,15 +260,18 @@ class BrowsingFlow extends Flow
     ranges = @category\get_order_ranges!
     min, max = ranges.regular.min, ranges.regular.max
 
-    @after = if t = @topics[1]
+    next_after = if t = @topics[1]
       t.category_order
 
-    @after = nil if max and @after and @after >= max
+    next_after = nil if max and next_after and next_after >= max
 
-    @before = if t = @topics[#@topics]
+    next_before = if t = @topics[#@topics]
       t.category_order
 
-    @before = nil if min and @before and @before <= min
+    next_before = nil if min and next_before and next_before <= min
+
+    @next_page = { before: next_before } if next_before
+    @prev_page = { after: next_after } if next_after
 
     @topics
 

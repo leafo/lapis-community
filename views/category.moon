@@ -88,21 +88,17 @@ class Category extends require "widgets.base"
     p ->
       cat_opts = {category_id: @category.id }
 
-      if @before
+      if @next_page
         a {
-          href: @url_for "category", cat_opts, {
-            before: @before
-          }
+          href: @url_for "category", cat_opts, @next_page
           "Next page"
         }
 
         text " "
 
-      if @after
+      if @prev_page
         a {
-          href: @url_for "category", cat_opts, {
-            after: @after
-          }
+          href: @url_for "category", cat_opts, @prev_page
           "Previous page"
         }
 
@@ -114,6 +110,4 @@ class Category extends require "widgets.base"
         }
 
         text " "
-
-
 
