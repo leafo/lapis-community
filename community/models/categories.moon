@@ -227,7 +227,7 @@ class Categories extends Model
       @@voting_types[@@default_voting_type]
 
   available_vote_types: =>
-    switch @voting_type
+    switch @get_voting_type!
       when @@voting_types.up_down
         { up: true, down: true }
       when @@voting_types.up

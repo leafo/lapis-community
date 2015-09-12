@@ -232,7 +232,7 @@ do
       end
     end,
     available_vote_types = function(self)
-      local _exp_0 = self.voting_type
+      local _exp_0 = self:get_voting_type()
       if self.__class.voting_types.up_down == _exp_0 then
         return {
           up = true,
