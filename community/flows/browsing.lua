@@ -166,9 +166,12 @@ do
         }
       })
     end,
-    topic_posts = function(self, mark_seen)
+    topic_posts = function(self, mark_seen, order)
       if mark_seen == nil then
         mark_seen = true
+      end
+      if order == nil then
+        order = "asc"
       end
       local TopicsFlow = require("community.flows.topics")
       TopicsFlow(self):load_topic()
@@ -200,37 +203,99 @@ do
           end
         end)()
       })
-      if before then
-        self.posts = pager:before(before)
-        do
-          local _accum_0 = { }
-          local _len_0 = 1
-          for i = #self.posts, 1, -1 do
-            _accum_0[_len_0] = self.posts[i]
-            _len_0 = _len_0 + 1
+      local _exp_0 = order
+      if "asc" == _exp_0 then
+        if before then
+          self.posts = pager:before(before)
+          do
+            local _accum_0 = { }
+            local _len_0 = 1
+            for i = #self.posts, 1, -1 do
+              _accum_0[_len_0] = self.posts[i]
+              _len_0 = _len_0 + 1
+            end
+            self.posts = _accum_0
           end
-          self.posts = _accum_0
+        else
+          self.posts = pager:after(after)
+        end
+        local next_after
+        do
+          local p = self.posts[#self.posts]
+          if p then
+            next_after = p.post_number
+          end
+        end
+        if next_after == self.topic.root_posts_count then
+          next_after = nil
+        end
+        local next_before
+        do
+          local p = self.posts[1]
+          if p then
+            next_before = p.post_number
+          end
+        end
+        if next_before == 1 then
+          next_before = nil
+        end
+        if next_after then
+          self.next_page = {
+            after = next_after
+          }
+        end
+        if next_before then
+          self.prev_page = {
+            before = next_before
+          }
+        end
+      elseif "desc" == _exp_0 then
+        if after then
+          self.posts = pager:after(after)
+          do
+            local _accum_0 = { }
+            local _len_0 = 1
+            for i = #self.posts, 1, -1 do
+              _accum_0[_len_0] = self.posts[i]
+              _len_0 = _len_0 + 1
+            end
+            self.posts = _accum_0
+          end
+        else
+          self.posts = pager:before(before)
+        end
+        local next_before
+        do
+          local p = self.posts[#self.posts]
+          if p then
+            next_before = p.post_number
+          end
+        end
+        if next_before == 1 then
+          next_before = nil
+        end
+        local next_after
+        do
+          local p = self.posts[1]
+          if p then
+            next_after = p.post_number
+          end
+        end
+        if next_after == self.topic.root_posts_count then
+          next_after = nil
+        end
+        if next_before then
+          self.next_page = {
+            before = next_before
+          }
+        end
+        if next_after then
+          self.prev_page = {
+            after = next_after
+          }
         end
       else
-        self.posts = pager:after(after)
-      end
-      do
-        local p = self.posts[#self.posts]
-        if p then
-          self.after = p.post_number
-        end
-      end
-      if self.after == self.topic.root_posts_count then
-        self.after = nil
-      end
-      do
-        local p = self.posts[1]
-        if p then
-          self.before = p.post_number
-        end
-      end
-      if self.before == 1 then
-        self.before = nil
+        error("unknown order: " .. tostring(order))
       end
       if mark_seen and self.current_user then
         local UserTopicLastSeens

@@ -60,21 +60,17 @@ class Topic extends require "widgets.base"
   pagination: =>
     topic_opts = { topic_id: @topic.id }
 
-    if @after
+    if @next_page
       a {
-        href: @url_for "topic", topic_opts, {
-          after: @after
-        }
+        href: @url_for "topic", topic_opts, @next_page
         "Next page"
       }
 
     text " "
 
-    if @before
+    if @prev_page
       a {
-        href: @url_for "topic", topic_opts, {
-          before: @before
-        }
+        href: @url_for "topic", topic_opts, @prev_page
         "Previous page"
       }
 

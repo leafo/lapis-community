@@ -94,7 +94,7 @@ class BrowsingFlow extends Flow
       }
     }
 
-  topic_posts: (mark_seen=true) =>
+  topic_posts: (mark_seen=true, order="asc") =>
     TopicsFlow = require "community.flows.topics"
     TopicsFlow(@)\load_topic!
     assert_error @topic\allowed_to_view(@current_user), "not allowed to view"
@@ -119,22 +119,50 @@ class BrowsingFlow extends Flow
       prepare_results: @\preload_posts
     }
 
-    if before
-      @posts = pager\before before
-      -- reverse it
-      @posts = [@posts[i] for i=#@posts,1,-1]
-    else
-      @posts = pager\after after
+    switch order
+      when "asc"
+        if before
+          @posts = pager\before before
+          -- reverse it
+          @posts = [@posts[i] for i=#@posts,1,-1]
+        else
+          @posts = pager\after after
 
-    @after = if p = @posts[#@posts]
-      p.post_number
+        next_after = if p = @posts[#@posts]
+          p.post_number
 
-    @after = nil if @after == @topic.root_posts_count
+        next_after = nil if next_after == @topic.root_posts_count
 
-    @before = if p = @posts[1]
-      p.post_number
+        next_before = if p = @posts[1]
+          p.post_number
 
-    @before = nil if @before == 1
+        next_before = nil if next_before == 1
+
+        @next_page = { after: next_after } if next_after
+        @prev_page = { before: next_before } if next_before
+
+      when "desc"
+        if after
+          @posts = pager\after after
+          @posts = [@posts[i] for i=#@posts,1,-1]
+        else
+          @posts = pager\before before
+
+        next_before = if p = @posts[#@posts]
+          p.post_number
+
+
+        next_before = nil if next_before == 1
+
+        next_after = if p = @posts[1]
+          p.post_number
+
+        next_after = nil if next_after == @topic.root_posts_count
+
+        @next_page = { before: next_before } if next_before
+        @prev_page = { after: next_after } if next_after
+      else
+        error "unknown order: #{order}"
 
     if mark_seen and @current_user
       import UserTopicLastSeens from require "community.models"

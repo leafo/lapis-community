@@ -27,7 +27,7 @@ class BrowsingApp extends TestApp
     }
 
   "/topic-posts": capture_errors_json =>
-    @flow\topic_posts!
+    @flow\topic_posts nil, @params.order
     json: {
       success: true
       posts: @posts
@@ -63,15 +63,30 @@ describe "browsing flow", ->
           assert.truthy res.errors
           assert.same {"topic_id must be an integer"}, res.errors
 
-        it "should get some posts", ->
+        it "get all posts in topic", ->
           topic = factory.Topics!
-          for i=1,3
+          posts = for i=1,3
             post = factory.Posts topic_id: topic.id
             topic\increment_from_post post
+            post
 
           res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
           assert.truthy res.success
           assert.same 3, #res.posts
+          assert.same [p.id for p in *posts], [p.id for p in *res.posts]
+
+
+        it "gets posts in reverse", ->
+          topic = factory.Topics!
+          posts = for i=1,3
+            post = factory.Posts topic_id: topic.id
+            topic\increment_from_post post
+            post
+
+          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id, order: "desc"
+          assert.truthy res.success
+          assert.same 3, #res.posts
+          assert.same [posts[i].id for i=#posts,1,-1], [p.id for p in *res.posts]
 
         it "should get paginated posts with after", ->
           topic = factory.Topics!
