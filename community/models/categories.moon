@@ -107,7 +107,7 @@ class Categories extends Model
     return false unless user
     return true if direction == "remove"
 
-    switch @voting_type
+    switch @get_voting_type!
       when @@voting_types.up_down
         true
       when @@voting_types.up

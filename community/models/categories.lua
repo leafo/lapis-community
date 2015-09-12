@@ -67,7 +67,7 @@ do
       if direction == "remove" then
         return true
       end
-      local _exp_0 = self.voting_type
+      local _exp_0 = self:get_voting_type()
       if self.__class.voting_types.up_down == _exp_0 then
         return true
       elseif self.__class.voting_types.up == _exp_0 then
