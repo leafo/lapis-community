@@ -158,18 +158,24 @@ class Categories extends Model
     Moderators\find opts
 
   is_member: (user) =>
-    member = @find_member user
-    member and member.accepted
+    @find_member user, accepted: true
 
-  find_member: (user) =>
-    -- TODO: make this hierarchy aware
+  find_member: (user, clause) =>
     return nil unless user
     import CategoryMembers from require "community.models"
 
-    CategoryMembers\find {
-      category_id: @id
+    opts = {
+      category_id: @parent_category_id and db.list(@get_category_ids!) or @id
       user_id: user.id
     }
+
+    if clause
+      for k,v in pairs clause
+        opts[k] = v
+
+    -- TODO: this returns a random category object, might want to make it
+    -- return the closest category in tree
+    CategoryMembers\find opts
 
   find_ban: (user) =>
     return nil unless user

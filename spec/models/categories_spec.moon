@@ -169,10 +169,9 @@ describe "categories", ->
           found_mod = deep\find_moderator user, accepted: true, admin: true
           assert.same mod.id, found_mod.id
 
-        it "searches ancestors for bans #ddd", ->
+        it "searches ancestors for bans", ->
           user = factory.Users!
-          ban = deep\find_ban user
-          assert.same nil, mod
+          assert.same nil, (deep\find_ban user)
 
           ban = factory.Bans {
             object: mid
@@ -182,6 +181,19 @@ describe "categories", ->
           found = deep\find_ban user
           assert.same {ban.object_type, ban.object_id},
             {found.object_type, found.object_id}
+
+        it "searches ancestors for members", ->
+          user = factory.Users!
+          assert.same nil, (deep\find_member user)
+
+          member = factory.CategoryMembers {
+            category_id: category.id
+            user_id: user.id
+            accepted: true
+          }
+
+          found = deep\find_member user, accepted: true
+          assert.same found.user_id, user.id
 
     describe "get_order_ranges", ->
       it "gets empty order range", ->

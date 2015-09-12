@@ -165,19 +165,26 @@ do
       return Moderators:find(opts)
     end,
     is_member = function(self, user)
-      local member = self:find_member(user)
-      return member and member.accepted
+      return self:find_member(user, {
+        accepted = true
+      })
     end,
-    find_member = function(self, user)
+    find_member = function(self, user, clause)
       if not (user) then
         return nil
       end
       local CategoryMembers
       CategoryMembers = require("community.models").CategoryMembers
-      return CategoryMembers:find({
-        category_id = self.id,
+      local opts = {
+        category_id = self.parent_category_id and db.list(self:get_category_ids()) or self.id,
         user_id = user.id
-      })
+      }
+      if clause then
+        for k, v in pairs(clause) do
+          opts[k] = v
+        end
+      end
+      return CategoryMembers:find(opts)
     end,
     find_ban = function(self, user)
       if not (user) then
