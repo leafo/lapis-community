@@ -31,8 +31,8 @@ class BrowsingApp extends TestApp
     json: {
       success: true
       posts: @posts
-      before: @before
-      after: @after
+      next_page: @next_page
+      prev_page: @prev_page
     }
 
   "/category-topics": capture_errors_json =>
@@ -40,8 +40,8 @@ class BrowsingApp extends TestApp
     json: {
       success: true
       topics: @topics
-      before: @before
-      after: @after
+      next_page: @next_page
+      prev_page: @prev_page
     }
 
 describe "browsing flow", ->
@@ -97,7 +97,9 @@ describe "browsing flow", ->
           res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id, after: 1
           assert.truthy res.success
           assert.same 2, #res.posts
-          assert.same 2, res.before
+
+          -- empty since it's first page
+          assert.same {}, res.prev_page
 
         it "should get paginated posts with before", ->
           topic = factory.Topics!
@@ -118,25 +120,31 @@ describe "browsing flow", ->
             topic\increment_from_post p
 
           res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
-          assert.falsy res.after
-          assert.falsy res.before
+
+          assert.falsy res.next_page
+          assert.falsy res.prev_page
 
           -- one more to push it over the limit
           p = factory.Posts topic_id: topic.id
           topic\increment_from_post p
 
           res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
-          assert.same 20, res.after
-          assert.falsy res.before
+          assert.same { after: 20 }, res.next_page
+          assert.falsy res.prev_page
 
 
           for i=1,3
             p = factory.Posts topic_id: topic.id
             topic\increment_from_post p
 
-          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id, after: res.after
-          assert.same 21, res.before
-          assert.falsy res.after
+          res = BrowsingApp\get current_user, "/topic-posts", {
+            topic_id: topic.id
+            after: res.next_page.after
+          }
+
+          assert.same {}, res.prev_page
+          assert.nil res.next_page
+
           assert.same 4, #res.posts
 
 
@@ -194,8 +202,8 @@ describe "browsing flow", ->
 
           assert.truthy res.success
           assert.same 4, #res.topics
-          assert.falsy res.before
-          assert.falsy res.after
+          assert.falsy res.next_page
+          assert.falsy res.prev_page
 
         it "sets pagination for category", ->
           category = factory.Categories!
@@ -209,18 +217,18 @@ describe "browsing flow", ->
 
           assert.truthy res.success
           assert.same 20, #res.topics
-          assert.same 2, res.before
-          assert.falsy res.after
+          assert.same {before: 2}, res.next_page
+          assert.same nil, res.prev_page
 
           res = BrowsingApp\get current_user, "/category-topics", {
             category_id: category.id
-            before: res.before
+            before: res.next_page.before
           }
 
           assert.truthy res.success
           assert.same 1, #res.topics
-          assert.same nil, res.before
-          assert.same 1, res.after
+          assert.same nil, res.next_page
+          assert.same {after: 1}, res.prev_page
 
       describe "post", ->
         it "gets post with no nested content", ->
