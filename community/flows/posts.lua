@@ -121,6 +121,7 @@ do
         }
       })
       assert_error(not is_empty_html(post_update.body), "body must be provided")
+      local edited
       if self.post.body ~= post_update.body then
         PostEdits:create({
           user_id = self.current_user.id,
@@ -133,6 +134,7 @@ do
           edits_count = db.raw("edits_count + 1"),
           last_edited_at = db.format_date()
         })
+        edited = true
       end
       if self.post:is_topic_post() and not self.topic.permanent then
         assert_valid(post_update, {
@@ -149,11 +151,13 @@ do
           })
         end
       end
-      ActivityLogs:create({
-        user_id = self.current_user.id,
-        object = self.post,
-        action = "edit"
-      })
+      if edited then
+        ActivityLogs:create({
+          user_id = self.current_user.id,
+          object = self.post,
+          action = "edit"
+        })
+      end
       return true
     end),
     delete_post = require_login(function(self)

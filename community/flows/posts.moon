@@ -94,7 +94,7 @@ class PostsFlow extends Flow
     assert_error not is_empty_html(post_update.body), "body must be provided"
 
     -- only if the body is different
-    if @post.body != post_update.body
+    edited = if @post.body != post_update.body
       PostEdits\create {
         user_id: @current_user.id
         body_before: @post.body
@@ -108,6 +108,8 @@ class PostsFlow extends Flow
         last_edited_at: db.format_date!
       }
 
+      true
+
     if @post\is_topic_post! and not @topic.permanent
       assert_valid post_update, {
         {"title", optional: true, max_length: limits.MAX_TITLE_LEN}
@@ -119,11 +121,12 @@ class PostsFlow extends Flow
           slug: slugify post_update.title
         }
 
-    ActivityLogs\create {
-      user_id: @current_user.id
-      object: @post
-      action: "edit"
-    }
+    if edited
+      ActivityLogs\create {
+        user_id: @current_user.id
+        object: @post
+        action: "edit"
+      }
 
     true
 
