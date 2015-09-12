@@ -28,6 +28,31 @@ local filter_update
 filter_update = require("community.helpers.models").filter_update
 local limits = require("community.limits")
 local db = require("lapis.db")
+local VALIDATIONS = {
+  {
+    "title",
+    exists = true,
+    max_length = limits.MAX_TITLE_LEN
+  },
+  {
+    "short_description",
+    optional = true,
+    max_length = limits.MAX_TITLE_LEN
+  },
+  {
+    "description",
+    optional = true,
+    max_length = limits.MAX_BODY_LEN
+  },
+  {
+    "membership_type",
+    one_of = Categories.membership_types
+  },
+  {
+    "voting_type",
+    one_of = Categories.voting_types
+  }
+}
 local CategoriesFlow
 do
   local _parent_0 = Flow
@@ -83,12 +108,21 @@ do
       self.moderation_logs = self.pager:get_page(self.page)
     end,
     validate_params = function(self)
+      self.params.category = self.params.category or { }
       assert_valid(self.params, {
         {
           "category",
           type = "table"
         }
       })
+      local has_field
+      do
+        local _tbl_0 = { }
+        for k in pairs(self.params.category) do
+          _tbl_0[k] = true
+        end
+        has_field = _tbl_0
+      end
       local category_params = trim_filter(self.params.category, {
         "title",
         "membership_type",
@@ -99,39 +133,42 @@ do
         "hidden",
         "rules"
       })
-      assert_valid(category_params, {
-        {
-          "title",
-          exists = true,
-          max_length = limits.MAX_TITLE_LEN
-        },
-        {
-          "short_description",
-          optional = true,
-          max_length = limits.MAX_TITLE_LEN
-        },
-        {
-          "description",
-          optional = true,
-          max_length = limits.MAX_BODY_LEN
-        },
-        {
-          "membership_type",
-          one_of = Categories.membership_types
-        },
-        {
-          "voting_type",
-          one_of = Categories.voting_types
-        }
-      })
-      category_params.archived = not not category_params.archived
-      category_params.hidden = not not category_params.hidden
-      category_params.membership_type = Categories.membership_types:for_db(category_params.membership_type)
-      category_params.voting_type = Categories.voting_types:for_db(category_params.voting_type)
-      category_params.slug = slugify(category_params.title)
-      category_params.description = category_params.description or db.NULL
-      category_params.short_description = category_params.short_description or db.NULL
-      category_params.rules = category_params.rules or db.NULL
+      assert_valid(category_params, (function()
+        local _accum_0 = { }
+        local _len_0 = 1
+        for _index_0 = 1, #VALIDATIONS do
+          local v = VALIDATIONS[_index_0]
+          if has_field[v] then
+            _accum_0[_len_0] = v
+            _len_0 = _len_0 + 1
+          end
+        end
+        return _accum_0
+      end)())
+      if has_field.archived or has_field.update_archived then
+        category_params.archived = not not category_params.archived
+      end
+      if has_field.hidden or has_field.update_hidden then
+        category_params.hidden = not not category_params.hidden
+      end
+      if has_field.membership_type then
+        category_params.membership_type = Categories.membership_types:for_db(category_params.membership_type)
+      end
+      if has_field.voting_type then
+        category_params.voting_type = Categories.voting_types:for_db(category_params.voting_type)
+      end
+      if has_field.title then
+        category_params.slug = slugify(category_params.title)
+      end
+      if has_field.description then
+        category_params.description = category_params.description or db.NULL
+      end
+      if has_field.short_description then
+        category_params.short_description = category_params.short_description or db.NULL
+      end
+      if has_field.rules then
+        category_params.rules = category_params.rules or db.NULL
+      end
       return category_params
     end,
     new_category = require_login(function(self)
@@ -151,11 +188,13 @@ do
       local update_params = self:validate_params()
       update_params = filter_update(self.category, update_params)
       self.category:update(update_params)
-      ActivityLogs:create({
-        user_id = self.current_user.id,
-        object = self.category,
-        action = "edit"
-      })
+      if next(update_params) then
+        ActivityLogs:create({
+          user_id = self.current_user.id,
+          object = self.category,
+          action = "edit"
+        })
+      end
       return true
     end)
   }

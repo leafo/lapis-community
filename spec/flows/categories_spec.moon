@@ -99,34 +99,54 @@ describe "categories", ->
     before_each ->
       category = factory.Categories user_id: current_user.id, description: "okay okay"
 
-    it "should edit category", ->
-      res = CategoryApp\get current_user, "/edit-category", {
-        category_id: category.id
-        "category[title]": "The good category"
-        "category[membership_type]": "members_only"
-        "category[voting_type]": "up"
-        "category[short_description]": "yeah yeah"
-        "category[archived]": "on"
-      }
+    describe "edit #ddd", ->
+      it "should edit category", ->
+        res = CategoryApp\get current_user, "/edit-category", {
+          category_id: category.id
+          "category[title]": "The good category"
+          "category[membership_type]": "members_only"
+          "category[voting_type]": "up"
+          "category[short_description]": "yeah yeah"
+          "category[archived]": "on"
+        }
 
-      assert.same {success: true}, res
-      category\refresh!
+        assert.same {success: true}, res
+        category\refresh!
 
-      assert.same "The good category", category.title
-      assert.same "yeah yeah", category.short_description
-      assert.falsy category.description
-      assert.truthy category.archived
-      assert.falsy category.hidden
+        assert.same "The good category", category.title
+        assert.same "yeah yeah", category.short_description
+        assert.same "okay okay", category.description
+        assert.truthy category.archived
+        assert.falsy category.hidden
 
-      assert.same Categories.membership_types.members_only, category.membership_type
-      assert.same Categories.voting_types.up, category.voting_type
+        assert.same Categories.membership_types.members_only, category.membership_type
+        assert.same Categories.voting_types.up, category.voting_type
 
-      assert.same 1, ActivityLogs\count!
-      log = unpack ActivityLogs\select!
-      assert.same current_user.id, log.user_id
-      assert.same category.id, log.object_id
-      assert.same ActivityLogs.object_types.category, log.object_type
-      assert.same "edit", log\action_name!
+        assert.same 1, ActivityLogs\count!
+        log = unpack ActivityLogs\select!
+        assert.same current_user.id, log.user_id
+        assert.same category.id, log.object_id
+        assert.same ActivityLogs.object_types.category, log.object_type
+        assert.same "edit", log\action_name!
+
+      it "should update partial", ->
+        category\update archived: true
+        res = CategoryApp\get current_user, "/edit-category", {
+          category_id: category.id
+          "category[update_archived]": "yes"
+        }
+
+        assert.same {success: true}, res
+        category\refresh!
+        assert.false category.hidden
+
+      it "should noop edit", ->
+        res = CategoryApp\get current_user, "/edit-category", {
+          category_id: category.id
+        }
+
+        assert.same {success: true}, res
+        assert.same 0, ActivityLogs\count!
 
     it "should not let unknown user edit category", ->
       other_user = factory.Users!

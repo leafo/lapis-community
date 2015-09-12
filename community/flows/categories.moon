@@ -14,6 +14,17 @@ limits = require "community.limits"
 
 db = require "lapis.db"
 
+VALIDATIONS = {
+  {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
+
+  {"short_description", optional: true, max_length: limits.MAX_TITLE_LEN}
+  {"description", optional: true, max_length: limits.MAX_BODY_LEN}
+
+  {"membership_type", one_of: Categories.membership_types}
+  {"voting_type", one_of: Categories.voting_types}
+}
+
+
 class CategoriesFlow extends Flow
   expose_assigns: true
 
@@ -64,9 +75,12 @@ class CategoriesFlow extends Flow
     @moderation_logs = @pager\get_page @page
 
   validate_params: =>
+    @params.category or= {}
     assert_valid @params, {
       {"category", type: "table"}
     }
+
+    has_field = {k, true for k in pairs @params.category}
 
     category_params = trim_filter @params.category, {
       "title"
@@ -79,26 +93,31 @@ class CategoriesFlow extends Flow
       "rules"
     }
 
-    assert_valid category_params, {
-      {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
+    assert_valid category_params, [v for v in *VALIDATIONS when has_field[v]]
 
-      {"short_description", optional: true, max_length: limits.MAX_TITLE_LEN}
-      {"description", optional: true, max_length: limits.MAX_BODY_LEN}
+    if has_field.archived or has_field.update_archived
+      category_params.archived = not not category_params.archived
 
-      {"membership_type", one_of: Categories.membership_types}
-      {"voting_type", one_of: Categories.voting_types}
-    }
+    if has_field.hidden or has_field.update_hidden
+      category_params.hidden = not not category_params.hidden
 
-    category_params.archived = not not category_params.archived
-    category_params.hidden = not not category_params.hidden
+    if has_field.membership_type
+      category_params.membership_type = Categories.membership_types\for_db category_params.membership_type
 
-    category_params.membership_type = Categories.membership_types\for_db category_params.membership_type
-    category_params.voting_type = Categories.voting_types\for_db category_params.voting_type
-    category_params.slug = slugify category_params.title
+    if has_field.voting_type
+      category_params.voting_type = Categories.voting_types\for_db category_params.voting_type
 
-    category_params.description or= db.NULL
-    category_params.short_description or= db.NULL
-    category_params.rules or= db.NULL
+    if has_field.title
+      category_params.slug = slugify category_params.title
+
+    if has_field.description
+      category_params.description or= db.NULL
+
+    if has_field.short_description
+      category_params.short_description or= db.NULL
+
+    if has_field.rules
+      category_params.rules or= db.NULL
 
     category_params
 
@@ -124,11 +143,12 @@ class CategoriesFlow extends Flow
 
     @category\update update_params
 
-    ActivityLogs\create {
-      user_id: @current_user.id
-      object: @category
-      action: "edit"
-    }
+    if next update_params
+      ActivityLogs\create {
+        user_id: @current_user.id
+        object: @category
+        action: "edit"
+      }
 
     true
 
