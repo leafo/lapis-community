@@ -209,6 +209,11 @@ do
   _base_0.__class = _class_0
   local self = _class_0
   self.timestamp = true
+  self.voting_types = enum({
+    up_down = 1,
+    up = 2,
+    disabled = 3
+  })
   self.relations = {
     {
       "moderators",

@@ -21,6 +21,12 @@ import Model from require "community.model"
 class CategoryGroups extends Model
   @timestamp: true
 
+  @voting_types: enum {
+    up_down: 1
+    up: 2
+    disabled: 3
+  }
+
   @relations: {
     -- TODO: see comment in Categories
     {"moderators", has_many: "Moderators", key: "object_id", where: { accepted: true, object_type: 2}}

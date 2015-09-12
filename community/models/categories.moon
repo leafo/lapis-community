@@ -234,3 +234,24 @@ class Categories extends Model
 
   notification_target_users: =>
     { @get_user! }
+
+  get_ancestors: =>
+    return {} unless @parent_category_id
+    unless @ancestors
+      tname = db.escape_identifier @@table_name!
+
+      res = db.query "
+        with recursive nested as (
+          (select * from #{tname} where id = ?)
+          union
+          select pr.* from #{tname} pr, nested
+            where pr.id = nested.parent_category_id
+        )
+        select * from nested
+      ", @parent_category_id
+
+      @ancestors = for category in *res
+        @@load category
+
+    @ancestors
+

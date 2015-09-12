@@ -141,6 +141,15 @@ describe "categories", ->
 
       assert.same category.last_topic_id, topic.id
 
+    describe "ancestors", ->
+      it "gets ancestors with no ancestors", ->
+        assert.same {}, category\get_ancestors!
+
+      it "gets ancestors with ancestors", ->
+        mid = factory.Categories parent_category_id: category.id
+        deep = factory.Categories parent_category_id: mid.id
+        assert.same {mid.id, category.id}, [c.id for c in *deep\get_ancestors!]
+
     describe "get_order_ranges", ->
       it "gets empty order range", ->
         assert.same {regular: {}, sticky: {}}, category\get_order_ranges!
