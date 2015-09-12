@@ -154,10 +154,20 @@ describe "categories", ->
         it "gets ancestors with ancestors", ->
           assert.same {mid.id, category.id}, [c.id for c in *deep\get_ancestors!]
 
-        it "searches ancestors for moderators", ->
+        it "searches ancestors for moderators #ddd", ->
           user = factory.Users!
           mod = deep\find_moderator user, accepted: true, admin: true
           assert.same nil, mod
+
+          mod = factory.Moderators {
+            object: mid
+            user_id: user.id
+            accepted: true
+            admin: true
+          }
+
+          found_mod = deep\find_moderator user, accepted: true, admin: true
+          assert.same mod.id, found_mod.id
 
     describe "get_order_ranges", ->
       it "gets empty order range", ->

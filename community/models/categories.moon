@@ -245,7 +245,9 @@ class Categories extends Model
 
   get_category_ids: =>
     if @parent_category_id
-      { @id, unpack [c.id for c in *@get_ancestors!] }
+      ids = [c.id for c in *@get_ancestors!]
+      table.insert ids, @id
+      ids
     else
       { @id }
 

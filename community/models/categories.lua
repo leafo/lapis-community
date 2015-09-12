@@ -252,20 +252,20 @@ do
     end,
     get_category_ids = function(self)
       if self.parent_category_id then
-        return {
-          self.id,
-          unpack((function()
-            local _accum_0 = { }
-            local _len_0 = 1
-            local _list_0 = self:get_ancestors()
-            for _index_0 = 1, #_list_0 do
-              local c = _list_0[_index_0]
-              _accum_0[_len_0] = c.id
-              _len_0 = _len_0 + 1
-            end
-            return _accum_0
-          end)())
-        }
+        local ids
+        do
+          local _accum_0 = { }
+          local _len_0 = 1
+          local _list_0 = self:get_ancestors()
+          for _index_0 = 1, #_list_0 do
+            local c = _list_0[_index_0]
+            _accum_0[_len_0] = c.id
+            _len_0 = _len_0 + 1
+          end
+          ids = _accum_0
+        end
+        table.insert(ids, self.id)
+        return ids
       else
         return {
           self.id
