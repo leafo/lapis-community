@@ -386,4 +386,15 @@ import create_table, create_index, drop_table, add_column from schema
         where category_id = id
       )"
     }
+
+  [3]: ->
+    create_table T"pending_posts", {
+      {"id", serial}
+      {"topic_id", foreign_key}
+      {"user_id", foreign_key}
+      {"parent_post_id", foreign_key null: true}
+      {"status", enum}
+
+      {"body", text}
+    }
 }
