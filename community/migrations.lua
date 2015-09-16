@@ -1,5 +1,6 @@
 local db = require("lapis.db.postgres")
 local schema = require("lapis.db.schema")
+local config = require("lapis.config").get()
 local create_table, create_index, drop_table, add_column
 create_table, create_index, drop_table, add_column = schema.create_table, schema.create_index, schema.drop_table, schema.add_column
 local T
@@ -800,7 +801,7 @@ return {
       category_groups_count = db.raw("(\n        select count(*) from " .. tostring(T("category_group_categories")) .. "\n        where category_id = id\n      )")
     })
   end,
-  [3] = function()
+  [3] = config._name == "test" and function()
     create_table(T("pending_posts"), {
       {
         "id",
@@ -827,6 +828,14 @@ return {
       {
         "body",
         text
+      },
+      {
+        "created_at",
+        time
+      },
+      {
+        "updated_at",
+        time
       },
       "PRIMARY KEY (id)"
     })

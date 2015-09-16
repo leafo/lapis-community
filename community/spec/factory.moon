@@ -114,7 +114,13 @@ Bookmarks = (opts={}) ->
   opts.user_id or= Users!.id
   assert models.Bookmarks\create opts
 
+PendingPosts = (opts={}) ->
+  opts.topic_id or= Topics!.id
+  opts.user_id or= Users!.id
+  opts.body or= "Pending post #{next_counter "post"} body"
+  assert models.PendingPosts\create opts
+
 { :next_counter, :next_email,
   :Categories, :Topics, :Posts, :Votes, :Moderators, :PostReports,
   :CategoryMembers, :Blocks, :Bans, :CategoryGroups, :Bookmarks,
-  :CommunityUsers }
+  :CommunityUsers, :PendingPosts }

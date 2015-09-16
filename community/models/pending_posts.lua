@@ -5,7 +5,7 @@ local enum
 enum = require("lapis.db.model").enum
 local PendingPosts
 do
-  local _parent_0 = require("model")
+  local _parent_0 = Model
   local _base_0 = {
     promote = function(self) end
   }

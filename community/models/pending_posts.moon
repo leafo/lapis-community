@@ -4,7 +4,7 @@ import Model from require "community.model"
 
 import enum from require "lapis.db.model"
 
-class PendingPosts extends require "model"
+class PendingPosts extends Model
   @timestamp: true
 
   @relations: {

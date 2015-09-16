@@ -1,6 +1,8 @@
 db = require "lapis.db.postgres"
 schema = require "lapis.db.schema"
 
+config = require("lapis.config").get!
+
 import create_table, create_index, drop_table, add_column from schema
 {prefix_table: T} = require "community.model"
 
@@ -387,7 +389,7 @@ import create_table, create_index, drop_table, add_column from schema
       )"
     }
 
-  [3]: ->
+  [3]: config._name == "test" and ->
     create_table T"pending_posts", {
       {"id", serial}
       {"topic_id", foreign_key}
@@ -395,6 +397,9 @@ import create_table, create_index, drop_table, add_column from schema
       {"parent_post_id", foreign_key null: true}
       {"status", enum}
       {"body", text}
+
+      {"created_at", time}
+      {"updated_at", time}
 
       "PRIMARY KEY (id)"
     }
