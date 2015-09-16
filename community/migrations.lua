@@ -799,5 +799,37 @@ return {
     return db.update(T("categories"), {
       category_groups_count = db.raw("(\n        select count(*) from " .. tostring(T("category_group_categories")) .. "\n        where category_id = id\n      )")
     })
+  end,
+  [3] = function()
+    create_table(T("pending_posts"), {
+      {
+        "id",
+        serial
+      },
+      {
+        "topic_id",
+        foreign_key
+      },
+      {
+        "user_id",
+        foreign_key
+      },
+      {
+        "parent_post_id",
+        foreign_key({
+          null = true
+        })
+      },
+      {
+        "status",
+        enum
+      },
+      {
+        "body",
+        text
+      },
+      "PRIMARY KEY (id)"
+    })
+    return create_index(T("pending_posts"), "topic_id", "status", "id")
   end
 }

@@ -51,6 +51,7 @@ build = {
     ["community.models.moderation_log_objects"] = "community/models/moderation_log_objects.lua",
     ["community.models.moderation_logs"] = "community/models/moderation_logs.lua",
     ["community.models.moderators"] = "community/models/moderators.lua",
+    ["community.models.pending_posts"] = "community/models/pending_posts.lua",
     ["community.models.post_edits"] = "community/models/post_edits.lua",
     ["community.models.post_reports"] = "community/models/post_reports.lua",
     ["community.models.posts"] = "community/models/posts.lua",

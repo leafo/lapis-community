@@ -394,7 +394,10 @@ import create_table, create_index, drop_table, add_column from schema
       {"user_id", foreign_key}
       {"parent_post_id", foreign_key null: true}
       {"status", enum}
-
       {"body", text}
+
+      "PRIMARY KEY (id)"
     }
+
+    create_index T"pending_posts", "topic_id", "status", "id"
 }
