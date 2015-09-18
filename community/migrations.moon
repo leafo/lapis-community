@@ -389,20 +389,21 @@ import create_table, create_index, drop_table, add_column from schema
       )"
     }
 
-  [3]: config._name == "test" and ->
-    create_table T"pending_posts", {
-      {"id", serial}
-      {"topic_id", foreign_key}
-      {"user_id", foreign_key}
-      {"parent_post_id", foreign_key null: true}
-      {"status", enum}
-      {"body", text}
+  [3]: if config._name == "test"
+    ->
+      create_table T"pending_posts", {
+        {"id", serial}
+        {"topic_id", foreign_key}
+        {"user_id", foreign_key}
+        {"parent_post_id", foreign_key null: true}
+        {"status", enum}
+        {"body", text}
 
-      {"created_at", time}
-      {"updated_at", time}
+        {"created_at", time}
+        {"updated_at", time}
 
-      "PRIMARY KEY (id)"
-    }
+        "PRIMARY KEY (id)"
+      }
 
-    create_index T"pending_posts", "topic_id", "status", "id"
+      create_index T"pending_posts", "topic_id", "status", "id"
 }

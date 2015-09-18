@@ -801,44 +801,48 @@ return {
       category_groups_count = db.raw("(\n        select count(*) from " .. tostring(T("category_group_categories")) .. "\n        where category_id = id\n      )")
     })
   end,
-  [3] = config._name == "test" and function()
-    create_table(T("pending_posts"), {
-      {
-        "id",
-        serial
-      },
-      {
-        "topic_id",
-        foreign_key
-      },
-      {
-        "user_id",
-        foreign_key
-      },
-      {
-        "parent_post_id",
-        foreign_key({
-          null = true
+  [3] = (function()
+    if config._name == "test" then
+      return function()
+        create_table(T("pending_posts"), {
+          {
+            "id",
+            serial
+          },
+          {
+            "topic_id",
+            foreign_key
+          },
+          {
+            "user_id",
+            foreign_key
+          },
+          {
+            "parent_post_id",
+            foreign_key({
+              null = true
+            })
+          },
+          {
+            "status",
+            enum
+          },
+          {
+            "body",
+            text
+          },
+          {
+            "created_at",
+            time
+          },
+          {
+            "updated_at",
+            time
+          },
+          "PRIMARY KEY (id)"
         })
-      },
-      {
-        "status",
-        enum
-      },
-      {
-        "body",
-        text
-      },
-      {
-        "created_at",
-        time
-      },
-      {
-        "updated_at",
-        time
-      },
-      "PRIMARY KEY (id)"
-    })
-    return create_index(T("pending_posts"), "topic_id", "status", "id")
-  end
+        return create_index(T("pending_posts"), "topic_id", "status", "id")
+      end
+    end
+  end)()
 }
