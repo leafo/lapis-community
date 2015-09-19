@@ -7,7 +7,31 @@ local PendingPosts
 do
   local _parent_0 = Model
   local _base_0 = {
-    promote = function(self) end
+    promote = function(self)
+      local Posts, CommunityUsers
+      do
+        local _obj_0 = require("community.models")
+        Posts, CommunityUsers = _obj_0.Posts, _obj_0.CommunityUsers
+      end
+      local post = Posts:create({
+        topic_id = self.topic_id,
+        user_id = self.user_id,
+        parent_post = self.parent_post,
+        body = self.body,
+        created_at = self.created_at
+      })
+      local topic = self:get_topic()
+      topic:increment_from_post(post)
+      do
+        local category = topic:get_category()
+        if category then
+          category:increment_from_post(post)
+        end
+      end
+      CommunityUsers:for_user(self:get_user()):increment("posts_count")
+      topic:increment_participant(self:get_user())
+      return post
+    end
   }
   _base_0.__index = _base_0
   setmetatable(_base_0, _parent_0.__base)
