@@ -406,4 +406,6 @@ import create_table, create_index, drop_table, add_column from schema
       }
 
       create_index T"pending_posts", "topic_id", "status", "id"
+
+      add_column T"categories", "approval_type", enum null: true
 }

@@ -46,6 +46,12 @@ class Categories extends Model
     disabled: 3
   }
 
+  @default_approval_type: "none"
+  @approval_types: enum {
+    none: 1
+    pending: 1
+  }
+
   @relations: {
     -- TODO: don't hardcode 1
     -- TODO: rename to accepted_moderators
@@ -62,6 +68,9 @@ class Categories extends Model
 
     if opts.voting_type
       opts.voting_type = @voting_types\for_db opts.voting_type
+
+    if opts.approval_type
+      opts.approval_type = @approval_types\for_db opts.approval_type
 
     if opts.title
       opts.slug or= slugify opts.title
@@ -217,6 +226,14 @@ class Categories extends Model
       r.max = max
 
     ranges
+
+  get_approval_type: =>
+    if t = @approval_type
+      t
+    elseif @parent_category_id
+      @get_parent_category!\get_approval_type!
+    else
+      @@approval_types[@@default_approval_type]
 
   get_voting_type: =>
     if t = @voting_type

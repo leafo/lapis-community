@@ -841,7 +841,10 @@ return {
           },
           "PRIMARY KEY (id)"
         })
-        return create_index(T("pending_posts"), "topic_id", "status", "id")
+        create_index(T("pending_posts"), "topic_id", "status", "id")
+        return add_column(T("categories"), "approval_type", enum({
+          null = true
+        }))
       end
     end
   end)()

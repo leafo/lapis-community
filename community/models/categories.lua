@@ -219,6 +219,18 @@ do
       end
       return ranges
     end,
+    get_approval_type = function(self)
+      do
+        local t = self.approval_type
+        if t then
+          return t
+        elseif self.parent_category_id then
+          return self:get_parent_category():get_approval_type()
+        else
+          return self.__class.approval_types[self.__class.default_approval_type]
+        end
+      end
+    end,
     get_voting_type = function(self)
       do
         local t = self.voting_type
@@ -372,6 +384,11 @@ do
     up = 2,
     disabled = 3
   })
+  self.default_approval_type = "none"
+  self.approval_types = enum({
+    none = 1,
+    pending = 1
+  })
   self.relations = {
     {
       "moderators",
@@ -404,6 +421,9 @@ do
     end
     if opts.voting_type then
       opts.voting_type = self.voting_types:for_db(opts.voting_type)
+    end
+    if opts.approval_type then
+      opts.approval_type = self.approval_types:for_db(opts.approval_type)
     end
     if opts.title then
       opts.slug = opts.slug or slugify(opts.title)
