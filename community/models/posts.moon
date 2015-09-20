@@ -124,9 +124,8 @@ class Posts extends Model
     return false if @deleted
 
     topic = @get_topic!
-    category = @topic\get_category!
 
-    if category
+    if category = @topic\get_category!
       category\allowed_to_vote user, direction
     else
       true

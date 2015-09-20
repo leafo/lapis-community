@@ -59,7 +59,6 @@ class TopicsFlow extends Flow
     CategoriesFlow(@)\load_category!
     assert_error @category\allowed_to_post @current_user
 
-
     moderator = @category\allowed_to_moderate @current_user
 
     assert_valid @params, {

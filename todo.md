@@ -3,6 +3,7 @@
 # Core
 
 * callbacks
+* topic last seens should increment integer to keep track of how often user checks
 
 ## v2
 
@@ -19,5 +20,4 @@
 
 * check for missing indexes
 * check n+1 queries on browsers
-* caches for permission checks, avoid n+1 queries
 

@@ -55,11 +55,13 @@ do
         return false
       end
       local topic = self:get_topic()
-      local category = self.topic:get_category()
-      if category then
-        return category:allowed_to_vote(user, direction)
-      else
-        return true
+      do
+        local category = self.topic:get_category()
+        if category then
+          return category:allowed_to_vote(user, direction)
+        else
+          return true
+        end
       end
     end,
     allowed_to_edit = function(self, user)
