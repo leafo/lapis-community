@@ -44,6 +44,7 @@ class PendingPosts extends Model
     CommunityUsers\for_user(@get_user!)\increment "posts_count"
     topic\increment_participant @get_user!
 
+    @delete!
     post
 
 
