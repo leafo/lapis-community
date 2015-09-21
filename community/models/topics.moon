@@ -302,3 +302,9 @@ class Topics extends Model
       ) foo
       where posts.id = foo.id and posts.post_number != new_number
     "
+
+  post_needs_approval: =>
+    category = @get_category!
+    return false unless category
+    import Categories from require "community.models"
+    category\get_approval_type! == Categories.approval_types.pending
