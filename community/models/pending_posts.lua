@@ -30,6 +30,7 @@ do
       end
       CommunityUsers:for_user(self:get_user()):increment("posts_count")
       topic:increment_participant(self:get_user())
+      self:delete()
       return post
     end
   }

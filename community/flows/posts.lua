@@ -1,9 +1,9 @@
 local Flow
 Flow = require("lapis.flow").Flow
-local Topics, Posts, PostEdits, CommunityUsers, ActivityLogs
+local Topics, Posts, PostEdits, CommunityUsers, ActivityLogs, PendingPosts
 do
   local _obj_0 = require("community.models")
-  Topics, Posts, PostEdits, CommunityUsers, ActivityLogs = _obj_0.Topics, _obj_0.Posts, _obj_0.PostEdits, _obj_0.CommunityUsers, _obj_0.ActivityLogs
+  Topics, Posts, PostEdits, CommunityUsers, ActivityLogs, PendingPosts = _obj_0.Topics, _obj_0.Posts, _obj_0.PostEdits, _obj_0.CommunityUsers, _obj_0.ActivityLogs, _obj_0.PendingPosts
 end
 local db = require("lapis.db")
 local assert_error
@@ -75,26 +75,35 @@ do
         assert_error(parent_post.topic_id == self.topic.id, "topic id mismatch (" .. tostring(parent_post.topic_id) .. " != " .. tostring(self.topic.id) .. ")")
         assert_error(parent_post:allowed_to_reply(self.current_user), "can't reply to post")
       end
-      self.post = Posts:create({
-        user_id = self.current_user.id,
-        topic_id = self.topic.id,
-        body = new_post.body,
-        parent_post = parent_post
-      })
-      self.topic:increment_from_post(self.post)
-      do
-        local category = self.topic:get_category()
-        if category then
-          category:increment_from_post(self.post)
+      if self.topic:post_needs_approval() then
+        self.pending_post = PendingPosts:create({
+          user_id = self.current_user.id,
+          topic_id = self.topic.id,
+          body = new_post.body,
+          parent_post = parent_post
+        })
+      else
+        self.post = Posts:create({
+          user_id = self.current_user.id,
+          topic_id = self.topic.id,
+          body = new_post.body,
+          parent_post = parent_post
+        })
+        self.topic:increment_from_post(self.post)
+        do
+          local category = self.topic:get_category()
+          if category then
+            category:increment_from_post(self.post)
+          end
         end
+        CommunityUsers:for_user(self.current_user):increment("posts_count")
+        self.topic:increment_participant(self.current_user)
+        ActivityLogs:create({
+          user_id = self.current_user.id,
+          object = self.post,
+          action = "create"
+        })
       end
-      CommunityUsers:for_user(self.current_user):increment("posts_count")
-      self.topic:increment_participant(self.current_user)
-      ActivityLogs:create({
-        user_id = self.current_user.id,
-        object = self.post,
-        action = "create"
-      })
       return true
     end),
     edit_post = require_login(function(self)

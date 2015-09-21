@@ -49,7 +49,7 @@ class Categories extends Model
   @default_approval_type: "none"
   @approval_types: enum {
     none: 1
-    pending: 1
+    pending: 2
   }
 
   @relations: {

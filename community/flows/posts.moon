@@ -1,5 +1,6 @@
 import Flow from require "lapis.flow"
-import Topics, Posts, PostEdits, CommunityUsers, ActivityLogs from require "community.models"
+import Topics, Posts, PostEdits,
+  CommunityUsers, ActivityLogs, PendingPosts from require "community.models"
 
 db = require "lapis.db"
 import assert_error from require "lapis.application"
@@ -52,26 +53,34 @@ class PostsFlow extends Flow
       assert_error parent_post\allowed_to_reply(@current_user),
         "can't reply to post"
 
-    @post = Posts\create {
-      user_id: @current_user.id
-      topic_id: @topic.id
-      body: new_post.body
-      :parent_post
-    }
+    if @topic\post_needs_approval!
+      @pending_post = PendingPosts\create {
+        user_id: @current_user.id
+        topic_id: @topic.id
+        body: new_post.body
+        :parent_post
+      }
+    else
+      @post = Posts\create {
+        user_id: @current_user.id
+        topic_id: @topic.id
+        body: new_post.body
+        :parent_post
+      }
 
-    @topic\increment_from_post @post
+      @topic\increment_from_post @post
 
-    if category = @topic\get_category!
-      category\increment_from_post @post
+      if category = @topic\get_category!
+        category\increment_from_post @post
 
-    CommunityUsers\for_user(@current_user)\increment "posts_count"
-    @topic\increment_participant @current_user
+      CommunityUsers\for_user(@current_user)\increment "posts_count"
+      @topic\increment_participant @current_user
 
-    ActivityLogs\create {
-      user_id: @current_user.id
-      object: @post
-      action: "create"
-    }
+      ActivityLogs\create {
+        user_id: @current_user.id
+        object: @post
+        action: "create"
+      }
 
     true
 

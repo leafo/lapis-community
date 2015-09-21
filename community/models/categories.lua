@@ -387,7 +387,7 @@ do
   self.default_approval_type = "none"
   self.approval_types = enum({
     none = 1,
-    pending = 1
+    pending = 2
   })
   self.relations = {
     {
