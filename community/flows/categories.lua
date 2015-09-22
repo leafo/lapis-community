@@ -107,6 +107,34 @@ do
       })
       self.moderation_logs = self.pager:get_page(self.page)
     end,
+    pending_posts = function(self)
+      self:load_category()
+      local PendingPosts, Topics, Posts
+      do
+        local _obj_0 = require("community.models")
+        PendingPosts, Topics, Posts = _obj_0.PendingPosts, _obj_0.Topics, _obj_0.Posts
+      end
+      assert_valid(self.params, {
+        {
+          "status",
+          optional = true,
+          one_of = PendingPosts.statuses
+        }
+      })
+      assert_page(self)
+      local status = PendingPosts.statuses:for_db(self.params.status or "pending")
+      self.pager = PendingPosts:paginated("\n      where category_id = ? and status = ?\n      order by id asc\n    ", self.category.id, status, {
+        prepare_results = function(pending)
+          Categories:include_in(pending, "category_id")
+          Users:include_in(pending, "user_id")
+          Topics:include_in(pending, "topic_id")
+          Posts:include_in(pending, "parent_post_id")
+          return pending
+        end
+      })
+      self.pending_posts = self.pager:get_page(self.page)
+      return self.pending_posts
+    end,
     validate_params = function(self)
       self.params.category = self.params.category or { }
       assert_valid(self.params, {

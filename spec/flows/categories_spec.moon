@@ -47,6 +47,14 @@ class CategoryApp extends TestApp
       moderation_logs: @moderation_logs
     }
 
+  "/pending-posts": capture_errors_json =>
+    @flow\pending_posts!
+    json: {
+      success: true
+      page: @page
+      pending_posts: @pending_posts
+    }
+
 
 describe "categories", ->
   use_test_env!
@@ -234,4 +242,35 @@ describe "categories", ->
 
       assert.same {errors: {"invalid category"}}, res
 
+  describe "pending posts", ->
+    local category
 
+    before_each ->
+      category = factory.Categories user_id: current_user.id
+
+    it "gets empty pending posts", ->
+      res = CategoryApp\get current_user, "/pending-posts", {
+        category_id: category.id
+      }
+
+      assert.same {}, res.pending_posts
+
+    describe "with pending posts", ->
+      local pending_post
+
+      before_each ->
+        pending_post = factory.PendingPosts category_id: category.id
+
+      it "gets pending posts", ->
+        res = CategoryApp\get current_user, "/pending-posts", {
+          category_id: category.id
+        }
+        assert.same 1, #res.pending_posts
+        assert.same pending_post.id, res.pending_posts[1].id
+
+      it "doesn't get incorrect satus", ->
+        res = CategoryApp\get current_user, "/pending-posts", {
+          category_id: category.id
+          status: "deleted"
+        }
+        assert.same {}, res.pending_posts

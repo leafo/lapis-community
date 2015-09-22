@@ -74,6 +74,32 @@ class CategoriesFlow extends Flow
 
     @moderation_logs = @pager\get_page @page
 
+  pending_posts: =>
+    @load_category!
+    import PendingPosts, Topics, Posts from require "community.models"
+
+    assert_valid @params, {
+      {"status", optional: true, one_of: PendingPosts.statuses}
+    }
+
+    assert_page @
+
+    status = PendingPosts.statuses\for_db @params.status or "pending"
+    @pager = PendingPosts\paginated "
+      where category_id = ? and status = ?
+      order by id asc
+    ", @category.id, status, {
+      prepare_results: (pending) ->
+        Categories\include_in pending, "category_id"
+        Users\include_in pending, "user_id"
+        Topics\include_in pending, "topic_id"
+        Posts\include_in pending, "parent_post_id"
+        pending
+    }
+
+    @pending_posts = @pager\get_page @page
+    @pending_posts
+
   validate_params: =>
     @params.category or= {}
     assert_valid @params, {

@@ -171,7 +171,13 @@ PendingPosts = function(opts)
   if opts == nil then
     opts = { }
   end
-  opts.topic_id = opts.topic_id or Topics().id
+  if not (opts.topic_id) then
+    local topic = Topics({
+      category_id = opts.category_id
+    })
+    opts.topic_id = topic.id
+    opts.category_id = topic.category_id
+  end
   opts.user_id = opts.user_id or Users().id
   opts.body = opts.body or "Pending post " .. tostring(next_counter("post")) .. " body"
   return assert(models.PendingPosts:create(opts))

@@ -115,7 +115,11 @@ Bookmarks = (opts={}) ->
   assert models.Bookmarks\create opts
 
 PendingPosts = (opts={}) ->
-  opts.topic_id or= Topics!.id
+  unless opts.topic_id
+    topic = Topics category_id: opts.category_id
+    opts.topic_id = topic.id
+    opts.category_id = topic.category_id
+
   opts.user_id or= Users!.id
   opts.body or= "Pending post #{next_counter "post"} body"
   assert models.PendingPosts\create opts
