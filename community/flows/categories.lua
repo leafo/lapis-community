@@ -109,6 +109,7 @@ do
     end,
     pending_posts = function(self)
       self:load_category()
+      assert_error(self.category:allowed_to_moderate(self.current_user), "invalid category")
       local PendingPosts, Topics, Posts
       do
         local _obj_0 = require("community.models")

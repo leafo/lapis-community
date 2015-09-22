@@ -76,6 +76,8 @@ class CategoriesFlow extends Flow
 
   pending_posts: =>
     @load_category!
+    assert_error @category\allowed_to_moderate(@current_user), "invalid category"
+
     import PendingPosts, Topics, Posts from require "community.models"
 
     assert_valid @params, {

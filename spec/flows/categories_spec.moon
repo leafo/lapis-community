@@ -275,6 +275,12 @@ describe "categories", ->
         assert.same 1, #res.pending_posts
         assert.same pending_post.id, res.pending_posts[1].id
 
+      it "doesn't let stranger view pending posts", ->
+        res = CategoryApp\get factory.Users!, "/pending-posts", {
+          category_id: category.id
+        }
+        assert.truthy res.errors
+
       it "doesn't get incorrect satus", ->
         res = CategoryApp\get current_user, "/pending-posts", {
           category_id: category.id
@@ -291,6 +297,15 @@ describe "categories", ->
 
         assert.same 0, PendingPosts\count!
         assert.same 1, Posts\count!
+
+      it "doesn't let stranger edit pending post", ->
+        res = CategoryApp\get factory.Users!, "/pending-post", {
+          category_id: category.id
+          pending_post_id: pending_post.id
+          action: "promote"
+        }
+
+        assert.truthy res.errors
 
       it "deletes pending post", ->
         res = CategoryApp\get current_user, "/pending-post", {
