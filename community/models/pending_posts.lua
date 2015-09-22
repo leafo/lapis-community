@@ -77,7 +77,8 @@ do
   }
   self.statuses = enum({
     pending = 1,
-    deleted = 2
+    deleted = 2,
+    spam = 3
   })
   self.create = function(self, opts)
     if opts == nil then

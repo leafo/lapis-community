@@ -4,6 +4,9 @@ import Model from require "community.model"
 
 import enum from require "lapis.db.model"
 
+-- Generated schema dump: (do not edit)
+--
+--
 class PendingPosts extends Model
   @timestamp: true
 
@@ -16,6 +19,7 @@ class PendingPosts extends Model
   @statuses: enum {
     pending: 1
     deleted: 2
+    spam: 3
   }
 
   @create: (opts={}) =>
