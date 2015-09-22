@@ -79,6 +79,7 @@ do
         self.pending_post = PendingPosts:create({
           user_id = self.current_user.id,
           topic_id = self.topic.id,
+          category_id = self.topic.category_id,
           body = new_post.body,
           parent_post = parent_post
         })

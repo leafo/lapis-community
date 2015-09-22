@@ -810,6 +810,12 @@ return {
             serial
           },
           {
+            "category_id",
+            foreign_key({
+              null = true
+            })
+          },
+          {
             "topic_id",
             foreign_key
           },
@@ -840,6 +846,9 @@ return {
             time
           },
           "PRIMARY KEY (id)"
+        })
+        create_index(T("pending_posts"), "category_id", "status", "id", {
+          where = "category_id is not null"
         })
         create_index(T("pending_posts"), "topic_id", "status", "id")
         return add_column(T("categories"), "approval_type", enum({

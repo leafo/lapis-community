@@ -393,6 +393,7 @@ import create_table, create_index, drop_table, add_column from schema
     ->
       create_table T"pending_posts", {
         {"id", serial}
+        {"category_id", foreign_key null: true}
         {"topic_id", foreign_key}
         {"user_id", foreign_key}
         {"parent_post_id", foreign_key null: true}
@@ -405,6 +406,7 @@ import create_table, create_index, drop_table, add_column from schema
         "PRIMARY KEY (id)"
       }
 
+      create_index T"pending_posts", "category_id", "status", "id", where: "category_id is not null"
       create_index T"pending_posts", "topic_id", "status", "id"
 
       add_column T"categories", "approval_type", enum null: true

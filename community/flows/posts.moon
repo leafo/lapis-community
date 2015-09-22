@@ -57,6 +57,7 @@ class PostsFlow extends Flow
       @pending_post = PendingPosts\create {
         user_id: @current_user.id
         topic_id: @topic.id
+        category_id: @topic.category_id
         body: new_post.body
         :parent_post
       }
