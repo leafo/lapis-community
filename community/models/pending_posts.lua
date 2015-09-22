@@ -7,6 +7,10 @@ local PendingPosts
 do
   local _parent_0 = Model
   local _base_0 = {
+    allowed_to_moderate = function(self, user)
+      local topic = self:get_topic()
+      return topic:allowed_to_moderate(user)
+    end,
     promote = function(self)
       local Posts, CommunityUsers
       do

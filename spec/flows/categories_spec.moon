@@ -9,8 +9,7 @@ import capture_errors_json from require "lapis.application"
 import Users from require "models"
 import
   Categories, Posts, Topics, CategoryMembers, Moderators, ActivityLogs,
-    ModerationLogs, ModerationLogObjects
-  from require "community.models"
+    ModerationLogs, ModerationLogObjects, PendingPosts from require "community.models"
 
 class CategoryApp extends TestApp
   @require_user!
@@ -55,6 +54,13 @@ class CategoryApp extends TestApp
       pending_posts: @pending_posts
     }
 
+  "/pending-post": capture_errors_json =>
+    status, post = @flow\edit_pending_post!
+    json: {
+      :status
+      :post
+    }
+
 
 describe "categories", ->
   use_test_env!
@@ -63,7 +69,8 @@ describe "categories", ->
 
   before_each ->
     truncate_tables Users, Categories, Posts, Topics, CategoryMembers,
-      Moderators, ActivityLogs, ModerationLogs, ModerationLogObjects
+      Moderators, ActivityLogs, ModerationLogs, ModerationLogObjects,
+      PendingPosts
 
     current_user = factory.Users!
 
@@ -274,3 +281,27 @@ describe "categories", ->
           status: "deleted"
         }
         assert.same {}, res.pending_posts
+
+      it "promotes pending post", ->
+        res = CategoryApp\get current_user, "/pending-post", {
+          category_id: category.id
+          pending_post_id: pending_post.id
+          action: "promote"
+        }
+
+        assert.same 0, PendingPosts\count!
+        assert.same 1, Posts\count!
+
+      it "deletes pending post", ->
+        res = CategoryApp\get current_user, "/pending-post", {
+          category_id: category.id
+          pending_post_id: pending_post.id
+          action: "deleted"
+        }
+
+        assert.same 1, PendingPosts\count!
+        assert.same 0, Posts\count!
+
+        pending_post\refresh!
+        assert.same PendingPosts.statuses.deleted, pending_post.status
+

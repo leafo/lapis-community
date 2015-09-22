@@ -26,6 +26,10 @@ class PendingPosts extends Model
     opts.status = @statuses\for_db opts.status or "pending"
     Model.create @, opts
 
+  allowed_to_moderate: (user) =>
+    topic = @get_topic!
+    topic\allowed_to_moderate user
+
   -- convert to real post
   promote: =>
     import Posts, CommunityUsers from require "community.models"

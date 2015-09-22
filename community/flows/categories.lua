@@ -135,6 +135,39 @@ do
       self.pending_posts = self.pager:get_page(self.page)
       return self.pending_posts
     end,
+    edit_pending_post = function(self)
+      local PendingPosts
+      PendingPosts = require("community.models").PendingPosts
+      self:load_category()
+      assert_valid(self.params, {
+        {
+          "pending_post_id",
+          is_integer = true
+        },
+        {
+          "action",
+          one_of = {
+            "promote",
+            "deleted",
+            "spam"
+          }
+        }
+      })
+      self.pending_post = PendingPosts:find(self.params.pending_post_id)
+      assert_error(self.pending_post, "invalid pending post")
+      local category_id = self.pending_post.category_id or self.pending_post:get_topic().category_id
+      assert_error(category_id == self.category.id, "invalid pending post for category")
+      assert_error(self.pending_post:allowed_to_moderate(self.current_user), "invalid pending post")
+      local _exp_0 = self.params.action
+      if "promote" == _exp_0 then
+        self.post = self.pending_post:promote()
+      elseif "deleted" == _exp_0 or "spam" == _exp_0 then
+        self.post = self.pending_post:update({
+          status = PendingPosts.statuses:for_db(self.params.action)
+        })
+      end
+      return true, self.post
+    end,
     validate_params = function(self)
       self.params.category = self.params.category or { }
       assert_valid(self.params, {

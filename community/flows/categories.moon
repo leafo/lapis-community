@@ -100,6 +100,36 @@ class CategoriesFlow extends Flow
     @pending_posts = @pager\get_page @page
     @pending_posts
 
+  edit_pending_post: =>
+    import PendingPosts from require "community.models"
+
+    @load_category!
+    assert_valid @params, {
+      {"pending_post_id", is_integer: true}
+      {"action", one_of: {
+        "promote"
+        "deleted"
+        "spam"
+      }}
+    }
+
+    @pending_post = PendingPosts\find @params.pending_post_id
+    assert_error @pending_post, "invalid pending post"
+    category_id = @pending_post.category_id or @pending_post\get_topic!.category_id
+    assert_error category_id == @category.id, "invalid pending post for category"
+    assert_error @pending_post\allowed_to_moderate(@current_user), "invalid pending post"
+
+    @post = switch @params.action
+      when "promote"
+        @pending_post\promote!
+      when "deleted", "spam"
+        @pending_post\update {
+          status: PendingPosts.statuses\for_db @params.action
+        }
+
+    true, @post
+
+
   validate_params: =>
     @params.category or= {}
     assert_valid @params, {
