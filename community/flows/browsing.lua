@@ -166,6 +166,17 @@ do
         }
       })
     end,
+    topic_pending_posts = function(self)
+      local TopicsFlow = require("community.flows.topics")
+      TopicsFlow(self):load_topic()
+      if not (self.current_user) then
+        return 
+      end
+      local PendingPosts
+      PendingPosts = require("community.models").PendingPosts
+      self.pending_posts = PendingPosts:select("where topic_id = ? and user_id = ?", self.topic.id, self.current_user.id)
+      return self.pending_posts
+    end,
     topic_posts = function(self, mark_seen, order)
       if mark_seen == nil then
         mark_seen = true

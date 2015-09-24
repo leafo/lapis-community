@@ -94,6 +94,15 @@ class BrowsingFlow extends Flow
       }
     }
 
+  topic_pending_posts: =>
+    TopicsFlow = require "community.flows.topics"
+    TopicsFlow(@)\load_topic!
+
+    return unless @current_user
+    import PendingPosts from require "community.models"
+    @pending_posts = PendingPosts\select "where topic_id = ? and user_id = ?", @topic.id, @current_user.id
+    @pending_posts
+
   topic_posts: (mark_seen=true, order="asc") =>
     TopicsFlow = require "community.flows.topics"
     TopicsFlow(@)\load_topic!
