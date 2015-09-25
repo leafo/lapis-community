@@ -140,6 +140,16 @@ class PostsFlow extends Flow
 
     true
 
+  delete_pending_post: require_login =>
+    assert_valid @params, {
+      {"post_id", is_integer: true }
+    }
+
+    @pending_post = assert_error PendingPosts\find @params.post_id
+    assert_error @pending_post\allowed_to_edit(@current_user), "not allowed to edit"
+    @pending_post\delete!
+    true
+
   delete_post: require_login =>
     @load_post!
     assert_error @post\allowed_to_edit(@current_user), "not allowed to edit"

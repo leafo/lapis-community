@@ -170,6 +170,18 @@ do
       end
       return true
     end),
+    delete_pending_post = require_login(function(self)
+      assert_valid(self.params, {
+        {
+          "post_id",
+          is_integer = true
+        }
+      })
+      self.pending_post = assert_error(PendingPosts:find(self.params.post_id))
+      assert_error(self.pending_post:allowed_to_edit(self.current_user), "not allowed to edit")
+      self.pending_post:delete()
+      return true
+    end),
     delete_post = require_login(function(self)
       self:load_post()
       assert_error(self.post:allowed_to_edit(self.current_user), "not allowed to edit")
