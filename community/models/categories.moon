@@ -83,6 +83,15 @@ class Categories extends Model
       as: "last_topic"
     }
 
+  @recount: =>
+    import Topics from require "community.models"
+    db.update @table_name!, {
+      topics_count: db.raw "
+        (select count(*) from #{db.escape_identifier Topics\table_name!}
+          where category_id = #{db.escape_identifier @table_name!}.id)
+      "
+    }
+
   get_category_group: =>
     return unless @category_groups_count and @category_groups_count > 0
     -- TODO: this doesn't support multiple
@@ -283,15 +292,6 @@ class Categories extends Model
     @update {
       last_topic_id: post.topic_id
     }, timestamp: false
-
-  @recount: =>
-    import Topics from require "community.models"
-    db.update @table_name!, {
-      topics_count: db.raw "
-        (select count(*) from #{db.escape_identifier Topics\table_name!}
-          where category_id = #{db.escape_identifier @table_name!}.id)
-      "
-    }
 
   notification_target_users: =>
     { @get_user! }
