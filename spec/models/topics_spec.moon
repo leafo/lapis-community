@@ -8,7 +8,7 @@ factory = require "spec.factory"
 
 import Model from require "lapis.db.model"
 
-describe "topics", ->
+describe "models.topics", ->
   use_test_env!
 
   before_each ->

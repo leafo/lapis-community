@@ -6,7 +6,7 @@ import CommunityUsers from require "community.models"
 
 factory = require "spec.factory"
 
-describe "users", ->
+describe "models.users", ->
   use_test_env!
 
   before_each ->

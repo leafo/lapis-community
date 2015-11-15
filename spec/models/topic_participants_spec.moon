@@ -6,7 +6,7 @@ import TopicParticipants from require "community.models"
 
 factory = require "spec.factory"
 
-describe "topic_participants", ->
+describe "models.topic_participants", ->
   use_test_env!
 
   before_each ->

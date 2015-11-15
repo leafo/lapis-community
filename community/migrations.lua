@@ -801,62 +801,58 @@ return {
       category_groups_count = db.raw("(\n        select count(*) from " .. tostring(T("category_group_categories")) .. "\n        where category_id = id\n      )")
     })
   end,
-  [3] = (function()
-    if config._name == "test" then
-      return function()
-        create_table(T("pending_posts"), {
-          {
-            "id",
-            serial
-          },
-          {
-            "category_id",
-            foreign_key({
-              null = true
-            })
-          },
-          {
-            "topic_id",
-            foreign_key
-          },
-          {
-            "user_id",
-            foreign_key
-          },
-          {
-            "parent_post_id",
-            foreign_key({
-              null = true
-            })
-          },
-          {
-            "status",
-            enum
-          },
-          {
-            "body",
-            text
-          },
-          {
-            "created_at",
-            time
-          },
-          {
-            "updated_at",
-            time
-          },
-          "PRIMARY KEY (id)"
-        })
-        create_index(T("pending_posts"), "category_id", "status", "id", {
-          where = "category_id is not null"
-        })
-        create_index(T("pending_posts"), "topic_id", "status", "id")
-        return add_column(T("categories"), "approval_type", enum({
+  [3] = function()
+    create_table(T("pending_posts"), {
+      {
+        "id",
+        serial
+      },
+      {
+        "category_id",
+        foreign_key({
           null = true
-        }))
-      end
-    end
-  end)(),
+        })
+      },
+      {
+        "topic_id",
+        foreign_key
+      },
+      {
+        "user_id",
+        foreign_key
+      },
+      {
+        "parent_post_id",
+        foreign_key({
+          null = true
+        })
+      },
+      {
+        "status",
+        enum
+      },
+      {
+        "body",
+        text
+      },
+      {
+        "created_at",
+        time
+      },
+      {
+        "updated_at",
+        time
+      },
+      "PRIMARY KEY (id)"
+    })
+    create_index(T("pending_posts"), "category_id", "status", "id", {
+      where = "category_id is not null"
+    })
+    create_index(T("pending_posts"), "topic_id", "status", "id")
+    return add_column(T("categories"), "approval_type", enum({
+      null = true
+    }))
+  end,
   [4] = function(self)
     add_column(T("categories"), "position", integer({
       default = 0

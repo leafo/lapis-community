@@ -8,7 +8,7 @@ db = require "lapis.db"
 
 factory = require "spec.factory"
 
-describe "posts", ->
+describe "models.pending_posts", ->
   use_test_env!
 
   before_each ->

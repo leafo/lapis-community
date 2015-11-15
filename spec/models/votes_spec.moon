@@ -6,7 +6,7 @@ import Votes, Posts, Topics from require "community.models"
 
 factory = require "spec.factory"
 
-describe "votes", ->
+describe "models.votes", ->
   use_test_env!
 
   local current_user

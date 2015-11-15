@@ -6,7 +6,7 @@ import Categories, Moderators, Posts, Topics from require "community.models"
 
 factory = require "spec.factory"
 
-describe "moderators", ->
+describe "models.moderators", ->
   use_test_env!
 
   local current_user, mod

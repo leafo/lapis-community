@@ -6,7 +6,7 @@ import Categories, CategoryGroups, CategoryGroupCategories from require "communi
 
 factory = require "spec.factory"
 
-describe "categories", ->
+describe "models.category_groups", ->
   use_test_env!
 
   before_each ->

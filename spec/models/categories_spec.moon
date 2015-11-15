@@ -6,7 +6,7 @@ import Categories, Moderators, CategoryMembers, Bans, CategoryGroups, CategoryGr
 
 factory = require "spec.factory"
 
-describe "categories", ->
+describe "models.categories", ->
   use_test_env!
 
   before_each ->

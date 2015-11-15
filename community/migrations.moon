@@ -389,27 +389,26 @@ import create_table, create_index, drop_table, add_column from schema
       )"
     }
 
-  [3]: if config._name == "test"
-    ->
-      create_table T"pending_posts", {
-        {"id", serial}
-        {"category_id", foreign_key null: true}
-        {"topic_id", foreign_key}
-        {"user_id", foreign_key}
-        {"parent_post_id", foreign_key null: true}
-        {"status", enum}
-        {"body", text}
+  [3]: ->
+    create_table T"pending_posts", {
+      {"id", serial}
+      {"category_id", foreign_key null: true}
+      {"topic_id", foreign_key}
+      {"user_id", foreign_key}
+      {"parent_post_id", foreign_key null: true}
+      {"status", enum}
+      {"body", text}
 
-        {"created_at", time}
-        {"updated_at", time}
+      {"created_at", time}
+      {"updated_at", time}
 
-        "PRIMARY KEY (id)"
-      }
+      "PRIMARY KEY (id)"
+    }
 
-      create_index T"pending_posts", "category_id", "status", "id", where: "category_id is not null"
-      create_index T"pending_posts", "topic_id", "status", "id"
+    create_index T"pending_posts", "category_id", "status", "id", where: "category_id is not null"
+    create_index T"pending_posts", "topic_id", "status", "id"
 
-      add_column T"categories", "approval_type", enum null: true
+    add_column T"categories", "approval_type", enum null: true
 
   [4]: =>
     add_column T"categories", "position", integer default: 0
