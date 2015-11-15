@@ -25,10 +25,12 @@ import slugify from require "lapis.util"
 --   hidden boolean DEFAULT false NOT NULL,
 --   created_at timestamp without time zone NOT NULL,
 --   updated_at timestamp without time zone NOT NULL,
---   category_groups_count integer DEFAULT 0 NOT NULL
+--   category_groups_count integer DEFAULT 0 NOT NULL,
+--   "position" integer DEFAULT 0 NOT NULL
 -- );
 -- ALTER TABLE ONLY community_categories
 --   ADD CONSTRAINT community_categories_pkey PRIMARY KEY (id);
+-- CREATE INDEX community_categories_parent_category_id_position_idx ON community_categories USING btree (parent_category_id, "position") WHERE (parent_category_id IS NOT NULL);
 --
 class Categories extends Model
   @timestamp: true
