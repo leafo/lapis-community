@@ -410,4 +410,20 @@ import create_table, create_index, drop_table, add_column from schema
       create_index T"pending_posts", "topic_id", "status", "id"
 
       add_column T"categories", "approval_type", enum null: true
+
+  [4]: =>
+    add_column T"categories", "position", integer default: 0
+
+    db.query "
+      update #{T"categories"} set position = foo.row_number
+      from (
+        select id, parent_category_id, row_number()
+        over (partition by parent_category_id order by created_at asc)
+        from #{T"categories"}
+        where parent_category_id is not null
+      ) as foo
+      where #{T"categories"}.id = foo.id
+    "
+
+    create_index T"categories", "parent_category_id", "position", where: "parent_category_id is not null"
 }

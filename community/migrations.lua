@@ -856,5 +856,14 @@ return {
         }))
       end
     end
-  end)()
+  end)(),
+  [4] = function(self)
+    add_column(T("categories"), "position", integer({
+      default = 0
+    }))
+    db.query("\n      update " .. tostring(T("categories")) .. " set position = foo.row_number\n      from (\n        select id, parent_category_id, row_number()\n        over (partition by parent_category_id order by created_at asc)\n        from " .. tostring(T("categories")) .. "\n        where parent_category_id is not null\n      ) as foo\n      where " .. tostring(T("categories")) .. ".id = foo.id\n    ")
+    return create_index(T("categories"), "parent_category_id", "position", {
+      where = "parent_category_id is not null"
+    })
+  end
 }
