@@ -26,6 +26,7 @@ import slugify from require "lapis.util"
 --   created_at timestamp without time zone NOT NULL,
 --   updated_at timestamp without time zone NOT NULL,
 --   category_groups_count integer DEFAULT 0 NOT NULL,
+--   approval_type smallint,
 --   "position" integer DEFAULT 0 NOT NULL
 -- );
 -- ALTER TABLE ONLY community_categories
