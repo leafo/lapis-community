@@ -217,6 +217,45 @@ describe "categories", ->
           mid\update membership_type: Categories.membership_types.members_only
           assert.same Categories.membership_types.members_only, deep\get_membership_type!
 
+    describe "children", ->
+      it "gets empty children", ->
+        assert.same {}, category\get_children!
+
+      it "gets hierarchy", ->
+        other_cat = factory.Categories!
+
+        a = factory.Categories parent_category_id: category.id
+        b = factory.Categories parent_category_id: category.id
+        a2 = factory.Categories parent_category_id: a.id
+
+        -- other categories should not interfere
+        xx = factory.Categories parent_category_id: other_cat.id
+        factory.Categories parent_category_id: xx.id
+
+        children = category\get_children!
+        assert.same children, category.children
+
+        flatten_children = (cs) ->
+          return for c in *cs
+            {
+              id: c.id
+              children: if c.children
+                flatten_children c.children
+            }
+
+        assert.same {
+          {
+            id: a.id
+            children: {
+              { id: a2.id}
+            }
+          }
+          {
+            id: b.id
+          }
+        }, flatten_children children
+
+
     describe "get_order_ranges", ->
       it "gets empty order range", ->
         assert.same {regular: {}, sticky: {}}, category\get_order_ranges!
@@ -251,8 +290,8 @@ describe "categories", ->
           sticky: {}
         }, category\get_order_ranges!
 
-  describe "heierarchy", ->
-    it "creates hierarchy with auto position", ->
+  describe "position", ->
+    it "creates hierarchy with position set correctly", ->
       root = factory.Categories!
       root2 = factory.Categories!
 
@@ -264,5 +303,3 @@ describe "categories", ->
 
       b = factory.Categories parent_category_id: root.id
       assert.same 2, b.position
-
-

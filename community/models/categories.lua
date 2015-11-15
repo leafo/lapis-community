@@ -344,6 +344,23 @@ do
         end
       end
       return self.ancestors
+    end,
+    get_children = function(self)
+      if self.children then
+        return self.children
+      end
+      local NestedOrderedPaginator
+      NestedOrderedPaginator = require("community.model").NestedOrderedPaginator
+      local pager = NestedOrderedPaginator(self.__class, "position", [[      where parent_category_id = ?
+    ]], self.id, {
+        per_page = 1000,
+        parent_field = "parent_category_id",
+        is_top_level_item = function(item)
+          return item.parent_category_id == self.id
+        end
+      })
+      self.children = pager:get_page()
+      return self.children
     end
   }
   _base_0.__index = _base_0
