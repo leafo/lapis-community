@@ -36,6 +36,7 @@ class Topics extends Model
   @relations: {
     {"category", belongs_to: "Categories"}
     {"user", belongs_to: "Users"}
+    {"last_post", belongs_to: "Posts"}
   }
 
   @create: (opts={}) =>

@@ -26,6 +26,13 @@ class BrowsingApp extends TestApp
       post: @post
     }
 
+  "/category": capture_errors_json =>
+    @flow\category_single!
+    json: {
+      success: true
+      category: @category
+    }
+
   "/topic-posts": capture_errors_json =>
     @flow\topic_posts nil, @params.order
     json: {
@@ -260,7 +267,6 @@ describe "browsing flow", ->
             post_id: p.id
           }
 
-
           assert.same p.id, res.post.id
           assert.truthy res.post.user
           assert.truthy res.post.topic
@@ -272,5 +278,51 @@ describe "browsing flow", ->
             assert.truthy child.user
             assert.truthy child.topic
 
+      describe "category", ->
+        it "gets empty category", ->
+          category = factory.Categories!
 
+          res = BrowsingApp\get current_user, "/category", {
+            category_id: category.id
+          }
+
+          assert.same {}, res.category.children
+
+        it "gets category with children preloaded", ->
+          category = factory.Categories!
+
+          a = factory.Categories parent_category_id: category.id
+          b = factory.Categories parent_category_id: category.id
+
+          category_topic = (cat) ->
+            topic = factory.Topics category_id: cat.id
+            post = factory.Posts topic_id: topic.id
+            topic\increment_from_post post
+            cat\increment_from_topic topic
+
+            topic
+
+          a_topic = category_topic a
+          b_topic = category_topic b
+
+          res = BrowsingApp\get current_user, "/category", {
+            category_id: category.id
+          }
+
+          children = res.category.children
+
+          assert.same 2, #children
+
+          for child in *children
+            assert.same category.id, child.parent_category_id
+
+          -- see if we've preloaded everything
+          assert.same a_topic.id, children[1].last_topic.id
+          assert.same b_topic.id, children[2].last_topic.id
+
+          assert.same a_topic.last_post_id, children[1].last_topic.last_post.id
+          assert.same b_topic.last_post_id, children[2].last_topic.last_post.id
+
+          assert.same a_topic\get_last_post!.user_id, children[1].last_topic.last_post.user.id
+          assert.same b_topic\get_last_post!.user_id, children[2].last_topic.last_post.user.id
 

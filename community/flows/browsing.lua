@@ -314,7 +314,6 @@ do
     category_topics = function(self)
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()
-      assert_error(self.category:allowed_to_view(self.current_user), "not allowed to view")
       do
         local view_counter = self:view_counter()
         if view_counter then
@@ -427,6 +426,45 @@ do
       end
       self:preload_posts(all_posts)
       self.post.children = children
+      return true
+    end,
+    category_single = function(self)
+      local CategoriesFlow = require("community.flows.categories")
+      CategoriesFlow(self):load_category()
+      self.category:get_children({
+        prepare_results = function(categories)
+          Topics:include_in(categories, "last_topic_id")
+          local topics
+          do
+            local _accum_0 = { }
+            local _len_0 = 1
+            for _index_0 = 1, #categories do
+              local c = categories[_index_0]
+              if c.last_topic then
+                _accum_0[_len_0] = c.last_topic
+                _len_0 = _len_0 + 1
+              end
+            end
+            topics = _accum_0
+          end
+          Posts:include_in(topics, "last_post_id")
+          local posts
+          do
+            local _accum_0 = { }
+            local _len_0 = 1
+            for _index_0 = 1, #topics do
+              local topic = topics[_index_0]
+              if topic.last_post then
+                _accum_0[_len_0] = topic.last_post
+                _len_0 = _len_0 + 1
+              end
+            end
+            posts = _accum_0
+          end
+          Users:include_in(posts, "user_id")
+          return categories
+        end
+      })
       return true
     end
   }

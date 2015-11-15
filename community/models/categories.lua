@@ -345,7 +345,7 @@ do
       end
       return self.ancestors
     end,
-    get_children = function(self)
+    get_children = function(self, opts)
       if self.children then
         return self.children
       end
@@ -353,6 +353,7 @@ do
       NestedOrderedPaginator = require("community.model").NestedOrderedPaginator
       local pager = NestedOrderedPaginator(self.__class, "position", [[      where parent_category_id = ?
     ]], self.id, {
+        prepare_results = opts and opts.prepare_results,
         per_page = 1000,
         parent_field = "parent_category_id",
         is_top_level_item = function(item)

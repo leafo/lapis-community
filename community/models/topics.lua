@@ -362,6 +362,10 @@ do
     {
       "user",
       belongs_to = "Users"
+    },
+    {
+      "last_post",
+      belongs_to = "Posts"
     }
   }
   self.create = function(self, opts)
