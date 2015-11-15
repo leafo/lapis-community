@@ -75,6 +75,12 @@ class Categories extends Model
     if opts.title
       opts.slug or= slugify opts.title
 
+    if opts.parent_category_id and not opts.position
+      opts.position = db.raw db.interpolate_query "
+       (select coalesce(max(position), 0) from #{db.escape_identifier @table_name!}
+         where parent_category_id = ?) + 1
+      ", opts.parent_category_id
+
     Model.create @, opts
 
   @preload_last_topics: (categories) =>

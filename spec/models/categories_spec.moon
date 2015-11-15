@@ -251,4 +251,18 @@ describe "categories", ->
           sticky: {}
         }, category\get_order_ranges!
 
+  describe "heierarchy", ->
+    it "creates hierarchy with auto position", ->
+      root = factory.Categories!
+      root2 = factory.Categories!
+
+      a = factory.Categories parent_category_id: root.id
+      assert.same 1, a.position
+
+      a2 = factory.Categories parent_category_id: root2.id
+      assert.same 1, a2.position
+
+      b = factory.Categories parent_category_id: root.id
+      assert.same 2, b.position
+
 
