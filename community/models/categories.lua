@@ -362,6 +362,23 @@ do
       })
       self.children = pager:get_page()
       return self.children
+    end,
+    get_flat_children = function(self, ...)
+      self:get_children(...)
+      local flat = { }
+      local append_children
+      append_children = function(cat)
+        local _list_0 = cat.children
+        for _index_0 = 1, #_list_0 do
+          local c = _list_0[_index_0]
+          table.insert(flat, c)
+          if c.children and next(c.children) then
+            append_children(c)
+          end
+        end
+      end
+      append_children(self)
+      return flat
     end
   }
   _base_0.__index = _base_0

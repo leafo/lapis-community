@@ -21,7 +21,31 @@ require_login = function(fn)
     return fn(self)
   end
 end
+local convert_arrays
+convert_arrays = function(p)
+  local i = 1
+  while true do
+    local str_i = tostring(i)
+    do
+      local v = p[str_i]
+      if v then
+        p[i] = v
+        p[str_i] = nil
+      else
+        break
+      end
+    end
+    i = i + 1
+  end
+  for k, v in pairs(p) do
+    if type(v) == "table" then
+      convert_arrays(v)
+    end
+  end
+  return p
+end
 return {
   assert_page = assert_page,
-  require_login = require_login
+  require_login = require_login,
+  convert_arrays = convert_arrays
 }

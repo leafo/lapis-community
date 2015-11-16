@@ -15,4 +15,23 @@ require_login = (fn) ->
     assert_error @current_user, "you must be logged in"
     fn @
 
-{:assert_page, :require_login}
+-- convert string array indxes into numbers for post params
+-- modifies in place
+convert_arrays = (p) ->
+  i = 1
+  while true
+    str_i = "#{i}"
+    if v = p[str_i]
+      p[i] = v
+      p[str_i] = nil
+    else
+      break
+    i += 1
+
+  for k,v in pairs p
+    if type(v) == "table"
+      convert_arrays v
+
+  p
+
+{:assert_page, :require_login, :convert_arrays}

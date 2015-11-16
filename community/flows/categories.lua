@@ -244,6 +244,137 @@ do
       })
       return true
     end),
+    set_children = require_login(function(self)
+      self:load_category()
+      assert_error(self.category:allowed_to_edit(self.current_user), "invalid category")
+      local convert_arrays
+      convert_arrays = require("community.helpers.app").convert_arrays
+      self.params.categories = self.params.categories or { }
+      assert_valid(self.params, {
+        {
+          "categories",
+          type = "table"
+        }
+      })
+      convert_arrays(self.params)
+      local validate_category_params
+      validate_category_params = function(params)
+        assert_valid(params, {
+          {
+            "id",
+            optional = true,
+            is_integer = true
+          },
+          {
+            "title",
+            exists = true,
+            max_length = limits.MAX_TITLE_LEN
+          },
+          {
+            "children",
+            optional = true,
+            type = "table"
+          }
+        })
+        if params.children then
+          local _list_0 = params.children
+          for _index_0 = 1, #_list_0 do
+            local child = _list_0[_index_0]
+            validate_params(child)
+          end
+        end
+      end
+      local _list_0 = self.params.categories
+      for _index_0 = 1, #_list_0 do
+        local category = _list_0[_index_0]
+        validate_category_params(category)
+      end
+      local existing = self.category:get_flat_children()
+      local existing_by_id
+      do
+        local _tbl_0 = { }
+        for _index_0 = 1, #existing do
+          local c = existing[_index_0]
+          _tbl_0[c.id] = c
+        end
+        existing_by_id = _tbl_0
+      end
+      local existing_assigned = { }
+      local set_children
+      set_children = function(parent, children)
+        local filtered
+        do
+          local _accum_0 = { }
+          local _len_0 = 1
+          for _index_0 = 1, #children do
+            local _continue_0 = false
+            repeat
+              local c = children[_index_0]
+              if c.id then
+                c.category = existing_by_id[tonumber(c.id)]
+                if not (c.category) then
+                  _continue_0 = true
+                  break
+                end
+              end
+              local _value_0 = c
+              _accum_0[_len_0] = _value_0
+              _len_0 = _len_0 + 1
+              _continue_0 = true
+            until true
+            if not _continue_0 then
+              break
+            end
+          end
+          filtered = _accum_0
+        end
+        for position, c in ipairs(filtered) do
+          local update_params = {
+            position = position,
+            parent_category_id = parent.id,
+            title = c.title
+          }
+          if c.category then
+            existing_assigned[c.category.id] = true
+            update_params = filter_update(c.category, update_params)
+            if next(update_params) then
+              c.category:update(update_params)
+            end
+          else
+            c.category = Categories:create(update_params)
+          end
+        end
+      end
+      set_children(self.category, self.params.categories)
+      local orphans
+      do
+        local _accum_0 = { }
+        local _len_0 = 1
+        for _index_0 = 1, #existing do
+          local _continue_0 = false
+          repeat
+            local c = existing[_index_0]
+            if existing_assigned[c.id] then
+              _continue_0 = true
+              break
+            end
+            local _value_0 = c
+            _accum_0[_len_0] = _value_0
+            _len_0 = _len_0 + 1
+            _continue_0 = true
+          until true
+          if not _continue_0 then
+            break
+          end
+        end
+        orphans = _accum_0
+      end
+      for _index_0 = 1, #orphans do
+        local o = orphans[_index_0]
+        o:delete()
+      end
+      return true
+    end),
     edit_category = require_login(function(self)
       self:load_category()
       assert_error(self.category:allowed_to_edit(self.current_user), "invalid category")

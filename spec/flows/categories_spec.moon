@@ -61,6 +61,9 @@ class CategoryApp extends TestApp
       :post
     }
 
+  "/set-children": capture_errors_json =>
+    @flow\set_children!
+    json: { "ok" }
 
 describe "categories", ->
   use_test_env!
@@ -114,7 +117,7 @@ describe "categories", ->
     before_each ->
       category = factory.Categories user_id: current_user.id, description: "okay okay"
 
-    describe "edit #ddd", ->
+    describe "edit", ->
       it "should edit category", ->
         res = CategoryApp\get current_user, "/edit-category", {
           category_id: category.id
@@ -320,3 +323,38 @@ describe "categories", ->
         pending_post\refresh!
         assert.same PendingPosts.statuses.deleted, pending_post.status
 
+  describe "set children #ddd", =>
+    local category
+
+    simplify_children = (children) ->
+      return for c in *children
+        {
+          title: c.title
+          children: c.children and next(c.children) and simplify_children(c.children) or nil
+        }
+
+    assert_children = (tree, category) ->
+      category = Categories\find category.id
+      category\get_children!
+      assert.same tree, simplify_children category.children
+
+    before_each ->
+      category = factory.Categories user_id: current_user.id
+
+    it "should set empty cateogires", ->
+      CategoryApp\get current_user, "/set-children", {
+        category_id: category.id
+      }
+
+    it "creates new categories", ->
+      res = CategoryApp\get current_user, "/set-children", {
+        category_id: category.id
+        "categories[1][title]": "alpha"
+        "categories[2][title]": "beta"
+      }
+
+      assert.nil res.errors
+      assert_children {
+        {title: "alpha"}
+        {title: "beta"}
+      }, category

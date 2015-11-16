@@ -192,6 +192,74 @@ class CategoriesFlow extends Flow
 
     true
 
+  -- categories[1][title] = "hello!"
+  -- categories[1][children][1][title] = "a child!"
+  -- categories[2][title] = "reused category"
+  -- categories[2][id] = "1234"
+  set_children: require_login =>
+    @load_category!
+    assert_error @category\allowed_to_edit(@current_user), "invalid category"
+
+    import convert_arrays from require "community.helpers.app"
+    @params.categories or= {}
+
+    assert_valid @params, {
+      {"categories", type: "table"}
+    }
+
+    convert_arrays @params
+
+    validate_category_params = (params) ->
+      assert_valid params, {
+        {"id", optional: true, is_integer: true}
+        {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
+        {"children", optional: true, type: "table"}
+      }
+
+      if params.children
+        for child in *params.children
+          validate_params child
+
+    for category in *@params.categories
+      validate_category_params category
+
+    existing = @category\get_flat_children!
+    existing_by_id = {c.id, c for c in *existing}
+    existing_assigned = {}
+
+    set_children = (parent, children) ->
+      filtered = for c in *children
+        if c.id
+          c.category = existing_by_id[tonumber c.id]
+          continue unless c.category
+        c
+
+      for position, c in ipairs filtered
+        update_params = {
+          :position
+          parent_category_id: parent.id
+          title: c.title
+        }
+
+        if c.category
+          existing_assigned[c.category.id] = true
+          update_params = filter_update c.category, update_params
+          if next update_params
+            c.category\update update_params
+        else
+          c.category = Categories\create update_params
+
+    set_children @category, @params.categories
+    orphans = for c in *existing
+      continue if existing_assigned[c.id]
+      c
+
+    -- TODO: not that great
+    for o in *orphans
+      o\delete!
+
+    true
+
   edit_category: require_login =>
     @load_category!
     assert_error @category\allowed_to_edit(@current_user), "invalid category"

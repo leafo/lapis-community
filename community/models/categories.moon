@@ -353,3 +353,15 @@ class Categories extends Model
     @children = pager\get_page!
     @children
 
+  get_flat_children: (...) =>
+    @get_children ...
+    flat = {}
+    append_children = (cat) ->
+      for c in *cat.children
+        table.insert flat, c
+        if c.children and next c.children
+          append_children c
+
+    append_children @
+    flat
+
