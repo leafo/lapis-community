@@ -323,7 +323,7 @@ describe "categories", ->
         pending_post\refresh!
         assert.same PendingPosts.statuses.deleted, pending_post.status
 
-  describe "set children #ddd", =>
+  describe "set children", =>
     local category
 
     simplify_children = (children) ->
@@ -336,6 +336,8 @@ describe "categories", ->
     assert_children = (tree, category) ->
       category = Categories\find category.id
       category\get_children!
+      -- require("moon").p tree
+      -- require("moon").p simplify_children category.children
       assert.same tree, simplify_children category.children
 
     before_each ->
@@ -357,4 +359,34 @@ describe "categories", ->
       assert_children {
         {title: "alpha"}
         {title: "beta"}
+      }, category
+
+    it "creates new categories with nesting #ddd", ->
+      res = CategoryApp\get current_user, "/set-children", {
+        category_id: category.id
+
+        "categories[1][title]": "alpha"
+        "categories[1][children][1][title]": "alpha one"
+        "categories[1][children][2][title]": "alpha two"
+        "categories[2][title]": "beta"
+        "categories[3][title]": "cow"
+        "categories[3][children][1][title]": "cow moo"
+      }
+
+      assert.nil res.errors
+      assert_children {
+        {
+          title: "alpha"
+          children: {
+            {title: "alpha one"}
+            {title: "alpha two"}
+          }
+        }
+        {title: "beta"}
+        {
+          title: "cow"
+          children: {
+            {title: "cow moo"}
+          }
+        }
       }, category

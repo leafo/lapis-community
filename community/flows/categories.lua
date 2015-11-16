@@ -280,7 +280,7 @@ do
           local _list_0 = params.children
           for _index_0 = 1, #_list_0 do
             local child = _list_0[_index_0]
-            validate_params(child)
+            validate_category_params(child)
           end
         end
       end
@@ -342,6 +342,12 @@ do
             end
           else
             c.category = Categories:create(update_params)
+          end
+        end
+        for _index_0 = 1, #filtered do
+          local c = filtered[_index_0]
+          if c.children and next(c.children) then
+            set_children(c.category, c.children)
           end
         end
       end

@@ -218,7 +218,7 @@ class CategoriesFlow extends Flow
 
       if params.children
         for child in *params.children
-          validate_params child
+          validate_category_params child
 
     for category in *@params.categories
       validate_category_params category
@@ -234,6 +234,7 @@ class CategoriesFlow extends Flow
           continue unless c.category
         c
 
+      -- current depth, update or create
       for position, c in ipairs filtered
         update_params = {
           :position
@@ -248,6 +249,11 @@ class CategoriesFlow extends Flow
             c.category\update update_params
         else
           c.category = Categories\create update_params
+
+      -- create children
+      for c in *filtered
+        if c.children and next c.children
+          set_children c.category, c.children
 
     set_children @category, @params.categories
     orphans = for c in *existing
