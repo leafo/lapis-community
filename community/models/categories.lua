@@ -445,6 +445,10 @@ do
     {
       "last_topic",
       belongs_to = "Topics"
+    },
+    {
+      "parent_category",
+      belongs_to = "Categories"
     }
   }
   self.create = function(self, opts)

@@ -264,6 +264,7 @@ class CategoriesFlow extends Flow
       if o.topics_count > 0
         o\update filter_update o, {
           archived: true
+          hidden: true
           parent_category_id: @category.id
         }
       else

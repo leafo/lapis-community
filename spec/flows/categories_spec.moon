@@ -463,7 +463,7 @@ describe "categories", ->
       assert.not.same category.id, b2.parent_category_id
       assert.nil Categories\find id: b1.id
 
-    it "archives orphan #ddd", ->
+    it "archives orphan", ->
       b1 = factory.Categories parent_category_id: category.id, title: "orphan"
       topic = factory.Topics category_id: b1.id
       b1\increment_from_topic topic
@@ -475,3 +475,4 @@ describe "categories", ->
 
       b1\refresh!
       assert.true b1.archived
+      assert.true b1.hidden

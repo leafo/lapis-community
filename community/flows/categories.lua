@@ -377,7 +377,15 @@ do
       end
       for _index_0 = 1, #orphans do
         local o = orphans[_index_0]
-        o:delete()
+        if o.topics_count > 0 then
+          o:update(filter_update(o, {
+            archived = true,
+            hidden = true,
+            parent_category_id = self.category.id
+          }))
+        else
+          o:delete()
+        end
       end
       return true
     end),
