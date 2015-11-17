@@ -505,3 +505,4 @@ describe "categories", ->
       b1\refresh!
       assert.true b1.archived
       assert.true b1.hidden
+      assert.same 2, b1.position

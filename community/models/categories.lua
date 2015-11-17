@@ -458,6 +458,9 @@ do
       belongs_to = "Categories"
     }
   }
+  self.next_position = function(self, parent_id)
+    return db.raw(db.interpolate_query("\n     (select coalesce(max(position), 0) from " .. tostring(db.escape_identifier(self:table_name())) .. "\n       where parent_category_id = ?) + 1\n    ", parent_id))
+  end
   self.create = function(self, opts)
     if opts == nil then
       opts = { }
@@ -475,7 +478,7 @@ do
       opts.slug = opts.slug or slugify(opts.title)
     end
     if opts.parent_category_id and not opts.position then
-      opts.position = db.raw(db.interpolate_query("\n       (select coalesce(max(position), 0) from " .. tostring(db.escape_identifier(self:table_name())) .. "\n         where parent_category_id = ?) + 1\n      ", opts.parent_category_id))
+      opts.position = self:next_position(opts.parent_category_id)
     end
     return Model.create(self, opts)
   end

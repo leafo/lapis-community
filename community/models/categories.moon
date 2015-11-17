@@ -66,6 +66,12 @@ class Categories extends Model
     {"parent_category", belongs_to: "Categories"}
   }
 
+  @next_position: (parent_id) =>
+    db.raw db.interpolate_query "
+     (select coalesce(max(position), 0) from #{db.escape_identifier @table_name!}
+       where parent_category_id = ?) + 1
+    ", parent_id
+
   @create: (opts={}) =>
     if opts.membership_type
       opts.membership_type = @membership_types\for_db opts.membership_type
@@ -80,10 +86,7 @@ class Categories extends Model
       opts.slug or= slugify opts.title
 
     if opts.parent_category_id and not opts.position
-      opts.position = db.raw db.interpolate_query "
-       (select coalesce(max(position), 0) from #{db.escape_identifier @table_name!}
-         where parent_category_id = ?) + 1
-      ", opts.parent_category_id
+      opts.position = @next_position opts.parent_category_id
 
     Model.create @, opts
 

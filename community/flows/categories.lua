@@ -387,7 +387,8 @@ do
               o:update(filter_update(o, {
                 archived = true,
                 hidden = true,
-                parent_category_id = self.category.id
+                parent_category_id = self.category.id,
+                position = Categories:next_position(self.category.id)
               }))
               _accum_0[_len_0] = o
             else

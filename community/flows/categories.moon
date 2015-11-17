@@ -266,6 +266,7 @@ class CategoriesFlow extends Flow
           archived: true
           hidden: true
           parent_category_id: @category.id
+          position: Categories\next_position @category.id
         }
         o
       else
