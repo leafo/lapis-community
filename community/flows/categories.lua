@@ -271,6 +271,16 @@ do
             max_length = limits.MAX_TITLE_LEN
           },
           {
+            "hidden",
+            optional = true,
+            type = "string"
+          },
+          {
+            "archived",
+            optional = true,
+            type = "string"
+          },
+          {
             "children",
             optional = true,
             type = "table"
@@ -332,7 +342,9 @@ do
           local update_params = {
             position = position,
             parent_category_id = parent.id,
-            title = c.title
+            title = c.title,
+            hidden = not not c.hidden,
+            archived = not not c.archived
           }
           if c.category then
             existing_assigned[c.category.id] = true

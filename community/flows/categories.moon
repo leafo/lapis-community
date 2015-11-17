@@ -213,6 +213,8 @@ class CategoriesFlow extends Flow
       assert_valid params, {
         {"id", optional: true, is_integer: true}
         {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
+        {"hidden", optional: true, type: "string"}
+        {"archived", optional: true, type: "string"}
         {"children", optional: true, type: "table"}
       }
 
@@ -240,6 +242,8 @@ class CategoriesFlow extends Flow
           :position
           parent_category_id: parent.id
           title: c.title
+          hidden: not not c.hidden
+          archived: not not c.archived
         }
 
         if c.category

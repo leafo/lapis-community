@@ -506,3 +506,27 @@ describe "categories", ->
       assert.true b1.archived
       assert.true b1.hidden
       assert.same 2, b1.position
+
+    it "updates hidden/archive", ->
+      res = CategoryApp\get current_user, "/set-children", {
+        category_id: category.id
+        "categories[1][title]": "new category"
+        "categories[1][hidden]": "on"
+      }
+
+      child = unpack category\get_children!
+      assert.true child.hidden
+      assert.false child.archived
+
+      res = CategoryApp\get current_user, "/set-children", {
+        category_id: category.id
+        "categories[1][id]": "#{child.id}"
+        "categories[1][title]": "new category"
+        "categories[1][archived]": "on"
+      }
+
+      child\refresh!
+
+      assert.false child.hidden
+      assert.true child.archived
+
