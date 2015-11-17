@@ -260,17 +260,19 @@ class CategoriesFlow extends Flow
       continue if existing_assigned[c.id]
       c
 
-    for o in *orphans
+    archived = for o in *orphans
       if o.topics_count > 0
         o\update filter_update o, {
           archived: true
           hidden: true
           parent_category_id: @category.id
         }
+        o
       else
         o\delete!
+        continue
 
-    true
+    true, archived
 
   edit_category: require_login =>
     @load_category!
