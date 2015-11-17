@@ -447,7 +447,7 @@ describe "categories", ->
       parent = b1\get_parent_category!
       assert.same category.id, parent.parent_category_id
 
-    it "deletes empty orphans #ddd", ->
+    it "deletes empty orphans", ->
       b1 = factory.Categories parent_category_id: category.id, title: "before1"
       b2 = factory.Categories parent_category_id: b1.id, title: "before2"
 
@@ -463,6 +463,15 @@ describe "categories", ->
       assert.not.same category.id, b2.parent_category_id
       assert.nil Categories\find id: b1.id
 
+    it "archives orphan #ddd", ->
+      b1 = factory.Categories parent_category_id: category.id, title: "orphan"
+      topic = factory.Topics category_id: b1.id
+      b1\increment_from_topic topic
 
+      res = CategoryApp\get current_user, "/set-children", {
+        category_id: category.id
+        "categories[1][title]": "new category"
+      }
 
-
+      b1\refresh!
+      assert.true b1.archived

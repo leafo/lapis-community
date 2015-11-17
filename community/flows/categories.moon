@@ -260,9 +260,14 @@ class CategoriesFlow extends Flow
       continue if existing_assigned[c.id]
       c
 
-    -- TODO: not that great, archive if it has posts
     for o in *orphans
-      o\delete!
+      if o.topics_count > 0
+        o\update filter_update o, {
+          archived: true
+          parent_category_id: @category.id
+        }
+      else
+        o\delete!
 
     true
 
