@@ -336,8 +336,6 @@ describe "categories", ->
     assert_children = (tree, category) ->
       category = Categories\find category.id
       category\get_children!
-      -- require("moon").p tree
-      -- require("moon").p simplify_children category.children
       assert.same tree, simplify_children category.children
 
     before_each ->
@@ -361,7 +359,7 @@ describe "categories", ->
         {title: "beta"}
       }, category
 
-    it "creates new categories with nesting", ->
+    it "creates new categories with nesting #ddd", ->
       res = CategoryApp\get current_user, "/set-children", {
         category_id: category.id
 

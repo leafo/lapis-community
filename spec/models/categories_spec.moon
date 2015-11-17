@@ -218,6 +218,13 @@ describe "models.categories", ->
           assert.same Categories.membership_types.members_only, deep\get_membership_type!
 
     describe "children", ->
+      flatten_children = (cs, fields={"id"}) ->
+        return for c in *cs
+          o = {f, c[f] for f in *fields}
+          o.children = if c.children
+            flatten_children c.children, fields
+          o
+
       it "gets empty children", ->
         assert.same {}, category\get_children!
 
@@ -235,14 +242,6 @@ describe "models.categories", ->
         children = category\get_children!
         assert.same children, category.children
 
-        flatten_children = (cs) ->
-          return for c in *cs
-            {
-              id: c.id
-              children: if c.children
-                flatten_children c.children
-            }
-
         assert.same {
           {
             id: a.id
@@ -255,6 +254,23 @@ describe "models.categories", ->
           }
         }, flatten_children children
 
+      it "gets hierarchy with many children", ->
+        a = factory.Categories parent_category_id: category.id, title: "hi"
+        a1 = factory.Categories parent_category_id: a.id, title: "alpha"
+        a2 = factory.Categories parent_category_id: a.id, title: "beta"
+        a3 = factory.Categories parent_category_id: a.id, title: "gama"
+
+        assert.same {
+          {
+            title: "hi"
+            children: {
+              { title: "alpha" }
+              { title: "beta" }
+              { title: "gama" }
+            }
+          }
+
+        }, flatten_children category\get_children!, {"title"}
 
     describe "get_order_ranges", ->
       it "gets empty order range", ->

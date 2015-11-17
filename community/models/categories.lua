@@ -349,6 +349,10 @@ do
       if self.children then
         return self.children
       end
+      local sorter
+      sorter = function(a, b)
+        return a.position < b.position
+      end
       local NestedOrderedPaginator
       NestedOrderedPaginator = require("community.model").NestedOrderedPaginator
       local pager = NestedOrderedPaginator(self.__class, "position", [[      where parent_category_id = ?
@@ -356,6 +360,9 @@ do
         prepare_results = opts and opts.prepare_results,
         per_page = 1000,
         parent_field = "parent_category_id",
+        sort = function(cats)
+          return table.sort(cats, sorter)
+        end,
         is_top_level_item = function(item)
           return item.parent_category_id == self.id
         end

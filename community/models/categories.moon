@@ -340,6 +340,8 @@ class Categories extends Model
   get_children: (opts) =>
     return @children if @children
 
+    sorter = (a,b) -> a.position < b.position
+
     import NestedOrderedPaginator from require "community.model"
     pager = NestedOrderedPaginator @@, "position", [[
       where parent_category_id = ?
@@ -347,6 +349,7 @@ class Categories extends Model
       prepare_results: opts and opts.prepare_results
       per_page: 1000
       parent_field: "parent_category_id"
+      sort: (cats) -> table.sort cats, sorter
       is_top_level_item: (item) ->
         item.parent_category_id == @id
     }
