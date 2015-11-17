@@ -361,7 +361,7 @@ describe "categories", ->
         {title: "beta"}
       }, category
 
-    it "creates new categories with nesting #ddd", ->
+    it "creates new categories with nesting", ->
       res = CategoryApp\get current_user, "/set-children", {
         category_id: category.id
 
@@ -390,3 +390,79 @@ describe "categories", ->
           }
         }
       }, category
+
+    it "edits existing children", ->
+      b1 = factory.Categories parent_category_id: category.id, title: "before1"
+      b2 = factory.Categories parent_category_id: category.id, title: "before2"
+
+      res = CategoryApp\get current_user, "/set-children", {
+        category_id: category.id
+
+        "categories[1][id]": "#{b1.id}"
+        "categories[1][title]": "before1 updated"
+        "categories[2][title]": "beta"
+        "categories[3][id]": "#{b2.id}"
+        "categories[3][title]": "before2"
+      }
+
+      assert.nil res.errors
+      assert_children {
+        {title: "before1 updated"}
+        {title: "beta"}
+        {title: "before2"}
+      }, category
+
+      b1\refresh!
+      assert.same category.id, b1.parent_category_id
+      assert.same 1, b1.position
+      assert.same "before1 updated", b1.title
+
+      b2\refresh!
+      assert.same category.id, b1.parent_category_id
+      assert.same 1, b1.position
+      assert.same "before1 updated", b1.title
+
+    it "renests existing into new parent", ->
+      b1 = factory.Categories parent_category_id: category.id, title: "before1"
+
+      res = CategoryApp\get current_user, "/set-children", {
+        category_id: category.id
+
+        "categories[1][title]": "new parent"
+        "categories[1][children][1][id]": "#{b1.id}"
+        "categories[1][children][1][title]": b1.title
+      }
+
+      assert.nil res.errors
+      assert_children {
+        {
+          title: "new parent"
+          children: {
+            { title: "before1" }
+          }
+        }
+      }, category
+
+      b1\refresh!
+      parent = b1\get_parent_category!
+      assert.same category.id, parent.parent_category_id
+
+    it "deletes empty orphans #ddd", ->
+      b1 = factory.Categories parent_category_id: category.id, title: "before1"
+      b2 = factory.Categories parent_category_id: b1.id, title: "before2"
+
+      res = CategoryApp\get current_user, "/set-children", {
+        category_id: category.id
+
+        "categories[1][title]": "cool parent"
+        "categories[1][children][1][id]": "#{b2.id}"
+        "categories[1][children][1][title]": b2.title
+      }
+
+      b2\refresh!
+      assert.not.same category.id, b2.parent_category_id
+      assert.nil Categories\find id: b1.id
+
+
+
+

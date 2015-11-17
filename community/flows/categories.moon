@@ -260,7 +260,7 @@ class CategoriesFlow extends Flow
       continue if existing_assigned[c.id]
       c
 
-    -- TODO: not that great
+    -- TODO: not that great, archive if it has posts
     for o in *orphans
       o\delete!
 

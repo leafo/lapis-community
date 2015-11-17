@@ -63,6 +63,7 @@ class Categories extends Model
     {"category_group_category", has_one: "CategoryGroupCategories"}
     {"user", belongs_to: "Users"}
     {"last_topic", belongs_to: "Topics"}
+    {"parent_category", belongs_to: "Categories"}
   }
 
   @create: (opts={}) =>
