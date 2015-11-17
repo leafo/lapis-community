@@ -359,7 +359,7 @@ describe "categories", ->
         {title: "beta"}
       }, category
 
-    it "creates new categories with nesting #ddd", ->
+    it "creates new categories with nesting", ->
       res = CategoryApp\get current_user, "/set-children", {
         category_id: category.id
 
@@ -386,6 +386,37 @@ describe "categories", ->
           children: {
             {title: "cow moo"}
           }
+        }
+      }, category
+
+    it "creates new nested child", ->
+      b1 = factory.Categories parent_category_id: category.id, title: "before1"
+      b2 = factory.Categories parent_category_id: category.id, title: "before2"
+      b3 = factory.Categories parent_category_id: category.id, title: "before2"
+
+      res = CategoryApp\get current_user, "/set-children", {
+        category_id: category.id
+
+        "categories[1][id]": b1.id
+        "categories[1][title]": "Hey cool category yeah"
+        "categories[1][children][1][id]": b2.id
+        "categories[1][children][1][title]": "Here's a child category"
+        "categories[1][children][2][title]": "Another child category"
+        "categories[2][id]": b3.id
+        "categories[2][title]": "Another thing here?"
+      }
+
+      assert.nil res.errors
+      assert_children {
+        {
+          title: "Hey cool category yeah"
+          children: {
+            { title: "Here's a child category" }
+            { title: "Another child category" }
+          }
+        }
+        {
+          title: "Another thing here?"
         }
       }, category
 
