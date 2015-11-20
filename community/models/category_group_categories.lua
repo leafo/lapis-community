@@ -7,13 +7,14 @@ local safe_insert
 safe_insert = require("community.helpers.models").safe_insert
 local CategoryGroupCategories
 do
+  local _class_0
   local _parent_0 = Model
   local _base_0 = { }
   _base_0.__index = _base_0
   setmetatable(_base_0, _parent_0.__base)
-  local _class_0 = setmetatable({
+  _class_0 = setmetatable({
     __init = function(self, ...)
-      return _parent_0.__init(self, ...)
+      return _class_0.__parent.__init(self, ...)
     end,
     __base = _base_0,
     __name = "CategoryGroupCategories",
@@ -22,7 +23,10 @@ do
     __index = function(cls, name)
       local val = rawget(_base_0, name)
       if val == nil then
-        return _parent_0[name]
+        local parent = rawget(cls, "__parent")
+        if parent then
+          return parent[name]
+        end
       else
         return val
       end

@@ -19,6 +19,7 @@ bulk_increment = function(model, column, tuples)
 end
 local AsyncCounter
 do
+  local _class_0
   local _base_0 = {
     SLEEP = 0.01,
     MAX_TRIES = 10,
@@ -95,7 +96,7 @@ do
     end
   }
   _base_0.__index = _base_0
-  local _class_0 = setmetatable({
+  _class_0 = setmetatable({
     __init = function(self, dict_name, opts)
       if opts == nil then
         opts = { }
