@@ -282,6 +282,11 @@ do
             type = "string"
           },
           {
+            "directory",
+            optional = true,
+            type = "string"
+          },
+          {
             "children",
             optional = true,
             type = "table"
@@ -345,7 +350,8 @@ do
             parent_category_id = parent.id,
             title = c.title,
             hidden = not not c.hidden,
-            archived = not not c.archived
+            archived = not not c.archived,
+            directory = not not c.directory
           }
           if c.category then
             existing_assigned[c.category.id] = true

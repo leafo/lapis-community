@@ -215,6 +215,7 @@ class CategoriesFlow extends Flow
         {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
         {"hidden", optional: true, type: "string"}
         {"archived", optional: true, type: "string"}
+        {"directory", optional: true, type: "string"}
         {"children", optional: true, type: "table"}
       }
 
@@ -244,6 +245,7 @@ class CategoriesFlow extends Flow
           title: c.title
           hidden: not not c.hidden
           archived: not not c.archived
+          directory: not not c.directory
         }
 
         if c.category
