@@ -165,6 +165,17 @@ describe "browsing flow", ->
 
           assert.same 4, #res.posts
 
+        it "sets blank pagination on posts when there are archived in first position #ddd", ->
+          topic = factory.Topics!
+          posts = for i=1,2
+            with post = factory.Posts topic_id: topic.id
+              topic\increment_from_post post
+
+          assert posts[1]\archive!
+
+          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
+          assert.falsy res.next_page
+          assert.falsy res.prev_page
 
         it "should get some nested posts", ->
           topic = factory.Topics!

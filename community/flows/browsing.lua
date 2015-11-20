@@ -130,6 +130,7 @@ do
           end
         end)()
       })
+      local min_range, max_range = self.topic:get_root_order_ranges()
       local _exp_0 = order
       if "asc" == _exp_0 then
         if before then
@@ -153,7 +154,7 @@ do
             next_after = p.post_number
           end
         end
-        if next_after == self.topic.root_posts_count then
+        if next_after == max_range then
           next_after = nil
         end
         local next_before
@@ -163,7 +164,7 @@ do
             next_before = p.post_number
           end
         end
-        if next_before == 1 then
+        if next_before == min_range then
           next_before = nil
         end
         if next_after then
@@ -198,7 +199,7 @@ do
             next_before = p.post_number
           end
         end
-        if next_before == 1 then
+        if next_before == min_range then
           next_before = nil
         end
         local next_after
@@ -208,7 +209,7 @@ do
             next_after = p.post_number
           end
         end
-        if next_after == self.topic.root_posts_count then
+        if next_after == max_range then
           next_after = nil
         end
         if next_before then

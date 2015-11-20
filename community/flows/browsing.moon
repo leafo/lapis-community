@@ -90,6 +90,8 @@ class BrowsingFlow extends Flow
       prepare_results: @\preload_posts
     }
 
+    min_range, max_range = @topic\get_root_order_ranges!
+
     switch order
       when "asc"
         if before
@@ -102,15 +104,23 @@ class BrowsingFlow extends Flow
         next_after = if p = @posts[#@posts]
           p.post_number
 
-        next_after = nil if next_after == @topic.root_posts_count
+        next_after = nil if next_after == max_range
 
         next_before = if p = @posts[1]
           p.post_number
 
-        next_before = nil if next_before == 1
+        next_before = nil if next_before == min_range
 
-        @next_page = { after: next_after } if next_after
-        @prev_page = { before: next_before > limits.POSTS_PER_PAGE + 1 and next_before or nil } if next_before
+        if next_after
+          @next_page = {
+            after: next_after
+          }
+
+        if next_before
+          -- we remove before and give empty params so first page just goes to plain URL
+          @prev_page = {
+            before: next_before > limits.POSTS_PER_PAGE + 1 and next_before or nil
+          }
 
       when "desc"
         if after
@@ -122,13 +132,12 @@ class BrowsingFlow extends Flow
         next_before = if p = @posts[#@posts]
           p.post_number
 
-
-        next_before = nil if next_before == 1
+        next_before = nil if next_before == min_range
 
         next_after = if p = @posts[1]
           p.post_number
 
-        next_after = nil if next_after == @topic.root_posts_count
+        next_after = nil if next_after == max_range
 
         @next_page = { before: next_before } if next_before
         @prev_page = { after: next_after } if next_after
