@@ -223,7 +223,7 @@ class BrowsingFlow extends Flow
     else
       @topics = pager\before before
 
-    ranges = @category\get_order_ranges!
+    ranges = @category\get_order_ranges status
     min, max = ranges.regular.min, ranges.regular.max
 
     next_after = if t = @topics[1]

@@ -228,15 +228,17 @@ class Categories extends Model
       banned_user_id: user.id
     }
 
-  get_order_ranges: =>
+  get_order_ranges: (status="default") =>
     import Topics from require "community.models"
+
+    status = Topics.statuses\for_db status
 
     res = db.query "
       select sticky, min(category_order), max(category_order)
       from #{db.escape_identifier Topics\table_name!}
-      where category_id = ? and not deleted
+      where category_id = ? and status = ? and not deleted
       group by sticky
-    ", @id
+    ", @id, status
 
     ranges = {
       sticky: {}

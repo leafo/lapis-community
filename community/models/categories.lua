@@ -202,10 +202,14 @@ do
         banned_user_id = user.id
       })
     end,
-    get_order_ranges = function(self)
+    get_order_ranges = function(self, status)
+      if status == nil then
+        status = "default"
+      end
       local Topics
       Topics = require("community.models").Topics
-      local res = db.query("\n      select sticky, min(category_order), max(category_order)\n      from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n      where category_id = ? and not deleted\n      group by sticky\n    ", self.id)
+      status = Topics.statuses:for_db(status)
+      local res = db.query("\n      select sticky, min(category_order), max(category_order)\n      from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n      where category_id = ? and status = ? and not deleted\n      group by sticky\n    ", self.id, status)
       local ranges = {
         sticky = { },
         regular = { }

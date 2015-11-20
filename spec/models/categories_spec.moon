@@ -306,6 +306,26 @@ describe "models.categories", ->
           sticky: {}
         }, category\get_order_ranges!
 
+      it "gets order range with archived topics", ->
+        topics = for i=1,4
+          with topic = factory.Topics category_id: category.id
+            category\increment_from_topic topic
+
+        topics[1]\archive!
+
+        assert.same {
+          regular: {min: 2, max: 4}
+          sticky: {}
+        }, category\get_order_ranges!
+
+        assert.same {
+          regular: {min: 1, max: 1}
+          sticky: {}
+        }, category\get_order_ranges "archived"
+
+
+
+
   describe "position", ->
     it "creates hierarchy with position set correctly", ->
       root = factory.Categories!

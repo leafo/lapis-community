@@ -360,7 +360,7 @@ do
       else
         self.topics = pager:before(before)
       end
-      local ranges = self.category:get_order_ranges()
+      local ranges = self.category:get_order_ranges(status)
       local min, max = ranges.regular.min, ranges.regular.max
       local next_after
       do
