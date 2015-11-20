@@ -1,5 +1,5 @@
 
-.PHONY: clean_test test local count build
+.PHONY: clean_test test local count build seed
 
 clean_test: build
 	-dropdb -U postgres community_test
@@ -10,6 +10,8 @@ clean_dev:
 	-dropdb -U postgres community
 	createdb -U postgres community
 	LAPIS_SHOW_QUERIES=1 LAPIS_ENVIRONMENT=development lua5.1 -e 'require("schema").make_schema()'
+
+seed:
 	LAPIS_SHOW_QUERIES=1 moon cmd/seed.moon
 
 test:
