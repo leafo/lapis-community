@@ -1,5 +1,6 @@
 db = require "lapis.db"
 import Model from require "community.model"
+import enum from require "lapis.db.model"
 
 date = require "date"
 
@@ -20,7 +21,8 @@ date = require "date"
 --   last_edited_at timestamp without time zone,
 --   deleted_at timestamp without time zone,
 --   created_at timestamp without time zone NOT NULL,
---   updated_at timestamp without time zone NOT NULL
+--   updated_at timestamp without time zone NOT NULL,
+--   status smallint DEFAULT 1 NOT NULL
 -- );
 -- ALTER TABLE ONLY community_posts
 --   ADD CONSTRAINT community_posts_pkey PRIMARY KEY (id);
@@ -35,6 +37,12 @@ class Posts extends Model
     {"topic", belongs_to: "Topics"}
     {"user", belongs_to: "Users"}
     {"parent_post", belongs_to: "Posts"}
+  }
+
+  @statuses: enum {
+    default: 1
+    archived: 2
+    spam: 2
   }
 
   @create: (opts={}) =>
@@ -65,6 +73,8 @@ class Posts extends Model
      (select coalesce(max(post_number), 0) from #{db.escape_identifier @table_name!}
        where #{db.encode_clause number_cond}) + 1
     "
+
+    opts.status = opts.status and @statuses\for_db opts.status
 
     opts.post_number = db.raw post_number
     Model.create @, opts
@@ -303,4 +313,14 @@ class Posts extends Model
       where #{clause} and post_number > ?
       limit 1
     ", @post_number, fields: "1"
+
+  archive: =>
+    @refresh "status" unless @status
+    return nil unless @status == @@statuses.default
+    return nil, "can only archive root post" unless @depth == 1
+    @update status: @@statuses.archived
+    true
+
+  is_archived: =>
+    @status == @@statuses.archived
 

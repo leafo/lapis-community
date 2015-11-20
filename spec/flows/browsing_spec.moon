@@ -70,7 +70,7 @@ describe "browsing flow", ->
           assert.truthy res.errors
           assert.same {"topic_id must be an integer"}, res.errors
 
-        it "get all posts in topic", ->
+        it "get flat posts in topic", ->
           topic = factory.Topics!
           posts = for i=1,3
             post = factory.Posts topic_id: topic.id
@@ -82,7 +82,6 @@ describe "browsing flow", ->
           assert.same 3, #res.posts
           assert.same [p.id for p in *posts], [p.id for p in *res.posts]
 
-
         it "gets posts in reverse", ->
           topic = factory.Topics!
           posts = for i=1,3
@@ -90,7 +89,11 @@ describe "browsing flow", ->
             topic\increment_from_post post
             post
 
-          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id, order: "desc"
+          res = BrowsingApp\get current_user, "/topic-posts", {
+            topic_id: topic.id
+            order: "desc"
+          }
+
           assert.truthy res.success
           assert.same 3, #res.posts
           assert.same [posts[i].id for i=#posts,1,-1], [p.id for p in *res.posts]
@@ -101,7 +104,11 @@ describe "browsing flow", ->
             post = factory.Posts topic_id: topic.id
             topic\increment_from_post post
 
-          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id, after: 1
+          res = BrowsingApp\get current_user, "/topic-posts", {
+            topic_id: topic.id
+            after: 1
+          }
+
           assert.truthy res.success
           assert.same 2, #res.posts
 
@@ -114,7 +121,11 @@ describe "browsing flow", ->
             post = factory.Posts topic_id: topic.id
             topic\increment_from_post post
 
-          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id, before: 2
+          res = BrowsingApp\get current_user, "/topic-posts", {
+            topic_id: topic.id
+            before: 2
+          }
+
           assert.truthy res.success
           assert.same 1, #res.posts
 
@@ -311,6 +322,49 @@ describe "browsing flow", ->
             assert.same p.id, child.parent_post_id
             assert.truthy child.user
             assert.truthy child.topic
+
+        it "gets post without spam nested content", ->
+          p = factory.Posts!
+          topic = p\get_topic!
+          topic\increment_from_post p
+
+          c1 = factory.Posts status: "spam", topic_id: topic.id, parent_post_id: p.id
+          topic\increment_from_post c1
+
+          c2 = factory.Posts topic_id: topic.id, parent_post_id: p.id
+          topic\increment_from_post c2
+
+          res = BrowsingApp\get current_user, "/post", {
+            post_id: p.id
+          }
+
+          assert.same 1, #res.post.children
+          assert.same c2.id, res.post.children[1].id
+
+        it "shows archive children when viewing archived post", ->
+          -- NOTE: this is currently impossible in practice since only root
+          -- posts can be archived, but it's implemented like this for future
+          -- proofing
+
+          p = factory.Posts status: "archived"
+          topic = p\get_topic!
+          topic\increment_from_post p
+
+          c1 = factory.Posts topic_id: topic.id, parent_post_id: p.id
+          topic\increment_from_post c1
+
+          c2 = factory.Posts status: "archived", topic_id: topic.id, parent_post_id: p.id
+          topic\increment_from_post c2
+
+          res = BrowsingApp\get current_user, "/post", {
+            post_id: p.id
+          }
+
+          assert.same 2, #res.post.children
+          assert.same {
+            [c1.id]: true
+            [c2.id]: true
+          }, {c.id, true for c in *res.post.children}
 
       describe "category", ->
         it "gets empty category", ->

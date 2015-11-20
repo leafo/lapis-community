@@ -877,9 +877,11 @@ return {
         create_index(T("topics"), "category_id", "sticky", "status", "category_order", {
           where = "not deleted and category_id is not null"
         })
-        return drop_index(T("topics"), "category_id", "sticky", "category_order", {
+        drop_index(T("topics"), "category_id", "sticky", "category_order", {
           where = "not deleted and category_id is not null"
         })
+        create_index(T("posts"), "topic_id", "parent_post_id", "depth", "status", "post_number")
+        return create_index(T("posts"), "parent_post_id", "status", "post_number")
       end
     end
   end)()

@@ -135,7 +135,18 @@ do
       local tname = db.escape_identifier(self.model:table_name())
       local parent_field = assert(self.opts.parent_field, "missing parent_field")
       local child_field = self.opts.child_field or "children"
-      local res = db.query("\n      with recursive nested as (\n        (select * from " .. tostring(tname) .. " " .. tostring(q) .. ")\n        union\n        select pr.* from " .. tostring(tname) .. " pr, nested\n          where pr." .. tostring(db.escape_identifier(parent_field)) .. " = nested.id\n      )\n      select * from nested\n    ")
+      local child_clause = {
+        [db.raw("pr." .. tostring(db.escape_identifier(parent_field)))] = db.raw("nested.id")
+      }
+      do
+        local clause = self.opts.child_clause
+        if clause then
+          for k, v in pairs(clause) do
+            child_clause[db.raw("pr." .. tostring(db.escape_identifier(k)))] = v
+          end
+        end
+      end
+      local res = db.query("\n      with recursive nested as (\n        (select * from " .. tostring(tname) .. " " .. tostring(q) .. ")\n        union\n        select pr.* from " .. tostring(tname) .. " pr, nested\n          where " .. tostring(db.encode_clause(child_clause)) .. "\n      )\n      select * from nested\n    ")
       for _index_0 = 1, #res do
         local r = res[_index_0]
         self.model:load(r)

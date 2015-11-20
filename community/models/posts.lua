@@ -1,6 +1,8 @@
 local db = require("lapis.db")
 local Model
 Model = require("community.model").Model
+local enum
+enum = require("lapis.db.model").enum
 local date = require("date")
 local Posts
 do
@@ -302,6 +304,24 @@ do
       return not not unpack(Posts:select("\n      where " .. tostring(clause) .. " and post_number > ?\n      limit 1\n    ", self.post_number, {
         fields = "1"
       }))
+    end,
+    archive = function(self)
+      if not (self.status) then
+        self:refresh("status")
+      end
+      if not (self.status == self.__class.statuses.default) then
+        return nil
+      end
+      if not (self.depth == 1) then
+        return nil, "can only archive root post"
+      end
+      self:update({
+        status = self.__class.statuses.archived
+      })
+      return true
+    end,
+    is_archived = function(self)
+      return self.status == self.__class.statuses.archived
     end
   }
   _base_0.__index = _base_0
@@ -348,6 +368,11 @@ do
       belongs_to = "Posts"
     }
   }
+  self.statuses = enum({
+    default = 1,
+    archived = 2,
+    spam = 2
+  })
   self.create = function(self, opts)
     if opts == nil then
       opts = { }
@@ -381,6 +406,7 @@ do
       parent_post_id = opts.parent_post_id or db.NULL
     }
     local post_number = db.interpolate_query("\n     (select coalesce(max(post_number), 0) from " .. tostring(db.escape_identifier(self:table_name())) .. "\n       where " .. tostring(db.encode_clause(number_cond)) .. ") + 1\n    ")
+    opts.status = opts.status and self.statuses:for_db(opts.status)
     opts.post_number = db.raw(post_number)
     return Model.create(self, opts)
   end

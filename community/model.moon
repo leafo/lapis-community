@@ -62,12 +62,20 @@ class NestedOrderedPaginator extends OrderedPaginator
     parent_field = assert @opts.parent_field, "missing parent_field"
     child_field = @opts.child_field or "children"
 
+    child_clause = {
+      [db.raw "pr.#{db.escape_identifier parent_field}"]: db.raw "nested.id"
+    }
+
+    if clause = @opts.child_clause
+      for k,v in pairs clause
+        child_clause[db.raw "pr.#{db.escape_identifier k}"] = v
+
     res = db.query "
       with recursive nested as (
         (select * from #{tname} #{q})
         union
         select pr.* from #{tname} pr, nested
-          where pr.#{db.escape_identifier parent_field} = nested.id
+          where #{db.encode_clause child_clause}
       )
       select * from nested
     "

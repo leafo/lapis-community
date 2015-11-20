@@ -100,10 +100,23 @@ do
         end
       end
       local before, after = self:get_before_after()
-      local pager = NestedOrderedPaginator(Posts, "post_number", [[      where topic_id = ? and depth = 1
-    ]], self.topic.id, {
+      assert_valid(self.params, {
+        {
+          "status",
+          optional = true,
+          one_of = {
+            "archived"
+          }
+        }
+      })
+      local status = Posts.statuses:for_db(self.params.status or "default")
+      local pager = NestedOrderedPaginator(Posts, "post_number", [[      where topic_id = ? and depth = 1 and status = ?
+    ]], self.topic.id, status, {
         per_page = limits.POSTS_PER_PAGE,
         parent_field = "parent_post_id",
+        child_clause = {
+          status = status
+        },
         sort = function(list)
           return table.sort(list, function(a, b)
             return a.post_number < b.post_number
@@ -400,11 +413,25 @@ do
       PostsFlow(self):load_post()
       self.topic = self.post:get_topic()
       assert_error(self.post:allowed_to_view(self.current_user), "not allowed to view")
+      local status
+      if self.post:is_archived() then
+        status = db.list({
+          Posts.statuses.archived,
+          Posts.statuses.default
+        })
+      else
+        status = db.list({
+          self.post.status
+        })
+      end
       local all_posts
-      local pager = NestedOrderedPaginator(Posts, "post_number", [[      where parent_post_id = ?
-    ]], self.post.id, {
+      local pager = NestedOrderedPaginator(Posts, "post_number", [[      where parent_post_id = ? and status in ?
+    ]], self.post.id, status, {
         per_page = limits.POSTS_PER_PAGE,
         parent_field = "parent_post_id",
+        child_clause = {
+          status = status
+        },
         sort = function(list)
           return table.sort(list, function(a, b)
             return a.post_number < b.post_number

@@ -67,12 +67,22 @@ class BrowsingFlow extends Flow
 
     before, after = @get_before_after!
 
+    assert_valid @params, {
+      {"status", optional: true, one_of: {"archived"}}
+    }
+
+    status = Posts.statuses\for_db @params.status or "default"
+
     pager = NestedOrderedPaginator Posts, "post_number", [[
-      where topic_id = ? and depth = 1
-    ]], @topic.id, {
+      where topic_id = ? and depth = 1 and status = ?
+    ]], @topic.id, status, {
       per_page: limits.POSTS_PER_PAGE
 
       parent_field: "parent_post_id"
+      child_clause: {
+        status: status
+      }
+
       sort: (list) ->
         table.sort list, (a,b) ->
           a.post_number < b.post_number
@@ -251,14 +261,24 @@ class BrowsingFlow extends Flow
 
     assert_error @post\allowed_to_view(@current_user), "not allowed to view"
 
+    -- if the post is archived then we should include both archived and non-archived
+    status = if @post\is_archived!
+      db.list { Posts.statuses.archived, Posts.statuses.default }
+    else
+      db.list { @post.status }
+
     local all_posts
 
     pager = NestedOrderedPaginator Posts, "post_number", [[
-      where parent_post_id = ?
-    ]], @post.id, {
+      where parent_post_id = ? and status in ?
+    ]], @post.id, status, {
       per_page: limits.POSTS_PER_PAGE
 
       parent_field: "parent_post_id"
+
+      child_clause: {
+        status: status
+      }
 
       sort: (list) ->
         table.sort list, (a,b) ->
