@@ -426,17 +426,16 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
 
     create_index T"categories", "parent_category_id", "position", where: "parent_category_id is not null"
 
-  [5]: if config._name == "test"
-    =>
-      add_column T"categories", "directory", boolean default: false
-      add_column T"topics", "status", enum default: 1
-      add_column T"posts", "status", enum default: 1
+  [5]: =>
+    add_column T"categories", "directory", boolean default: false
+    add_column T"topics", "status", enum default: 1
+    add_column T"posts", "status", enum default: 1
 
-      create_index T"topics", "category_id", "sticky", "status", "category_order", where: "not deleted and category_id is not null"
-      drop_index T"topics", "category_id", "sticky", "category_order", where: "not deleted and category_id is not null"
+    create_index T"topics", "category_id", "sticky", "status", "category_order", where: "not deleted and category_id is not null"
+    drop_index T"topics", "category_id", "sticky", "category_order", where: "not deleted and category_id is not null"
 
-      create_index T"posts", "topic_id", "parent_post_id", "depth", "status", "post_number"
-      create_index T"posts", "parent_post_id", "status", "post_number"
+    create_index T"posts", "topic_id", "parent_post_id", "depth", "status", "post_number"
+    create_index T"posts", "parent_post_id", "status", "post_number"
 }
 
 

@@ -30,7 +30,7 @@ import enum from require "lapis.db.model"
 -- );
 -- ALTER TABLE ONLY community_topics
 --   ADD CONSTRAINT community_topics_pkey PRIMARY KEY (id);
--- CREATE INDEX community_topics_category_id_sticky_category_order_idx ON community_topics USING btree (category_id, sticky, category_order) WHERE ((NOT deleted) AND (category_id IS NOT NULL));
+-- CREATE INDEX community_topics_category_id_sticky_status_category_order_idx ON community_topics USING btree (category_id, sticky, status, category_order) WHERE ((NOT deleted) AND (category_id IS NOT NULL));
 --
 class Topics extends Model
   @timestamp: true
