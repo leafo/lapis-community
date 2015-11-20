@@ -217,3 +217,41 @@ describe "models.topics", ->
       posts = Posts\select "where parent_post_id = ? order by post_number", p2.id
       assert.same {1,2}, [p.post_number for p in *posts]
 
+  describe "get_root_order_ranges", ->
+    it "gets order ranges in empty topic", ->
+      topic = factory.Topics!
+      min, max = topic\get_root_order_ranges!
+
+      assert.same nil, min
+      assert.same nil, max
+
+    it "gets order ranges topic with posts", ->
+      topic = factory.Topics!
+      p1 = factory.Posts topic_id: topic.id
+      topic\increment_from_post p1
+
+      p2 = factory.Posts topic_id: topic.id
+      topic\increment_from_post p2
+
+      for i=1,3
+        pc = factory.Posts topic_id: topic.id, parent_post_id: p1.id
+        topic\increment_from_post pc
+
+      min, max = topic\get_root_order_ranges!
+
+      assert.same 1, min
+      assert.same 2, max
+
+    it "ignores archive posts when getting order ranges", ->
+      topic = factory.Topics!
+
+      posts = for i=1,3
+        with post = factory.Posts topic_id: topic.id
+          topic\increment_from_post post
+
+      posts[1]\archive!
+
+      min, max = topic\get_root_order_ranges!
+      assert.same 2, min
+      assert.same 3, max
+

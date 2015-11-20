@@ -325,3 +325,17 @@ class Topics extends Model
     return false unless category
     import Categories from require "community.models"
     category\get_approval_type! == Categories.approval_types.pending
+
+  get_root_order_ranges: (status="default") =>
+    import Posts from require "community.models"
+    status = Posts.statuses\for_db status
+
+    res = db.query "
+      select min(post_number), max(post_number)
+      from #{db.escape_identifier Posts\table_name!}
+      where topic_id = ? and depth = 1 and parent_post_id is null and status = ?
+    ", @id, status
+
+    if res = unpack res
+      res.min, res.max
+

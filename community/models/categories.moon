@@ -230,7 +230,6 @@ class Categories extends Model
 
   get_order_ranges: (status="default") =>
     import Topics from require "community.models"
-
     status = Topics.statuses\for_db status
 
     res = db.query "

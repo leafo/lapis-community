@@ -340,6 +340,21 @@ do
       local Categories
       Categories = require("community.models").Categories
       return category:get_approval_type() == Categories.approval_types.pending
+    end,
+    get_root_order_ranges = function(self, status)
+      if status == nil then
+        status = "default"
+      end
+      local Posts
+      Posts = require("community.models").Posts
+      status = Posts.statuses:for_db(status)
+      local res = db.query("\n      select min(post_number), max(post_number)\n      from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n      where topic_id = ? and depth = 1 and parent_post_id is null and status = ?\n    ", self.id, status)
+      do
+        res = unpack(res)
+        if res then
+          return res.min, res.max
+        end
+      end
     end
   }
   _base_0.__index = _base_0
