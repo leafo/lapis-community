@@ -3,6 +3,7 @@ db = require "lapis.db"
 import Model from require "community.model"
 import slugify from require "lapis.util"
 import memoize1 from require "community.helpers.models"
+import enum from require "lapis.db.model"
 
 -- Generated schema dump: (do not edit)
 --
@@ -24,7 +25,8 @@ import memoize1 from require "community.helpers.models"
 --   category_order integer DEFAULT 0 NOT NULL,
 --   deleted_at timestamp without time zone,
 --   created_at timestamp without time zone NOT NULL,
---   updated_at timestamp without time zone NOT NULL
+--   updated_at timestamp without time zone NOT NULL,
+--   status smallint DEFAULT 1 NOT NULL
 -- );
 -- ALTER TABLE ONLY community_topics
 --   ADD CONSTRAINT community_topics_pkey PRIMARY KEY (id);
@@ -39,10 +41,17 @@ class Topics extends Model
     {"last_post", belongs_to: "Posts"}
   }
 
+  @statuses: enum {
+    default: 1
+    archived: 2
+    spam: 2
+  }
+
   @create: (opts={}) =>
     if opts.title
       opts.slug or= slugify opts.title
 
+    opts.status = opts.status and @statuses\for_db opts.status
     opts.category_order = @update_category_order_sql opts.category_id
 
     Model.create @, opts
@@ -71,6 +80,7 @@ class Topics extends Model
       "
     }, where
 
+  -- AKA: allowed to reply
   allowed_to_post: (user) =>
     return false unless user
     return false if @deleted
@@ -303,6 +313,12 @@ class Topics extends Model
       ) foo
       where posts.id = foo.id and posts.post_number != new_number
     "
+
+  archive: =>
+    @refresh "status" unless @status
+    return nil unless @status == @@statuses.default
+    @update status: @@statuses.archived
+    true
 
   post_needs_approval: =>
     category = @get_category!

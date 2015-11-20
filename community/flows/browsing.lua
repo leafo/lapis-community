@@ -299,8 +299,8 @@ do
       return posts
     end,
     sticky_category_topics = function(self)
-      local pager = OrderedPaginator(Topics, "category_order", [[      where category_id = ? and not deleted and sticky
-    ]], self.category.id, {
+      local pager = OrderedPaginator(Topics, "category_order", [[      where category_id = ? and status = ? not deleted and sticky
+    ]], self.category.id, Topics.statuses.default, {
         per_page = limits.TOPICS_PER_PAGE,
         prepare_results = (function()
           local _base_1 = self
@@ -315,6 +315,16 @@ do
     category_topics = function(self)
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()
+      assert_valid(self.params, {
+        {
+          "status",
+          optional = true,
+          one_of = {
+            "archived"
+          }
+        }
+      })
+      local status = Topics.statuses:for_db(self.params.status or "default")
       do
         local view_counter = self:view_counter()
         if view_counter then
@@ -325,8 +335,8 @@ do
         end
       end
       local before, after = self:get_before_after()
-      local pager = OrderedPaginator(Topics, "category_order", [[      where category_id = ? and not deleted and not sticky
-    ]], self.category.id, {
+      local pager = OrderedPaginator(Topics, "category_order", [[      where category_id = ? and status = ? and not deleted and not sticky
+    ]], self.category.id, status, {
         per_page = limits.TOPICS_PER_PAGE,
         prepare_results = (function()
           local _base_1 = self

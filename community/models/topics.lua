@@ -5,6 +5,8 @@ local slugify
 slugify = require("lapis.util").slugify
 local memoize1
 memoize1 = require("community.helpers.models").memoize1
+local enum
+enum = require("lapis.db.model").enum
 local Topics
 do
   local _class_0
@@ -318,6 +320,18 @@ do
       local tbl = db.escape_identifier(Posts:table_name())
       return db.query("\n      update " .. tostring(tbl) .. " as posts set post_number = new_number from (\n        select id, row_number() over () as new_number\n        from " .. tostring(tbl) .. "\n        where " .. tostring(db.encode_clause(cond)) .. "\n        order by post_number asc\n      ) foo\n      where posts.id = foo.id and posts.post_number != new_number\n    ")
     end,
+    archive = function(self)
+      if not (self.status) then
+        self:refresh("status")
+      end
+      if not (self.status == self.__class.statuses.default) then
+        return nil
+      end
+      self:update({
+        status = self.__class.statuses.archived
+      })
+      return true
+    end,
     post_needs_approval = function(self)
       local category = self:get_category()
       if not (category) then
@@ -372,6 +386,11 @@ do
       belongs_to = "Posts"
     }
   }
+  self.statuses = enum({
+    default = 1,
+    archived = 2,
+    spam = 2
+  })
   self.create = function(self, opts)
     if opts == nil then
       opts = { }
@@ -379,6 +398,7 @@ do
     if opts.title then
       opts.slug = opts.slug or slugify(opts.title)
     end
+    opts.status = opts.status and self.statuses:for_db(opts.status)
     opts.category_order = self:update_category_order_sql(opts.category_id)
     return Model.create(self, opts)
   end

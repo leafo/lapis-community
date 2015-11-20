@@ -27,7 +27,8 @@ import slugify from require "lapis.util"
 --   updated_at timestamp without time zone NOT NULL,
 --   category_groups_count integer DEFAULT 0 NOT NULL,
 --   approval_type smallint,
---   "position" integer DEFAULT 0 NOT NULL
+--   "position" integer DEFAULT 0 NOT NULL,
+--   directory boolean DEFAULT false NOT NULL
 -- );
 -- ALTER TABLE ONLY community_categories
 --   ADD CONSTRAINT community_categories_pkey PRIMARY KEY (id);

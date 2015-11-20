@@ -184,8 +184,8 @@ class BrowsingFlow extends Flow
   -- TODO: there is no pagination here yet
   sticky_category_topics: =>
     pager = OrderedPaginator Topics, "category_order", [[
-      where category_id = ? and not deleted and sticky
-    ]], @category.id, {
+      where category_id = ? and status = ? not deleted and sticky
+    ]], @category.id, Topics.statuses.default, {
       per_page: limits.TOPICS_PER_PAGE
       prepare_results: @\preload_topics
     }
@@ -196,6 +196,12 @@ class BrowsingFlow extends Flow
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
 
+    assert_valid @params, {
+      {"status", optional: true, one_of: {"archived"}}
+    }
+
+    status = Topics.statuses\for_db @params.status or "default"
+
     if view_counter = @view_counter!
       key = "category:#{@category.id}"
       unless @throttle_view_count key
@@ -204,8 +210,8 @@ class BrowsingFlow extends Flow
     before, after = @get_before_after!
 
     pager = OrderedPaginator Topics, "category_order", [[
-      where category_id = ? and not deleted and not sticky
-    ]], @category.id, {
+      where category_id = ? and status = ? and not deleted and not sticky
+    ]], @category.id, status, {
       per_page: limits.TOPICS_PER_PAGE
       prepare_results: @\preload_topics
     }

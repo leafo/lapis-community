@@ -1,8 +1,8 @@
 local db = require("lapis.db.postgres")
 local schema = require("lapis.db.schema")
 local config = require("lapis.config").get()
-local create_table, create_index, drop_table, add_column
-create_table, create_index, drop_table, add_column = schema.create_table, schema.create_index, schema.drop_table, schema.add_column
+local create_table, create_index, drop_table, add_column, drop_index
+create_table, create_index, drop_table, add_column, drop_index = schema.create_table, schema.create_index, schema.drop_table, schema.add_column, schema.drop_index
 local T
 T = require("community.model").prefix_table
 local serial, varchar, text, time, integer, foreign_key, boolean, numeric, double, enum
@@ -861,5 +861,26 @@ return {
     return create_index(T("categories"), "parent_category_id", "position", {
       where = "parent_category_id is not null"
     })
-  end
+  end,
+  [5] = (function()
+    if config._name == "test" then
+      return function(self)
+        add_column(T("categories"), "directory", boolean({
+          default = false
+        }))
+        add_column(T("topics"), "status", enum({
+          default = 1
+        }))
+        add_column(T("posts"), "status", enum({
+          default = 1
+        }))
+        create_index(T("topics"), "category_id", "sticky", "status", "category_order", {
+          where = "not deleted and category_id is not null"
+        })
+        return drop_index(T("topics"), "category_id", "sticky", "category_order", {
+          where = "not deleted and category_id is not null"
+        })
+      end
+    end
+  end)()
 }

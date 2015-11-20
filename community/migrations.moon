@@ -3,7 +3,7 @@ schema = require "lapis.db.schema"
 
 config = require("lapis.config").get!
 
-import create_table, create_index, drop_table, add_column from schema
+import create_table, create_index, drop_table, add_column, drop_index from schema
 {prefix_table: T} = require "community.model"
 
 {
@@ -425,4 +425,15 @@ import create_table, create_index, drop_table, add_column from schema
     "
 
     create_index T"categories", "parent_category_id", "position", where: "parent_category_id is not null"
+
+  [5]: if config._name == "test"
+    =>
+      add_column T"categories", "directory", boolean default: false
+      add_column T"topics", "status", enum default: 1
+      add_column T"posts", "status", enum default: 1
+
+      create_index T"topics", "category_id", "sticky", "status", "category_order", where: "not deleted and category_id is not null"
+      drop_index T"topics", "category_id", "sticky", "category_order", where: "not deleted and category_id is not null"
 }
+
+

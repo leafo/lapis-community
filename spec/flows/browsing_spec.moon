@@ -212,6 +212,40 @@ describe "browsing flow", ->
           assert.falsy res.next_page
           assert.falsy res.prev_page
 
+        it "archived topics are exluded by default", ->
+          category = factory.Categories!
+          topics = for i=1,4
+            with topic = factory.Topics category_id: category.id
+              category\increment_from_topic topic
+
+          topics[1]\archive!
+
+          res = BrowsingApp\get current_user, "/category-topics", category_id: category.id
+          assert.same 3, #res.topics
+          ids = {t.id, true for t in *res.topics}
+          assert.same {
+            [topics[2].id]: true
+            [topics[3].id]: true
+            [topics[4].id]: true
+          }, ids
+
+
+        it "only shows archived topics", ->
+          category = factory.Categories!
+          topics = for i=1,4
+            with topic = factory.Topics category_id: category.id
+              category\increment_from_topic topic
+
+          topics[2]\archive!
+
+          res = BrowsingApp\get current_user, "/category-topics", {
+            category_id: category.id
+            status: "archived"
+          }
+
+          assert.same 1, #res.topics
+          assert.same topics[2].id, res.topics[1].id
+
         it "sets pagination for category", ->
           category = factory.Categories!
           limits = require "community.limits"
