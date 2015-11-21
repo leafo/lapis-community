@@ -51,6 +51,14 @@ class BrowsingApp extends TestApp
       prev_page: @prev_page
     }
 
+
+  "/sticky-category-topics": capture_errors_json =>
+    @flow\sticky_category_topics!
+    json: {
+      success: true
+      sticky_topics: @sticky_topics
+    }
+
 describe "browsing flow", ->
   use_test_env!
 
@@ -221,6 +229,12 @@ describe "browsing flow", ->
           assert.truthy res.success
           assert.same 0, #res.topics
 
+        it "gets empty sticky topics", ->
+          category = factory.Categories!
+          res = BrowsingApp\get current_user, "/sticky-category-topics", category_id: category.id
+          assert.truthy res.success
+          assert.same 0, #res.sticky_topics
+
         it "gets some topics", ->
           category = factory.Categories!
           for i=1,4
@@ -233,6 +247,20 @@ describe "browsing flow", ->
           assert.same 4, #res.topics
           assert.falsy res.next_page
           assert.falsy res.prev_page
+
+        it "gets only sticky topics", ->
+          category = factory.Categories!
+
+          topics = for i=1,2
+            with topic = factory.Topics category_id: category.id
+              category\increment_from_topic topic
+
+          topics[1]\update sticky: true
+
+          res = BrowsingApp\get current_user, "/sticky-category-topics", category_id: category.id
+          assert.truthy res.success
+          assert.same 1, #res.sticky_topics
+          assert.same topics[1].id, res.sticky_topics[1].id
 
         it "archived topics are exluded by default", ->
           category = factory.Categories!

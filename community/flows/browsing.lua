@@ -313,7 +313,9 @@ do
       return posts
     end,
     sticky_category_topics = function(self)
-      local pager = OrderedPaginator(Topics, "category_order", [[      where category_id = ? and status = ? not deleted and sticky
+      local CategoriesFlow = require("community.flows.categories")
+      CategoriesFlow(self):load_category()
+      local pager = OrderedPaginator(Topics, "category_order", [[      where category_id = ? and status = ? and not deleted and sticky
     ]], self.category.id, Topics.statuses.default, {
         per_page = limits.TOPICS_PER_PAGE,
         prepare_results = (function()
