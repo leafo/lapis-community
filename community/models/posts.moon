@@ -79,7 +79,7 @@ class Posts extends Model
     opts.status = opts.status and @statuses\for_db opts.status
 
     opts.post_number = db.raw post_number
-    Model.create @, opts
+    Model.create @, opts, returning: {"status"}
 
   @preload_mentioned_users: (posts) =>
     import Users from require "models"
@@ -134,6 +134,7 @@ class Posts extends Model
   allowed_to_vote: (user, direction) =>
     return false unless user
     return false if @deleted
+    return false if @is_archived!
 
     topic = @get_topic!
 
@@ -145,6 +146,7 @@ class Posts extends Model
   allowed_to_edit: (user) =>
     return false unless user
     return true if user\is_admin!
+    return false if @is_archived!
     return true if user.id == @user_id
     return false if @deleted
 
@@ -156,6 +158,7 @@ class Posts extends Model
 
   allowed_to_reply: (user) =>
     return false unless user
+    return false unless @is_default!
     topic = @get_topic!
     topic\allowed_to_post user
 
@@ -236,6 +239,7 @@ class Posts extends Model
   allowed_to_report: (user) =>
     return false unless user
     return false if user.id == @user_id
+    return false unless @is_default!
     return false unless @allowed_to_view user
     true
 
@@ -317,7 +321,6 @@ class Posts extends Model
     ", @post_number, fields: "1"
 
   archive: =>
-    @refresh "status" unless @status
     return nil unless @status == @@statuses.default
     return nil, "can only archive root post" unless @depth == 1
     @update status: @@statuses.archived
@@ -326,3 +329,5 @@ class Posts extends Model
   is_archived: =>
     @status == @@statuses.archived
 
+  is_default: =>
+    @status == @@statuses.default

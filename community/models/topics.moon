@@ -54,7 +54,7 @@ class Topics extends Model
     opts.status = opts.status and @statuses\for_db opts.status
     opts.category_order = @update_category_order_sql opts.category_id
 
-    Model.create @, opts
+    Model.create @, opts, returning: {"status"}
 
   @update_category_order_sql: (category_id) =>
     return nil unless category_id
@@ -80,11 +80,11 @@ class Topics extends Model
       "
     }, where
 
-  -- AKA: allowed to reply
   allowed_to_post: (user) =>
     return false unless user
     return false if @deleted
     return false if @locked
+    return false unless @is_default!
 
     @allowed_to_view user
 
@@ -104,8 +104,9 @@ class Topics extends Model
   allowed_to_edit: memoize1 (user) =>
     return false if @deleted
     return false unless user
-    return true if user.id == @user_id
     return true if user\is_admin!
+    return false if @is_archived!
+    return true if user.id == @user_id
     return true if @allowed_to_moderate user
 
     false
@@ -339,3 +340,8 @@ class Topics extends Model
     if res = unpack res
       res.min, res.max
 
+  is_archived: =>
+    @status == @@statuses.archived
+
+  is_default: =>
+    @status == @@statuses.default

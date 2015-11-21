@@ -22,6 +22,9 @@ do
       if self.locked then
         return false
       end
+      if not (self:is_default()) then
+        return false
+      end
       return self:allowed_to_view(user)
     end,
     allowed_to_view = memoize1(function(self, user)
@@ -48,10 +51,13 @@ do
       if not (user) then
         return false
       end
-      if user.id == self.user_id then
+      if user:is_admin() then
         return true
       end
-      if user:is_admin() then
+      if self:is_archived() then
+        return false
+      end
+      if user.id == self.user_id then
         return true
       end
       if self:allowed_to_moderate(user) then
@@ -355,6 +361,12 @@ do
           return res.min, res.max
         end
       end
+    end,
+    is_archived = function(self)
+      return self.status == self.__class.statuses.archived
+    end,
+    is_default = function(self)
+      return self.status == self.__class.statuses.default
     end
   }
   _base_0.__index = _base_0
@@ -415,7 +427,11 @@ do
     end
     opts.status = opts.status and self.statuses:for_db(opts.status)
     opts.category_order = self:update_category_order_sql(opts.category_id)
-    return Model.create(self, opts)
+    return Model.create(self, opts, {
+      returning = {
+        "status"
+      }
+    })
   end
   self.update_category_order_sql = function(self, category_id)
     if not (category_id) then

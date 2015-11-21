@@ -57,6 +57,9 @@ do
       if self.deleted then
         return false
       end
+      if self:is_archived() then
+        return false
+      end
       local topic = self:get_topic()
       do
         local category = self.topic:get_category()
@@ -74,6 +77,9 @@ do
       if user:is_admin() then
         return true
       end
+      if self:is_archived() then
+        return false
+      end
       if user.id == self.user_id then
         return true
       end
@@ -88,6 +94,9 @@ do
     end,
     allowed_to_reply = function(self, user)
       if not (user) then
+        return false
+      end
+      if not (self:is_default()) then
         return false
       end
       local topic = self:get_topic()
@@ -187,6 +196,9 @@ do
         return false
       end
       if user.id == self.user_id then
+        return false
+      end
+      if not (self:is_default()) then
         return false
       end
       if not (self:allowed_to_view(user)) then
@@ -306,9 +318,6 @@ do
       }))
     end,
     archive = function(self)
-      if not (self.status) then
-        self:refresh("status")
-      end
       if not (self.status == self.__class.statuses.default) then
         return nil
       end
@@ -322,6 +331,9 @@ do
     end,
     is_archived = function(self)
       return self.status == self.__class.statuses.archived
+    end,
+    is_default = function(self)
+      return self.status == self.__class.statuses.default
     end
   }
   _base_0.__index = _base_0
@@ -408,7 +420,11 @@ do
     local post_number = db.interpolate_query("\n     (select coalesce(max(post_number), 0) from " .. tostring(db.escape_identifier(self:table_name())) .. "\n       where " .. tostring(db.encode_clause(number_cond)) .. ") + 1\n    ")
     opts.status = opts.status and self.statuses:for_db(opts.status)
     opts.post_number = db.raw(post_number)
-    return Model.create(self, opts)
+    return Model.create(self, opts, {
+      returning = {
+        "status"
+      }
+    })
   end
   self.preload_mentioned_users = function(self, posts)
     local Users
