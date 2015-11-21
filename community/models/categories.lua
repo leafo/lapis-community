@@ -31,6 +31,9 @@ do
       if self.hidden then
         return false
       end
+      if self.directory then
+        return false
+      end
       return self:allowed_to_view(user)
     end,
     allowed_to_view = function(self, user)

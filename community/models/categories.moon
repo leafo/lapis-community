@@ -116,6 +116,7 @@ class Categories extends Model
     return false unless user
     return false if @archived
     return false if @hidden
+    return false if @directory
 
     @allowed_to_view user
 
