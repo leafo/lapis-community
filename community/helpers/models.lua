@@ -190,14 +190,19 @@ memoize1 = function(fn)
     else
       key = arg
     end
-    local cache_value = cache[key]
+    local cache_value = cache[self] and cache[key]
     if cache_value then
       return unpack(cache_value)
     end
     local res = {
       fn(self, arg)
     }
-    cache[key] = res
+    if not (cache[self]) then
+      cache[self] = setmetatable({ }, {
+        __mode = "k"
+      })
+    end
+    cache[self][key] = res
     return unpack(res)
   end
 end

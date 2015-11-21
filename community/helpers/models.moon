@@ -121,14 +121,18 @@ memoize1 = (fn) ->
     error "memoize1 function recieved second argument" if more
     key = if arg == nil then NIL else arg
 
-    cache_value = cache[key]
+    cache_value = cache[@] and cache[key]
 
     if cache_value
       return unpack cache_value
 
     res = { fn @, arg }
 
-    cache[key] = res
+    unless cache[@]
+      cache[@] = setmetatable {}, __mode: "k"
+
+    cache[@][key] = res
+
     unpack res
 
 { :upsert, :safe_insert, :filter_update, :soft_delete, :memoize1 }
