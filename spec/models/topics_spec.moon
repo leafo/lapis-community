@@ -18,24 +18,24 @@ describe "models.topics", ->
     factory.Topics!
     factory.Topics category: false
 
-  it "should check permissions of topic with category", ->
+  it "should check permissions of topic with category #ddd", ->
     category_user = factory.Users!
     category = factory.Categories user_id: category_user.id
 
     topic = factory.Topics category_id: category.id
-    user = topic\get_user!
+    topic_user = topic\get_user!
 
-    assert.truthy topic\allowed_to_post user
-    assert.truthy topic\allowed_to_view user
-    assert.truthy topic\allowed_to_edit user
-    assert.falsy topic\allowed_to_moderate user
+    assert.truthy topic\allowed_to_post topic_user
+    assert.truthy topic\allowed_to_view topic_user
+    assert.truthy topic\allowed_to_edit topic_user
+    assert.falsy topic\allowed_to_moderate topic_user
 
-    other_user = factory.Users!
+    some_user = factory.Users!
 
-    assert.truthy topic\allowed_to_post other_user
-    assert.truthy topic\allowed_to_view other_user
-    assert.falsy topic\allowed_to_edit other_user
-    assert.falsy topic\allowed_to_moderate other_user
+    assert.truthy topic\allowed_to_post some_user
+    assert.truthy topic\allowed_to_view some_user
+    assert.falsy topic\allowed_to_edit some_user
+    assert.falsy topic\allowed_to_moderate some_user
 
     mod = factory.Moderators object: topic\get_category!
     mod_user = mod\get_user!
@@ -51,6 +51,24 @@ describe "models.topics", ->
     assert.truthy topic\allowed_to_view category_user
     assert.truthy topic\allowed_to_edit category_user
     assert.truthy topic\allowed_to_moderate category_user
+
+    topic\archive!
+    topic = Topics\find topic.id -- clear memoized cache
+
+    assert.false topic\allowed_to_post topic_user
+    assert.true topic\allowed_to_view topic_user
+    assert.false topic\allowed_to_edit topic_user
+    assert.false topic\allowed_to_moderate topic_user
+
+    assert.false topic\allowed_to_post some_user
+    assert.true topic\allowed_to_view some_user
+    assert.false topic\allowed_to_edit some_user
+    assert.false topic\allowed_to_moderate some_user
+
+    assert.false topic\allowed_to_post mod_user
+    assert.true topic\allowed_to_view mod_user
+    assert.false topic\allowed_to_edit mod_user
+    assert.true topic\allowed_to_moderate mod_user
 
   it "doesn't allow posts in locked topics", ->
     category_user = factory.Users!
