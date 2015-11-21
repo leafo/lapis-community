@@ -14,6 +14,56 @@ describe "models.posts", ->
   before_each ->
     truncate_tables Users, Categories, Topics, Posts
 
+  it "checks permissions", ->
+    post_user = factory.Users!
+    topic = factory.Topics!
+    post = factory.Posts user_id: post_user.id, topic_id: topic.id
+    topic_user = post\get_topic!\get_user!
+    some_user = factory.Users!
+
+    admin_user = with factory.Users!
+      .is_admin = => true
+
+    assert.false post\allowed_to_edit nil
+    assert.false post\allowed_to_edit topic_user
+    assert.false post\allowed_to_edit some_user
+    assert.true post\allowed_to_edit post_user
+    assert.true post\allowed_to_edit admin_user
+    -- otherwise hits topic\allowed_to_moderate
+
+    assert.false post\allowed_to_reply nil
+    assert.true post\allowed_to_reply post_user
+    assert.true post\allowed_to_reply topic_user
+    assert.true post\allowed_to_reply some_user
+
+    assert.false post\allowed_to_report nil
+    assert.false post\allowed_to_report post_user
+    assert.true post\allowed_to_report topic_user
+    assert.true post\allowed_to_report some_user
+
+    -- archived
+    post\archive!
+    post = Posts\find post.id
+
+    assert.false post\allowed_to_edit nil
+    assert.false post\allowed_to_edit topic_user
+    assert.false post\allowed_to_edit some_user
+    assert.false post\allowed_to_edit post_user
+    assert.true post\allowed_to_edit admin_user
+    -- otherwise hits topic\allowed_to_moderate
+
+    assert.false post\allowed_to_reply nil
+    assert.false post\allowed_to_reply post_user
+    assert.false post\allowed_to_reply topic_user
+    assert.false post\allowed_to_reply some_user
+    assert.false post\allowed_to_reply admin_user
+
+    assert.false post\allowed_to_report nil
+    assert.false post\allowed_to_report post_user
+    assert.false post\allowed_to_report topic_user
+    assert.false post\allowed_to_report some_user
+    assert.false post\allowed_to_report admin_user
+
   describe "has_replies", ->
     it "with no replies", ->
       post = factory.Posts!
