@@ -121,7 +121,7 @@ memoize1 = (fn) ->
     error "memoize1 function recieved second argument" if more
     key = if arg == nil then NIL else arg
 
-    cache_value = cache[@] and cache[key]
+    cache_value = cache[@] and cache[@][key]
 
     if cache_value
       return unpack cache_value
