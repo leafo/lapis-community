@@ -290,10 +290,14 @@ class Categories extends Model
 
     @update {
       last_topic_id: db.raw db.interpolate_query "(
-        select id from #{db.escape_identifier Topics\table_name!} where category_id = ? and not deleted
+        select id from #{db.escape_identifier Topics\table_name!}
+        where
+          category_id = ? and
+          not deleted and
+          status = ?
         order by category_order desc
         limit 1
-      )", @id
+      )", @id, Topics.statuses.default
     }, timestamp: false
 
   increment_from_topic: (topic) =>

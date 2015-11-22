@@ -141,6 +141,13 @@ describe "models.categories", ->
 
       assert.same category.last_topic_id, topic.id
 
+    it "should refresh last topic ignoring spam", ->
+      t1 = factory.Topics category_id: category.id
+      t2 = factory.Topics category_id: category.id, status: "spam"
+
+      category\refresh_last_topic!
+      assert.same category.last_topic_id, t1.id
+
     it "gets voting type", ->
       assert.same Categories.voting_types.up_down, category\get_voting_type!
 
