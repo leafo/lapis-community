@@ -317,6 +317,15 @@ do
         fields = "1"
       }))
     end,
+    set_status = function(self, status)
+      self:update({
+        status = self.__class.statuses:for_db(status)
+      })
+      local topic = self:get_topic()
+      if topic.last_post_id == self.id then
+        return topic:refresh_last_post()
+      end
+    end,
     archive = function(self)
       if not (self.status == self.__class.statuses.default) then
         return nil
@@ -324,9 +333,7 @@ do
       if not (self.depth == 1) then
         return nil, "can only archive root post"
       end
-      self:update({
-        status = self.__class.statuses.archived
-      })
+      self:set_status("archived")
       return true
     end,
     is_archived = function(self)

@@ -158,6 +158,28 @@ describe "models.topics", ->
     topic\refresh_last_post!
     assert.same nil, topic.last_post_id
 
+  it "should not include archived post when refreshing last", ->
+    topic = factory.Topics!
+    posts = for i=1,3
+      with post = factory.Posts topic_id: topic.id
+        topic\increment_from_post post
+
+    posts[3]\update status: Posts.statuses.archived
+
+    topic\refresh_last_post!
+    assert.same posts[2].id, topic.last_post_id
+
+  it "should not include archive and reset last post to nil", ->
+    topic = factory.Topics!
+    posts = for i=1,2
+      with post = factory.Posts topic_id: topic.id
+        topic\increment_from_post post
+
+    posts[2]\update status: Posts.statuses.archived
+
+    topic\refresh_last_post!
+    assert.nil topic.last_post_id
+
   it "should not mark for no last post", ->
     user = factory.Users!
     topic = factory.Topics!

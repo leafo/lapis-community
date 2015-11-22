@@ -320,10 +320,17 @@ class Posts extends Model
       limit 1
     ", @post_number, fields: "1"
 
+  set_status: (status) =>
+    @update status: @@statuses\for_db status
+
+    topic = @get_topic!
+    if topic.last_post_id == @id
+      topic\refresh_last_post!
+
   archive: =>
     return nil unless @status == @@statuses.default
     return nil, "can only archive root post" unless @depth == 1
-    @update status: @@statuses.archived
+    @set_status "archived"
     true
 
   is_archived: =>

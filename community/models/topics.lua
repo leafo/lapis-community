@@ -118,7 +118,7 @@ do
       local Posts
       Posts = require("community.models").Posts
       return self:update({
-        last_post_id = db.raw(db.interpolate_query("(\n        select id from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n        where topic_id = ? and not deleted and (depth != 1 or post_number != 1)\n        order by id desc\n        limit 1\n      )", self.id))
+        last_post_id = db.raw(db.interpolate_query("(\n        select id from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n        where\n          topic_id = ? and\n            not deleted and\n            status = ? and\n            (depth != 1 or post_number != 1)\n        order by id desc\n        limit 1\n      )", self.id, self.__class.statuses.default))
       }, {
         timestamp = false
       })

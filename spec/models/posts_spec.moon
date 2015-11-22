@@ -100,6 +100,25 @@ describe "models.posts", ->
       assert.same false, p2_2\has_next_post!
       assert.same false, p1_1\has_next_post!
 
+  describe "set status", ->
+    it "updates post to spam", ->
+      post = factory.Posts!
+      post\set_status "spam"
+
+    it "updates topic last post when archiving", ->
+      post = factory.Posts!
+
+      topic = post\get_topic!
+      topic\increment_from_post post
+
+      topic\refresh!
+      assert.same topic.last_post_id, post.id
+
+      post\archive!
+
+      topic\refresh!
+      assert.nil topic.last_post_id
+
   describe "delete", ->
     local post
     before_each ->
