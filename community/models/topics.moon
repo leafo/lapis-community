@@ -319,12 +319,6 @@ class Topics extends Model
       where posts.id = foo.id and posts.post_number != new_number
     "
 
-  archive: =>
-    @refresh "status" unless @status
-    return nil unless @status == @@statuses.default
-    @update status: @@statuses.archived
-    true
-
   post_needs_approval: =>
     category = @get_category!
     return false unless category
@@ -349,3 +343,17 @@ class Topics extends Model
 
   is_default: =>
     @status == @@statuses.default
+
+  set_status: (status) =>
+    @update status: @@statuses\for_db status
+
+    category = @get_category!
+    if category and category.last_topic_id == @id
+      category\refresh_last_topic!
+
+  archive: =>
+    @refresh "status" unless @status
+    return nil unless @status == @@statuses.default
+    @set_status "archived"
+    true
+

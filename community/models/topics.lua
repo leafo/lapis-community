@@ -326,18 +326,6 @@ do
       local tbl = db.escape_identifier(Posts:table_name())
       return db.query("\n      update " .. tostring(tbl) .. " as posts set post_number = new_number from (\n        select id, row_number() over () as new_number\n        from " .. tostring(tbl) .. "\n        where " .. tostring(db.encode_clause(cond)) .. "\n        order by post_number asc\n      ) foo\n      where posts.id = foo.id and posts.post_number != new_number\n    ")
     end,
-    archive = function(self)
-      if not (self.status) then
-        self:refresh("status")
-      end
-      if not (self.status == self.__class.statuses.default) then
-        return nil
-      end
-      self:update({
-        status = self.__class.statuses.archived
-      })
-      return true
-    end,
     post_needs_approval = function(self)
       local category = self:get_category()
       if not (category) then
@@ -367,6 +355,26 @@ do
     end,
     is_default = function(self)
       return self.status == self.__class.statuses.default
+    end,
+    set_status = function(self, status)
+      self:update({
+        status = self.__class.statuses:for_db(status)
+      })
+      local category = self:get_category()
+      if category and category.last_topic_id == self.id then
+        return category:refresh_last_topic()
+      end
+    end,
+    archive = function(self)
+      error("hi")
+      if not (self.status) then
+        self:refresh("status")
+      end
+      if not (self.status == self.__class.statuses.default) then
+        return nil
+      end
+      self:set_status("archived")
+      return true
     end
   }
   _base_0.__index = _base_0

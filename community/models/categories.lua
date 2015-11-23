@@ -282,7 +282,7 @@ do
       local Topics
       Topics = require("community.models").Topics
       return self:update({
-        last_topic_id = db.raw(db.interpolate_query("(\n        select id from " .. tostring(db.escape_identifier(Topics:table_name())) .. " where category_id = ? and not deleted\n        order by category_order desc\n        limit 1\n      )", self.id))
+        last_topic_id = db.raw(db.interpolate_query("(\n        select id from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n        where\n          category_id = ? and\n          not deleted and\n          status = ?\n        order by category_order desc\n        limit 1\n      )", self.id, Topics.statuses.default))
       }, {
         timestamp = false
       })
