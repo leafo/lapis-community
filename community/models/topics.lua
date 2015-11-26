@@ -366,7 +366,6 @@ do
       end
     end,
     archive = function(self)
-      error("hi")
       if not (self.status) then
         self:refresh("status")
       end
