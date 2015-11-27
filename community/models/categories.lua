@@ -394,6 +394,19 @@ do
       end
       append_children(self)
       return flat
+    end,
+    has_unread = function(self, user)
+      if not (user) then
+        return 
+      end
+      if not (self.user_category_last_seen) then
+        return 
+      end
+      if not (self.last_topic) then
+        return 
+      end
+      assert(self.user_category_last_seen.user_id == user.id, "unexpected user for last seen")
+      return self.user_category_last_seen.category_order < self.last_topic.category_order
     end
   }
   _base_0.__index = _base_0

@@ -282,6 +282,7 @@ do
       if not (self.user_topic_last_seen) then
         return 
       end
+      assert(self.user_topic_last_seen.user_id == user.id, "unexpected user for last seen")
       return self.user_topic_last_seen.post_id < self.last_post_id
     end,
     notification_target_users = function(self)

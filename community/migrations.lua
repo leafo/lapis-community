@@ -880,5 +880,26 @@ return {
     })
     create_index(T("posts"), "topic_id", "parent_post_id", "depth", "status", "post_number")
     return create_index(T("posts"), "parent_post_id", "status", "post_number")
+  end,
+  [6] = function(self)
+    return create_table(T("user_category_last_seens"), {
+      {
+        "user_id",
+        foreign_key
+      },
+      {
+        "category_id",
+        foreign_key
+      },
+      {
+        "category_order",
+        integer
+      },
+      {
+        "topic_id",
+        foreign_key
+      },
+      "PRIMARY KEY (user_id, category_id)"
+    })
   end
 }

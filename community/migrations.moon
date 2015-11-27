@@ -335,7 +335,7 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
 
       "PRIMARY KEY (user_id, topic_id)"
     }
-    
+
     create_table T"bookmarks", {
       {"user_id", foreign_key}
       {"object_type", integer}
@@ -436,6 +436,18 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
 
     create_index T"posts", "topic_id", "parent_post_id", "depth", "status", "post_number"
     create_index T"posts", "parent_post_id", "status", "post_number"
+
+  [6]: =>
+    create_table T"user_category_last_seens", {
+      {"user_id", foreign_key}
+      {"category_id", foreign_key}
+
+      {"category_order", integer}
+      {"topic_id", foreign_key}
+
+      "PRIMARY KEY (user_id, category_id)"
+    }
+
 }
 
 

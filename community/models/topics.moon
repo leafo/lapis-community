@@ -270,6 +270,7 @@ class Topics extends Model
   has_unread: (user) =>
     return unless user
     return unless @user_topic_last_seen
+    assert @user_topic_last_seen.user_id == user.id, "unexpected user for last seen"
     @user_topic_last_seen.post_id < @last_post_id
 
   notification_target_users: =>

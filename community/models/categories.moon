@@ -379,3 +379,15 @@ class Categories extends Model
     append_children @
     flat
 
+  -- this assumes UserCategoryLastSeens and last topic has been preloaded
+  has_unread: (user) =>
+    return unless user
+
+    return unless @user_category_last_seen
+    return unless @last_topic
+
+    assert @user_category_last_seen.user_id == user.id,
+      "unexpected user for last seen"
+
+    @user_category_last_seen.category_order < @last_topic.category_order
+
