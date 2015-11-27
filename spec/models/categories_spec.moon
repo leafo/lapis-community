@@ -201,6 +201,36 @@ describe "models.categories", ->
         assert.same t2.category_order, last_seen.category_order
         assert.same category.id, last_seen.category_id
 
+      it "detects unread", ->
+        current_user = factory.Users!
+
+        assert.falsy category\has_unread nil
+        assert.falsy category\has_unread current_user
+
+        t1 = factory.Topics category_id: category.id
+        category\increment_from_topic t1
+
+        -- this is nil
+        last_seen = category\find_last_seen_for_user current_user
+        assert not last_seen, "expected no last_seen"
+
+        -- never seen category before, so nothing is unread
+        assert.falsy category\has_unread current_user
+
+        category\set_seen current_user
+        last_seen = category\find_last_seen_for_user current_user
+        assert last_seen, "expected last_seen"
+        category.user_category_last_seen = last_seen
+
+        -- user's last seen is up to date
+        assert.falsy category\has_unread current_user
+
+        t2 = factory.Topics category_id: category.id
+        category\increment_from_topic t2
+
+        -- user's last seen is out of date
+        assert.truthy category\has_unread current_user
+
     describe "ancestors", ->
       it "gets ancestors with no ancestors", ->
         assert.same {}, category\get_ancestors!
