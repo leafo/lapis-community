@@ -488,21 +488,7 @@ do
             end
             topics = _accum_0
           end
-          Posts:include_in(topics, "last_post_id")
-          local posts
-          do
-            local _accum_0 = { }
-            local _len_0 = 1
-            for _index_0 = 1, #topics do
-              local topic = topics[_index_0]
-              if topic.last_post then
-                _accum_0[_len_0] = topic.last_post
-                _len_0 = _len_0 + 1
-              end
-            end
-            posts = _accum_0
-          end
-          Users:include_in(posts, "user_id")
+          self:preload_topics(topics)
           return categories
         end
       })

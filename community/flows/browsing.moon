@@ -322,9 +322,7 @@ class BrowsingFlow extends Flow
     @category\get_children prepare_results: (categories) ->
       Topics\include_in categories, "last_topic_id"
       topics = [c.last_topic for c in *categories when c.last_topic]
-      Posts\include_in topics, "last_post_id"
-      posts = [topic.last_post for topic in *topics when topic.last_post]
-      Users\include_in posts, "user_id"
+      @preload_topics topics
       categories
 
     true
