@@ -154,7 +154,20 @@ class BrowsingFlow extends Flow
       if not last_seen or last_seen.post_id != @topic.last_post_id
         @topic\set_seen @current_user
 
-  preload_topics: (topics) =>
+  preload_categories: (categories, last_seens=true) =>
+    Topics\include_in categories, "last_topic_id"
+    topics = [c.last_topic for c in *categories when c.last_topic]
+    @preload_topics topics, false
+
+    if last_seens and @current_user
+      import UserCategoryLastSeens from require "community.models"
+      UserCategoryLastSeens\include_in categories, "category_id", flip: true, where: {
+        user_id: @current_user.id
+      }
+
+    categories
+
+  preload_topics: (topics, last_seens=true) =>
     Posts\include_in topics, "last_post_id"
 
     with_users = [t for t in *topics]
@@ -164,7 +177,7 @@ class BrowsingFlow extends Flow
 
     Users\include_in with_users, "user_id"
 
-    if @current_user
+    if last_seens and @current_user
       import UserTopicLastSeens from require "community.models"
       UserTopicLastSeens\include_in topics, "topic_id", flip: true, where: { user_id: @current_user.id }
 
@@ -324,12 +337,7 @@ class BrowsingFlow extends Flow
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
 
-    @category\get_children prepare_results: (categories) ->
-      Topics\include_in categories, "last_topic_id"
-      topics = [c.last_topic for c in *categories when c.last_topic]
-      @preload_topics topics
-      categories
-
+    @category\get_children prepare_results: @\preload_categories
     true
 
 

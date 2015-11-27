@@ -237,7 +237,41 @@ do
         end
       end
     end,
-    preload_topics = function(self, topics)
+    preload_categories = function(self, categories, last_seens)
+      if last_seens == nil then
+        last_seens = true
+      end
+      Topics:include_in(categories, "last_topic_id")
+      local topics
+      do
+        local _accum_0 = { }
+        local _len_0 = 1
+        for _index_0 = 1, #categories do
+          local c = categories[_index_0]
+          if c.last_topic then
+            _accum_0[_len_0] = c.last_topic
+            _len_0 = _len_0 + 1
+          end
+        end
+        topics = _accum_0
+      end
+      self:preload_topics(topics, false)
+      if last_seens and self.current_user then
+        local UserCategoryLastSeens
+        UserCategoryLastSeens = require("community.models").UserCategoryLastSeens
+        UserCategoryLastSeens:include_in(categories, "category_id", {
+          flip = true,
+          where = {
+            user_id = self.current_user.id
+          }
+        })
+      end
+      return categories
+    end,
+    preload_topics = function(self, topics, last_seens)
+      if last_seens == nil then
+        last_seens = true
+      end
       Posts:include_in(topics, "last_post_id")
       local with_users
       do
@@ -257,7 +291,7 @@ do
         end
       end
       Users:include_in(with_users, "user_id")
-      if self.current_user then
+      if last_seens and self.current_user then
         local UserTopicLastSeens
         UserTopicLastSeens = require("community.models").UserTopicLastSeens
         UserTopicLastSeens:include_in(topics, "topic_id", {
@@ -482,24 +516,13 @@ do
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()
       self.category:get_children({
-        prepare_results = function(categories)
-          Topics:include_in(categories, "last_topic_id")
-          local topics
-          do
-            local _accum_0 = { }
-            local _len_0 = 1
-            for _index_0 = 1, #categories do
-              local c = categories[_index_0]
-              if c.last_topic then
-                _accum_0[_len_0] = c.last_topic
-                _len_0 = _len_0 + 1
-              end
-            end
-            topics = _accum_0
+        prepare_results = (function()
+          local _base_1 = self
+          local _fn_0 = _base_1.preload_categories
+          return function(...)
+            return _fn_0(_base_1, ...)
           end
-          self:preload_topics(topics)
-          return categories
-        end
+        end)()
       })
       return true
     end
