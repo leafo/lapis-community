@@ -2,7 +2,7 @@ import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
 import Users from require "models"
-import Categories, Moderators, CategoryMembers, Bans, CategoryGroups, CategoryGroupCategories from require "community.models"
+import Categories, Moderators, CategoryMembers, Bans, CategoryGroups, CategoryGroupCategories, UserCategoryLastSeens from require "community.models"
 
 factory = require "spec.factory"
 
@@ -10,7 +10,8 @@ describe "models.categories", ->
   use_test_env!
 
   before_each ->
-    truncate_tables Users, Categories, Moderators, CategoryMembers, Bans, CategoryGroups, CategoryGroupCategories
+    truncate_tables Users, Categories, Moderators, CategoryMembers, Bans,
+      CategoryGroups, CategoryGroupCategories, UserCategoryLastSeens
 
   it "should create a category", ->
     factory.Categories!
@@ -153,6 +154,52 @@ describe "models.categories", ->
 
     it "gets membership_type type", ->
       assert.same Categories.membership_types.public, category\get_membership_type!
+
+    describe "last seen #ddd", ->
+      it "does nothing for category with no last topic", ->
+        current_user = factory.Users!
+        category\set_seen current_user
+        assert.same 0, UserCategoryLastSeens\count!
+
+      it "sets last seen for category with topic", ->
+        current_user = factory.Users!
+
+        t1 = factory.Topics category_id: category.id
+        category\increment_from_topic t1
+
+        category\set_seen current_user
+        assert.same 1, UserCategoryLastSeens\count!
+
+        -- noop
+        category\set_seen current_user
+        last_seen = assert category\find_last_seen_for_user current_user
+
+        do
+          l = unpack UserCategoryLastSeens\select!
+          assert.false l\should_update!
+
+        assert.same current_user.id, last_seen.user_id
+        assert.same t1.category_order, last_seen.category_order
+        assert.same t1.id, last_seen.topic_id
+        assert.same category.id, last_seen.category_id
+
+        t2 = factory.Topics category_id: category.id
+        category\increment_from_topic t2
+
+        do
+          l = unpack UserCategoryLastSeens\select!
+          assert.true l\should_update!
+
+        category\set_seen current_user
+
+        assert.same 1, UserCategoryLastSeens\count!
+
+        last_seen = assert category\find_last_seen_for_user current_user
+
+        assert.same current_user.id, last_seen.user_id
+        assert.same t2.id, last_seen.topic_id
+        assert.same t2.category_order, last_seen.category_order
+        assert.same category.id, last_seen.category_id
 
     describe "ancestors", ->
       it "gets ancestors with no ancestors", ->

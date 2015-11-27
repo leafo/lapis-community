@@ -411,14 +411,8 @@ do
           after = next_after
         }
       end
-      if mark_seen and self.category.last_topic_id then
+      if mark_seen then
         local last_seen = self.category:find_last_seen_for_user(self.current_user)
-        local UserCategoryLastSeens
-        UserCategoryLastSeens = require("models").UserCategoryLastSeens
-        last_seen = UserCategoryLastSeens:find({
-          user_id = user.id,
-          category_id = self.category.id
-        })
         if not last_seen or last_seen:should_update() then
           self.category:set_seen(self.current_user)
         end

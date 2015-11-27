@@ -8,7 +8,7 @@ do
   local _base_0 = {
     should_update = function(self)
       local category = self:get_category()
-      return self.category < category:get_latest_topic().category_order
+      return self.category_order < category:get_last_topic().category_order
     end
   }
   _base_0.__index = _base_0

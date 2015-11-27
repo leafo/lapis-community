@@ -228,7 +228,6 @@ describe "browsing flow", ->
           res = BrowsingApp\get current_user, "/category-topics", category_id: category.id
           assert.truthy res.success
           assert.same 0, #res.topics
-
           assert.same 0, UserCategoryLastSeens\count!
 
         it "gets empty sticky topics", ->

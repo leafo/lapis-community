@@ -289,6 +289,9 @@ do
     end,
     increment_from_topic = function(self, topic)
       assert(topic.category_id == self.id)
+      local clear_loaded_relation
+      clear_loaded_relation = require("lapis.db.model.relations").clear_loaded_relation
+      clear_loaded_relation(self, "last_topic")
       return self:update({
         topics_count = db.raw("topics_count + 1"),
         last_topic_id = topic.id
@@ -399,11 +402,14 @@ do
       if not (user) then
         return 
       end
+      if not (self.last_topic_id) then
+        return 
+      end
       local UserCategoryLastSeens
-      UserCategoryLastSeens = require("models").UserCategoryLastSeens
+      UserCategoryLastSeens = require("community.models").UserCategoryLastSeens
       local last_seen = UserCategoryLastSeens:find({
         user_id = user.id,
-        category_id = self.category.id
+        category_id = self.id
       })
       if last_seen then
         last_seen.category = self

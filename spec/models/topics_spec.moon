@@ -12,7 +12,8 @@ describe "models.topics", ->
   use_test_env!
 
   before_each ->
-    truncate_tables Users, Categories, Moderators, CategoryMembers, Topics, Posts, Bans, UserTopicLastSeens
+    truncate_tables Users, Categories, Moderators, CategoryMembers, Topics,
+      Posts, Bans, UserTopicLastSeens
 
   it "should create a topic", ->
     factory.Topics!
@@ -185,7 +186,7 @@ describe "models.topics", ->
     topic = factory.Topics!
     topic\set_seen user
 
-  it "should not mark for no last post", ->
+  it "should mark topic last seen", ->
     user = factory.Users!
     topic = factory.Topics!
     post = factory.Posts topic_id: topic.id
