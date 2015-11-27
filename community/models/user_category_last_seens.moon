@@ -20,3 +20,10 @@ class UserCategoryLastSeens extends Model
     {"category", belongs_to: "Categories"}
     {"topic", belongs_to: "Topics"}
   }
+
+  should_update: =>
+    category = @get_category!
+    @category_order < category\get_last_topic!.category_order
+
+
+

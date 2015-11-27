@@ -200,7 +200,7 @@ class BrowsingFlow extends Flow
 
     posts
 
-  -- TODO: there is no pagination here yet (and no specs...)
+  -- TODO: there is no pagination here yet
   sticky_category_topics: =>
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
@@ -214,7 +214,7 @@ class BrowsingFlow extends Flow
 
     @sticky_topics = pager\before!
 
-  category_topics: =>
+  category_topics: (mark_seen=true) =>
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
 
@@ -260,6 +260,11 @@ class BrowsingFlow extends Flow
 
     @next_page = { before: next_before } if next_before
     @prev_page = { after: next_after } if next_after
+
+    if mark_seen
+      last_seen = @category\find_last_seen_for_user @current_user
+      if not last_seen or last_seen\should_update!
+        @category\set_seen @current_user
 
     @topics
 

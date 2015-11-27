@@ -395,6 +395,22 @@ do
       append_children(self)
       return flat
     end,
+    find_last_seen_for_user = function(self, user)
+      if not (user) then
+        return 
+      end
+      local UserCategoryLastSeens
+      UserCategoryLastSeens = require("models").UserCategoryLastSeens
+      local last_seen = UserCategoryLastSeens:find({
+        user_id = user.id,
+        category_id = self.category.id
+      })
+      if last_seen then
+        last_seen.category = self
+        last_seen.user = user
+      end
+      return last_seen
+    end,
     has_unread = function(self, user)
       if not (user) then
         return 
@@ -402,11 +418,30 @@ do
       if not (self.user_category_last_seen) then
         return 
       end
-      if not (self.last_topic) then
+      if not (self.last_topic_id) then
         return 
       end
       assert(self.user_category_last_seen.user_id == user.id, "unexpected user for last seen")
-      return self.user_category_last_seen.category_order < self.last_topic.category_order
+      return self.user_category_last_seen.category_order < self:get_last_topic().category_order
+    end,
+    set_seen = function(self, user)
+      if not (user) then
+        return 
+      end
+      if not (self.last_topic_id) then
+        return 
+      end
+      local upsert
+      upsert = require("community.helpers.models").upsert
+      local UserCategoryLastSeens
+      UserCategoryLastSeens = require("community.models").UserCategoryLastSeens
+      local last_topic = self:get_last_topic()
+      return upsert(UserCategoryLastSeens, {
+        user_id = user.id,
+        category_id = self.id,
+        topic_id = last_topic.id,
+        category_order = last_topic.category_order
+      })
     end
   }
   _base_0.__index = _base_0

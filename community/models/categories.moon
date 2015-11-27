@@ -379,15 +379,48 @@ class Categories extends Model
     append_children @
     flat
 
+  find_last_seen_for_user: (user) =>
+    return unless user
+    return unless @last_topic_id
+
+    import UserCategoryLastSeens from require "community.models"
+    last_seen = UserCategoryLastSeens\find {
+      user_id: user.id
+      category_id: @id
+    }
+
+    if last_seen
+      last_seen.category = @
+      last_seen.user = user
+
+    last_seen
+
   -- this assumes UserCategoryLastSeens and last topic has been preloaded
   has_unread: (user) =>
     return unless user
 
     return unless @user_category_last_seen
-    return unless @last_topic
+    return unless @last_topic_id
 
     assert @user_category_last_seen.user_id == user.id,
       "unexpected user for last seen"
 
-    @user_category_last_seen.category_order < @last_topic.category_order
+    @user_category_last_seen.category_order < @get_last_topic!.category_order
+
+  set_seen: (user) =>
+    return unless user
+    return unless @last_topic_id
+
+    import upsert from require "community.helpers.models"
+    import UserCategoryLastSeens from require "community.models"
+
+    last_topic = @get_last_topic!
+
+    upsert UserCategoryLastSeens, {
+      user_id: user.id
+      category_id: @id
+      topic_id: last_topic.id
+      category_order: last_topic.category_order
+    }
+
 

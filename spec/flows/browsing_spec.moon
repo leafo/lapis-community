@@ -2,7 +2,7 @@ import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
 import Users from require "models"
-import Categories, Topics, Posts, Votes from require "community.models"
+import Categories, Topics, Posts, Votes, UserCategoryLastSeens, UserTopicLastSeens from require "community.models"
 
 factory = require "spec.factory"
 
@@ -63,7 +63,7 @@ describe "browsing flow", ->
   use_test_env!
 
   before_each ->
-    truncate_tables Users, Categories, Topics, Posts, Votes
+    truncate_tables Users, Categories, Topics, Posts, Votes, UserCategoryLastSeens, UserTopicLastSeens
 
   for logged_in in *{true, nil} -- false
     local current_user
@@ -173,7 +173,7 @@ describe "browsing flow", ->
 
           assert.same 4, #res.posts
 
-        it "sets blank pagination on posts when there are archived in first position #ddd", ->
+        it "sets blank pagination on posts when there are archived in first position", ->
           topic = factory.Topics!
           posts = for i=1,2
             with post = factory.Posts topic_id: topic.id
@@ -229,6 +229,8 @@ describe "browsing flow", ->
           assert.truthy res.success
           assert.same 0, #res.topics
 
+          assert.same 0, UserCategoryLastSeens\count!
+
         it "gets empty sticky topics", ->
           category = factory.Categories!
           res = BrowsingApp\get current_user, "/sticky-category-topics", category_id: category.id
@@ -237,9 +239,10 @@ describe "browsing flow", ->
 
         it "gets some topics", ->
           category = factory.Categories!
-          for i=1,4
-            topic = factory.Topics category_id: category.id
-            category\increment_from_topic topic
+
+          topics = for i=1,4
+            with topic = factory.Topics category_id: category.id
+              category\increment_from_topic topic
 
           res = BrowsingApp\get current_user, "/category-topics", category_id: category.id
 
@@ -247,6 +250,20 @@ describe "browsing flow", ->
           assert.same 4, #res.topics
           assert.falsy res.next_page
           assert.falsy res.prev_page
+
+          last_seen, other = unpack UserCategoryLastSeens\select!
+          assert.nil other
+
+          last_topic = topics[4]
+          last_topic\refresh!
+
+          assert.same {
+            category_id: category.id
+            user_id: current_user.id
+            topic_id: last_topic.id
+            category_order: last_topic.category_order
+          }, last_seen
+
 
         it "gets only sticky topics", ->
           category = factory.Categories!
@@ -278,7 +295,6 @@ describe "browsing flow", ->
             [topics[3].id]: true
             [topics[4].id]: true
           }, ids
-
 
         it "only shows archived topics", ->
           category = factory.Categories!

@@ -328,7 +328,10 @@ do
       })
       self.sticky_topics = pager:before()
     end,
-    category_topics = function(self)
+    category_topics = function(self, mark_seen)
+      if mark_seen == nil then
+        mark_seen = true
+      end
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()
       assert_valid(self.params, {
@@ -407,6 +410,18 @@ do
         self.prev_page = {
           after = next_after
         }
+      end
+      if mark_seen and self.category.last_topic_id then
+        local last_seen = self.category:find_last_seen_for_user(self.current_user)
+        local UserCategoryLastSeens
+        UserCategoryLastSeens = require("models").UserCategoryLastSeens
+        last_seen = UserCategoryLastSeens:find({
+          user_id = user.id,
+          category_id = self.category.id
+        })
+        if not last_seen or last_seen:should_update() then
+          self.category:set_seen(self.current_user)
+        end
       end
       return self.topics
     end,
