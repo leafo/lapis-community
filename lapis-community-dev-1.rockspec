@@ -58,6 +58,7 @@ build = {
     ["community.models.topic_participants"] = "community/models/topic_participants.lua",
     ["community.models.topic_tags"] = "community/models/topic_tags.lua",
     ["community.models.topics"] = "community/models/topics.lua",
+    ["community.models.user_category_last_seens"] = "community/models/user_category_last_seens.lua",
     ["community.models.user_topic_last_seens"] = "community/models/user_topic_last_seens.lua",
     ["community.models.votes"] = "community/models/votes.lua",
     ["community.schema"] = "community/schema.lua",
