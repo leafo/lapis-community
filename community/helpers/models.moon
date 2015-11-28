@@ -135,4 +135,5 @@ memoize1 = (fn) ->
 
     unpack res
 
+
 { :upsert, :safe_insert, :filter_update, :soft_delete, :memoize1 }

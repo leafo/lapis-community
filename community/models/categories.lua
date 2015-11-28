@@ -5,6 +5,26 @@ local Model
 Model = require("community.model").Model
 local slugify
 slugify = require("lapis.util").slugify
+local parent_enum
+parent_enum = function(self, property_name, default, opts)
+  local enum_name = next(opts)
+  self["default_" .. tostring(property_name)] = default
+  self[enum_name] = opts[enum_name]
+  local method_name = "get_" .. tostring(property_name)
+  self.__base[method_name] = function(self)
+    do
+      local t = self[property_name]
+      if t then
+        return t
+      elseif self.parent_category_id then
+        local parent = self:get_parent_category()
+        return parent[method_name](parent)
+      else
+        return self.__class[enum_name][default]
+      end
+    end
+  end
+end
 local Categories
 do
   local _class_0
@@ -227,30 +247,6 @@ do
       end
       return ranges
     end,
-    get_approval_type = function(self)
-      do
-        local t = self.approval_type
-        if t then
-          return t
-        elseif self.parent_category_id then
-          return self:get_parent_category():get_approval_type()
-        else
-          return self.__class.approval_types[self.__class.default_approval_type]
-        end
-      end
-    end,
-    get_voting_type = function(self)
-      do
-        local t = self.voting_type
-        if t then
-          return t
-        elseif self.parent_category_id then
-          return self:get_parent_category():get_voting_type()
-        else
-          return self.__class.voting_types[self.__class.default_voting_type]
-        end
-      end
-    end,
     available_vote_types = function(self)
       local _exp_0 = self:get_voting_type()
       if self.__class.voting_types.up_down == _exp_0 then
@@ -264,18 +260,6 @@ do
         }
       else
         return { }
-      end
-    end,
-    get_membership_type = function(self)
-      do
-        local t = self.membership_type
-        if t then
-          return t
-        elseif self.parent_category_id then
-          return self:get_parent_category():get_membership_type()
-        else
-          return self.__class.membership_types[self.__class.default_membership_type]
-        end
       end
     end,
     refresh_last_topic = function(self)
@@ -480,21 +464,31 @@ do
   _base_0.__class = _class_0
   local self = _class_0
   self.timestamp = true
-  self.default_membership_type = "public"
-  self.membership_types = enum({
-    public = 1,
-    members_only = 2
+  parent_enum(self, "membership_type", "public", {
+    membership_types = enum({
+      public = 1,
+      members_only = 2
+    })
   })
-  self.default_voting_type = "up_down"
-  self.voting_types = enum({
-    up_down = 1,
-    up = 2,
-    disabled = 3
+  parent_enum(self, "topic_posting_type", "everyone", {
+    topic_posting_types = enum({
+      everyone = 1,
+      members_only = 2,
+      moderators_only = 3
+    })
   })
-  self.default_approval_type = "none"
-  self.approval_types = enum({
-    none = 1,
-    pending = 2
+  parent_enum(self, "voting_type", "up_down", {
+    voting_types = enum({
+      up_down = 1,
+      up = 2,
+      disabled = 3
+    })
+  })
+  parent_enum(self, "approval_type", "none", {
+    approval_types = enum({
+      none = 1,
+      pending = 2
+    })
   })
   self.relations = {
     {

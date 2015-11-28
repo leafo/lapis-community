@@ -236,6 +236,7 @@ describe "models.categories", ->
         assert.same {}, category\get_ancestors!
 
       describe "with hierarchy", ->
+        -- (child) deep -> mid -> category (parent)
         local mid, deep
         before_each ->
           mid = factory.Categories parent_category_id: category.id

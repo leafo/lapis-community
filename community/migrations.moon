@@ -448,6 +448,9 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
       "PRIMARY KEY (user_id, category_id)"
     }
 
+  [7]: =>
+    add_column T"categories", "topic_posting_type", enum null: true
+    add_column T"users", "flair", varchar null: true
 }
 
 

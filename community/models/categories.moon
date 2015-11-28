@@ -4,6 +4,22 @@ import Model from require "community.model"
 
 import slugify from require "lapis.util"
 
+parent_enum = (property_name, default, opts) =>
+  enum_name = next opts
+  @["default_#{property_name}"] = default
+  @[enum_name] = opts[enum_name]
+
+  method_name = "get_#{property_name}"
+
+  @__base[method_name] = =>
+    if t = @[property_name]
+      t
+    elseif @parent_category_id
+      parent = @get_parent_category!
+      parent[method_name] parent
+    else
+      @@[enum_name][default]
+
 -- Generated schema dump: (do not edit)
 --
 -- CREATE TABLE community_categories (
@@ -37,23 +53,34 @@ import slugify from require "lapis.util"
 class Categories extends Model
   @timestamp: true
 
-  @default_membership_type: "public"
-  @membership_types: enum {
-    public: 1
-    members_only: 2
+  parent_enum @, "membership_type", "public", {
+    membership_types: enum {
+      public: 1
+      members_only: 2
+    }
   }
 
-  @default_voting_type: "up_down"
-  @voting_types: enum {
-    up_down: 1
-    up: 2
-    disabled: 3
+  parent_enum @, "topic_posting_type", "everyone", {
+    topic_posting_types: enum {
+      everyone: 1
+      members_only: 2
+      moderators_only: 3
+    }
   }
 
-  @default_approval_type: "none"
-  @approval_types: enum {
-    none: 1
-    pending: 2
+  parent_enum @, "voting_type", "up_down", {
+    voting_types: enum {
+      up_down: 1
+      up: 2
+      disabled: 3
+    }
+  }
+
+  parent_enum @, "approval_type", "none", {
+    approval_types: enum {
+      none: 1
+      pending: 2
+    }
   }
 
   @relations: {
@@ -252,22 +279,6 @@ class Categories extends Model
 
     ranges
 
-  get_approval_type: =>
-    if t = @approval_type
-      t
-    elseif @parent_category_id
-      @get_parent_category!\get_approval_type!
-    else
-      @@approval_types[@@default_approval_type]
-
-  get_voting_type: =>
-    if t = @voting_type
-      t
-    elseif @parent_category_id
-      @get_parent_category!\get_voting_type!
-    else
-      @@voting_types[@@default_voting_type]
-
   available_vote_types: =>
     switch @get_voting_type!
       when @@voting_types.up_down
@@ -276,14 +287,6 @@ class Categories extends Model
         { up: true }
       else
         {}
-
-  get_membership_type: =>
-    if t = @membership_type
-      t
-    elseif @parent_category_id
-      @get_parent_category!\get_membership_type!
-    else
-      @@membership_types[@@default_membership_type]
 
   refresh_last_topic: =>
     import Topics from require "community.models"

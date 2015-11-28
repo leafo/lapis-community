@@ -901,5 +901,13 @@ return {
       },
       "PRIMARY KEY (user_id, category_id)"
     })
+  end,
+  [7] = function(self)
+    add_column(T("categories"), "topic_posting_type", enum({
+      null = true
+    }))
+    return add_column(T("users"), "flair", varchar({
+      null = true
+    }))
   end
 }
