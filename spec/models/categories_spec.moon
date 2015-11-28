@@ -407,9 +407,6 @@ describe "models.categories", ->
           sticky: {}
         }, category\get_order_ranges "archived"
 
-
-
-
   describe "position", ->
     it "creates hierarchy with position set correctly", ->
       root = factory.Categories!

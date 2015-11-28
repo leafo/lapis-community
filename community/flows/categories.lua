@@ -272,6 +272,11 @@ do
             max_length = limits.MAX_TITLE_LEN
           },
           {
+            "short_description",
+            optional = true,
+            max_length = limits.MAX_TITLE_LEN
+          },
+          {
             "hidden",
             optional = true,
             type = "string"
@@ -349,6 +354,7 @@ do
             position = position,
             parent_category_id = parent.id,
             title = c.title,
+            short_description = c.short_description or db.NULL,
             hidden = not not c.hidden,
             archived = not not c.archived,
             directory = not not c.directory
