@@ -44,7 +44,8 @@ parent_enum = (property_name, default, opts) =>
 --   category_groups_count integer DEFAULT 0 NOT NULL,
 --   approval_type smallint,
 --   "position" integer DEFAULT 0 NOT NULL,
---   directory boolean DEFAULT false NOT NULL
+--   directory boolean DEFAULT false NOT NULL,
+--   topic_posting_type smallint
 -- );
 -- ALTER TABLE ONLY community_categories
 --   ADD CONSTRAINT community_categories_pkey PRIMARY KEY (id);

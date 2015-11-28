@@ -9,7 +9,8 @@ import Model from require "community.model"
 --   topics_count integer DEFAULT 0 NOT NULL,
 --   votes_count integer DEFAULT 0 NOT NULL,
 --   created_at timestamp without time zone NOT NULL,
---   updated_at timestamp without time zone NOT NULL
+--   updated_at timestamp without time zone NOT NULL,
+--   flair character varying(255)
 -- );
 -- ALTER TABLE ONLY community_users
 --   ADD CONSTRAINT community_users_pkey PRIMARY KEY (user_id);
