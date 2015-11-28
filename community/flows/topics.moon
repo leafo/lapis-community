@@ -108,6 +108,7 @@ class TopicsFlow extends Flow
 
     true
 
+
   -- this is called indirectly through delete post
   delete_topic: require_login =>
     @load_topic!
@@ -169,5 +170,26 @@ class TopicsFlow extends Flow
 
     @topic\update sticky: false
     @write_moderation_log "topic.unstick"
+    true
+
+  archive_topic: =>
+    @load_topic_for_moderation!
+    assert_error not @topic\is_archived!, "topic is already archived"
+
+    trim_filter @params
+    assert_valid @params, {
+      {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
+    }
+
+    @topic\archive!
+    @write_moderation_log "topic.archive", @params.reason
+    true
+
+  unarchive_topic: =>
+    @load_topic_for_moderation!
+    assert_error @topic\is_archived!, "topic is not archived"
+
+    @topic\set_status "default"
+    @write_moderation_log "topic.unarchive"
     true
 

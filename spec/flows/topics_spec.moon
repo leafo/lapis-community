@@ -37,6 +37,15 @@ class TopicsApp extends TestApp
     @flow\unstick_topic!
     json: { success: true }
 
+  "/archive-topic": capture_errors_json =>
+    @flow\archive_topic!
+    json: { success: true }
+
+  "/unarchive-topic": capture_errors_json =>
+    @flow\unarchive_topic!
+    json: { success: true }
+
+
 describe "topics", ->
   use_test_env!
 
@@ -123,7 +132,7 @@ describe "topics", ->
         reason: " this topic is great and important "
       }
 
-      assert.truthy res.success
+      assert.nil res.errors
 
       logs = ModerationLogs\select!
       assert.same 1, #logs
@@ -144,6 +153,8 @@ describe "topics", ->
         topic_id: topic.id
       }
 
+      assert.nil res.errors
+
       logs = ModerationLogs\select!
       assert.same 1, #logs
       log = unpack logs
@@ -155,3 +166,42 @@ describe "topics", ->
       assert.same topic.category_id, log.category_id
 
       assert.same 0, #ModerationLogObjects\select!
+
+  describe "archive", ->
+    it "archives topic", ->
+      res = TopicsApp\get current_user, "/archive-topic", {
+        topic_id: topic.id
+        reason: "NOW ARCHIVED "
+      }
+
+      assert.nil res.errors
+
+      topic\refresh!
+      assert.true topic\is_archived!
+
+      logs = ModerationLogs\select!
+      assert.same 1, #logs
+      log = unpack logs
+
+      assert.same current_user.id, log.user_id
+      assert.same ModerationLogs.object_types.topic, log.object_type
+      assert.same topic.id, log.object_id
+      assert.same "topic.archive", log.action
+      assert.same "NOW ARCHIVED", log.reason
+      assert.same topic.category_id, log.category_id
+
+      assert.same 0, #ModerationLogObjects\select!
+
+
+    it "unarchives topic", ->
+      topic\archive!
+
+      res = TopicsApp\get current_user, "/unarchive-topic", {
+        topic_id: topic.id
+      }
+
+      assert.nil res.errors
+
+      topic\refresh!
+      assert.false topic\is_archived!
+
