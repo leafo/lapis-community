@@ -71,8 +71,6 @@ class BrowsingFlow extends Flow
       {"status", optional: true, one_of: {"archived"}}
     }
 
-    @topics_status = @params.status
-
     status = Posts.statuses\for_db @params.status or "default"
 
     pager = NestedOrderedPaginator Posts, "post_number", [[
@@ -237,6 +235,7 @@ class BrowsingFlow extends Flow
       {"status", optional: true, one_of: {"archived"}}
     }
 
+    @topics_status = @params.status or "default"
     status = Topics.statuses\for_db @params.status or "default"
 
     if view_counter = @view_counter!

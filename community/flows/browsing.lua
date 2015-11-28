@@ -109,7 +109,6 @@ do
           }
         }
       })
-      self.topics_status = self.params.status
       local status = Posts.statuses:for_db(self.params.status or "default")
       local pager = NestedOrderedPaginator(Posts, "post_number", [[      where topic_id = ? and depth = 1 and status = ?
     ]], self.topic.id, status, {
@@ -378,6 +377,7 @@ do
           }
         }
       })
+      self.topics_status = self.params.status or "default"
       local status = Topics.statuses:for_db(self.params.status or "default")
       do
         local view_counter = self:view_counter()
