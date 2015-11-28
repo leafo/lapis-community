@@ -187,6 +187,28 @@ do
       })
       self:write_moderation_log("topic.unstick")
       return true
+    end,
+    archive_topic = function(self)
+      self:load_topic_for_moderation()
+      assert_error(not self.topic:is_archived(), "topic is already archived")
+      trim_filter(self.params)
+      assert_valid(self.params, {
+        {
+          "reason",
+          optional = true,
+          max_length = limits.MAX_BODY_LEN
+        }
+      })
+      self.topic:archive()
+      self:write_moderation_log("topic.archive", self.params.reason)
+      return true
+    end,
+    unarchive_topic = function(self)
+      self:load_topic_for_moderation()
+      assert_error(self.topic:is_archived(), "topic is not archived")
+      self.topic:set_status("default")
+      self:write_moderation_log("topic.unarchive")
+      return true
     end
   }
   _base_0.__index = _base_0
