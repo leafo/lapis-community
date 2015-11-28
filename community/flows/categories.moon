@@ -143,6 +143,7 @@ class CategoriesFlow extends Flow
     category_params = trim_filter @params.category, {
       "title"
       "membership_type"
+      "topic_posting_type"
       "voting_type"
       "description"
       "short_description"
@@ -164,6 +165,9 @@ class CategoriesFlow extends Flow
 
     if has_field.voting_type
       category_params.voting_type = Categories.voting_types\for_db category_params.voting_type
+
+    if has_field.topic_posting_type
+      category_params.topic_posting_type = Categories.topic_posting_types\for_db category_params.topic_posting_type
 
     if has_field.title
       category_params.slug = slugify category_params.title

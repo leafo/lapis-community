@@ -57,7 +57,7 @@ class TopicsFlow extends Flow
   new_topic: require_login =>
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
-    assert_error @category\allowed_to_post @current_user
+    assert_error @category\allowed_to_post_topic @current_user
 
     moderator = @category\allowed_to_moderate @current_user
 

@@ -124,6 +124,7 @@ describe "categories", ->
           "category[title]": "The good category"
           "category[membership_type]": "members_only"
           "category[voting_type]": "up"
+          "category[topic_posting_type]": "moderators_only"
           "category[short_description]": "yeah yeah"
           "category[archived]": "on"
         }
@@ -139,6 +140,7 @@ describe "categories", ->
 
         assert.same Categories.membership_types.members_only, category.membership_type
         assert.same Categories.voting_types.up, category.voting_type
+        assert.same Categories.topic_posting_types.moderators_only, category.topic_posting_type
 
         assert.same 1, ActivityLogs\count!
         log = unpack ActivityLogs\select!

@@ -41,7 +41,7 @@ do
         end
       end
     end,
-    allowed_to_post = function(self, user)
+    allowed_to_post_topic = function(self, user)
       if not (user) then
         return false
       end
@@ -54,7 +54,19 @@ do
       if self.directory then
         return false
       end
-      return self:allowed_to_view(user)
+      local _exp_0 = self:get_topic_posting_type()
+      if self.__class.topic_posting_types.everyone == _exp_0 then
+        return self:allowed_to_view(user)
+      elseif self.__class.topic_posting_types.members_only == _exp_0 then
+        if self:allowed_to_moderate(user) then
+          return true
+        end
+        return self:is_member(user)
+      elseif self.__class.topic_posting_types.moderators_only == _exp_0 then
+        return self:allowed_to_moderate(user)
+      else
+        return error("unknown topic posting type")
+      end
     end,
     allowed_to_view = function(self, user)
       if self.hidden then

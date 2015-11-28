@@ -139,13 +139,22 @@ class Categories extends Model
     if cgc = @get_category_group_category!
       cgc\get_category_group!
 
-  allowed_to_post: (user) =>
+  allowed_to_post_topic: (user) =>
     return false unless user
     return false if @archived
     return false if @hidden
     return false if @directory
 
-    @allowed_to_view user
+    switch @get_topic_posting_type!
+      when @@topic_posting_types.everyone
+        @allowed_to_view user
+      when @@topic_posting_types.members_only
+        return true if @allowed_to_moderate user
+        @is_member user
+      when @@topic_posting_types.moderators_only
+        @allowed_to_moderate user
+      else
+        error "unknown topic posting type"
 
   allowed_to_view: (user) =>
     return false if @hidden

@@ -25,7 +25,7 @@ describe "models.categories", ->
 
     it "should check permissions for no user", ->
       assert.truthy category\allowed_to_view nil
-      assert.falsy category\allowed_to_post nil
+      assert.falsy category\allowed_to_post_topic nil
 
       assert.falsy category\allowed_to_edit nil
       assert.falsy category\allowed_to_edit_moderators nil
@@ -34,7 +34,7 @@ describe "models.categories", ->
 
     it "should check permissions for owner", ->
       assert.truthy category\allowed_to_view category_user
-      assert.truthy category\allowed_to_post category_user
+      assert.truthy category\allowed_to_post_topic category_user
 
       assert.truthy category\allowed_to_edit category_user
       assert.truthy category\allowed_to_edit_moderators category_user
@@ -45,7 +45,7 @@ describe "models.categories", ->
       other_user = factory.Users!
 
       assert.truthy category\allowed_to_view other_user
-      assert.truthy category\allowed_to_post other_user
+      assert.truthy category\allowed_to_post_topic other_user
 
       assert.falsy category\allowed_to_edit other_user
       assert.falsy category\allowed_to_edit_moderators other_user
@@ -58,7 +58,7 @@ describe "models.categories", ->
       other_user = factory.Users!
 
       assert.falsy category\allowed_to_view other_user
-      assert.falsy category\allowed_to_post other_user
+      assert.falsy category\allowed_to_post_topic other_user
 
       assert.falsy category\allowed_to_edit other_user
       assert.falsy category\allowed_to_edit_moderators other_user
@@ -71,7 +71,7 @@ describe "models.categories", ->
       factory.CategoryMembers user_id: member_user.id, category_id: category.id
 
       assert.truthy category\allowed_to_view member_user
-      assert.truthy category\allowed_to_post member_user
+      assert.truthy category\allowed_to_post_topic member_user
 
       assert.falsy category\allowed_to_edit member_user
       assert.falsy category\allowed_to_edit_moderators member_user
@@ -115,7 +115,7 @@ describe "models.categories", ->
       assert.truthy category\find_ban banned_user
 
       assert.falsy category\allowed_to_view banned_user
-      assert.falsy category\allowed_to_post banned_user
+      assert.falsy category\allowed_to_post_topic banned_user
 
       assert.falsy category\allowed_to_edit banned_user
       assert.falsy category\allowed_to_edit_moderators banned_user
@@ -128,7 +128,7 @@ describe "models.categories", ->
       factory.Bans object: group, banned_user_id: group_banned_user.id
 
       assert.falsy category\allowed_to_view group_banned_user
-      assert.falsy category\allowed_to_post group_banned_user
+      assert.falsy category\allowed_to_post_topic group_banned_user
 
     it "should update last topic to nothing", ->
       category\refresh_last_topic!
