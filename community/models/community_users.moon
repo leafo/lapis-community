@@ -34,6 +34,10 @@ class CommunityUsers extends Model
     assert opts.user_id, "missing user id"
     Model.create @, opts
 
+  @preload_users: (users) =>
+    @include_in users, "user_id", flip: true
+    users
+
   @for_user: (user_id) =>
     user_id = user_id.id if type(user_id) == "table"
     community_user = @find(:user_id)
@@ -44,12 +48,6 @@ class CommunityUsers extends Model
       community_user or= @find(:user_id)
 
     community_user
-
-  increment: (field, amount=1) =>
-    @update {
-      [field]: db.raw db.interpolate_query "#{db.escape_identifier field} + ?", amount
-    }, timestamp: false
-
 
   @recount: =>
     import Topics, Posts, Votes from require "community.models"
@@ -74,4 +72,11 @@ class CommunityUsers extends Model
           and not deleted)
       "
     }
+
+  increment: (field, amount=1) =>
+    @update {
+      [field]: db.raw db.interpolate_query "#{db.escape_identifier field} + ?", amount
+    }, timestamp: false
+
+
 

@@ -70,6 +70,12 @@ do
     assert(opts.user_id, "missing user id")
     return Model.create(self, opts)
   end
+  self.preload_users = function(self, users)
+    self:include_in(users, "user_id", {
+      flip = true
+    })
+    return users
+  end
   self.for_user = function(self, user_id)
     if type(user_id) == "table" then
       user_id = user_id.id

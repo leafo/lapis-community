@@ -2,10 +2,10 @@ local Flow
 Flow = require("lapis.flow").Flow
 local Users
 Users = require("models").Users
-local Categories, Topics, Posts
+local Categories, Topics, Posts, CommunityUsers
 do
   local _obj_0 = require("community.models")
-  Categories, Topics, Posts = _obj_0.Categories, _obj_0.Topics, _obj_0.Posts
+  Categories, Topics, Posts, CommunityUsers = _obj_0.Categories, _obj_0.Topics, _obj_0.Posts, _obj_0.CommunityUsers
 end
 local OrderedPaginator
 OrderedPaginator = require("lapis.db.pagination").OrderedPaginator
@@ -310,6 +310,18 @@ do
         p.topic = self.topic
       end
       Posts:preload_mentioned_users(posts)
+      CommunityUsers:preload_users((function()
+        local _accum_0 = { }
+        local _len_0 = 1
+        for _index_0 = 1, #posts do
+          local p = posts[_index_0]
+          if p.user then
+            _accum_0[_len_0] = p.user
+            _len_0 = _len_0 + 1
+          end
+        end
+        return _accum_0
+      end)())
       if self.current_user then
         local posts_with_votes
         do

@@ -2,7 +2,7 @@
 import Flow from require "lapis.flow"
 
 import Users from require "models"
-import Categories, Topics, Posts from require "community.models"
+import Categories, Topics, Posts, CommunityUsers from require "community.models"
 import OrderedPaginator from require "lapis.db.pagination"
 import NestedOrderedPaginator from require "community.model"
 
@@ -189,6 +189,7 @@ class BrowsingFlow extends Flow
       p.topic = @topic
 
     Posts\preload_mentioned_users posts
+    CommunityUsers\preload_users [p.user for p in *posts when p.user]
 
     if @current_user
       posts_with_votes = [p for p in *posts when p.down_votes_count > 0 or p.up_votes_count > 0]
