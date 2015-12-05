@@ -96,10 +96,23 @@ do
     moderation_logs = function(self)
       self:load_category()
       assert_error(self.category:allowed_to_moderate(self.current_user), "invalid category")
+      local children = self.category:get_flat_children()
+      local category_ids
+      do
+        local _accum_0 = { }
+        local _len_0 = 1
+        for _index_0 = 1, #children do
+          local c = children[_index_0]
+          _accum_0[_len_0] = c.id
+          _len_0 = _len_0 + 1
+        end
+        category_ids = _accum_0
+      end
+      table.insert(category_ids, self.category.id)
       assert_page(self)
       local ModerationLogs
       ModerationLogs = require("community.models").ModerationLogs
-      self.pager = ModerationLogs:paginated("\n      where category_id = ? order by id desc\n    ", self.category.id, {
+      self.pager = ModerationLogs:paginated("\n      where category_id in ? order by id desc\n    ", db.list(category_ids), {
         prepare_results = function(logs)
           ModerationLogs:preload_objects(logs)
           Users:include_in(logs, "user_id")

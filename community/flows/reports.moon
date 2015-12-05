@@ -86,10 +86,14 @@ class ReportsFlow extends Flow
       status: @params.status and PostReports.statuses\for_db @params.status
     }
 
+    children = @category\get_flat_children!
+    category_ids = [c.id for c in *children]
+    table.insert category_ids, @category.id
+
     @pager = PostReports\paginated "
-      where category_id = ?
+      where category_id in (?)
       #{next(filter) and "and " .. db.encode_clause(filter) or ""}
-    ", category.id, prepare_results: (reports) ->
+    ", db.list(category_ids), prepare_results: (reports) ->
       import Posts, Topics from require "community.models"
       import Users from require "models"
 

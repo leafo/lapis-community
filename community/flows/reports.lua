@@ -96,7 +96,20 @@ do
       local filter = {
         status = self.params.status and PostReports.statuses:for_db(self.params.status)
       }
-      self.pager = PostReports:paginated("\n      where category_id = ?\n      " .. tostring(next(filter) and "and " .. db.encode_clause(filter) or "") .. "\n    ", category.id, {
+      local children = self.category:get_flat_children()
+      local category_ids
+      do
+        local _accum_0 = { }
+        local _len_0 = 1
+        for _index_0 = 1, #children do
+          local c = children[_index_0]
+          _accum_0[_len_0] = c.id
+          _len_0 = _len_0 + 1
+        end
+        category_ids = _accum_0
+      end
+      table.insert(category_ids, self.category.id)
+      self.pager = PostReports:paginated("\n      where category_id in (?)\n      " .. tostring(next(filter) and "and " .. db.encode_clause(filter) or "") .. "\n    ", db.list(category_ids), {
         prepare_results = function(reports)
           local Posts, Topics
           do

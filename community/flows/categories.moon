@@ -63,11 +63,15 @@ class CategoriesFlow extends Flow
     @load_category!
     assert_error @category\allowed_to_moderate(@current_user), "invalid category"
 
+    children = @category\get_flat_children!
+    category_ids = [c.id for c in *children]
+    table.insert category_ids, @category.id
+
     assert_page @
     import ModerationLogs from require "community.models"
     @pager = ModerationLogs\paginated "
-      where category_id = ? order by id desc
-    ", @category.id, prepare_results: (logs) ->
+      where category_id in ? order by id desc
+    ", db.list(category_ids), prepare_results: (logs) ->
       ModerationLogs\preload_objects logs
       Users\include_in logs, "user_id"
       logs
