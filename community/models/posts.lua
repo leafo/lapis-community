@@ -283,23 +283,27 @@ do
       end
       return _accum_0
     end,
-    find_ancestor_posts = function(self)
-      if self.depth == 1 then
-        return { }
+    get_ancestors = function(self)
+      if not (self.ancestors) then
+        if self.depth == 1 then
+          self.ancestors = { }
+          return self.ancestors
+        end
+        local tname = db.escape_identifier(self.__class:table_name())
+        self.ancestors = db.query("\n        with recursive nested as (\n          (select * from " .. tostring(tname) .. " where id = ?)\n          union\n          select pr.* from " .. tostring(tname) .. " pr, nested\n            where pr.id = nested.parent_post_id\n        )\n        select * from nested\n      ", self.parent_post_id)
+        local _list_0 = self.ancestors
+        for _index_0 = 1, #_list_0 do
+          local post = _list_0[_index_0]
+          self.__class:load(post)
+        end
+        table.sort(self.ancestors, function(a, b)
+          return a.depth > b.depth
+        end)
       end
-      local tname = db.escape_identifier(self.__class:table_name())
-      local res = db.query("\n      with recursive nested as (\n        (select * from " .. tostring(tname) .. " where id = ?)\n        union\n        select pr.* from " .. tostring(tname) .. " pr, nested\n          where pr.id = nested.parent_post_id\n      )\n      select * from nested\n    ", self.parent_post_id)
-      for _index_0 = 1, #res do
-        local post = res[_index_0]
-        self.__class:load(post)
-      end
-      table.sort(res, function(a, b)
-        return a.depth > b.depth
-      end)
-      return res
+      return self.ancestors
     end,
-    find_root_ancestor = function(self)
-      local ancestors = self:find_ancestor_posts()
+    get_root_ancestor = function(self)
+      local ancestors = self:get_ancestors()
       return ancestors[#ancestors]
     end,
     has_replies = function(self)

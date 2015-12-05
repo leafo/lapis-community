@@ -34,7 +34,10 @@ class BrowsingApp extends TestApp
     }
 
   "/topic-posts": capture_errors_json =>
-    @flow\topic_posts nil, @params.order
+    @flow\topic_posts {
+      order: @params.order
+    }
+
     json: {
       success: true
       posts: @posts

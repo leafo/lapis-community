@@ -80,13 +80,18 @@ do
       self.pending_posts = PendingPosts:select("where topic_id = ? and user_id = ?", self.topic.id, self.current_user.id)
       return self.pending_posts
     end,
-    topic_posts = function(self, mark_seen, order)
-      if mark_seen == nil then
+    topic_posts = function(self, opts)
+      if opts == nil then
+        opts = { }
+      end
+      local mark_seen
+      if opts.mark_seen == nil then
         mark_seen = true
+      else
+        mark_seen = opts.mark_seen
       end
-      if order == nil then
-        order = "asc"
-      end
+      local order = opts.order or "asc"
+      local per_page = opts.per_page or limits.POSTS_PER_PAGE
       local TopicsFlow = require("community.flows.topics")
       TopicsFlow(self):load_topic()
       assert_error(self.topic:allowed_to_view(self.current_user), "not allowed to view")
@@ -112,7 +117,7 @@ do
       local status = Posts.statuses:for_db(self.params.status or "default")
       local pager = NestedOrderedPaginator(Posts, "post_number", [[      where topic_id = ? and depth = 1 and status = ?
     ]], self.topic.id, status, {
-        per_page = limits.POSTS_PER_PAGE,
+        per_page = per_page,
         parent_field = "parent_post_id",
         child_clause = {
           status = status
@@ -174,7 +179,7 @@ do
         end
         if next_before then
           self.prev_page = {
-            before = next_before > limits.POSTS_PER_PAGE + 1 and next_before or nil
+            before = next_before > per_page + 1 and next_before or nil
           }
         end
       elseif "desc" == _exp_0 then

@@ -193,7 +193,9 @@ class extends lapis.Application
 
   [topic: "/topic/:topic_id"]: capture_errors_json =>
     BrowsingFlow = require "community.flows.browsing"
-    BrowsingFlow(@)\topic_posts nil, @params.order
+    BrowsingFlow(@)\topic_posts {
+      order: @params.order
+    }
     render: true
 
   [post: "/post/:post_id"]: capture_errors_json =>

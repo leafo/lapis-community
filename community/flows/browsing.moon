@@ -55,7 +55,16 @@ class BrowsingFlow extends Flow
     @pending_posts = PendingPosts\select "where topic_id = ? and user_id = ?", @topic.id, @current_user.id
     @pending_posts
 
-  topic_posts: (mark_seen=true, order="asc") =>
+  topic_posts: (opts={}) =>
+    mark_seen = if opts.mark_seen == nil
+      true
+    else
+      opts.mark_seen
+
+    order = opts.order or "asc"
+
+    per_page = opts.per_page or limits.POSTS_PER_PAGE
+
     TopicsFlow = require "community.flows.topics"
     TopicsFlow(@)\load_topic!
     assert_error @topic\allowed_to_view(@current_user), "not allowed to view"
@@ -76,7 +85,7 @@ class BrowsingFlow extends Flow
     pager = NestedOrderedPaginator Posts, "post_number", [[
       where topic_id = ? and depth = 1 and status = ?
     ]], @topic.id, status, {
-      per_page: limits.POSTS_PER_PAGE
+      :per_page
 
       parent_field: "parent_post_id"
       child_clause: {
@@ -119,7 +128,7 @@ class BrowsingFlow extends Flow
         if next_before
           -- we remove before and give empty params so first page just goes to plain URL
           @prev_page = {
-            before: next_before > limits.POSTS_PER_PAGE + 1 and next_before or nil
+            before: next_before > per_page + 1 and next_before or nil
           }
 
       when "desc"
