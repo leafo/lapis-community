@@ -237,7 +237,12 @@ class BrowsingFlow extends Flow
 
     @sticky_topics = pager\before!
 
-  category_topics: (mark_seen=true) =>
+  category_topics: (opts={}) =>
+    mark_seen = if opts.mark_seen == nil
+      true
+    else
+      opts.mark_seen
+
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
 

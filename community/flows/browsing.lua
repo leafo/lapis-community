@@ -379,9 +379,15 @@ do
       })
       self.sticky_topics = pager:before()
     end,
-    category_topics = function(self, mark_seen)
-      if mark_seen == nil then
+    category_topics = function(self, opts)
+      if opts == nil then
+        opts = { }
+      end
+      local mark_seen
+      if opts.mark_seen == nil then
         mark_seen = true
+      else
+        mark_seen = opts.mark_seen
       end
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()
