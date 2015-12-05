@@ -166,7 +166,7 @@ class BrowsingFlow extends Flow
   preload_categories: (categories, last_seens=true) =>
     Topics\include_in categories, "last_topic_id"
     topics = [c.last_topic for c in *categories when c.last_topic]
-    @preload_topics topics, false
+    @preload_topics topics
 
     if last_seens and @current_user
       import UserCategoryLastSeens from require "community.models"

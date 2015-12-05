@@ -260,7 +260,7 @@ do
         end
         topics = _accum_0
       end
-      self:preload_topics(topics, false)
+      self:preload_topics(topics)
       if last_seens and self.current_user then
         local UserCategoryLastSeens
         UserCategoryLastSeens = require("community.models").UserCategoryLastSeens
