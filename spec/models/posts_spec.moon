@@ -332,7 +332,7 @@ describe "models.posts", ->
       assert.same group.id, tuple[3].id
 
   it "gets ancestors of post", ->
-    assert.same {}, factory.Posts!\find_ancestor_posts!
+    assert.same {}, factory.Posts!\get_ancestors!
 
   it "gets ancestors of nested post", ->
     parent = factory.Posts!
@@ -342,7 +342,7 @@ describe "models.posts", ->
     }
 
     assert.same {parent.id},
-      [p.id for p in *post\find_ancestor_posts!]
+      [p.id for p in *post\get_ancestors!]
 
   it "gets ancestors of many nested post in deep first", ->
     post = factory.Posts!
@@ -355,7 +355,7 @@ describe "models.posts", ->
 
     ids = [ids[i] for i=#ids,1,-1]
 
-    ancestors = post\find_ancestor_posts!
+    ancestors = post\get_ancestors!
 
     assert.same ids, [p.id for p in *ancestors]
     assert.same [i for i=5,1,-1], [p.depth for p in *ancestors]
@@ -369,7 +369,7 @@ describe "models.posts", ->
         parent_post_id: post.id
       }
 
-    ancestor = post\find_root_ancestor!
+    ancestor = post\get_root_ancestor!
     assert.same root_post.id, ancestor.id
     assert.same 1, ancestor.depth
 

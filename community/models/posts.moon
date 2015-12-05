@@ -278,30 +278,34 @@ class Posts extends Model
 
     [v for _, v in pairs targets]
 
-  find_ancestor_posts: =>
-    return {} if @depth == 1
-    tname = db.escape_identifier @@table_name!
+  get_ancestors: =>
+    unless @ancestors
+      if @depth == 1
+        @ancestors = {}
+        return @ancestors
 
-    res = db.query "
-      with recursive nested as (
-        (select * from #{tname} where id = ?)
-        union
-        select pr.* from #{tname} pr, nested
-          where pr.id = nested.parent_post_id
-      )
-      select * from nested
-    ", @parent_post_id
+      tname = db.escape_identifier @@table_name!
 
-    for post in *res
-      @@load post
+      @ancestors = db.query "
+        with recursive nested as (
+          (select * from #{tname} where id = ?)
+          union
+          select pr.* from #{tname} pr, nested
+            where pr.id = nested.parent_post_id
+        )
+        select * from nested
+      ", @parent_post_id
 
-    table.sort res, (a,b) ->
-      a.depth > b.depth
+      for post in *@ancestors
+        @@load post
 
-    res
+      table.sort @ancestors, (a,b) ->
+        a.depth > b.depth
 
-  find_root_ancestor: =>
-    ancestors = @find_ancestor_posts!
+    @ancestors
+
+  get_root_ancestor: =>
+    ancestors = @get_ancestors!
     ancestors[#ancestors]
 
   has_replies: =>
