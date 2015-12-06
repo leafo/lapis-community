@@ -909,5 +909,10 @@ return {
     return add_column(T("users"), "flair", varchar({
       null = true
     }))
+  end,
+  [8] = function(self)
+    return create_index(T("posts"), "user_id", "status", "id", {
+      where = "not deleted"
+    })
   end
 }
