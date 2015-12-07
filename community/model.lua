@@ -78,7 +78,7 @@ do
   local _parent_0 = OrderedPaginator
   local _base_0 = {
     prepare_results = function(self, items)
-      items = _class_0.__parent.prepare_results(self, items)
+      items = _class_0.__parent.__base.prepare_results(self, items)
       local parent_field = self.opts.parent_field
       local child_field = self.opts.child_field or "children"
       local by_parent = { }
