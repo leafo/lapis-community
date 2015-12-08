@@ -1,23 +1,34 @@
 language: c
 
+sudo: false
+
 addons:
   postgresql: "9.3"
 
+env:
+  global:
+    - LUAROCKS=2.2.2
+  matrix:
+    - LUA=luajit2.1
+
+before_install:
+  - source .travis/setenv_lua.sh
+
 install:
-  - sudo apt-get install luarocks
-  - sudo apt-get install libssl-dev
-  - mkdir -p ~/.luarocks
-  - echo 'rocks_servers = { "http://rocks.moonscript.org" }' > ~/.luarocks/config.lua
-  - sudo luarocks install luasec
-  - sudo luarocks install https://rocks.moonscript.org/manifests/olivine-labs/busted-2.0.rc7-0.rockspec
-  - sudo luarocks install https://raw.githubusercontent.com/leafo/lapis/master/lapis-dev-1.rockspec
-  - sudo luarocks install moonscript
-  - sudo luarocks install luabitop
-  - sudo luarocks install date
+  - luarocks install https://luarocks.org/manifests/olivine-labs/busted-2.0.rc11-0.rockspec
+  - luarocks install https://raw.githubusercontent.com/leafo/lapis/master/lapis-dev-1.rockspec
+  - luarocks install moonscript
+  - luarocks install luabitop
+  - luarocks install date
+  - luarocks make
+
+before_script:
   - moonc schema.moon
   - moonc config.moon
   - make clean_test
-  # - cat $(which busted) | sed 's/\/usr\/bin\/lua/.\/luajit/' > busted
-  # - chmod +x busted
 
-script: busted
+script: 
+  - busted
+
+
+
