@@ -28,7 +28,7 @@ count:
 
 build:
 	moonc community
-	tup upd
+	[ $$(which tup) ] && tup upd
 
 local: build
 	luarocks make --local lapis-community-dev-1.rockspec
