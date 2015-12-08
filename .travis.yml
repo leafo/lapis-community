@@ -24,7 +24,9 @@ install:
 before_script:
   - moonc schema.moon
   - moonc config.moon
-  - make clean_test
+  - moonc community
+  - createdb -U postgres community_test
+  - LAPIS_SHOW_QUERIES=1 LAPIS_ENVIRONMENT=test luajit -e 'require("schema").make_schema()'
 
 script: 
   - busted
