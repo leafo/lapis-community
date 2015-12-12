@@ -26,6 +26,10 @@ class CategoryApp extends TestApp
     @flow\edit_category!
     json: { success: true }
 
+  "/show-members": capture_errors_json =>
+    @flow\members_flow!\show_members!
+    json: { success: true, members: @members }
+
   "/add-member": capture_errors_json =>
     @flow\members_flow!\add_member!
     json: { success: true }
@@ -177,6 +181,43 @@ describe "categories", ->
       }
 
       assert.same {errors: {"invalid category"}}, res
+
+  describe "show members #ddd", ->
+    local category
+
+    before_each ->
+      category = factory.Categories user_id: current_user.id
+
+    it "shows empty members", ->
+      res = CategoryApp\get current_user, "/show-members", {
+        category_id: category.id
+        user_id: current_user.id
+      }
+
+      assert.nil res.errors
+      assert.same {}, res.members
+
+    it "shows members", ->
+      CategoryMembers\create {
+        user_id: factory.Users!.id
+        category_id: category.id
+        accepted: true
+      }
+
+      CategoryMembers\create {
+        user_id: factory.Users!.id
+        category_id: category.id
+        accepted: false
+      }
+
+      res = CategoryApp\get current_user, "/show-members", {
+        category_id: category.id
+        user_id: current_user.id
+      }
+
+      assert.nil res.errors
+      assert.same 2, #res.members
+      assert.truthy res.members[1].user
 
   describe "add_member", ->
     local category
