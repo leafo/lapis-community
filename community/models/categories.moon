@@ -128,6 +128,47 @@ class Categories extends Model
       "
     }
 
+  @preload_ancestors: (categories) =>
+    categories_by_id = {c.id, c for c in *categories}
+
+    has_parents = false
+
+    parent_ids = for c in *categories
+      continue unless c.parent_category_id
+      has_parents = true
+
+      continue if categories_by_id[c.parent_category_id]
+      c.parent_category_id
+
+    return unless has_parents
+
+    if next parent_ids
+      tname = db.escape_identifier @@table_name!
+      res = db.query "
+        with recursive nested as (
+          (select * from #{tname} where id in ?)
+          union
+          select pr.* from #{tname} pr, nested
+            where pr.id = nested.parent_category_id
+        )
+        select * from nested
+      ", db.list parent_ids
+
+      for category in *res
+        category = @@load category
+        categories_by_id[category.id] or= category
+
+    -- now build all the ancestors
+    for _, category in pairs categories_by_id
+      continue unless category.parent_category_id
+      category.ancestors = {}
+      current = categories_by_id[category.parent_category_id]
+      while current
+        table.insert category.ancestors, current
+        current = categories_by_id[current.parent_category_id]
+
+    true
+
   get_category_group: =>
     return unless @category_groups_count and @category_groups_count > 0
     -- TODO: this doesn't support multiple

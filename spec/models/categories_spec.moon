@@ -155,7 +155,7 @@ describe "models.categories", ->
     it "gets membership_type type", ->
       assert.same Categories.membership_types.public, category\get_membership_type!
 
-    describe "last seen #ddd", ->
+    describe "last seen", ->
       it "does nothing for category with no last topic", ->
         current_user = factory.Users!
         category\set_seen current_user
@@ -235,6 +235,10 @@ describe "models.categories", ->
       it "gets ancestors with no ancestors", ->
         assert.same {}, category\get_ancestors!
 
+      it "preloads single with no ancestors", ->
+        Categories\preload_ancestors { category }
+        assert.same {}, category\get_ancestors!
+
       describe "with hierarchy", ->
         -- (child) deep -> mid -> category (parent)
         local mid, deep
@@ -244,6 +248,26 @@ describe "models.categories", ->
 
         it "gets ancestors with ancestors", ->
           assert.same {mid.id, category.id}, [c.id for c in *deep\get_ancestors!]
+
+        it "assembles category hierarchy without any queries", ->
+          Categories\preload_ancestors { deep, mid, category }
+          assert.same {mid.id, category.id}, [c.id for c in *deep.ancestors]
+          assert.same {category.id}, [c.id for c in *mid.ancestors]
+          assert.same {}, [c.id for c in *category.ancestors or {}]
+
+        it "preloads from deepest, filling ancestors", ->
+          Categories\preload_ancestors { deep }
+          assert.same {mid.id, category.id}, [c.id for c in *deep.ancestors]
+          assert.same {category.id}, [c.id for c in *deep.ancestors[1].ancestors]
+          assert.same {}, [c.id for c in *deep.ancestors[2].ancestors or {}]
+
+        it "preloads many adjacent", ->
+          deep2 = factory.Categories parent_category_id: mid.id
+          deep3 = factory.Categories parent_category_id: mid.id
+          Categories\preload_ancestors { deep, deep2, deep3 }
+          assert.same {mid.id, category.id}, [c.id for c in *deep.ancestors]
+          assert.same {mid.id, category.id}, [c.id for c in *deep2.ancestors]
+          assert.same {mid.id, category.id}, [c.id for c in *deep3.ancestors]
 
         it "searches ancestors for moderators", ->
           user = factory.Users!

@@ -560,6 +560,78 @@ do
       topics_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n          where category_id = " .. tostring(db.escape_identifier(self:table_name())) .. ".id)\n      ")
     })
   end
+  self.preload_ancestors = function(self, categories)
+    local categories_by_id
+    do
+      local _tbl_0 = { }
+      for _index_0 = 1, #categories do
+        local c = categories[_index_0]
+        _tbl_0[c.id] = c
+      end
+      categories_by_id = _tbl_0
+    end
+    local has_parents = false
+    local parent_ids
+    do
+      local _accum_0 = { }
+      local _len_0 = 1
+      for _index_0 = 1, #categories do
+        local _continue_0 = false
+        repeat
+          local c = categories[_index_0]
+          if not (c.parent_category_id) then
+            _continue_0 = true
+            break
+          end
+          has_parents = true
+          if categories_by_id[c.parent_category_id] then
+            _continue_0 = true
+            break
+          end
+          local _value_0 = c.parent_category_id
+          _accum_0[_len_0] = _value_0
+          _len_0 = _len_0 + 1
+          _continue_0 = true
+        until true
+        if not _continue_0 then
+          break
+        end
+      end
+      parent_ids = _accum_0
+    end
+    if not (has_parents) then
+      return 
+    end
+    if next(parent_ids) then
+      local tname = db.escape_identifier(self.__class:table_name())
+      local res = db.query("\n        with recursive nested as (\n          (select * from " .. tostring(tname) .. " where id in ?)\n          union\n          select pr.* from " .. tostring(tname) .. " pr, nested\n            where pr.id = nested.parent_category_id\n        )\n        select * from nested\n      ", db.list(parent_ids))
+      for _index_0 = 1, #res do
+        local category = res[_index_0]
+        category = self.__class:load(category)
+        categories_by_id[category.id] = categories_by_id[category.id] or category
+      end
+    end
+    for _, category in pairs(categories_by_id) do
+      local _continue_0 = false
+      repeat
+        if not (category.parent_category_id) then
+          _continue_0 = true
+          break
+        end
+        category.ancestors = { }
+        local current = categories_by_id[category.parent_category_id]
+        while current do
+          table.insert(category.ancestors, current)
+          current = categories_by_id[current.parent_category_id]
+        end
+        _continue_0 = true
+      until true
+      if not _continue_0 then
+        break
+      end
+    end
+    return true
+  end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end
