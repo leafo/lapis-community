@@ -50,7 +50,7 @@ do
     ]], self.category.id, {
         per_page = 20,
         prepare_results = function(members)
-          Users:include_in(members, "user_id")
+          CategoryMembers:preload_relations(members, "user")
           return members
         end
       })

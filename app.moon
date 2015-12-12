@@ -382,9 +382,7 @@ class extends lapis.Application
     import Categories from require "community.models"
 
     @categories = Categories\select!
-
-    Users\include_in @categories, "user_id"
-    Categories\preload_last_topics @categories
+    Categories\preload_relations @categories, "user", "last_topic"
 
     render: true
 

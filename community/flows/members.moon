@@ -38,7 +38,7 @@ class MembersFlow extends Flow
       where category_id = ?
       order by created_at desc
     ]], @category.id, per_page: 20, prepare_results: (members) ->
-      Users\include_in members, "user_id"
+      CategoryMembers\preload_relations members, "user"
       members
 
     @members = @pager\get_page @page

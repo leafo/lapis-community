@@ -553,13 +553,6 @@ do
     end
     return Model.create(self, opts)
   end
-  self.preload_last_topics = function(self, categories)
-    local Topics
-    Topics = require("community.models").Topics
-    return Topics:include_in(categories, "last_topic_id", {
-      as = "last_topic"
-    })
-  end
   self.recount = function(self)
     local Topics
     Topics = require("community.models").Topics

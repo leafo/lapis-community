@@ -119,12 +119,6 @@ class Categories extends Model
 
     Model.create @, opts
 
-  @preload_last_topics: (categories) =>
-    import Topics from require "community.models"
-    Topics\include_in categories, "last_topic_id", {
-      as: "last_topic"
-    }
-
   @recount: =>
     import Topics from require "community.models"
     db.update @table_name!, {
