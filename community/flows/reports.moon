@@ -91,7 +91,7 @@ class ReportsFlow extends Flow
     table.insert category_ids, @category.id
 
     @pager = PostReports\paginated "
-      where category_id in (?)
+      where category_id in ?
       #{next(filter) and "and " .. db.encode_clause(filter) or ""}
     ", db.list(category_ids), prepare_results: (reports) ->
       PostReports\preload_relations reports, "category", "user",

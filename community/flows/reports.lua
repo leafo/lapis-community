@@ -112,7 +112,7 @@ do
         category_ids = _accum_0
       end
       table.insert(category_ids, self.category.id)
-      self.pager = PostReports:paginated("\n      where category_id in (?)\n      " .. tostring(next(filter) and "and " .. db.encode_clause(filter) or "") .. "\n    ", db.list(category_ids), {
+      self.pager = PostReports:paginated("\n      where category_id in ?\n      " .. tostring(next(filter) and "and " .. db.encode_clause(filter) or "") .. "\n    ", db.list(category_ids), {
         prepare_results = function(reports)
           PostReports:preload_relations(reports, "category", "user", "moderating_user", "post")
           Posts:preload_relations((function()
