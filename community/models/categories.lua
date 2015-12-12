@@ -337,18 +337,9 @@ do
         return { }
       end
       if not (self.ancestors) then
-        local tname = db.escape_identifier(self.__class:table_name())
-        local res = db.query("\n        with recursive nested as (\n          (select * from " .. tostring(tname) .. " where id = ?)\n          union\n          select pr.* from " .. tostring(tname) .. " pr, nested\n            where pr.id = nested.parent_category_id\n        )\n        select * from nested\n      ", self.parent_category_id)
-        do
-          local _accum_0 = { }
-          local _len_0 = 1
-          for _index_0 = 1, #res do
-            local category = res[_index_0]
-            _accum_0[_len_0] = self.__class:load(category)
-            _len_0 = _len_0 + 1
-          end
-          self.ancestors = _accum_0
-        end
+        self.__class:preload_ancestors({
+          self
+        })
       end
       return self.ancestors
     end,
