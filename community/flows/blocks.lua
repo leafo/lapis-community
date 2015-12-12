@@ -24,7 +24,7 @@ do
       self.pager = Blocks:paginated("\n      where blocking_user_id = ?\n      order by created_at desc\n    ", self.current_user.id, {
         per_page = 40,
         prepare_results = function(blocks)
-          Users:include_in(blocks, "blocked_user_id")
+          Blocks:preload_relations(blocks, "blocked_user")
           return blocks
         end
       })

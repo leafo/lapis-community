@@ -24,7 +24,7 @@ class BlocksFlow extends Flow
     ", @current_user.id, {
       per_page: 40
       prepare_results: (blocks) ->
-        Users\include_in blocks, "blocked_user_id"
+        Blocks\preload_relations blocks, "blocked_user"
         blocks
     }
 

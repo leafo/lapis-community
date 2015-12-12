@@ -131,8 +131,7 @@ do
     ]], Bans:object_type_for_object(self.object), self.object.id, {
         per_page = 20,
         prepare_results = function(bans)
-          Users:include_in(bans, "banned_user_id")
-          Users:include_in(bans, "banning_user_id")
+          Bans:preload_relations(bans, "banned_user", "banning_user")
           return bans
         end
       })

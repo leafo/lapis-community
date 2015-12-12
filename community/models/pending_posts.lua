@@ -81,6 +81,10 @@ do
     {
       "parent_post",
       belongs_to = "Posts"
+    },
+    {
+      "category",
+      belongs_to = "Categories"
     }
   }
   self.statuses = enum({

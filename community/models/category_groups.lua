@@ -76,12 +76,15 @@ do
       if opts == nil then
         opts = { }
       end
-      local Categories
-      Categories = require("community.models").Categories
+      local Categories, CategoryGroupCategories
+      do
+        local _obj_0 = require("community.models")
+        Categories, CategoryGroupCategories = _obj_0.Categories, _obj_0.CategoryGroupCategories
+      end
       local fields = opts.fields
       local prepare_results = opts.prepare_results
       opts.prepare_results = function(cgcs)
-        Categories:include_in(cgcs, "category_id", {
+        CategoryGroupCategories.relation_preloaders.category(CategoryGroupCategories, cgcs, {
           fields = fields
         })
         local categories

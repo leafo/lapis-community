@@ -114,8 +114,7 @@ do
       ModerationLogs = require("community.models").ModerationLogs
       self.pager = ModerationLogs:paginated("\n      where category_id in ? order by id desc\n    ", db.list(category_ids), {
         prepare_results = function(logs)
-          ModerationLogs:preload_objects(logs)
-          Users:include_in(logs, "user_id")
+          ModerationLogs:preload_relations(logs, "object", "user")
           return logs
         end
       })
@@ -140,10 +139,7 @@ do
       local status = PendingPosts.statuses:for_db(self.params.status or "pending")
       self.pager = PendingPosts:paginated("\n      where category_id = ? and status = ?\n      order by id asc\n    ", self.category.id, status, {
         prepare_results = function(pending)
-          Categories:include_in(pending, "category_id")
-          Users:include_in(pending, "user_id")
-          Topics:include_in(pending, "topic_id")
-          Posts:include_in(pending, "parent_post_id")
+          PendingPosts:preload_relations(pending, "category", "user", "topic", "parent_post")
           return pending
         end
       })

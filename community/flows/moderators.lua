@@ -90,7 +90,7 @@ do
       self.pager = Moderators:paginated("\n      where object_type = ? and object_id = ?\n      order by created_at desc\n    ", Moderators:object_type_for_object(self.object), self.object.id, {
         per_page = 20,
         prepare_results = function(moderators)
-          Users:include_in(moderators, "user_id")
+          Moderators:preload_relations(moderators, "user")
           return moderators
         end
       })

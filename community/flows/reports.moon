@@ -10,7 +10,7 @@ import trim_filter from require "lapis.util"
 
 import assert_page, require_login from require "community.helpers.app"
 
-import PostReports from require "community.models"
+import PostReports, Posts from require "community.models"
 
 limits = require "community.limits"
 
@@ -94,17 +94,11 @@ class ReportsFlow extends Flow
       where category_id in (?)
       #{next(filter) and "and " .. db.encode_clause(filter) or ""}
     ", db.list(category_ids), prepare_results: (reports) ->
-      import Posts, Topics from require "community.models"
-      import Users from require "models"
+      PostReports\preload_relations reports, "category", "user",
+        "moderating_user", "post"
 
-      for report in *reports
-        report.category = category
-
-      Posts\include_in reports, "post_id"
-      Topics\include_in [r.post for r in *reports], "topic_id"
-
-      Users\include_in reports, "user_id"
-      Users\include_in reports, "moderating_user_id"
+      Posts\preload_relations [r.post for r in *reports], "topic"
+      reports
 
     @reports = @pager\get_page!
     true

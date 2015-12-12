@@ -182,7 +182,7 @@ describe "categories", ->
 
       assert.same {errors: {"invalid category"}}, res
 
-  describe "show members #ddd", ->
+  describe "show members", ->
     local category
 
     before_each ->

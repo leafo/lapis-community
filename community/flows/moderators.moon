@@ -89,7 +89,7 @@ class ModeratorsFlow extends Flow
     ", Moderators\object_type_for_object(@object), @object.id, {
       per_page: 20
       prepare_results: (moderators) ->
-        Users\include_in moderators, "user_id"
+        Moderators\preload_relations moderators, "user"
         moderators
     }
 

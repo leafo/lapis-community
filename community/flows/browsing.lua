@@ -246,7 +246,7 @@ do
       if last_seens == nil then
         last_seens = true
       end
-      Topics:include_in(categories, "last_topic_id")
+      Categories:preload_relations(categories, "last_topic")
       local topics
       do
         local _accum_0 = { }
@@ -277,7 +277,7 @@ do
       if last_seens == nil then
         last_seens = true
       end
-      Posts:include_in(topics, "last_post_id")
+      Topics:preload_relations(topics, "last_post")
       local with_users
       do
         local _accum_0 = { }
@@ -295,7 +295,9 @@ do
           table.insert(with_users, t.last_post)
         end
       end
-      Users:include_in(with_users, "user_id")
+      Users:include_in(with_users, "user_id", {
+        for_relation = "user"
+      })
       if last_seens and self.current_user then
         local UserTopicLastSeens
         UserTopicLastSeens = require("community.models").UserTopicLastSeens
@@ -309,7 +311,7 @@ do
       return topics
     end,
     preload_posts = function(self, posts)
-      Users:include_in(posts, "user_id")
+      Posts:preload_relations(posts, "user")
       for _index_0 = 1, #posts do
         local p = posts[_index_0]
         p.topic = self.topic

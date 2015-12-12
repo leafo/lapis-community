@@ -72,8 +72,7 @@ class CategoriesFlow extends Flow
     @pager = ModerationLogs\paginated "
       where category_id in ? order by id desc
     ", db.list(category_ids), prepare_results: (logs) ->
-      ModerationLogs\preload_objects logs
-      Users\include_in logs, "user_id"
+      ModerationLogs\preload_relations logs, "object", "user"
       logs
 
     @moderation_logs = @pager\get_page @page
@@ -96,10 +95,7 @@ class CategoriesFlow extends Flow
       order by id asc
     ", @category.id, status, {
       prepare_results: (pending) ->
-        Categories\include_in pending, "category_id"
-        Users\include_in pending, "user_id"
-        Topics\include_in pending, "topic_id"
-        Posts\include_in pending, "parent_post_id"
+        PendingPosts\preload_relations pending, "category", "user", "topic", "parent_post"
         pending
     }
 

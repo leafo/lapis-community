@@ -29,6 +29,7 @@ class PendingPosts extends Model
     {"topic", belongs_to: "Topics"}
     {"user", belongs_to: "Users"}
     {"parent_post", belongs_to: "Posts"}
+    {"category", belongs_to: "Categories"}
   }
 
   @statuses: enum {

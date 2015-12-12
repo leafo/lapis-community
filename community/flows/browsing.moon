@@ -164,7 +164,7 @@ class BrowsingFlow extends Flow
         @topic\set_seen @current_user
 
   preload_categories: (categories, last_seens=true) =>
-    Topics\include_in categories, "last_topic_id"
+    Categories\preload_relations categories, "last_topic"
     topics = [c.last_topic for c in *categories when c.last_topic]
     @preload_topics topics
 
@@ -177,23 +177,28 @@ class BrowsingFlow extends Flow
     categories
 
   preload_topics: (topics, last_seens=true) =>
-    Posts\include_in topics, "last_post_id"
+    Topics\preload_relations topics, "last_post"
 
     with_users = [t for t in *topics]
     for t in *topics
       if t.last_post
         table.insert with_users, t.last_post
 
-    Users\include_in with_users, "user_id"
+    Users\include_in with_users, "user_id", for_relation: "user"
 
     if last_seens and @current_user
       import UserTopicLastSeens from require "community.models"
-      UserTopicLastSeens\include_in topics, "topic_id", flip: true, where: { user_id: @current_user.id }
+      UserTopicLastSeens\include_in topics, "topic_id", {
+        flip: true
+        where: {
+          user_id: @current_user.id
+        }
+      }
 
     topics
 
   preload_posts: (posts) =>
-    Users\include_in posts, "user_id"
+    Posts\preload_relations posts, "user"
     for p in *posts
       p.topic = @topic
 

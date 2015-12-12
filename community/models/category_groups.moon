@@ -68,13 +68,15 @@ class CategoryGroups extends Model
     }
 
   get_categories_paginated: (opts={}) =>
-    import Categories from require "community.models"
+    import Categories, CategoryGroupCategories from require "community.models"
 
     fields = opts.fields
     prepare_results = opts.prepare_results
 
     opts.prepare_results = (cgcs)->
-      Categories\include_in cgcs, "category_id", :fields
+      -- lol
+      CategoryGroupCategories.relation_preloaders.category CategoryGroupCategories, cgcs, :fields
+
       categories = [cgc.category for cgc in *cgcs]
 
       if prepare_results

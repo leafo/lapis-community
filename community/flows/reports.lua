@@ -17,8 +17,11 @@ do
   local _obj_0 = require("community.helpers.app")
   assert_page, require_login = _obj_0.assert_page, _obj_0.require_login
 end
-local PostReports
-PostReports = require("community.models").PostReports
+local PostReports, Posts
+do
+  local _obj_0 = require("community.models")
+  PostReports, Posts = _obj_0.PostReports, _obj_0.Posts
+end
 local limits = require("community.limits")
 local ReportsFlow
 do
@@ -111,19 +114,8 @@ do
       table.insert(category_ids, self.category.id)
       self.pager = PostReports:paginated("\n      where category_id in (?)\n      " .. tostring(next(filter) and "and " .. db.encode_clause(filter) or "") .. "\n    ", db.list(category_ids), {
         prepare_results = function(reports)
-          local Posts, Topics
-          do
-            local _obj_0 = require("community.models")
-            Posts, Topics = _obj_0.Posts, _obj_0.Topics
-          end
-          local Users
-          Users = require("models").Users
-          for _index_0 = 1, #reports do
-            local report = reports[_index_0]
-            report.category = category
-          end
-          Posts:include_in(reports, "post_id")
-          Topics:include_in((function()
+          PostReports:preload_relations(reports, "category", "user", "moderating_user", "post")
+          Posts:preload_relations((function()
             local _accum_0 = { }
             local _len_0 = 1
             for _index_0 = 1, #reports do
@@ -132,9 +124,8 @@ do
               _len_0 = _len_0 + 1
             end
             return _accum_0
-          end)(), "topic_id")
-          Users:include_in(reports, "user_id")
-          return Users:include_in(reports, "moderating_user_id")
+          end)(), "topic")
+          return reports
         end
       })
       self.reports = self.pager:get_page()
