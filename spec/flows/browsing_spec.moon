@@ -13,6 +13,17 @@ import capture_errors_json from require "lapis.application"
 
 import TestApp from require "spec.helpers"
 
+-- to prevent sparse array error
+filter_bans = (thing, ...) ->
+  return unless thing
+  thing.user_bans = nil
+  if thing.category
+    rest = {...}
+    table.insert rest, thing.category
+    thing, filter_bans unpack rest
+  else
+    thing, filter_bans ...
+
 class BrowsingApp extends TestApp
   @before_filter =>
     @current_user = @params.current_user_id and assert Users\find @params.current_user_id
@@ -21,6 +32,8 @@ class BrowsingApp extends TestApp
 
   "/post": capture_errors_json =>
     @flow\post_single!
+    filter_bans @post\get_topic!
+
     json: {
       success: true
       post: @post
@@ -28,6 +41,8 @@ class BrowsingApp extends TestApp
 
   "/category": capture_errors_json =>
     @flow\category_single!
+    filter_bans @category
+
     json: {
       success: true
       category: @category
@@ -37,6 +52,8 @@ class BrowsingApp extends TestApp
     @flow\topic_posts {
       order: @params.order
     }
+
+    filter_bans unpack [post.topic for post in *@posts]
 
     json: {
       success: true
