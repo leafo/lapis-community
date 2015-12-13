@@ -635,6 +635,63 @@ do
     end
     return true
   end
+  self.preload_bans = function(self, categories, user)
+    if not (user) then
+      return 
+    end
+    if not (next(categories)) then
+      return 
+    end
+    self:preload_ancestors((function()
+      local _accum_0 = { }
+      local _len_0 = 1
+      for _index_0 = 1, #categories do
+        local c = categories[_index_0]
+        if not c.ancestors then
+          _accum_0[_len_0] = c
+          _len_0 = _len_0 + 1
+        end
+      end
+      return _accum_0
+    end)())
+    local categories_by_id = { }
+    for _index_0 = 1, #categories do
+      local c = categories[_index_0]
+      categories_by_id[c.id] = c
+      local _list_0 = c:get_ancestors()
+      for _index_1 = 1, #_list_0 do
+        local ancestor = _list_0[_index_1]
+        categories_by_id[ancestor.id] = categories_by_id[ancestor.id] or ancestor
+      end
+    end
+    local category_ids
+    do
+      local _accum_0 = { }
+      local _len_0 = 1
+      for id in pairs(categories_by_id) do
+        _accum_0[_len_0] = id
+        _len_0 = _len_0 + 1
+      end
+      category_ids = _accum_0
+    end
+    local Bans
+    Bans = require("community.models").Bans
+    local bans = Bans:select("\n      where banned_user_id = ? and object_type = ? and object_id in ?\n    ", user.id, Bans.object_types.category, db.list(category_ids))
+    local bans_by_category_id
+    do
+      local _tbl_0 = { }
+      for _index_0 = 1, #bans do
+        local b = bans[_index_0]
+        _tbl_0[b.object_id] = b
+      end
+      bans_by_category_id = _tbl_0
+    end
+    for _, category in pairs(categories_by_id) do
+      category.user_bans = category.user_bans or { }
+      category.user_bans[user.id] = bans_by_category_id[category.id] or false
+    end
+    return true
+  end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end
