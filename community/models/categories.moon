@@ -203,7 +203,7 @@ class Categories extends Model
         return true if @allowed_to_moderate user
         return false unless @is_member user
 
-    return false if @find_ban user
+    return false if @get_ban user
 
     if category_group = @get_category_group!
       return false unless category_group\allowed_to_view user
@@ -300,6 +300,18 @@ class Categories extends Model
       object_id: @parent_category_id and db.list(@get_category_ids!) or @id
       banned_user_id: user.id
     }
+
+  get_ban: (user) =>
+    return nil unless user
+
+    @user_bans or= {}
+    ban = @user_bans[user.id]
+
+    if ban != nil
+      return ban
+
+    @user_bans[user.id] = @find_ban(user) or false
+    @user_bans[user.id]
 
   get_order_ranges: (status="default") =>
     import Topics from require "community.models"

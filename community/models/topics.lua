@@ -38,7 +38,7 @@ do
         can_view = true
       end
       if can_view then
-        if self:find_ban(user) then
+        if self:get_ban(user) then
           return false
         end
       end
@@ -211,6 +211,18 @@ do
       end
       self.tags = nil
       return true
+    end,
+    get_ban = function(self, user)
+      if not (user) then
+        return nil
+      end
+      self.user_bans = self.user_bans or { }
+      local ban = self.user_bans[user.id]
+      if ban ~= nil then
+        return ban
+      end
+      self.user_bans[user.id] = self:find_ban(user) or false
+      return self.user_bans[user.id]
     end,
     find_ban = function(self, user)
       if not (user) then

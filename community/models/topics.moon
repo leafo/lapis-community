@@ -97,7 +97,7 @@ class Topics extends Model
       true
 
     if can_view
-      return false if @find_ban user
+      return false if @get_ban user
 
     can_view
 
@@ -214,6 +214,18 @@ class Topics extends Model
 
     @tags = nil -- clear cache
     true
+
+  get_ban: (user) =>
+    return nil unless user
+
+    @user_bans or= {}
+    ban = @user_bans[user.id]
+
+    if ban != nil
+      return ban
+
+    @user_bans[user.id] = @find_ban(user) or false
+    @user_bans[user.id]
 
   find_ban: (user) =>
     return nil unless user

@@ -86,7 +86,7 @@ do
           return false
         end
       end
-      if self:find_ban(user) then
+      if self:get_ban(user) then
         return false
       end
       do
@@ -236,6 +236,18 @@ do
         object_id = self.parent_category_id and db.list(self:get_category_ids()) or self.id,
         banned_user_id = user.id
       })
+    end,
+    get_ban = function(self, user)
+      if not (user) then
+        return nil
+      end
+      self.user_bans = self.user_bans or { }
+      local ban = self.user_bans[user.id]
+      if ban ~= nil then
+        return ban
+      end
+      self.user_bans[user.id] = self:find_ban(user) or false
+      return self.user_bans[user.id]
     end,
     get_order_ranges = function(self, status)
       if status == nil then
