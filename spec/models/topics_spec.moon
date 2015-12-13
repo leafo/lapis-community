@@ -296,3 +296,28 @@ describe "models.topics", ->
       assert.same 2, min
       assert.same 3, max
 
+  describe "bans", ->
+    it "preloads bans on many topics when user is not banned", ->
+      user = factory.Users!
+      topics = for i=1,3
+        factory.Topics!
+
+      Topics\preload_bans topics, user
+      for t in *topics
+        assert.same {[user.id]: false}, t.user_bans
+
+    it "preloads bans user", ->
+      user = factory.Users!
+      other_user = factory.Users!
+      topics = for i=1,3
+        factory.Topics!
+
+      b1 = factory.Bans object: topics[1], banned_user_id: user.id
+      b2 = factory.Bans object: topics[2], banned_user_id: other_user.id
+
+      Topics\preload_bans topics, user
+
+      assert.same {[user.id]: b1}, topics[1].user_bans
+      assert.same {[user.id]: false}, topics[2].user_bans
+      assert.same {[user.id]: false}, topics[3].user_bans
+

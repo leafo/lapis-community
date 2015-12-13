@@ -470,6 +470,41 @@ do
       posts_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where topic_id = " .. tostring(db.escape_identifier(self:table_name())) .. ".id)\n      ")
     }, where)
   end
+  self.preload_bans = function(self, topics, user)
+    if not (user) then
+      return 
+    end
+    if not (next(topics)) then
+      return 
+    end
+    local Bans
+    Bans = require("community.models").Bans
+    local bans = Bans:select("\n      where banned_user_id = ? and object_type = ? and object_id in ?\n    ", user.id, Bans.object_types.topic, db.list((function()
+      local _accum_0 = { }
+      local _len_0 = 1
+      for _index_0 = 1, #topics do
+        local t = topics[_index_0]
+        _accum_0[_len_0] = t.id
+        _len_0 = _len_0 + 1
+      end
+      return _accum_0
+    end)()))
+    local bans_by_topic_id
+    do
+      local _tbl_0 = { }
+      for _index_0 = 1, #bans do
+        local b = bans[_index_0]
+        _tbl_0[b.object_id] = b
+      end
+      bans_by_topic_id = _tbl_0
+    end
+    for _index_0 = 1, #topics do
+      local t = topics[_index_0]
+      t.user_bans = t.user_bans or { }
+      t.user_bans[user.id] = bans_by_topic_id[t.id] or false
+    end
+    return true
+  end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end

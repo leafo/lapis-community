@@ -80,6 +80,22 @@ class Topics extends Model
       "
     }, where
 
+  @preload_bans: (topics, user) =>
+    return unless user
+    return unless next topics
+
+    import Bans from require "community.models"
+    bans = Bans\select "
+      where banned_user_id = ? and object_type = ? and object_id in ?
+    ", user.id, Bans.object_types.topic, db.list [t.id for t in *topics]
+
+    bans_by_topic_id = {b.object_id, b for b in *bans}
+    for t in *topics
+      t.user_bans or= {}
+      t.user_bans[user.id] = bans_by_topic_id[t.id] or false
+
+    true
+
   allowed_to_post: (user) =>
     return false unless user
     return false if @deleted
