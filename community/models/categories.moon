@@ -169,6 +169,35 @@ class Categories extends Model
 
     true
 
+  @preload_bans: (categories, user) =>
+    return unless user
+    return unless next categories
+
+    -- preload anecestors where necessary
+    @preload_ancestors [c for c in *categories when not c.ancestors]
+
+    categories_by_id = {}
+    for c in *categories
+      categories_by_id[c.id] = c
+      for ancestor in *c\get_ancestors!
+        categories_by_id[ancestor.id] or= ancestor
+
+
+    category_ids = [id for id in pairs categories_by_id]
+
+    import Bans from require "community.models"
+    bans = Bans\select "
+      where banned_user_id = ? and object_type = ? and object_id in ?
+    ", user.id, Bans.object_types.category, db.list category_ids
+
+    bans_by_category_id = {b.object_id, b for b in *bans}
+
+    for _, category in pairs categories_by_id
+      category.user_bans or= {}
+      category.user_bans[user.id] = bans_by_category_id[category.id] or false
+
+    true
+
   get_category_group: =>
     return unless @category_groups_count and @category_groups_count > 0
     -- TODO: this doesn't support multiple

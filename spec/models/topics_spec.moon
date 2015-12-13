@@ -19,7 +19,7 @@ describe "models.topics", ->
     factory.Topics!
     factory.Topics category: false
 
-  it "should check permissions of topic with category #ddd", ->
+  it "should check permissions of topic with category", ->
     category_user = factory.Users!
     category = factory.Categories user_id: category_user.id
 

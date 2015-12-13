@@ -445,3 +445,18 @@ describe "models.categories", ->
 
       b = factory.Categories parent_category_id: root.id
       assert.same 2, b.position
+
+  describe "bans", ->
+    it "preloads bans on many topics when user is not banned", ->
+      user = factory.Users!
+
+      parent_category = factory.Categories!
+
+      categories = for i=1,3
+        factory.Categories {
+          parent_category_id: i == 2 and parent_category.id or nil
+        }
+
+      Categories\preload_bans categories, user
+      for c in *categories
+        assert.same {[user.id]: false}, c.user_bans
