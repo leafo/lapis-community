@@ -182,7 +182,6 @@ class Categories extends Model
       for ancestor in *c\get_ancestors!
         categories_by_id[ancestor.id] or= ancestor
 
-
     category_ids = [id for id in pairs categories_by_id]
 
     import Bans from require "community.models"

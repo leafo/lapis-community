@@ -447,16 +447,35 @@ describe "models.categories", ->
       assert.same 2, b.position
 
   describe "bans", ->
-    it "preloads bans on many topics when user is not banned", ->
-      user = factory.Users!
+    local parent_category
+    local categories
 
+    before_each ->
       parent_category = factory.Categories!
-
       categories = for i=1,3
         factory.Categories {
           parent_category_id: i == 2 and parent_category.id or nil
         }
 
+    it "preloads bans on many topics when user is not banned", ->
+      user = factory.Users!
       Categories\preload_bans categories, user
       for c in *categories
         assert.same {[user.id]: false}, c.user_bans
+
+    it "preloads bans user", ->
+      other_user = factory.Users!
+      user = factory.Users!
+
+      b1 = factory.Bans object: categories[2], banned_user_id: other_user.id
+
+      b2 = factory.Bans object: categories[3], banned_user_id: user.id
+      b3 = factory.Bans object: parent_category, banned_user_id: user.id
+
+      Categories\preload_bans categories, user
+
+      assert.same {[user.id]: false}, categories[1].user_bans
+      assert.same {[user.id]: false}, categories[2].user_bans
+      assert.same {[user.id]: b2}, categories[3].user_bans
+      assert.same {[user.id]: b3}, categories[2]\get_parent_category!.user_bans
+
