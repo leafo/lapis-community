@@ -28,7 +28,12 @@ Categories = (opts={}) ->
   assert models.Categories\create opts
 
 Topics = (opts={}) ->
+  local category
   if opts.category == false
+    opts.category = nil
+  elseif opts.category
+    category = opts.category
+    opts.category_id = category.id
     opts.category = nil
   else
     opts.category_id or= Categories!.id
@@ -36,14 +41,27 @@ Topics = (opts={}) ->
   opts.user_id or= Users!.id
   opts.title or= "Topic #{next_counter "topic"}"
 
-  assert models.Topics\create opts
+  with topic = assert models.Topics\create opts
+    if category
+      category\increment_from_topic topic
 
 Posts = (opts={}) ->
+  local topic
   opts.user_id or= Users!.id
-  opts.topic_id or= Topics(user_id: opts.user_id).id
+  if opts.topic
+    topic = opts.topic
+    opts.topic_id = topic.id
+    opts.topic = nil
+  else
+    opts.topic_id or= Topics(user_id: opts.user_id).id
+
   opts.body or= "Post #{next_counter "post"} body"
 
-  assert models.Posts\create opts
+  with post = assert models.Posts\create opts
+    if topic
+      topic\increment_from_post post
+      category = topic\get_category!
+      category\increment_from_post post
 
 Votes = (opts={}) ->
   opts.positive = true if opts.positive == nil

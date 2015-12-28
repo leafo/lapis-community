@@ -45,25 +45,51 @@ Topics = function(opts)
   if opts == nil then
     opts = { }
   end
+  local category
   if opts.category == false then
+    opts.category = nil
+  elseif opts.category then
+    category = opts.category
+    opts.category_id = category.id
     opts.category = nil
   else
     opts.category_id = opts.category_id or Categories().id
   end
   opts.user_id = opts.user_id or Users().id
   opts.title = opts.title or "Topic " .. tostring(next_counter("topic"))
-  return assert(models.Topics:create(opts))
+  do
+    local topic = assert(models.Topics:create(opts))
+    if category then
+      category:increment_from_topic(topic)
+    end
+    return topic
+  end
 end
 Posts = function(opts)
   if opts == nil then
     opts = { }
   end
+  local topic
   opts.user_id = opts.user_id or Users().id
-  opts.topic_id = opts.topic_id or Topics({
-    user_id = opts.user_id
-  }).id
+  if opts.topic then
+    topic = opts.topic
+    opts.topic_id = topic.id
+    opts.topic = nil
+  else
+    opts.topic_id = opts.topic_id or Topics({
+      user_id = opts.user_id
+    }).id
+  end
   opts.body = opts.body or "Post " .. tostring(next_counter("post")) .. " body"
-  return assert(models.Posts:create(opts))
+  do
+    local post = assert(models.Posts:create(opts))
+    if topic then
+      topic:increment_from_post(post)
+      local category = topic:get_category()
+      category:increment_from_post(post)
+    end
+    return post
+  end
 end
 Votes = function(opts)
   if opts == nil then
