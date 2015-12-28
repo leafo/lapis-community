@@ -215,6 +215,24 @@ describe "models.topics", ->
     assert.same topic.id, last_seen.topic_id
     assert.same post2.id, last_seen.post_id
 
+  describe "delete", ->
+    it "deletes a topic", ->
+      topic = factory.Topics!
+      topic\delete!
+      topic\refresh!
+      assert.true topic.deleted
+
+    it "refreshes category when deleting topic", ->
+      category = factory.Categories!
+      t1 = factory.Topics :category
+      t2 = factory.Topics :category
+
+      category\refresh!
+      assert.same t2.id, category.last_topic_id
+      t2\delete!
+      category\refresh!
+      assert.same t1.id, category.last_topic_id
+
   describe "renumber_posts", ->
     it "renumbers root posts", ->
       topic = factory.Topics!

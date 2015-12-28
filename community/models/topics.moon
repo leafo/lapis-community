@@ -188,10 +188,13 @@ class Topics extends Model
       if @user_id
         CommunityUsers\for_user(@get_user!)\increment "topics_count", -1
 
-      if @category_id
-        Categories\load(id: @category_id)\update {
+      if category = @get_category!
+        category\update {
           deleted_topics_count: db.raw "deleted_topics_count + 1"
         }, timestamp: false
+
+        if category.last_topic_id == @id
+          category\refresh_last_topic!
 
       return true
 
