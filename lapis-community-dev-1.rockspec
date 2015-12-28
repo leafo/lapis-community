@@ -63,6 +63,7 @@ build = {
     ["community.models.votes"] = "community/models/votes.lua",
     ["community.schema"] = "community/schema.lua",
     ["community.spec.factory"] = "community/spec/factory.lua",
+    ["community.version"] = "community/version.lua",
   }
 }
 

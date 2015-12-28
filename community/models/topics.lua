@@ -140,14 +140,18 @@ do
         if self.user_id then
           CommunityUsers:for_user(self:get_user()):increment("topics_count", -1)
         end
-        if self.category_id then
-          Categories:load({
-            id = self.category_id
-          }):update({
-            deleted_topics_count = db.raw("deleted_topics_count + 1")
-          }, {
-            timestamp = false
-          })
+        do
+          local category = self:get_category()
+          if category then
+            category:update({
+              deleted_topics_count = db.raw("deleted_topics_count + 1")
+            }, {
+              timestamp = false
+            })
+            if category.last_topic_id == self.id then
+              category:refresh_last_topic()
+            end
+          end
         end
         return true
       end
