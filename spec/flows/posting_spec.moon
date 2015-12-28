@@ -525,3 +525,32 @@ describe "posting flow", ->
 
       assert.same {errors: {"not allowed to edit"}}, res
 
+    it "should delete last post, refreshing topic on category and topic", ->
+      category = factory.Categories!
+      topic = factory.Topics(:category)
+
+      p1 = factory.Posts(:topic)
+      p2 = factory.Posts(:topic)
+
+      other_topic = factory.Topics(:category)
+      other_post = factory.Posts topic: other_topic
+
+      post = factory.Posts(:topic, user_id: current_user.id)
+
+      category\refresh!
+      topic\refresh!
+
+      assert.same topic.id, category.last_topic_id
+      assert.same post.id, topic.last_post_id
+
+      res = PostingApp\get current_user, "/delete-post", {
+        post_id: post.id
+      }
+
+      category\refresh!
+      topic\refresh!
+
+      assert.same p2.id, topic.last_post_id
+      assert.same topic.id, category.last_topic_id
+
+

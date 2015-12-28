@@ -200,11 +200,7 @@ do
       end
       local deleted, kind = self.post:delete(mode)
       if deleted then
-        local topic = self.post:get_topic()
-        topic:decrement_participant(self.current_user)
-        if self.post.id == topic.last_post_id then
-          topic:refresh_last_post()
-        end
+        self.topic:decrement_participant(self.post:get_user())
         if not (kind == "hard") then
           ActivityLogs:create({
             user_id = self.current_user.id,

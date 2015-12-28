@@ -181,9 +181,17 @@ class Posts extends Model
       import CommunityUsers, Topics from require "community.models"
       CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
 
-      Topics\load(id: @topic_id)\update {
-        deleted_posts_count: db.raw "deleted_posts_count + 1"
-      }, timestamp: false
+      if topic = @get_topic!
+        if topic.last_post_id == @id
+          topic\refresh_last_post!
+
+        if category = topic\get_category!
+          if category.last_topic_id = topic.id
+            category\refresh_last_topic!
+
+        topic\update {
+          deleted_posts_count: db.raw "deleted_posts_count + 1"
+        }, timestamp: false
 
       return true
 
@@ -203,17 +211,21 @@ class Posts extends Model
 
     CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
 
-    topic = @get_topic!
-    topic\renumber_posts @get_parent_post!
+    if topic = @get_topic!
+      topic\renumber_posts @get_parent_post!
 
-    if topic.last_post_id == @id
-      topic\refresh_last_post!
+      if topic.last_post_id == @id
+        topic\refresh_last_post!
 
-    topic\update {
-      posts_count: db.raw "posts_count - 1"
-      root_posts_count: if @depth == 1
-        db.raw "root_posts_count - 1"
-    }, timestamp: false
+      if category = topic\get_category!
+        if category.last_topic_id = topic.id
+          category\refresh_last_topic!
+
+      topic\update {
+        posts_count: db.raw "posts_count - 1"
+        root_posts_count: if @depth == 1
+          db.raw "root_posts_count - 1"
+      }, timestamp: false
 
     db.delete ModerationLogs\table_name!, {
       object_type: ModerationLogs.object_types.post_report

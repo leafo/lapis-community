@@ -389,7 +389,7 @@ class Categories extends Model
     }, timestamp: false
 
   increment_from_topic: (topic) =>
-    assert topic.category_id == @id
+    assert topic.category_id == @id, "topic does not belong to category"
 
     import clear_loaded_relation from require "lapis.db.model.relations"
     clear_loaded_relation @, "last_topic"

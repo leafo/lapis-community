@@ -296,7 +296,7 @@ do
       })
     end,
     increment_from_topic = function(self, topic)
-      assert(topic.category_id == self.id)
+      assert(topic.category_id == self.id, "topic does not belong to category")
       local clear_loaded_relation
       clear_loaded_relation = require("lapis.db.model.relations").clear_loaded_relation
       clear_loaded_relation(self, "last_topic")

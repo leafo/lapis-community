@@ -127,13 +127,30 @@ do
           CommunityUsers, Topics = _obj_0.CommunityUsers, _obj_0.Topics
         end
         CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
-        Topics:load({
-          id = self.topic_id
-        }):update({
-          deleted_posts_count = db.raw("deleted_posts_count + 1")
-        }, {
-          timestamp = false
-        })
+        do
+          local topic = self:get_topic()
+          if topic then
+            if topic.last_post_id == self.id then
+              topic:refresh_last_post()
+            end
+            do
+              local category = topic:get_category()
+              if category then
+                do
+                  category.last_topic_id = topic.id
+                  if category.last_topic_id then
+                    category:refresh_last_topic()
+                  end
+                end
+              end
+            end
+            topic:update({
+              deleted_posts_count = db.raw("deleted_posts_count + 1")
+            }, {
+              timestamp = false
+            })
+          end
+        end
         return true
       end
     end,
@@ -147,21 +164,36 @@ do
         CommunityUsers, ModerationLogs, PostEdits, PostReports, Votes, ActivityLogs = _obj_0.CommunityUsers, _obj_0.ModerationLogs, _obj_0.PostEdits, _obj_0.PostReports, _obj_0.Votes, _obj_0.ActivityLogs
       end
       CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
-      local topic = self:get_topic()
-      topic:renumber_posts(self:get_parent_post())
-      if topic.last_post_id == self.id then
-        topic:refresh_last_post()
-      end
-      topic:update({
-        posts_count = db.raw("posts_count - 1"),
-        root_posts_count = (function()
-          if self.depth == 1 then
-            return db.raw("root_posts_count - 1")
+      do
+        local topic = self:get_topic()
+        if topic then
+          topic:renumber_posts(self:get_parent_post())
+          if topic.last_post_id == self.id then
+            topic:refresh_last_post()
           end
-        end)()
-      }, {
-        timestamp = false
-      })
+          do
+            local category = topic:get_category()
+            if category then
+              do
+                category.last_topic_id = topic.id
+                if category.last_topic_id then
+                  category:refresh_last_topic()
+                end
+              end
+            end
+          end
+          topic:update({
+            posts_count = db.raw("posts_count - 1"),
+            root_posts_count = (function()
+              if self.depth == 1 then
+                return db.raw("root_posts_count - 1")
+              end
+            end)()
+          }, {
+            timestamp = false
+          })
+        end
+      end
       db.delete(ModerationLogs:table_name(), {
         object_type = ModerationLogs.object_types.post_report,
         object_id = db.list({
