@@ -916,7 +916,7 @@ return {
     })
   end,
   [9] = function(self)
-    add_column(T("categories"), "available_tags", varchar({
+    add_column(T("topics"), "tags", varchar({
       array = true,
       null = true
     }))

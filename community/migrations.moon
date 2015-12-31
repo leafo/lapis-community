@@ -456,7 +456,7 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
     create_index T"posts", "user_id", "status", "id", where: "not deleted"
 
   [9]: =>
-    add_column T"categories", "available_tags", varchar array: true, null: true
+    add_column T"topics", "tags", varchar array: true, null: true
     drop_table T"topic_tags"
 
     create_table T"category_tags", {

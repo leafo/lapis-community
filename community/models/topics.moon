@@ -26,7 +26,8 @@ import enum from require "lapis.db.model"
 --   deleted_at timestamp without time zone,
 --   created_at timestamp without time zone NOT NULL,
 --   updated_at timestamp without time zone NOT NULL,
---   status smallint DEFAULT 1 NOT NULL
+--   status smallint DEFAULT 1 NOT NULL,
+--   tags character varying(255)[]
 -- );
 -- ALTER TABLE ONLY community_topics
 --   ADD CONSTRAINT community_topics_pkey PRIMARY KEY (id);
