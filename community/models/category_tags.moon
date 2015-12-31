@@ -43,3 +43,5 @@ class CategoryTags extends Model
 
     super opts
 
+  name_for_display: =>
+    @label or @slug
