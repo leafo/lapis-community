@@ -8,9 +8,19 @@ import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
 
 import Users from require "models"
+
 import
-  Categories, Posts, Topics, CategoryMembers, Moderators, ActivityLogs,
-    ModerationLogs, ModerationLogObjects, PendingPosts from require "community.models"
+  ActivityLogs
+  Categories
+  CategoryMembers
+  CategoryTags
+  ModerationLogObjects
+  ModerationLogs
+  Moderators
+  PendingPosts
+  Posts
+  Topics
+  from require "community.models"
 
 class CategoryApp extends TestApp
   @require_user!
@@ -68,7 +78,11 @@ class CategoryApp extends TestApp
 
   "/set-children": capture_errors_json =>
     @flow\set_children!
-    json: { "ok" }
+    json: { success: true }
+
+  "/set-tags": capture_errors_json =>
+    @flow\set_tags!
+    json: { success: true }
 
 describe "categories", ->
   use_test_env!
@@ -78,7 +92,7 @@ describe "categories", ->
   before_each ->
     truncate_tables Users, Categories, Posts, Topics, CategoryMembers,
       Moderators, ActivityLogs, ModerationLogs, ModerationLogObjects,
-      PendingPosts
+      PendingPosts, CategoryTags
 
     current_user = factory.Users!
 
@@ -154,27 +168,6 @@ describe "categories", ->
         assert.same ActivityLogs.object_types.category, log.object_type
         assert.same "edit", log\action_name!
 
-      it "sets tags", ->
-        res = CategoryApp\get current_user, "/edit-category", {
-          category_id: category.id
-          "category[available_tags]": "one,two,three"
-        }
-
-        assert.same {success: true}, res
-        category\refresh!
-        assert.same {"one", "two", "three"}, category.available_tags
-
-      it "clears tags tags", ->
-        category\update available_tags: db.array {"hello", "world"}
-        res = CategoryApp\get current_user, "/edit-category", {
-          category_id: category.id
-          "category[available_tags]": ""
-        }
-
-        assert.same {success: true}, res
-        category\refresh!
-        assert.nil category.available_tags
-
       it "should update partial", ->
         category\update archived: true
         res = CategoryApp\get current_user, "/edit-category", {
@@ -203,6 +196,78 @@ describe "categories", ->
       }
 
       assert.same {errors: {"invalid category"}}, res
+
+    describe "tags", ->
+      it "sets tags", ->
+        res = CategoryApp\get current_user, "/set-tags", {
+          category_id: category.id
+          "category_tags[1][label]": "the first one"
+          "category_tags[2][label]": "Second here"
+          "category_tags[2][color]": "#dfdfee"
+        }
+
+        assert.same {success: true}, res
+        ts = for t in *category\get_tags!
+          {
+            category_id: t.category_id
+            label: t.label
+            slug: t.slug
+            tag_order: t.tag_order
+            color: t.color
+          }
+
+        assert.same {
+          {
+            category_id: category.id
+            tag_order: 1
+            label: "the first one"
+            slug: "the-first-one"
+          }
+          {
+            category_id: category.id
+            tag_order: 2
+            label: "Second here"
+            slug: "second-here"
+            color: "#dfdfee"
+          }
+        }, ts
+
+      it "clears tags", ->
+        for i=1,2
+          factory.CategoryTags category_id: category.id
+
+        res = CategoryApp\get current_user, "/set-tags", {
+          category_id: category.id
+        }
+
+        assert.same {success: true}, res
+        assert.same {}, category\get_tags!
+
+      it "clears edits tags", ->
+        existing = for i=1,2
+          factory.CategoryTags category_id: category.id
+
+        res = CategoryApp\get current_user, "/set-tags", {
+          category_id: category.id
+          "category_tags[1][label]": "the first one"
+          "category_tags[1][id]": "#{existing[2].id}"
+          "category_tags[1][color]": "#daddad"
+          "category_tags[2][label]": "new one"
+        }
+
+        assert.same {success: true}, res
+        tags = category\get_tags!
+        assert.same 2, #tags
+
+        first, second = unpack tags
+        assert.same existing[2].id, first.id
+        t = existing[2]
+        t\refresh!
+        assert.same "the first one", t.label
+
+        -- created a new second one
+        assert.not.same existing[1].id, second.id
+
 
   describe "show members", ->
     local category
