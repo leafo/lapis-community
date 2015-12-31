@@ -196,6 +196,57 @@ class CategoriesFlow extends Flow
 
     true
 
+
+  -- category_tags[1][label] = "what"
+  -- category_tags[1][id] = 1123
+  -- category_tags[2][label] = "new one"
+  set_tags: require_login =>
+    @load_category!
+    assert_error @category\allowed_to_edit(@current_user), "invalid category"
+
+    import convert_arrays from require "community.helpers.app"
+    convert_arrays @params
+
+    @params.category_tags or= {}
+
+    assert_valid @params, {
+      {"category_tags", type: "table"}
+    }
+
+    for tag in *@params.category_tags
+      trim_filter tag, { "label", "id", "color" }
+      assert_valid tag, {
+        {"id", is_integer: true, optional: true}
+        {"label", exists: "true", type: "string"}
+        {"color", is_color: true, optional: true}
+      }
+
+    existing_tags = @category\get_tags!
+    existing_by_id = {t.id, t for t in *existing_tags}
+
+    import CategoryTags from require "community.models"
+
+    for position, tag in ipairs @params.category_tags
+      opts = {
+        label: tag.label
+        color: tag.color or db.NULL
+        tag_order: position
+      }
+
+      if tid = tonumber tag.id
+        existing = existing_by_id[tid]
+        continue unless existing
+        existing_by_id[tid] = nil
+        existing\update filter_update existing, opts
+      else
+        opts.category_id = @category.id
+        CategoryTags\create opts
+
+    for _, old in pairs existing_by_id
+      old\delete!
+
+    true
+
   -- categories[1][title] = "hello!"
   -- categories[1][children][1][title] = "a child!"
   -- categories[2][title] = "reused category"

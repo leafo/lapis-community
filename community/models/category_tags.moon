@@ -23,4 +23,23 @@ class CategoryTags extends Model
     {"category", belongs_to: "Categories"}
   }
 
+  @slugify: (str) =>
+    str = str\gsub "%s+", "-"
+    str = str\gsub "[^%w%-_%.]+", ""
+    str = str\gsub "^[%-%._]+", ""
+    str = str\gsub "[%-%._]+$", ""
+    return nil if str == ""
+
+    str = str\lower!
+    str
+
+  @create: (opts={}) =>
+    if opts.label and not opts.slug
+      opts.slug = @slugify opts.label
+      return nil, "invalid label" unless opts.slug
+
+    if opts.slug == opts.label
+      opts.label = nil
+
+    super opts
 

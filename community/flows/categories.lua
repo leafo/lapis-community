@@ -258,6 +258,91 @@ do
       })
       return true
     end),
+    set_tags = require_login(function(self)
+      self:load_category()
+      assert_error(self.category:allowed_to_edit(self.current_user), "invalid category")
+      local convert_arrays
+      convert_arrays = require("community.helpers.app").convert_arrays
+      convert_arrays(self.params)
+      self.params.category_tags = self.params.category_tags or { }
+      assert_valid(self.params, {
+        {
+          "category_tags",
+          type = "table"
+        }
+      })
+      local _list_0 = self.params.category_tags
+      for _index_0 = 1, #_list_0 do
+        local tag = _list_0[_index_0]
+        trim_filter(tag, {
+          "label",
+          "id",
+          "color"
+        })
+        assert_valid(tag, {
+          {
+            "id",
+            is_integer = true,
+            optional = true
+          },
+          {
+            "label",
+            exists = "true",
+            type = "string"
+          },
+          {
+            "color",
+            is_color = true,
+            optional = true
+          }
+        })
+      end
+      local existing_tags = self.category:get_tags()
+      local existing_by_id
+      do
+        local _tbl_0 = { }
+        for _index_0 = 1, #existing_tags do
+          local t = existing_tags[_index_0]
+          _tbl_0[t.id] = t
+        end
+        existing_by_id = _tbl_0
+      end
+      local CategoryTags
+      CategoryTags = require("community.models").CategoryTags
+      for position, tag in ipairs(self.params.category_tags) do
+        local _continue_0 = false
+        repeat
+          local opts = {
+            label = tag.label,
+            color = tag.color or db.NULL,
+            tag_order = position
+          }
+          do
+            local tid = tonumber(tag.id)
+            if tid then
+              local existing = existing_by_id[tid]
+              if not (existing) then
+                _continue_0 = true
+                break
+              end
+              existing_by_id[tid] = nil
+              existing:update(filter_update(existing, opts))
+            else
+              opts.category_id = self.category.id
+              CategoryTags:create(opts)
+            end
+          end
+          _continue_0 = true
+        until true
+        if not _continue_0 then
+          break
+        end
+      end
+      for _, old in pairs(existing_by_id) do
+        old:delete()
+      end
+      return true
+    end),
     set_children = require_login(function(self)
       self:load_category()
       assert_error(self.category:allowed_to_edit(self.current_user), "invalid category")

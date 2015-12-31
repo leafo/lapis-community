@@ -41,6 +41,32 @@ do
       belongs_to = "Categories"
     }
   }
+  self.slugify = function(self, str)
+    str = str:gsub("%s+", "-")
+    str = str:gsub("[^%w%-_%.]+", "")
+    str = str:gsub("^[%-%._]+", "")
+    str = str:gsub("[%-%._]+$", "")
+    if str == "" then
+      return nil
+    end
+    str = str:lower()
+    return str
+  end
+  self.create = function(self, opts)
+    if opts == nil then
+      opts = { }
+    end
+    if opts.label and not opts.slug then
+      opts.slug = self:slugify(opts.label)
+      if not (opts.slug) then
+        return nil, "invalid label"
+      end
+    end
+    if opts.slug == opts.label then
+      opts.label = nil
+    end
+    return _class_0.__parent.create(self, opts)
+  end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end
