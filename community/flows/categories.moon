@@ -150,6 +150,7 @@ class CategoriesFlow extends Flow
       "archived"
       "hidden"
       "rules"
+      "available_tags"
     }
 
     assert_valid category_params, [v for v in *VALIDATIONS when has_field[v]]
@@ -159,6 +160,15 @@ class CategoriesFlow extends Flow
 
     if has_field.hidden or has_field.update_hidden
       category_params.hidden = not not category_params.hidden
+
+    if has_field.available_tags
+      import TopicTags from require "community.models"
+      tags = TopicTags\parse category_params.available_tags
+
+      category_params.available_tags = if next tags
+        db.array tags
+      else
+        db.NULL
 
     if has_field.membership_type
       category_params.membership_type = Categories.membership_types\for_db category_params.membership_type

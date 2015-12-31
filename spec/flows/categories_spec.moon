@@ -1,6 +1,7 @@
 import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
+db = require "lapis.db"
 factory = require "spec.factory"
 
 import TestApp from require "spec.helpers"
@@ -152,6 +153,27 @@ describe "categories", ->
         assert.same category.id, log.object_id
         assert.same ActivityLogs.object_types.category, log.object_type
         assert.same "edit", log\action_name!
+
+      it "sets tags", ->
+        res = CategoryApp\get current_user, "/edit-category", {
+          category_id: category.id
+          "category[available_tags]": "one,two,three"
+        }
+
+        assert.same {success: true}, res
+        category\refresh!
+        assert.same {"one", "two", "three"}, category.available_tags
+
+      it "clears tags tags", ->
+        category\update available_tags: db.array {"hello", "world"}
+        res = CategoryApp\get current_user, "/edit-category", {
+          category_id: category.id
+          "category[available_tags]": ""
+        }
+
+        assert.same {success: true}, res
+        category\refresh!
+        assert.nil category.available_tags
 
       it "should update partial", ->
         category\update archived: true

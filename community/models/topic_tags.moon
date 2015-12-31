@@ -39,6 +39,7 @@ class TopicTags extends Model
     white * Ct (words^-1 * white * sep * white)^0 * words^-1 * -1
 
   @parse: (str) =>
+    str = "" unless type(str) == "string"
     tag_parser\match(str) or {}
 
   @slugify: (str) =>

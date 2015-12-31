@@ -70,6 +70,9 @@ do
     tag_parser = white * Ct((words ^ -1 * white * sep * white) ^ 0 * words ^ -1 * -1)
   end
   self.parse = function(self, str)
+    if not (type(str) == "string") then
+      str = ""
+    end
     return tag_parser:match(str) or { }
   end
   self.slugify = function(self, str)
