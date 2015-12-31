@@ -123,13 +123,23 @@ class PostsFlow extends Flow
     if @post\is_topic_post! and not @topic.permanent
       assert_valid post_update, {
         {"title", optional: true, max_length: limits.MAX_TITLE_LEN}
+        {"tags", optional: true, type: "string"}
       }
 
+      opts = {}
+
       if post_update.title
-        @topic\update {
-          title: post_update.title
-          slug: slugify post_update.title
-        }
+        opts.title = post_update.title
+        opts.slug = slugify post_update.title
+
+      if post_update.tags
+        category = @topic\get_category!
+        tags = category\parse_tags post_update.tags
+        if tags
+          opts.tags = db.array [t.slug for t in *tags]
+
+      import filter_update from require "community.helpers.models"
+      @topic\update filter_update @topic, opts
 
     if edited
       ActivityLogs\create {

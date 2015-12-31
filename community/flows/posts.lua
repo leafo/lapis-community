@@ -153,14 +153,37 @@ do
             "title",
             optional = true,
             max_length = limits.MAX_TITLE_LEN
+          },
+          {
+            "tags",
+            optional = true,
+            type = "string"
           }
         })
+        local opts = { }
         if post_update.title then
-          self.topic:update({
-            title = post_update.title,
-            slug = slugify(post_update.title)
-          })
+          opts.title = post_update.title
+          opts.slug = slugify(post_update.title)
         end
+        if post_update.tags then
+          local category = self.topic:get_category()
+          local tags = category:parse_tags(post_update.tags)
+          if tags then
+            opts.tags = db.array((function()
+              local _accum_0 = { }
+              local _len_0 = 1
+              for _index_0 = 1, #tags do
+                local t = tags[_index_0]
+                _accum_0[_len_0] = t.slug
+                _len_0 = _len_0 + 1
+              end
+              return _accum_0
+            end)())
+          end
+        end
+        local filter_update
+        filter_update = require("community.helpers.models").filter_update
+        self.topic:update(filter_update(self.topic, opts))
       end
       if edited then
         ActivityLogs:create({
