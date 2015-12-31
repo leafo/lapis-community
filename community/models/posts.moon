@@ -31,6 +31,7 @@ date = require "date"
 -- CREATE INDEX community_posts_topic_id_id_idx ON community_posts USING btree (topic_id, id) WHERE (NOT deleted);
 -- CREATE UNIQUE INDEX community_posts_topic_id_parent_post_id_depth_post_number_idx ON community_posts USING btree (topic_id, parent_post_id, depth, post_number);
 -- CREATE INDEX community_posts_topic_id_parent_post_id_depth_status_post_numbe ON community_posts USING btree (topic_id, parent_post_id, depth, status, post_number);
+-- CREATE INDEX community_posts_user_id_status_id_idx ON community_posts USING btree (user_id, status, id) WHERE (NOT deleted);
 --
 class Posts extends Model
   @timestamp: true

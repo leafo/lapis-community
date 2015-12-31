@@ -8,7 +8,7 @@ import concat from table
 -- CREATE TABLE community_topic_tags (
 --   topic_id integer NOT NULL,
 --   slug character varying(255) NOT NULL,
---   label character varying(255) NOT NULL,
+--   label character varying(255),
 --   created_at timestamp without time zone NOT NULL,
 --   updated_at timestamp without time zone NOT NULL
 -- );
@@ -56,4 +56,7 @@ class TopicTags extends Model
 
     import safe_insert from require "community.helpers.models"
     safe_insert @, opts
+
+  name_for_display: =>
+    @label or @slug
 

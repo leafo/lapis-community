@@ -914,5 +914,12 @@ return {
     return create_index(T("posts"), "user_id", "status", "id", {
       where = "not deleted"
     })
+  end,
+  [9] = function(self)
+    add_column(T("categories"), "available_tags", varchar({
+      array = true,
+      null = true
+    }))
+    return db.query("alter table " .. tostring(T("topic_tags")) .. " alter column label drop not null")
   end
 }

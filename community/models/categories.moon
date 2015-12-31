@@ -45,7 +45,8 @@ parent_enum = (property_name, default, opts) =>
 --   approval_type smallint,
 --   "position" integer DEFAULT 0 NOT NULL,
 --   directory boolean DEFAULT false NOT NULL,
---   topic_posting_type smallint
+--   topic_posting_type smallint,
+--   available_tags character varying(255)[]
 -- );
 -- ALTER TABLE ONLY community_categories
 --   ADD CONSTRAINT community_categories_pkey PRIMARY KEY (id);
