@@ -79,6 +79,11 @@ do
           "title",
           exists = true,
           max_length = limits.MAX_TITLE_LEN
+        },
+        {
+          "tags",
+          optional = true,
+          type = "string"
         }
       })
       assert_error(not is_empty_html(new_topic.body), "body must be provided")
@@ -88,10 +93,21 @@ do
         sticky = not not new_topic.sticky
         locked = not not new_topic.locked
       end
+      local tags = self.category:parse_tags(new_topic.tags)
       self.topic = Topics:create({
         user_id = self.current_user.id,
         category_id = self.category.id,
         title = new_topic.title,
+        tags = next(tags) and db.array((function()
+          local _accum_0 = { }
+          local _len_0 = 1
+          for _index_0 = 1, #tags do
+            local t = tags[_index_0]
+            _accum_0[_len_0] = t.slug
+            _len_0 = _len_0 + 1
+          end
+          return _accum_0
+        end)()) or nil,
         sticky = sticky,
         locked = locked
       })

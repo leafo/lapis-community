@@ -556,6 +556,7 @@ do
       local update_params = self:validate_params()
       update_params = filter_update(self.category, update_params)
       self.category:update(update_params)
+      self:set_tags()
       if next(update_params) then
         ActivityLogs:create({
           user_id = self.current_user.id,

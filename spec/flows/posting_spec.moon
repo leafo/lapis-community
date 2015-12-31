@@ -154,6 +154,20 @@ describe "posting flow", ->
       assert.same ActivityLogs.object_types.topic, log.object_type
       assert.same "create", log\action_name!
 
+    it "should post a new topic with tags", ->
+      category = factory.Categories!
+      factory.CategoryTags slug: "hello", category_id: category.id
+
+      res = PostingApp\get current_user, "/new-topic", {
+        current_user_id: current_user.id
+        category_id: category.id
+        "topic[title]": "Hello world"
+        "topic[body]": "This is the body"
+        "topic[tags]": "hello"
+      }
+
+      topic = unpack Topics\select!
+      assert.same {"hello"}, [t.slug for t in *topic\get_tags!]
 
   describe "new post", ->
     local topic

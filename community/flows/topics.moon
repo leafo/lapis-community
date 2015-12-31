@@ -62,6 +62,7 @@ class TopicsFlow extends Flow
     assert_valid new_topic, {
       {"body", exists: true, max_length: limits.MAX_BODY_LEN}
       {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
+      {"tags", optional: true, type: "string"}
     }
 
     assert_error not is_empty_html(new_topic.body), "body must be provided"
@@ -73,10 +74,13 @@ class TopicsFlow extends Flow
       sticky = not not new_topic.sticky
       locked = not not new_topic.locked
 
+    tags = @category\parse_tags new_topic.tags
+
     @topic = Topics\create {
       user_id: @current_user.id
       category_id: @category.id
       title: new_topic.title
+      tags: next(tags) and db.array([t.slug for t in *tags]) or nil
       :sticky
       :locked
     }

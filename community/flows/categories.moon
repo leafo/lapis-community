@@ -361,6 +361,7 @@ class CategoriesFlow extends Flow
     update_params = filter_update @category, update_params
 
     @category\update update_params
+    @set_tags!
 
     if next update_params
       ActivityLogs\create {
