@@ -1,8 +1,19 @@
 import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
+db = require "lapis.db"
+
 import Users from require "models"
-import Categories, Moderators, CategoryMembers, Topics, Posts, Bans, UserTopicLastSeens from require "community.models"
+import
+  Bans
+  Categories
+  CategoryMembers
+  CategoryTags
+  Moderators
+  Posts
+  Topics
+  UserTopicLastSeens
+  from require "community.models"
 
 factory = require "spec.factory"
 
@@ -13,11 +24,21 @@ describe "models.topics", ->
 
   before_each ->
     truncate_tables Users, Categories, Moderators, CategoryMembers, Topics,
-      Posts, Bans, UserTopicLastSeens
+      Posts, Bans, UserTopicLastSeens, CategoryTags
 
   it "should create a topic", ->
     factory.Topics!
     factory.Topics category: false
+
+  it "gets category tags", ->
+    topic = factory.Topics!
+    category = topic\get_category!
+    tag = factory.CategoryTags category_id: category.id
+
+    topic\update tags: db.array { tag.slug, "other-thing"}
+    tags = topic\get_tags!
+    assert.same 1, #tags
+    assert.same tag.label,tags[1].label
 
   it "should check permissions of topic with category", ->
     category_user = factory.Users!

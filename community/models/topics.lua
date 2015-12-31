@@ -335,6 +335,34 @@ do
       end
       self:set_status("archived")
       return true
+    end,
+    get_tags = function(self)
+      if not (self.tags) then
+        return 
+      end
+      local category = self:get_category()
+      if not (category) then
+        return self.tags
+      end
+      local tags_by_slug
+      do
+        local _tbl_0 = { }
+        local _list_0 = category:get_tags()
+        for _index_0 = 1, #_list_0 do
+          local t = _list_0[_index_0]
+          _tbl_0[t.slug] = t
+        end
+        tags_by_slug = _tbl_0
+      end
+      local _accum_0 = { }
+      local _len_0 = 1
+      local _list_0 = self.tags
+      for _index_0 = 1, #_list_0 do
+        local t = _list_0[_index_0]
+        _accum_0[_len_0] = tags_by_slug[t]
+        _len_0 = _len_0 + 1
+      end
+      return _accum_0
     end
   }
   _base_0.__index = _base_0

@@ -358,3 +358,10 @@ class Topics extends Model
     @set_status "archived"
     true
 
+  get_tags: =>
+    return unless @tags
+    category = @get_category!
+    return @tags unless category
+    tags_by_slug = {t.slug, t for t in *category\get_tags!}
+    [tags_by_slug[t] for t in *@tags]
+
