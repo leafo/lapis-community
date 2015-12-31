@@ -2,7 +2,17 @@ import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
 import Users from require "models"
-import Categories, Moderators, CategoryMembers, Bans, CategoryGroups, CategoryGroupCategories, UserCategoryLastSeens from require "community.models"
+
+import
+  Bans
+  Categories
+  CategoryGroupCategories
+  CategoryGroups
+  CategoryMembers
+  CategoryTags
+  Moderators
+  UserCategoryLastSeens
+  from require "community.models"
 
 factory = require "spec.factory"
 
@@ -15,6 +25,16 @@ describe "models.categories", ->
 
   it "should create a category", ->
     factory.Categories!
+
+  describe "tags", ->
+    it "should parse tags", ->
+      category = factory.Categories!
+      factory.CategoryTags slug: "hello", category_id: category.id
+      factory.CategoryTags slug: "world", category_id: category.id
+
+      assert.same {
+        "hello"
+      }, [t.slug for t in *category\parse_tags "hello,zone,hello,butt"]
 
   describe "with category", ->
     local category, category_user

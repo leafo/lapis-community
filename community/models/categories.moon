@@ -503,4 +503,20 @@ class Categories extends Model
       category_order: last_topic.category_order
     }
 
+  parse_tags: (str="") =>
+    tags_by_slug = {t.slug, t for t in *@get_tags!}
+    import trim from require "lapis.util"
+    parsed = [trim s for s in str\gmatch "[^,]+"]
+    seen = {}
+    parsed = for t in *parsed
+      t = tags_by_slug[t]
+      continue unless t
+      continue if seen[t.slug]
+      seen[t.slug] = true
+      t
+
+    parsed
+
+
+
 

@@ -447,6 +447,63 @@ do
         topic_id = last_topic.id,
         category_order = last_topic.category_order
       })
+    end,
+    parse_tags = function(self, str)
+      if str == nil then
+        str = ""
+      end
+      local tags_by_slug
+      do
+        local _tbl_0 = { }
+        local _list_0 = self:get_tags()
+        for _index_0 = 1, #_list_0 do
+          local t = _list_0[_index_0]
+          _tbl_0[t.slug] = t
+        end
+        tags_by_slug = _tbl_0
+      end
+      local trim
+      trim = require("lapis.util").trim
+      local parsed
+      do
+        local _accum_0 = { }
+        local _len_0 = 1
+        for s in str:gmatch("[^,]+") do
+          _accum_0[_len_0] = trim(s)
+          _len_0 = _len_0 + 1
+        end
+        parsed = _accum_0
+      end
+      local seen = { }
+      do
+        local _accum_0 = { }
+        local _len_0 = 1
+        for _index_0 = 1, #parsed do
+          local _continue_0 = false
+          repeat
+            local t = parsed[_index_0]
+            t = tags_by_slug[t]
+            if not (t) then
+              _continue_0 = true
+              break
+            end
+            if seen[t.slug] then
+              _continue_0 = true
+              break
+            end
+            seen[t.slug] = true
+            local _value_0 = t
+            _accum_0[_len_0] = _value_0
+            _len_0 = _len_0 + 1
+            _continue_0 = true
+          until true
+          if not _continue_0 then
+            break
+          end
+        end
+        parsed = _accum_0
+      end
+      return parsed
     end
   }
   _base_0.__index = _base_0
