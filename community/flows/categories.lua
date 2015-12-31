@@ -309,9 +309,21 @@ do
       end
       local CategoryTags
       CategoryTags = require("community.models").CategoryTags
+      local actions = { }
+      local used_slugs = { }
       for position, tag in ipairs(self.params.category_tags) do
         local _continue_0 = false
         repeat
+          local slug = CategoryTags:slugify(tag.label)
+          if slug == "" then
+            _continue_0 = true
+            break
+          end
+          if used_slugs[slug] then
+            _continue_0 = true
+            break
+          end
+          used_slugs[slug] = true
           local opts = {
             label = tag.label,
             color = tag.color or db.NULL,
@@ -326,10 +338,14 @@ do
                 break
               end
               existing_by_id[tid] = nil
-              existing:update(filter_update(existing, opts))
+              table.insert(actions, function()
+                return existing:update(filter_update(existing, opts))
+              end)
             else
               opts.category_id = self.category.id
-              CategoryTags:create(opts)
+              table.insert(actions, function()
+                return CategoryTags:create(opts)
+              end)
             end
           end
           _continue_0 = true
@@ -340,6 +356,10 @@ do
       end
       for _, old in pairs(existing_by_id) do
         old:delete()
+      end
+      for _index_0 = 1, #actions do
+        local a = actions[_index_0]
+        a()
       end
       return true
     end),

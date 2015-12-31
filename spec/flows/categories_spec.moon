@@ -197,7 +197,7 @@ describe "categories", ->
 
       assert.same {errors: {"invalid category"}}, res
 
-    describe "tags", ->
+    describe "tags #ddd", ->
       it "sets tags", ->
         res = CategoryApp\get current_user, "/set-tags", {
           category_id: category.id
@@ -243,7 +243,7 @@ describe "categories", ->
         assert.same {success: true}, res
         assert.same {}, category\get_tags!
 
-      it "clears edits tags", ->
+      it "edits tags", ->
         existing = for i=1,2
           factory.CategoryTags category_id: category.id
 
@@ -268,6 +268,24 @@ describe "categories", ->
         -- created a new second one
         assert.not.same existing[1].id, second.id
 
+      it "doesn't fail when recreating tag of same slug", ->
+        existing = factory.CategoryTags category_id: category.id
+
+        res = CategoryApp\get current_user, "/set-tags", {
+          category_id: category.id
+          "category_tags[1][label]": existing.label
+        }
+
+        assert.same 1, #category\get_tags!
+
+      it "doesn't fail when trying to create dupes", ->
+        res = CategoryApp\get current_user, "/set-tags", {
+          category_id: category.id
+          "category_tags[1][label]": "alpha"
+          "category_tags[1][label]": "alpha"
+        }
+
+        assert.same 1, #category\get_tags!
 
   describe "show members", ->
     local category

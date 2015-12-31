@@ -226,7 +226,15 @@ class CategoriesFlow extends Flow
 
     import CategoryTags from require "community.models"
 
+    actions = {}
+    used_slugs = {}
+
     for position, tag in ipairs @params.category_tags
+      slug = CategoryTags\slugify tag.label
+      continue if slug == ""
+      continue if used_slugs[slug]
+      used_slugs[slug] = true
+
       opts = {
         label: tag.label
         color: tag.color or db.NULL
@@ -237,13 +245,19 @@ class CategoriesFlow extends Flow
         existing = existing_by_id[tid]
         continue unless existing
         existing_by_id[tid] = nil
-        existing\update filter_update existing, opts
+        table.insert actions, ->
+          existing\update filter_update existing, opts
       else
         opts.category_id = @category.id
-        CategoryTags\create opts
+
+        table.insert actions, ->
+          CategoryTags\create opts
 
     for _, old in pairs existing_by_id
       old\delete!
+
+    for a in *actions
+      a!
 
     true
 
