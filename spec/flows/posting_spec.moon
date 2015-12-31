@@ -6,6 +6,7 @@ import Users from require "models"
 
 import
   Categories
+  CategoryTags
   Moderators
   CommunityUsers
   PostEdits
@@ -66,7 +67,7 @@ describe "posting flow", ->
 
   before_each ->
     truncate_tables Users, Categories, Topics, Posts, Votes, Moderators,
-      PostEdits, CommunityUsers, TopicParticipants, ActivityLogs
+      PostEdits, CommunityUsers, TopicParticipants, ActivityLogs, CategoryTags
 
     current_user = factory.Users!
 
@@ -305,6 +306,24 @@ describe "posting flow", ->
 
       assert.same 1, post.edits_count
       assert.truthy post.last_edited_at
+
+    it "should edit tags", ->
+      post = factory.Posts user_id: current_user.id
+      topic = post\get_topic!
+      category = topic\get_category!
+
+      factory.CategoryTags category_id: category.id, slug: "hello"
+      factory.CategoryTags category_id: category.id, slug: "zone"
+
+      res = PostingApp\get current_user, "/edit-post", {
+        post_id: post.id
+        "post[body]": "good stuff"
+        "post[tags]": "hello,zone,woop"
+      }
+
+      topic\refresh!
+      assert.same {"hello", "zone"}, topic.tags
+      assert.same 2, #topic\get_tags!
 
     it "should edit post with reason", ->
       post = factory.Posts user_id: current_user.id

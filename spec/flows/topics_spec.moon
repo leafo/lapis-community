@@ -17,10 +17,6 @@ class TopicsApp extends TestApp
     TopicsFlow = require "community.flows.topics"
     @flow = TopicsFlow @
 
-  "/set-tags": capture_errors_json =>
-    @flow\set_tags!
-    json: { success: true }
-
   "/lock-topic": capture_errors_json =>
     @flow\lock_topic!
     json: { success: true }
@@ -57,15 +53,6 @@ describe "topics", ->
 
     category = factory.Categories user_id: current_user.id
     topic = factory.Topics category_id: category.id
-
-  it "should set tags for topic", ->
-    res = TopicsApp\get current_user, "/set-tags", {
-      topic_id: topic.id
-      tags: "hello,one,Two"
-    }
-
-    assert.truthy res.success
-    assert.same 3, #topic\get_tags!
 
   describe "lock", ->
     it "should lock topic", ->
