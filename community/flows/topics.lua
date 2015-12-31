@@ -57,11 +57,6 @@ do
         reason = reason
       })
     end,
-    set_tags = require_login(function(self)
-      self:load_topic_for_moderation()
-      error("fix me")
-      return true
-    end),
     new_topic = require_login(function(self)
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()

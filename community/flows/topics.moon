@@ -47,11 +47,6 @@ class TopicsFlow extends Flow
       :reason
     }
 
-  set_tags: require_login =>
-    @load_topic_for_moderation!
-    error "fix me"
-    true
-
   new_topic: require_login =>
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
