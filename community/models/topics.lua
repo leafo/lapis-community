@@ -157,65 +157,6 @@ do
       end
       return false
     end,
-    get_tags = function(self)
-      if not (self.tags) then
-        local TopicTags
-        TopicTags = require("community.models").TopicTags
-        self.tags = TopicTags:select("where topic_id = ?", self.id)
-      end
-      return self.tags
-    end,
-    set_tags = function(self, tags_str)
-      local TopicTags
-      TopicTags = require("community.models").TopicTags
-      local tags = TopicTags:parse(tags_str)
-      local old_tags
-      do
-        local _tbl_0 = { }
-        local _list_0 = self:get_tags()
-        for _index_0 = 1, #_list_0 do
-          local tag = _list_0[_index_0]
-          _tbl_0[tag.slug] = true
-        end
-        old_tags = _tbl_0
-      end
-      local new_tags
-      do
-        local _tbl_0 = { }
-        for _index_0 = 1, #tags do
-          local tag = tags[_index_0]
-          _tbl_0[TopicTags:slugify(tag)] = tag
-        end
-        new_tags = _tbl_0
-      end
-      for slug in pairs(new_tags) do
-        if slug:match("^%-*$") or old_tags[slug] then
-          new_tags[slug] = nil
-          old_tags[slug] = nil
-        end
-      end
-      if next(old_tags) then
-        local slugs = table.concat((function()
-          local _accum_0 = { }
-          local _len_0 = 1
-          for slug in pairs(old_tags) do
-            _accum_0[_len_0] = db.escape_literal(slug)
-            _len_0 = _len_0 + 1
-          end
-          return _accum_0
-        end)(), ",")
-        db.delete(TopicTags:table_name(), "topic_id = ? and slug in (" .. tostring(slugs) .. ")", self.id)
-      end
-      for slug, label in pairs(new_tags) do
-        TopicTags:create({
-          topic_id = self.id,
-          label = label,
-          slug = slug
-        })
-      end
-      self.tags = nil
-      return true
-    end,
     get_ban = function(self, user)
       if not (user) then
         return nil

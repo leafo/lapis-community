@@ -457,7 +457,22 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
 
   [9]: =>
     add_column T"categories", "available_tags", varchar array: true, null: true
-    db.query "alter table #{T"topic_tags"} alter column label drop not null"
-}
+    drop_table T"topic_tags"
 
+    create_table T"category_tags", {
+      {"id", serial}
+      {"category_id", foreign_key}
+      {"slug", varchar}
+      {"label", text null: true}
+      {"color", varchar null: true}
+      {"tag_order", integer defaut: 1}
+
+      {"created_at", time}
+      {"updated_at", time}
+
+      "PRIMARY KEY (id)"
+    }
+
+    create_index T"category_tags", "category_id", "slug", unique: true
+}
 

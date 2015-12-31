@@ -49,9 +49,7 @@ class TopicsFlow extends Flow
 
   set_tags: require_login =>
     @load_topic_for_moderation!
-    import TopicTags from require "community.models"
-
-    @topic\set_tags @params.tags or ""
+    error "fix me"
     true
 
   new_topic: require_login =>

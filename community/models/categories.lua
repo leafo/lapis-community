@@ -530,6 +530,11 @@ do
     {
       "parent_category",
       belongs_to = "Categories"
+    },
+    {
+      "tags",
+      has_many = "CategoryTags",
+      order = "tag_order asc"
     }
   }
   self.next_position = function(self, parent_id)

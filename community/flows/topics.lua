@@ -59,9 +59,7 @@ do
     end,
     set_tags = require_login(function(self)
       self:load_topic_for_moderation()
-      local TopicTags
-      TopicTags = require("community.models").TopicTags
-      self.topic:set_tags(self.params.tags or "")
+      error("fix me")
       return true
     end),
     new_topic = require_login(function(self)

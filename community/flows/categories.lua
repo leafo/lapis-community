@@ -204,8 +204,7 @@ do
         "short_description",
         "archived",
         "hidden",
-        "rules",
-        "available_tags"
+        "rules"
       })
       assert_valid(category_params, (function()
         local _accum_0 = { }
@@ -224,16 +223,6 @@ do
       end
       if has_field.hidden or has_field.update_hidden then
         category_params.hidden = not not category_params.hidden
-      end
-      if has_field.available_tags then
-        local TopicTags
-        TopicTags = require("community.models").TopicTags
-        local tags = TopicTags:parse(category_params.available_tags)
-        if next(tags) then
-          category_params.available_tags = db.array(tags)
-        else
-          category_params.available_tags = db.NULL
-        end
       end
       if has_field.membership_type then
         category_params.membership_type = Categories.membership_types:for_db(category_params.membership_type)
