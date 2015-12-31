@@ -23,7 +23,7 @@ local next_email
 next_email = function()
   return "me-" .. tostring(next_counter("email")) .. "@example.com"
 end
-local Users, CommunityUsers, Categories, Topics, Posts, Votes, Moderators, PostReports, CategoryMembers, Blocks, Bans, CategoryGroups, Bookmarks, PendingPosts
+local Users, CommunityUsers, Categories, Topics, Posts, Votes, Moderators, PostReports, CategoryMembers, Blocks, Bans, CategoryGroups, Bookmarks, PendingPosts, CategoryTags
 Users = function(...)
   return require("spec.factory").Users(...)
 end
@@ -208,6 +208,14 @@ PendingPosts = function(opts)
   opts.body = opts.body or "Pending post " .. tostring(next_counter("post")) .. " body"
   return assert(models.PendingPosts:create(opts))
 end
+CategoryTags = function(opts)
+  if opts == nil then
+    opts = { }
+  end
+  opts.category_id = opts.category_id or Categories().id
+  opts.label = opts.label or "Some tag " .. tostring(next_counter("tag"))
+  return assert(models.CategoryTags:create(opts))
+end
 return {
   next_counter = next_counter,
   next_email = next_email,
@@ -223,5 +231,6 @@ return {
   CategoryGroups = CategoryGroups,
   Bookmarks = Bookmarks,
   CommunityUsers = CommunityUsers,
-  PendingPosts = PendingPosts
+  PendingPosts = PendingPosts,
+  CategoryTags = CategoryTags
 }
