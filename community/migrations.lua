@@ -947,6 +947,12 @@ return {
         })
       },
       {
+        "image_url",
+        varchar({
+          null = true
+        })
+      },
+      {
         "tag_order",
         integer({
           defaut = 1

@@ -465,6 +465,7 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
       {"slug", varchar}
       {"label", text null: true}
       {"color", varchar null: true}
+      {"image_url", varchar null: true}
       {"tag_order", integer defaut: 1}
 
       {"created_at", time}
