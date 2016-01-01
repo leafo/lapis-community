@@ -26,25 +26,16 @@ class BookmarksFlow extends Flow
     model = Bookmarks\model_for_object_type @params.object_type
     @object = model\find @params.object_id
 
-    assert_error @object, "invalid ban object"
+    assert_error @object, "invalid bookmark object"
 
-    @bookmark = Bookmarks\find {
-      object_type: Bookmarks\object_type_for_object @object
-      object_id: @object.id
-      user_id: @current_user.id
-    }
+    @bookmark = Bookmarks\get @object, @current_user
 
   save_bookmark: =>
     @load_object!
     assert_error @object\allowed_to_view(@current_user), "invalid object"
-
-    Bookmarks\create {
-      object_type: Bookmarks\object_type_for_object @object
-      object_id: @object.id
-      user_id: @current_user.id
-    }
+    Bookmarks\save @object, @current_user
 
   remove_bookmark: =>
     @load_object!
-    @bookmark\delete!
+    Bookmarks\remove @object, @current_user
 

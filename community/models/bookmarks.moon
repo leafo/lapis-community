@@ -32,3 +32,26 @@ class Bookmarks extends Model
   @create: (opts={}) =>
     opts.object_type = @object_types\for_db opts.object_type
     safe_insert @, opts
+
+
+  @get: (object, user) =>
+    return nil unless user
+    @find {
+      user_id: user.id
+      object_id: object.id
+      object_type: @object_type_for_model object.__class
+    }
+
+  @save: (object, user) =>
+    return unless user
+
+    @create {
+      user_id: user.id
+      object_id: object.id
+      object_type: @object_type_for_model object.__class
+    }
+
+  @remove: (object, user) =>
+    if bookmark = @get object, user
+      bookmark\delete!
+

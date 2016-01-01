@@ -383,6 +383,10 @@ class Topics extends Model
     import TopicSubscriptions from require "community.models"
     TopicSubscriptions\find user_id: user.id, topic_id: @id
 
+  get_bookmark: memoize1 (user) =>
+    import Bookmarks from require "community.models"
+    Bookmarks\get @, user
+
   is_subscribed: memoize1 (user) =>
     return nil unless user
 
