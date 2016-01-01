@@ -245,6 +245,11 @@ class CategoriesFlow extends Flow
         existing = existing_by_id[tid]
         continue unless existing
         existing_by_id[tid] = nil
+
+        opts.slug = slug
+        if slug == opts.label
+          opts.label = db.NULL
+
         table.insert actions, ->
           existing\update filter_update existing, opts
       else

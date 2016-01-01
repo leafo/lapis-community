@@ -338,6 +338,10 @@ do
                 break
               end
               existing_by_id[tid] = nil
+              opts.slug = slug
+              if slug == opts.label then
+                opts.label = db.NULL
+              end
               table.insert(actions, function()
                 return existing:update(filter_update(existing, opts))
               end)
