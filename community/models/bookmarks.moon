@@ -33,7 +33,6 @@ class Bookmarks extends Model
     opts.object_type = @object_types\for_db opts.object_type
     safe_insert @, opts
 
-
   @get: (object, user) =>
     return nil unless user
     @find {

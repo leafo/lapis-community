@@ -12,8 +12,19 @@ import TestApp from require "spec.helpers"
 
 BookmarksFlow = require "community.flows.bookmarks"
 
+import filter_bans from require "spec.helpers"
+
 class BookmarksApp extends TestApp
   @require_user!
+
+  "/show": capture_errors_json =>
+    BookmarksFlow(@)\show_bookmarks!
+    filter_bans unpack @topics
+
+    json: {
+      success: true
+      topics: @topics
+    }
 
   "/save": capture_errors_json =>
     BookmarksFlow(@)\save_bookmark!
@@ -31,6 +42,26 @@ describe "flows.bookmarks", ->
   before_each ->
     truncate_tables Topics, Users, Bookmarks
     current_user = factory.Users!
+
+  describe "show #ddd", ->
+    it "fetches empty topic list", ->
+      res = BookmarksApp\get current_user, "/show"
+      assert.same {
+        success: true
+        topics: {}
+      }, res
+
+    it "fetches topic with bookmark", ->
+      other_topic = factory.Topics!
+      Bookmarks\save other_topic, factory.Users!
+
+      topics = for i=1,2
+        with topic = factory.Topics!
+          Bookmarks\save topic, current_user
+
+      res = BookmarksApp\get current_user, "/show"
+      assert.same {t.id, true for t in *topics},
+         {t.id, true for t in *res.topics}
 
   it "should save a bookmark", ->
     topic = factory.Topics!

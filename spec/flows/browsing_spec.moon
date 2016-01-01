@@ -13,16 +13,7 @@ import capture_errors_json from require "lapis.application"
 
 import TestApp from require "spec.helpers"
 
--- to prevent sparse array error
-filter_bans = (thing, ...) ->
-  return unless thing
-  thing.user_bans = nil
-  if thing.category
-    rest = {...}
-    table.insert rest, thing.category
-    thing, filter_bans unpack rest
-  else
-    thing, filter_bans ...
+import filter_bans from require "spec.helpers"
 
 class BrowsingApp extends TestApp
   @before_filter =>

@@ -73,6 +73,34 @@ do
     opts.object_type = self.object_types:for_db(opts.object_type)
     return safe_insert(self, opts)
   end
+  self.get = function(self, object, user)
+    if not (user) then
+      return nil
+    end
+    return self:find({
+      user_id = user.id,
+      object_id = object.id,
+      object_type = self:object_type_for_model(object.__class)
+    })
+  end
+  self.save = function(self, object, user)
+    if not (user) then
+      return 
+    end
+    return self:create({
+      user_id = user.id,
+      object_id = object.id,
+      object_type = self:object_type_for_model(object.__class)
+    })
+  end
+  self.remove = function(self, object, user)
+    do
+      local bookmark = self:get(object, user)
+      if bookmark then
+        return bookmark:delete()
+      end
+    end
+  end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end

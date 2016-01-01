@@ -404,6 +404,11 @@ do
         topic_id = self.id
       })
     end,
+    get_bookmark = memoize1(function(self, user)
+      local Bookmarks
+      Bookmarks = require("community.models").Bookmarks
+      return Bookmarks:get(self, user)
+    end),
     is_subscribed = memoize1(function(self, user)
       if not (user) then
         return nil

@@ -1,5 +1,6 @@
 local Flow
 Flow = require("lapis.flow").Flow
+local db = require("lapis.db")
 local assert_error
 assert_error = require("lapis.application").assert_error
 local assert_valid
@@ -10,6 +11,11 @@ local Users
 Users = require("models").Users
 local Bookmarks
 Bookmarks = require("community.models").Bookmarks
+local require_login, assert_page
+do
+  local _obj_0 = require("community.helpers.app")
+  require_login, assert_page = _obj_0.require_login, _obj_0.assert_page
+end
 local BookmarksFlow
 do
   local _class_0
@@ -32,25 +38,55 @@ do
       })
       local model = Bookmarks:model_for_object_type(self.params.object_type)
       self.object = model:find(self.params.object_id)
-      assert_error(self.object, "invalid ban object")
-      self.bookmark = Bookmarks:find({
-        object_type = Bookmarks:object_type_for_object(self.object),
-        object_id = self.object.id,
-        user_id = self.current_user.id
-      })
+      assert_error(self.object, "invalid bookmark object")
+      self.bookmark = Bookmarks:get(self.object, self.current_user)
     end,
+    show_bookmarks = require_login(function(self)
+      local BrowsingFlow = require("community.flows.browsing")
+      local Topics, Categories
+      do
+        local _obj_0 = require("community.models")
+        Topics, Categories = _obj_0.Topics, _obj_0.Categories
+      end
+      self.pager = Topics:paginated("\n      where id in (\n        select object_id from " .. tostring(db.escape_identifier(Bookmarks:table_name())) .. "\n        where user_id = ? and object_type = ?\n      )\n      and not deleted\n      order by last_post_id desc\n    ", self.current_user.id, Bookmarks.object_types.topic, {
+        per_page = 50,
+        prepare_results = function(topics)
+          Topics:preload_relations(topics, "category")
+          Topics:preload_bans(topics, self.current_user)
+          Categories:preload_bans((function()
+            local _accum_0 = { }
+            local _len_0 = 1
+            for _index_0 = 1, #topics do
+              local t = topics[_index_0]
+              _accum_0[_len_0] = t:get_category()
+              _len_0 = _len_0 + 1
+            end
+            return _accum_0
+          end)(), self.current_user)
+          topics = BrowsingFlow(self):preload_topics(topics)
+          local _accum_0 = { }
+          local _len_0 = 1
+          for _index_0 = 1, #topics do
+            local t = topics[_index_0]
+            if t:allowed_to_view(self.current_user) then
+              _accum_0[_len_0] = t
+              _len_0 = _len_0 + 1
+            end
+          end
+          return _accum_0
+        end
+      })
+      assert_page(self)
+      self.topics = self.pager:get_page(self.page)
+    end),
     save_bookmark = function(self)
       self:load_object()
       assert_error(self.object:allowed_to_view(self.current_user), "invalid object")
-      return Bookmarks:create({
-        object_type = Bookmarks:object_type_for_object(self.object),
-        object_id = self.object.id,
-        user_id = self.current_user.id
-      })
+      return Bookmarks:save(self.object, self.current_user)
     end,
     remove_bookmark = function(self)
       self:load_object()
-      return self.bookmark:delete()
+      return Bookmarks:remove(self.object, self.current_user)
     end
   }
   _base_0.__index = _base_0
