@@ -8,6 +8,7 @@ import Model from require "community.model"
 --   slug character varying(255) NOT NULL,
 --   label text,
 --   color character varying(255),
+--   image_url character varying(255),
 --   tag_order integer DEFAULT 0 NOT NULL,
 --   created_at timestamp without time zone NOT NULL,
 --   updated_at timestamp without time zone NOT NULL
