@@ -12,6 +12,7 @@ import
   Moderators
   Posts
   Topics
+  TopicSubscriptions
   UserTopicLastSeens
   from require "community.models"
 
@@ -24,7 +25,7 @@ describe "models.topics", ->
 
   before_each ->
     truncate_tables Users, Categories, Moderators, CategoryMembers, Topics,
-      Posts, Bans, UserTopicLastSeens, CategoryTags
+      Posts, Bans, UserTopicLastSeens, CategoryTags, TopicSubscriptions
 
   it "should create a topic", ->
     factory.Topics!
@@ -39,6 +40,13 @@ describe "models.topics", ->
     tags = topic\get_tags!
     assert.same 1, #tags
     assert.same tag.label,tags[1].label
+
+  it "gets topic subscriptions", ->
+    topic = factory.Topics!
+    assert.same {}, topic\get_subscriptions!
+    topic\refresh!
+    TopicSubscriptions\create user_id: -1, topic_id: topic.id
+    assert.same 1, #topic\get_subscriptions!
 
   it "should check permissions of topic with category", ->
     category_user = factory.Users!

@@ -1,7 +1,7 @@
 local db = require("lapis.db")
 local Model
 Model = require("community.model").Model
-local TopicParticipants
+local TopicSubscriptions
 do
   local _class_0
   local _parent_0 = Model
@@ -13,7 +13,7 @@ do
       return _class_0.__parent.__init(self, ...)
     end,
     __base = _base_0,
-    __name = "TopicParticipants",
+    __name = "TopicSubscriptions",
     __parent = _parent_0
   }, {
     __index = function(cls, name)
@@ -43,6 +43,6 @@ do
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end
-  TopicParticipants = _class_0
+  TopicSubscriptions = _class_0
   return _class_0
 end

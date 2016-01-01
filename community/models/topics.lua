@@ -407,6 +407,10 @@ do
     {
       "last_post",
       belongs_to = "Posts"
+    },
+    {
+      "subscriptions",
+      has_many = "TopicSubscriptions"
     }
   }
   self.statuses = enum({

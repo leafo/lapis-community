@@ -40,6 +40,7 @@ class Topics extends Model
     {"category", belongs_to: "Categories"}
     {"user", belongs_to: "Users"}
     {"last_post", belongs_to: "Posts"}
+    {"subscriptions", has_many: "TopicSubscriptions"}
   }
 
   @statuses: enum {
