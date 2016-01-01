@@ -41,7 +41,7 @@ do
       assert_error(self.object, "invalid bookmark object")
       self.bookmark = Bookmarks:get(self.object, self.current_user)
     end,
-    show_bookmarks = require_login(function(self)
+    show_topic_bookmarks = require_login(function(self)
       local BrowsingFlow = require("community.flows.browsing")
       local Topics, Categories
       do

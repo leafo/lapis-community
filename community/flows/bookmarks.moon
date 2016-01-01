@@ -34,12 +34,11 @@ class BookmarksFlow extends Flow
 
     @bookmark = Bookmarks\get @object, @current_user
   
-  show_bookmarks: require_login =>
+  show_topic_bookmarks: require_login =>
     BrowsingFlow = require "community.flows.browsing"
 
     -- TODO: this query can be bad
     -- TODO: not all topics have last post
-    -- this is limited to just topics for the time being
     import Topics, Categories from require "community.models"
 
     @pager = Topics\paginated "

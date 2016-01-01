@@ -17,8 +17,8 @@ import filter_bans from require "spec.helpers"
 class BookmarksApp extends TestApp
   @require_user!
 
-  "/show": capture_errors_json =>
-    BookmarksFlow(@)\show_bookmarks!
+  "/show-topics": capture_errors_json =>
+    BookmarksFlow(@)\show_topic_bookmarks!
     filter_bans unpack @topics
 
     json: {
@@ -45,7 +45,7 @@ describe "flows.bookmarks", ->
 
   describe "show #ddd", ->
     it "fetches empty topic list", ->
-      res = BookmarksApp\get current_user, "/show"
+      res = BookmarksApp\get current_user, "/show-topics"
       assert.same {
         success: true
         topics: {}
@@ -59,7 +59,7 @@ describe "flows.bookmarks", ->
         with topic = factory.Topics!
           Bookmarks\save topic, current_user
 
-      res = BookmarksApp\get current_user, "/show"
+      res = BookmarksApp\get current_user, "/show-topics"
       assert.same {t.id, true for t in *topics},
          {t.id, true for t in *res.topics}
 
