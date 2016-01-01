@@ -404,14 +404,17 @@ do
         topic_id = self.id
       })
     end,
-    is_subscribed = function(self, user)
+    is_subscribed = memoize1(function(self, user)
+      if not (user) then
+        return nil
+      end
       local sub = self:get_subscription(user)
       if user.id == self.user_id then
         return not sub or sub.subscribed
       else
         return sub and sub.subscribed
       end
-    end,
+    end),
     subscribe = function(self, user)
       if not (self:allowed_to_view(user)) then
         return 

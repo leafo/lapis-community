@@ -455,7 +455,6 @@ describe "models.topics", ->
       topic\unsubscribe topic\get_user!
       assert.same {}, topic\notification_target_users!
 
-
     it "gets targets for subs and unsubs", ->
       topic = factory.Topics!
       user = factory.Users!

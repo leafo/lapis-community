@@ -383,7 +383,9 @@ class Topics extends Model
     import TopicSubscriptions from require "community.models"
     TopicSubscriptions\find user_id: user.id, topic_id: @id
 
-  is_subscribed: (user) =>
+  is_subscribed: memoize1 (user) =>
+    return nil unless user
+
     sub = @get_subscription user
     if user.id == @user_id
       not sub or sub.subscribed
