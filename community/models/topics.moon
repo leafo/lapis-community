@@ -366,3 +366,57 @@ class Topics extends Model
     tags_by_slug = {t.slug, t for t in *category\get_tags!}
     [tags_by_slug[t] for t in *@tags]
 
+  get_subscription: (user) =>
+    import TopicSubscriptions from require "community.models"
+    TopicSubscriptions\find user_id: user.id, topic_id: @id
+
+  is_subscribed: (user) =>
+    sub = @get_subscription user
+    if user.id == @user_id
+      not sub or sub.subscribed
+    else
+      sub and sub.subscribed
+
+  subscribe: (user) =>
+    return unless @allowed_to_view user
+
+    sub = @get_subscription user
+    if user.id == @user_id
+      if sub
+        sub\delete!
+        return true
+      else
+        return
+
+    return if sub and sub.subscribed
+
+    if sub
+      sub\update subscribed: true
+    else
+      import TopicSubscriptions from require "community.models"
+      TopicSubscriptions\create {
+        user_id: user.id
+        topic_id: @id
+      }
+
+    true
+
+  unsubscribe: (user) =>
+    sub = @get_subscription user
+    if user.id == @user_id
+      if sub
+        return unless sub.subscribed
+        sub\update subscribed: false
+      else
+        import TopicSubscriptions from require "community.models"
+        TopicSubscriptions\create {
+          user_id: user.id
+          topic_id: @id
+          subscribed: false
+        }
+      true
+    else
+      if sub
+        sub\delete!
+        return true
+

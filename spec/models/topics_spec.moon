@@ -41,13 +41,6 @@ describe "models.topics", ->
     assert.same 1, #tags
     assert.same tag.label,tags[1].label
 
-  it "gets topic subscriptions", ->
-    topic = factory.Topics!
-    assert.same {}, topic\get_subscriptions!
-    topic\refresh!
-    TopicSubscriptions\create user_id: -1, topic_id: topic.id
-    assert.same 1, #topic\get_subscriptions!
-
   it "should check permissions of topic with category", ->
     category_user = factory.Users!
     category = factory.Categories user_id: category_user.id
@@ -367,4 +360,79 @@ describe "models.topics", ->
       assert.same {[user.id]: b1}, topics[1].user_bans
       assert.same {[user.id]: false}, topics[2].user_bans
       assert.same {[user.id]: false}, topics[3].user_bans
+
+
+  describe "subscribe", ->
+    fetch_subs = ->
+      TopicSubscriptions\select "order by user_id, topic_id", fields: "user_id, topic_id, subscribed"
+
+    it "gets topic subscriptions", ->
+      topic = factory.Topics!
+      assert.same {}, topic\get_subscriptions!
+      topic\refresh!
+      TopicSubscriptions\create user_id: -1, topic_id: topic.id
+      assert.same 1, #topic\get_subscriptions!
+
+    it "subscribes user to topic", ->
+      topic = factory.Topics!
+      user = factory.Users!
+
+      -- twice to test no-op
+      for i=1,2
+        topic\subscribe user
+        assert.same {
+          {
+            topic_id: topic.id
+            user_id: user.id
+            subscribed: true
+          }
+        }, fetch_subs!
+
+
+    it "topic creator subscribing is noop", ->
+      topic = factory.Topics!
+      user = topic\get_user!
+
+      topic\subscribe user
+      assert.same {}, fetch_subs!
+
+    it "unsubscribe with no sub is noop", ->
+      topic = factory.Topics!
+      user = factory.Users!
+      topic\unsubscribe user
+      assert.same {}, fetch_subs!
+
+    it "topic owner unsubscribes", ->
+      topic = factory.Topics!
+      user = topic\get_user!
+
+      -- twice to test no-op
+      for i=1,2
+        topic\unsubscribe user
+        assert.same {
+          {
+            topic_id: topic.id
+            user_id: user.id
+            subscribed: false
+          }
+        }, fetch_subs!
+
+
+    it "regular user unsubscibes", ->
+      topic = factory.Topics!
+      user1 = factory.Users!
+      user2 = factory.Users!
+
+      topic\subscribe user1
+      topic\subscribe user2
+
+      topic\unsubscribe user1
+
+      assert.same {
+        {
+          topic_id: topic.id
+          user_id: user2.id
+          subscribed: true
+        }
+      }, fetch_subs!
 

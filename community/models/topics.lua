@@ -363,6 +363,79 @@ do
         _len_0 = _len_0 + 1
       end
       return _accum_0
+    end,
+    get_subscription = function(self, user)
+      local TopicSubscriptions
+      TopicSubscriptions = require("community.models").TopicSubscriptions
+      return TopicSubscriptions:find({
+        user_id = user.id,
+        topic_id = self.id
+      })
+    end,
+    is_subscribed = function(self, user)
+      local sub = self:get_subscription(user)
+      if user.id == self.user_id then
+        return not sub or sub.subscribed
+      else
+        return sub and sub.subscribed
+      end
+    end,
+    subscribe = function(self, user)
+      if not (self:allowed_to_view(user)) then
+        return 
+      end
+      local sub = self:get_subscription(user)
+      if user.id == self.user_id then
+        if sub then
+          sub:delete()
+          return true
+        else
+          return 
+        end
+      end
+      if sub and sub.subscribed then
+        return 
+      end
+      if sub then
+        sub:update({
+          subscribed = true
+        })
+      else
+        local TopicSubscriptions
+        TopicSubscriptions = require("community.models").TopicSubscriptions
+        TopicSubscriptions:create({
+          user_id = user.id,
+          topic_id = self.id
+        })
+      end
+      return true
+    end,
+    unsubscribe = function(self, user)
+      local sub = self:get_subscription(user)
+      if user.id == self.user_id then
+        if sub then
+          if not (sub.subscribed) then
+            return 
+          end
+          sub:update({
+            subscribed = false
+          })
+        else
+          local TopicSubscriptions
+          TopicSubscriptions = require("community.models").TopicSubscriptions
+          TopicSubscriptions:create({
+            user_id = user.id,
+            topic_id = self.id,
+            subscribed = false
+          })
+        end
+        return true
+      else
+        if sub then
+          sub:delete()
+          return true
+        end
+      end
     end
   }
   _base_0.__index = _base_0
