@@ -417,7 +417,6 @@ describe "models.topics", ->
           }
         }, fetch_subs!
 
-
     it "regular user unsubscibes", ->
       topic = factory.Topics!
       user1 = factory.Users!
@@ -436,3 +435,31 @@ describe "models.topics", ->
         }
       }, fetch_subs!
 
+    it "gets notification targets for topic with no subs", ->
+      topic = factory.Topics!
+      targets = topic\notification_target_users!
+      assert.same {topic.user_id}, [t.id for t in *targets]
+
+    it "gets notification targets for topic with subs", ->
+      topic = factory.Topics!
+      user = factory.Users!
+      topic\subscribe user
+
+      targets = topic\notification_target_users!
+      target_ids = [t.id for t in *targets]
+      table.sort target_ids
+      assert.same {topic.user_id, user.id}, target_ids
+
+    it "gets empty notification targets when owner has unsubscribed", ->
+      topic = factory.Topics!
+      topic\unsubscribe topic\get_user!
+      assert.same {}, topic\notification_target_users!
+
+
+    it "gets targets for subs and unsubs", ->
+      topic = factory.Topics!
+      user = factory.Users!
+      topic\unsubscribe topic\get_user!
+      topic\subscribe user
+
+      assert.same {user.id}, [t.id for t in *topic\notification_target_users!]

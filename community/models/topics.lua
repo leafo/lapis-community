@@ -246,9 +246,41 @@ do
       return self.user_topic_last_seen.post_id < self.last_post_id
     end,
     notification_target_users = function(self)
-      return {
-        self:get_user()
-      }
+      local TopicSubscriptions
+      TopicSubscriptions = require("community.models").TopicSubscriptions
+      local subs = self:get_subscriptions()
+      TopicSubscriptions:preload_relations(subs, "user")
+      local include_owner = true
+      local targets
+      do
+        local _accum_0 = { }
+        local _len_0 = 1
+        for _index_0 = 1, #subs do
+          local _continue_0 = false
+          repeat
+            local sub = subs[_index_0]
+            if sub.user_id == self.user_id then
+              include_owner = false
+            end
+            if not (sub.subscribed) then
+              _continue_0 = true
+              break
+            end
+            local _value_0 = sub:get_user()
+            _accum_0[_len_0] = _value_0
+            _len_0 = _len_0 + 1
+            _continue_0 = true
+          until true
+          if not _continue_0 then
+            break
+          end
+        end
+        targets = _accum_0
+      end
+      if include_owner then
+        table.insert(targets, self:get_user())
+      end
+      return targets
     end,
     find_latest_root_post = function(self)
       local Posts

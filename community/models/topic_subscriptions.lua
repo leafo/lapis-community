@@ -40,6 +40,16 @@ do
     "user_id"
   }
   self.timestamp = true
+  self.relations = {
+    {
+      "user",
+      belongs_to = "Users"
+    },
+    {
+      "topic",
+      belongs_to = "Topics"
+    }
+  }
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end

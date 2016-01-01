@@ -18,3 +18,8 @@ import Model from require "community.model"
 class TopicSubscriptions extends Model
   @primary_key: {"topic_id", "user_id"}
   @timestamp: true
+
+  @relations: {
+    {"user", belongs_to: "Users"}
+    {"topic", belongs_to: "Topics"}
+  }

@@ -275,7 +275,20 @@ class Topics extends Model
     @user_topic_last_seen.post_id < @last_post_id
 
   notification_target_users: =>
-    { @get_user! }
+    import TopicSubscriptions from require "community.models"
+    subs = @get_subscriptions!
+    TopicSubscriptions\preload_relations subs, "user"
+
+    include_owner = true
+    targets = for sub in *subs
+      include_owner = false if sub.user_id == @user_id
+      continue unless sub.subscribed
+      sub\get_user!
+
+    if include_owner
+      table.insert targets, @get_user!
+
+    targets
 
   find_latest_root_post: =>
     import Posts from require "community.models"
