@@ -971,5 +971,33 @@ return {
     return create_index(T("category_tags"), "category_id", "slug", {
       unique = true
     })
+  end,
+  [10] = function(self)
+    create_table(T("topic_subscriptions"), {
+      {
+        "topic_id",
+        foreign_key
+      },
+      {
+        "user_id",
+        foreign_key
+      },
+      {
+        "subscribed",
+        boolean({
+          default = true
+        })
+      },
+      {
+        "created_at",
+        time
+      },
+      {
+        "updated_at",
+        time
+      },
+      "PRIMARY KEY (topic_id, user_id)"
+    })
+    return create_index(T("topic_subscriptions"), "user_id")
   end
 }

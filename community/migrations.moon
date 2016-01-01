@@ -475,5 +475,20 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
     }
 
     create_index T"category_tags", "category_id", "slug", unique: true
+
+  [10]: =>
+    create_table T"topic_subscriptions", {
+      {"topic_id", foreign_key}
+      {"user_id", foreign_key}
+
+      {"subscribed", boolean default: true}
+
+      {"created_at", time}
+      {"updated_at", time}
+
+      "PRIMARY KEY (topic_id, user_id)"
+    }
+    create_index T"topic_subscriptions", "user_id"
+
 }
 
