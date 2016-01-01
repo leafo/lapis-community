@@ -2,6 +2,8 @@
 db = require "lapis.db"
 import Model from require "community.model"
 
+import safe_insert from require "community.helpers.models"
+
 -- Generated schema dump: (do not edit)
 --
 -- CREATE TABLE community_topic_subscriptions (
@@ -23,3 +25,5 @@ class TopicSubscriptions extends Model
     {"user", belongs_to: "Users"}
     {"topic", belongs_to: "Topics"}
   }
+
+  @create: safe_insert
