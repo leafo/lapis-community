@@ -132,11 +132,12 @@ do
         }, {
           timestamp = false
         })
-        local CommunityUsers, Categories
+        local CommunityUsers, Categories, CategoryPostLogs
         do
           local _obj_0 = require("community.models")
-          CommunityUsers, Categories = _obj_0.CommunityUsers, _obj_0.Categories
+          CommunityUsers, Categories, CategoryPostLogs = _obj_0.CommunityUsers, _obj_0.Categories, _obj_0.CategoryPostLogs
         end
+        CategoryPostLogs:clear_posts_for_topic(self)
         if self.user_id then
           CommunityUsers:for_user(self:get_user()):increment("topics_count", -1)
         end
@@ -353,6 +354,13 @@ do
       self:update({
         status = self.__class.statuses:for_db(status)
       })
+      local CategoryPostLogs
+      CategoryPostLogs = require("community.models").CategoryPostLogs
+      if self.status == self.__class.statuses.default then
+        CategoryPostLogs:log_topic_posts(self)
+      else
+        CategoryPostLogs:clear_posts_for_topic(self)
+      end
       local category = self:get_category()
       if category and category.last_topic_id == self.id then
         return category:refresh_last_topic()

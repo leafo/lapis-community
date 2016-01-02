@@ -185,7 +185,8 @@ class Topics extends Model
     if soft_delete @
       @update { deleted_at: db.format_date! }, timestamp: false
 
-      import CommunityUsers, Categories from require "community.models"
+      import CommunityUsers, Categories, CategoryPostLogs from require "community.models"
+      CategoryPostLogs\clear_posts_for_topic @
 
       if @user_id
         CommunityUsers\for_user(@get_user!)\increment "topics_count", -1
@@ -361,6 +362,12 @@ class Topics extends Model
 
   set_status: (status) =>
     @update status: @@statuses\for_db status
+
+    import CategoryPostLogs from require "community.models"
+    if @status == @@statuses.default
+      CategoryPostLogs\log_topic_posts @
+    else
+      CategoryPostLogs\clear_posts_for_topic @
 
     category = @get_category!
     if category and category.last_topic_id == @id
