@@ -58,34 +58,35 @@ class CategoriesFlow extends Flow
     @load_category!
     assert_error @category\should_log_posts!, "category has no log"
 
-    import CategoryPostLogs, Categories, Topics, Posts from require "community.models"
+    import CategoryPostLogs from require "community.models"
     import OrderedPaginator from require "lapis.db.pagination"
-    BrowsingFlow = require "community.flows.browsing"
 
-    @pager = OrderedPaginator CategoryPostLogs, "post_id", "where category_id = ?", @category.id, {
+    @pager = OrderedPaginator CategoryPostLogs, "post_id", "
+      where category_id = ?
+    ", @category.id, {
       per_page: limits.TOPICS_PER_PAGE
       order: "desc"
       prepare_results: (logs) ->
-        CategoryPostLogs\preload_relation logs, "post", fields: "id, user_id, topic_id"
+        CategoryPostLogs\preload_relation logs, "post"
         posts = [log\get_post! for log in *logs]
-        Posts\preload_relations posts, "topic", "user"
-        topics = [post\get_topic! for post in *posts]
-
-        Topics\preload_relations topics, "category"
-        Topics\preload_bans topics, @current_user
-        Categories\preload_bans [t\get_category! for t in *topics], @current_user
-        BrowsingFlow(@)\preload_topics topics
-
-        posts = for log in *logs
-          post = log\get_post!
-          continue unless post\allowed_to_view @current_user
-          log\get_post!
-
-        posts
+        @preload_post_log posts
     }
 
     @posts = @pager\get_page!
     true
+
+  preload_post_log: (posts) =>
+    import Posts, Topics, Categories from require "community.models"
+    BrowsingFlow = require "community.flows.browsing"
+
+    Posts\preload_relations posts, "topic", "user"
+    topics = [post\get_topic! for post in *posts]
+
+    Topics\preload_relations topics, "category"
+    Topics\preload_bans topics, @current_user
+    Categories\preload_bans [t\get_category! for t in *topics], @current_user
+    BrowsingFlow(@)\preload_topics topics
+    [p for p in *posts when p\allowed_to_view @current_user]
 
   reports: =>
     @load_category!

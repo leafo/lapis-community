@@ -277,7 +277,9 @@ do
       if last_seens == nil then
         last_seens = true
       end
-      Topics:preload_relations(topics, "last_post")
+      Topics:preload_relation(topics, "last_post", {
+        fields = "id, user_id, created_at, updated_at"
+      })
       local with_users
       do
         local _accum_0 = { }

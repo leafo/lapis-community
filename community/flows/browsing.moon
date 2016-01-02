@@ -177,7 +177,9 @@ class BrowsingFlow extends Flow
     categories
 
   preload_topics: (topics, last_seens=true) =>
-    Topics\preload_relations topics, "last_post"
+    Topics\preload_relation topics, "last_post", {
+      fields: "id, user_id, created_at, updated_at"
+    }
 
     with_users = [t for t in *topics]
     for t in *topics
