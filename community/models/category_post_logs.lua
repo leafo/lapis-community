@@ -81,6 +81,15 @@ do
       post_id = post.id
     })
   end
+  self.clear_posts_for_topic = function(self, topic)
+    local Posts
+    Posts = require("community.models").Posts
+    return db.delete(self:table_name(), {
+      post_id = db.list({
+        db.raw(db.interpolate_query("\n          select id from " .. tostring(db.escape_identifier(Posts:table_name())) .. " where topic_id = ?\n        ", topic.id))
+      })
+    })
+  end
   self.create = safe_insert
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)

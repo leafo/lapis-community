@@ -38,4 +38,15 @@ class CategoryPostLogs extends Model
       post_id: post.id
     }
 
+  @clear_posts_for_topic: (topic) =>
+    import Posts from require "community.models"
+
+    db.delete @table_name!, {
+      post_id: db.list {
+        db.raw db.interpolate_query "
+          select id from #{db.escape_identifier Posts\table_name!} where topic_id = ?
+        ", topic.id
+      }
+    }
+
   @create: safe_insert

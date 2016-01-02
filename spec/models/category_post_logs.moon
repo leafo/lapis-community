@@ -82,3 +82,28 @@ describe "models.category_tags", ->
         post_id: post2.id
       }
     }, CategoryPostLogs\select!
+
+  it "clears posts for topic", ->
+    topic = factory.Topics!
+
+    for i=1,3
+      post = factory.Posts topic_id: topic.id
+      CategoryPostLogs\create {
+        post_id: post.id
+        category_id: -1
+      }
+
+    other_post = factory.Posts!
+    CategoryPostLogs\create {
+      post_id: other_post.id
+      category_id: -1
+    }
+
+    CategoryPostLogs\clear_posts_for_topic topic
+
+    assert.same {
+      {
+        category_id: -1
+        post_id: other_post.id
+      }
+    }, CategoryPostLogs\select!

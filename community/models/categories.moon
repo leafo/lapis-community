@@ -401,6 +401,9 @@ class Categories extends Model
     }, timestamp: false
 
   increment_from_post: (post) =>
+    import CategoryPostLogs from require "community.logs"
+    CategoryPostLogs\log_post post
+
     @update {
       last_topic_id: post.topic_id
     }, timestamp: false
