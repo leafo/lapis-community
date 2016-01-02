@@ -121,12 +121,13 @@ do
         }, {
           timestamp = false
         })
-        local CommunityUsers, Topics
+        local CommunityUsers, Topics, CategoryPostLogs
         do
           local _obj_0 = require("community.models")
-          CommunityUsers, Topics = _obj_0.CommunityUsers, _obj_0.Topics
+          CommunityUsers, Topics, CategoryPostLogs = _obj_0.CommunityUsers, _obj_0.Topics, _obj_0.CategoryPostLogs
         end
         CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
+        CategoryPostLogs:clear_post(self)
         do
           local topic = self:get_topic()
           if topic then
@@ -158,12 +159,13 @@ do
       if not (Model.delete(self)) then
         return false
       end
-      local CommunityUsers, ModerationLogs, PostEdits, PostReports, Votes, ActivityLogs
+      local CommunityUsers, ModerationLogs, PostEdits, PostReports, Votes, ActivityLogs, CategoryPostLogs
       do
         local _obj_0 = require("community.models")
-        CommunityUsers, ModerationLogs, PostEdits, PostReports, Votes, ActivityLogs = _obj_0.CommunityUsers, _obj_0.ModerationLogs, _obj_0.PostEdits, _obj_0.PostReports, _obj_0.Votes, _obj_0.ActivityLogs
+        CommunityUsers, ModerationLogs, PostEdits, PostReports, Votes, ActivityLogs, CategoryPostLogs = _obj_0.CommunityUsers, _obj_0.ModerationLogs, _obj_0.PostEdits, _obj_0.PostReports, _obj_0.Votes, _obj_0.ActivityLogs, _obj_0.CategoryPostLogs
       end
       CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
+      CategoryPostLogs:clear_post(self)
       do
         local topic = self:get_topic()
         if topic then
@@ -357,6 +359,13 @@ do
       self:update({
         status = self.__class.statuses:for_db(status)
       })
+      local CategoryPostLogs
+      CategoryPostLogs = require("community.models").CategoryPostLogs
+      if self.status == self.__class.statuses.default then
+        CategoryPostLogs:log_post(self)
+      else
+        CategoryPostLogs:clear_post(self)
+      end
       local topic = self:get_topic()
       if topic.last_post_id == self.id then
         return topic:refresh_last_post()

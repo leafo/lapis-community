@@ -309,7 +309,7 @@ do
     end,
     increment_from_post = function(self, post)
       local CategoryPostLogs
-      CategoryPostLogs = require("community.logs").CategoryPostLogs
+      CategoryPostLogs = require("community.models").CategoryPostLogs
       CategoryPostLogs:log_post(post)
       return self:update({
         last_topic_id = post.topic_id

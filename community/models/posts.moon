@@ -179,8 +179,10 @@ class Posts extends Model
 
     if soft_delete @
       @update { deleted_at: db.format_date! }, timestamp: false
-      import CommunityUsers, Topics from require "community.models"
+      import CommunityUsers, Topics, CategoryPostLogs from require "community.models"
+
       CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
+      CategoryPostLogs\clear_post @
 
       if topic = @get_topic!
         if topic.last_post_id == @id
@@ -208,9 +210,11 @@ class Posts extends Model
       PostReports
       Votes
       ActivityLogs
+      CategoryPostLogs
       from require "community.models"
 
     CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
+    CategoryPostLogs\clear_post @
 
     if topic = @get_topic!
       topic\renumber_posts @get_parent_post!
@@ -339,6 +343,12 @@ class Posts extends Model
 
   set_status: (status) =>
     @update status: @@statuses\for_db status
+
+    import CategoryPostLogs from require "community.models"
+    if @status == @@statuses.default
+      CategoryPostLogs\log_post @
+    else
+      CategoryPostLogs\clear_post @
 
     topic = @get_topic!
     if topic.last_post_id == @id
