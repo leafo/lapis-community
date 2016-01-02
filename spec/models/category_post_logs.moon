@@ -25,6 +25,7 @@ describe "models.category_tags", ->
     post = factory.Posts topic_id: topic.id
 
     CategoryPostLogs\log_post post
+    CategoryPostLogs\log_post post -- logging again is noop
 
     assert.same {
       {
@@ -42,6 +43,7 @@ describe "models.category_tags", ->
     post = factory.Posts topic_id: topic.id
 
     CategoryPostLogs\log_post post
+    CategoryPostLogs\log_post post -- logging again is noop
 
     assert.same {
       {
