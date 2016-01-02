@@ -76,6 +76,45 @@ do
     local tbl = db.escape_identifier(self:table_name())
     return db.query("\n      insert into " .. tostring(tbl) .. " (post_id, category_id)\n      select ?, foo.category_id from \n      (values (" .. tostring(table.concat(ids, "), (")) .. ")) as foo(category_id)\n      where not exists(select 1 from " .. tostring(tbl) .. "\n        where category_id = foo.category_id and post_id = ?)\n    ", post.id, post.id)
   end
+  self.log_topic_posts = function(self, topic)
+    local category = topic:get_category()
+    if not (category) then
+      return 
+    end
+    local ids
+    do
+      local _accum_0 = { }
+      local _len_0 = 1
+      local _list_0 = category:get_ancestors()
+      for _index_0 = 1, #_list_0 do
+        local c = _list_0[_index_0]
+        if c:should_log_posts() then
+          _accum_0[_len_0] = c.id
+          _len_0 = _len_0 + 1
+        end
+      end
+      ids = _accum_0
+    end
+    if not (next(ids)) then
+      return 
+    end
+    do
+      local _accum_0 = { }
+      local _len_0 = 1
+      for _index_0 = 1, #ids do
+        local id = ids[_index_0]
+        _accum_0[_len_0] = db.escape_literal(id)
+        _len_0 = _len_0 + 1
+      end
+      ids = _accum_0
+    end
+    local tbl = db.escape_identifier(self:table_name())
+    local category_ids = ""
+    local Posts
+    Posts = require("community.models").Posts
+    tbl = db.escape_identifier(self:table_name())
+    return db.query("\n      insert into " .. tostring(tbl) .. " (post_id, category_id)\n      select topic_post_ids.post_id, category_ids.category_id from\n        (select id as post_id from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where topic_id = ? and status = 1 and not deleted) as topic_post_ids(post_id),\n        (values (" .. tostring(table.concat(ids, "), (")) .. ")) as category_ids(category_id)\n        where not exists (select 1 from " .. tostring(tbl) .. " where category_id = category_ids.category_id and post_id = topic_post_ids.post_id)\n    ", topic.id)
+  end
   self.clear_post = function(self, post)
     return db.delete(self:table_name(), {
       post_id = post.id

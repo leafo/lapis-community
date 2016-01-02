@@ -33,6 +33,29 @@ class CategoryPostLogs extends Model
         where category_id = foo.category_id and post_id = ?)
     ", post.id, post.id
 
+  @log_topic_posts: (topic) =>
+    category = topic\get_category!
+    return unless category
+    ids = [c.id for c in *category\get_ancestors! when c\should_log_posts!]
+    return unless next ids
+    ids = [db.escape_literal id for id in *ids]
+
+    tbl = db.escape_identifier @table_name!
+    category_ids = ""
+
+    import Posts from require "community.models"
+
+    tbl = db.escape_identifier @table_name!
+    db.query "
+      insert into #{tbl} (post_id, category_id)
+      select topic_post_ids.post_id, category_ids.category_id from
+        (select id as post_id from #{db.escape_identifier Posts\table_name!}
+          where topic_id = ? and status = 1 and not deleted) as topic_post_ids(post_id),
+        (values (#{table.concat ids, "), ("})) as category_ids(category_id)
+        where not exists (select 1 from #{tbl} where category_id = category_ids.category_id and post_id = topic_post_ids.post_id)
+    ", topic.id
+
+
   @clear_post: (post) =>
     db.delete @table_name!, {
       post_id: post.id

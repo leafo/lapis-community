@@ -57,6 +57,37 @@ describe "models.category_tags", ->
     }, CategoryPostLogs\select "order by category_id asc"
 
 
+  it "create logs for topic with multiple categories", ->
+    top_directory = factory.Categories directory: true
+    bottom_directory = factory.Categories directory: true, parent_category_id: top_directory.id
+    category = factory.Categories parent_category_id: bottom_directory.id
+
+    topic = factory.Topics category_id: category.id
+    posts = for i=1,2
+      factory.Posts topic_id: topic.id
+
+    CategoryPostLogs\log_topic_posts topic
+    CategoryPostLogs\log_topic_posts topic
+
+    assert.same {
+      {
+        category_id: top_directory.id
+        post_id: posts[1].id
+      }
+      {
+        category_id: bottom_directory.id
+        post_id: posts[1].id
+      }
+      {
+        category_id: top_directory.id
+        post_id: posts[2].id
+      }
+      {
+        category_id: bottom_directory.id
+        post_id: posts[2].id
+      }
+    }, CategoryPostLogs\select "order by post_id, category_id"
+
   it "clears logs for post", ->
     post = factory.Posts!
     post2 = factory.Posts!
