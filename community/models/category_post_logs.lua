@@ -37,6 +37,20 @@ do
   })
   _base_0.__class = _class_0
   local self = _class_0
+  self.primary_key = {
+    "category_id",
+    "post_id"
+  }
+  self.relations = {
+    {
+      "post",
+      belongs_to = "Posts"
+    },
+    {
+      "category",
+      belongs_to = "Categories"
+    }
+  }
   self.log_post = function(self, post)
     local topic = post:get_topic()
     if not (topic) then

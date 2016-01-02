@@ -15,6 +15,13 @@ import safe_insert from require "community.helpers.models"
 -- CREATE INDEX community_category_post_logs_post_id_idx ON community_category_post_logs USING btree (post_id);
 --
 class CategoryPostLogs extends Model
+  @primary_key: {"category_id", "post_id"}
+
+  @relations: {
+    {"post", belongs_to: "Posts"}
+    {"category", belongs_to: "Categories"}
+  }
+
   @log_post: (post) =>
     topic = post\get_topic!
     return unless topic
