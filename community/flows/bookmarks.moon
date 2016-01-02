@@ -39,6 +39,7 @@ class BookmarksFlow extends Flow
 
     -- TODO: this query can be bad
     -- TODO: not all topics have last post
+    -- TODO: this doesn't preload the category tags
     import Topics, Categories from require "community.models"
 
     @pager = Topics\paginated "

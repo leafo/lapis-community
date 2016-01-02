@@ -490,5 +490,14 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
     }
     create_index T"topic_subscriptions", "user_id"
 
+  [11]: =>
+    create_table T"category_post_logs", {
+      {"category_id", foreign_key}
+      {"post_id", foreign_key}
+
+      "PRIMARY KEY (category_id, post_id)"
+    }
+
+    create_index T"category_post_logs", "post_id"
 }
 

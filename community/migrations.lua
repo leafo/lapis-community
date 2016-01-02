@@ -999,5 +999,19 @@ return {
       "PRIMARY KEY (topic_id, user_id)"
     })
     return create_index(T("topic_subscriptions"), "user_id")
+  end,
+  [11] = function(self)
+    create_table(T("category_post_logs"), {
+      {
+        "category_id",
+        foreign_key
+      },
+      {
+        "post_id",
+        foreign_key
+      },
+      "PRIMARY KEY (category_id, post_id)"
+    })
+    return create_index(T("category_post_logs"), "post_id")
   end
 }
