@@ -47,6 +47,7 @@ build = {
     ["community.models.category_group_categories"] = "community/models/category_group_categories.lua",
     ["community.models.category_groups"] = "community/models/category_groups.lua",
     ["community.models.category_members"] = "community/models/category_members.lua",
+    ["community.models.category_post_logs"] = "community/models/category_post_logs.lua",
     ["community.models.category_tags"] = "community/models/category_tags.lua",
     ["community.models.community_users"] = "community/models/community_users.lua",
     ["community.models.moderation_log_objects"] = "community/models/moderation_log_objects.lua",
