@@ -306,6 +306,7 @@ describe "categories", ->
 
       it "gets category with posts from many topics", ->
         category\update directory: true
+
         for i=1,2
           post = factory.Posts!
           CategoryPostLogs\create category_id: category.id, post_id: post.id
@@ -314,8 +315,7 @@ describe "categories", ->
           category_id: category.id
         }
 
-        assert.same 4, #res.posts
-
+        assert.same 2, #res.posts
 
   describe "show members", ->
     local category
