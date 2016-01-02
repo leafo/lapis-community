@@ -46,7 +46,20 @@ do
     if not (category) then
       return 
     end
-    local ids = category:get_category_ids()
+    local ids
+    do
+      local _accum_0 = { }
+      local _len_0 = 1
+      local _list_0 = category:get_ancestors()
+      for _index_0 = 1, #_list_0 do
+        local c = _list_0[_index_0]
+        if c:should_log_posts() then
+          _accum_0[_len_0] = c.id
+          _len_0 = _len_0 + 1
+        end
+      end
+      ids = _accum_0
+    end
     if not (next(ids)) then
       return 
     end

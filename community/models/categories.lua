@@ -504,6 +504,9 @@ do
         parsed = _accum_0
       end
       return parsed
+    end,
+    should_log_posts = function(self)
+      return self.directory
     end
   }
   _base_0.__index = _base_0

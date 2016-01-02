@@ -20,7 +20,7 @@ class CategoryPostLogs extends Model
     return unless topic
     category = topic\get_category!
     return unless category
-    ids = category\get_category_ids!
+    ids = [c.id for c in *category\get_ancestors! when c\should_log_posts!]
     return unless next ids
     ids = [db.escape_literal id for id in *ids]
 

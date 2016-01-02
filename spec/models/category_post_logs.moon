@@ -12,16 +12,48 @@ describe "models.category_tags", ->
   before_each ->
     truncate_tables Users, Categories, Topics, Posts, CategoryPostLogs
 
-  it "creates single log for post", ->
+  it "doesn't create post log for post with no loggable ancestors", ->
     post = factory.Posts!
+    CategoryPostLogs\log_post post
+
+    assert.same {}, CategoryPostLogs\select!
+
+  it "creates single log for post", ->
+    directory = factory.Categories directory: true
+    category = factory.Categories parent_category_id: directory.id
+    topic = factory.Topics category_id: category.id
+    post = factory.Posts topic_id: topic.id
+
     CategoryPostLogs\log_post post
 
     assert.same {
       {
-        category_id: post\get_topic!.category_id
+        category_id: directory.id
         post_id: post.id
       }
     }, CategoryPostLogs\select!
+
+  it "creates multiple log for each directory", ->
+    top_directory = factory.Categories directory: true
+    bottom_directory = factory.Categories directory: true, parent_category_id: top_directory.id
+    category = factory.Categories parent_category_id: bottom_directory.id
+
+    topic = factory.Topics category_id: category.id
+    post = factory.Posts topic_id: topic.id
+
+    CategoryPostLogs\log_post post
+
+    assert.same {
+      {
+        category_id: top_directory.id
+        post_id: post.id
+      }
+      {
+        category_id: bottom_directory.id
+        post_id: post.id
+      }
+    }, CategoryPostLogs\select "order by category_id asc"
+
 
   it "clears logs for post", ->
     post = factory.Posts!

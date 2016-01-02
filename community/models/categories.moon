@@ -517,6 +517,10 @@ class Categories extends Model
 
     parsed
 
+  should_log_posts: =>
+    @directory
+
+
 
 
 
