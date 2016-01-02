@@ -11,9 +11,12 @@ assert = require "luassert"
 filter_bans = (thing, ...) ->
   return unless thing
   thing.user_bans = nil
-  if thing.category
+  if thing.category or thing.topic
     rest = {...}
-    table.insert rest, thing.category
+
+    table.insert rest, thing.category if thing.category
+    table.insert rest, thing.topic if thing.topic
+
     thing, filter_bans unpack rest
   else
     thing, filter_bans ...

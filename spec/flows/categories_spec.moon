@@ -14,6 +14,7 @@ import
   Categories
   CategoryMembers
   CategoryTags
+  CategoryPostLogs
   ModerationLogObjects
   ModerationLogs
   Moderators
@@ -21,6 +22,8 @@ import
   Posts
   Topics
   from require "community.models"
+
+import filter_bans from require "spec.helpers"
 
 class CategoryApp extends TestApp
   @require_user!
@@ -84,6 +87,11 @@ class CategoryApp extends TestApp
     @flow\set_tags!
     json: { success: true }
 
+  "/recent-posts": capture_errors_json =>
+    @flow\recent_posts!
+    filter_bans unpack @posts
+    json: { success: true, posts: @posts }
+
 describe "categories", ->
   use_test_env!
 
@@ -92,7 +100,7 @@ describe "categories", ->
   before_each ->
     truncate_tables Users, Categories, Posts, Topics, CategoryMembers,
       Moderators, ActivityLogs, ModerationLogs, ModerationLogObjects,
-      PendingPosts, CategoryTags
+      PendingPosts, CategoryTags, CategoryPostLogs
 
     current_user = factory.Users!
 
@@ -197,7 +205,7 @@ describe "categories", ->
 
       assert.same {errors: {"invalid category"}}, res
 
-    describe "tags #ddd", ->
+    describe "tags", ->
       it "sets tags", ->
         res = CategoryApp\get current_user, "/set-tags", {
           category_id: category.id
@@ -286,6 +294,28 @@ describe "categories", ->
         }
 
         assert.same 1, #category\get_tags!
+
+    describe "recent posts", ->
+      it "gets empty recent posts", ->
+        category\update directory: true
+        res = CategoryApp\get current_user, "/recent-posts", {
+          category_id: category.id
+        }
+
+        assert.same {}, res.posts
+
+      it "gets category with posts from many topics", ->
+        category\update directory: true
+        for i=1,2
+          post = factory.Posts!
+          CategoryPostLogs\create category_id: category.id, post_id: post.id
+
+        res = CategoryApp\get current_user, "/recent-posts", {
+          category_id: category.id
+        }
+
+        assert.same 4, #res.posts
+
 
   describe "show members", ->
     local category

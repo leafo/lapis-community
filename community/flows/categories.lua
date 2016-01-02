@@ -88,6 +88,89 @@ do
       assert_error(self.category, "invalid category")
       return assert_error(self.category:allowed_to_view(self.current_user), "invalid category")
     end,
+    recent_posts = function(self)
+      self:load_category()
+      assert_error(self.category:should_log_posts(), "category has no log")
+      local CategoryPostLogs, Topics, Posts
+      do
+        local _obj_0 = require("community.models")
+        CategoryPostLogs, Categories, Topics, Posts = _obj_0.CategoryPostLogs, _obj_0.Categories, _obj_0.Topics, _obj_0.Posts
+      end
+      local OrderedPaginator
+      OrderedPaginator = require("lapis.db.pagination").OrderedPaginator
+      local BrowsingFlow = require("community.flows.browsing")
+      self.pager = OrderedPaginator(CategoryPostLogs, "post_id", "where category_id = ?", self.category.id, {
+        per_page = limits.TOPICS_PER_PAGE,
+        order = "desc",
+        prepare_results = function(logs)
+          CategoryPostLogs:preload_relation(logs, "post", {
+            fields = "id, user_id, topic_id"
+          })
+          local posts
+          do
+            local _accum_0 = { }
+            local _len_0 = 1
+            for _index_0 = 1, #logs do
+              local log = logs[_index_0]
+              _accum_0[_len_0] = log:get_post()
+              _len_0 = _len_0 + 1
+            end
+            posts = _accum_0
+          end
+          Posts:preload_relations(posts, "topic", "user")
+          local topics
+          do
+            local _accum_0 = { }
+            local _len_0 = 1
+            for _index_0 = 1, #posts do
+              local post = posts[_index_0]
+              _accum_0[_len_0] = post:get_topic()
+              _len_0 = _len_0 + 1
+            end
+            topics = _accum_0
+          end
+          Topics:preload_relations(topics, "category")
+          Topics:preload_bans(topics, self.current_user)
+          Categories:preload_bans((function()
+            local _accum_0 = { }
+            local _len_0 = 1
+            for _index_0 = 1, #topics do
+              local t = topics[_index_0]
+              _accum_0[_len_0] = t:get_category()
+              _len_0 = _len_0 + 1
+            end
+            return _accum_0
+          end)(), self.current_user)
+          BrowsingFlow(self):preload_topics(topics)
+          do
+            local _accum_0 = { }
+            local _len_0 = 1
+            for _index_0 = 1, #logs do
+              local _continue_0 = false
+              repeat
+                local log = logs[_index_0]
+                local post = log:get_post()
+                if not (post:allowed_to_view(self.current_user)) then
+                  _continue_0 = true
+                  break
+                end
+                local _value_0 = log:get_post()
+                _accum_0[_len_0] = _value_0
+                _len_0 = _len_0 + 1
+                _continue_0 = true
+              until true
+              if not _continue_0 then
+                break
+              end
+            end
+            posts = _accum_0
+          end
+          return posts
+        end
+      })
+      self.posts = self.pager:get_page()
+      return true
+    end,
     reports = function(self)
       self:load_category()
       local ReportsFlow = require("community.flows.reports")
