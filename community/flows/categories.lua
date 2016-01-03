@@ -111,7 +111,8 @@ do
             end
             posts = _accum_0
           end
-          return self:preload_post_log(posts)
+          self:preload_post_log(posts)
+          return posts
         end
       })
       self.posts = self.pager:get_page()
@@ -149,16 +150,7 @@ do
         return _accum_0
       end)(), self.current_user)
       BrowsingFlow(self):preload_topics(topics)
-      local _accum_0 = { }
-      local _len_0 = 1
-      for _index_0 = 1, #posts do
-        local p = posts[_index_0]
-        if p:allowed_to_view(self.current_user) then
-          _accum_0[_len_0] = p
-          _len_0 = _len_0 + 1
-        end
-      end
-      return _accum_0
+      return true
     end,
     reports = function(self)
       self:load_category()

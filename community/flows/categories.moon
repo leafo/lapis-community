@@ -70,6 +70,7 @@ class CategoriesFlow extends Flow
         CategoryPostLogs\preload_relation logs, "post"
         posts = [log\get_post! for log in *logs]
         @preload_post_log posts
+        posts
     }
 
     @posts = @pager\get_page!
@@ -86,7 +87,7 @@ class CategoriesFlow extends Flow
     Topics\preload_bans topics, @current_user
     Categories\preload_bans [t\get_category! for t in *topics], @current_user
     BrowsingFlow(@)\preload_topics topics
-    [p for p in *posts when p\allowed_to_view @current_user]
+    true
 
   reports: =>
     @load_category!
