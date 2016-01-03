@@ -59,6 +59,7 @@ Topics = function(opts)
   opts.title = opts.title or "Topic " .. tostring(next_counter("topic"))
   do
     local topic = assert(models.Topics:create(opts))
+    topic.category = category
     if category then
       category:increment_from_topic(topic)
     end
@@ -83,6 +84,7 @@ Posts = function(opts)
   opts.body = opts.body or "Post " .. tostring(next_counter("post")) .. " body"
   do
     local post = assert(models.Posts:create(opts))
+    post.topic = topic
     if topic then
       topic:increment_from_post(post)
     end

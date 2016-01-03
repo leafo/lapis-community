@@ -42,6 +42,7 @@ Topics = (opts={}) ->
   opts.title or= "Topic #{next_counter "topic"}"
 
   with topic = assert models.Topics\create opts
+    topic.category = category
     if category
       category\increment_from_topic topic
 
@@ -58,6 +59,7 @@ Posts = (opts={}) ->
   opts.body or= "Post #{next_counter "post"} body"
 
   with post = assert models.Posts\create opts
+    post.topic = topic
     if topic
       topic\increment_from_post post
 

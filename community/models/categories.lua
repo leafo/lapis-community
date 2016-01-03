@@ -297,9 +297,7 @@ do
     end,
     increment_from_topic = function(self, topic)
       assert(topic.category_id == self.id, "topic does not belong to category")
-      local clear_loaded_relation
-      clear_loaded_relation = require("lapis.db.model.relations").clear_loaded_relation
-      clear_loaded_relation(self, "last_topic")
+      self:clear_loaded_relation("last_topic")
       return self:update({
         topics_count = db.raw("topics_count + 1"),
         last_topic_id = topic.id
@@ -311,7 +309,8 @@ do
       local CategoryPostLogs
       CategoryPostLogs = require("community.models").CategoryPostLogs
       CategoryPostLogs:log_post(post)
-      if not (post:is_topic_post()) then
+      if not (self.last_topic_id == post.topic_id) then
+        self:clear_loaded_relation("last_topic")
         return self:update({
           last_topic_id = post.topic_id
         }, {
