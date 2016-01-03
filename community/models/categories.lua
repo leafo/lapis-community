@@ -311,11 +311,13 @@ do
       local CategoryPostLogs
       CategoryPostLogs = require("community.models").CategoryPostLogs
       CategoryPostLogs:log_post(post)
-      return self:update({
-        last_topic_id = post.topic_id
-      }, {
-        timestamp = false
-      })
+      if not (post:is_topic_post()) then
+        return self:update({
+          last_topic_id = post.topic_id
+        }, {
+          timestamp = false
+        })
+      end
     end,
     notification_target_users = function(self)
       return {

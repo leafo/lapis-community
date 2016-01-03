@@ -404,9 +404,11 @@ class Categories extends Model
     import CategoryPostLogs from require "community.models"
     CategoryPostLogs\log_post post
 
-    @update {
-      last_topic_id: post.topic_id
-    }, timestamp: false
+    -- the topic handles the increment
+    unless post\is_topic_post!
+      @update {
+        last_topic_id: post.topic_id
+      }, timestamp: false
 
   notification_target_users: =>
     { @get_user! }

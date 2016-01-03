@@ -101,7 +101,7 @@ do
       if not (opts and opts.update_category_order == false) then
         category_order = Topics:update_category_order_sql(self.category_id)
       end
-      return self:update({
+      self:update({
         posts_count = db.raw("posts_count + 1"),
         root_posts_count = (function()
           if post.depth == 1 then
@@ -113,6 +113,12 @@ do
       }, {
         timestamp = false
       })
+      do
+        local category = self:get_category()
+        if category then
+          return category:increment_from_post(post)
+        end
+      end
     end,
     refresh_last_post = function(self)
       local Posts

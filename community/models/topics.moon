@@ -162,6 +162,8 @@ class Topics extends Model
       :category_order
     }, timestamp: false
 
+    if category = @get_category!
+      category\increment_from_post post
 
   refresh_last_post: =>
     import Posts from require "community.models"

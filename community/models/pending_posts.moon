@@ -62,9 +62,6 @@ class PendingPosts extends Model
 
     topic\increment_from_post post
 
-    if category = topic\get_category!
-      category\increment_from_post post
-
     CommunityUsers\for_user(@get_user!)\increment "posts_count"
     topic\increment_participant @get_user!
 

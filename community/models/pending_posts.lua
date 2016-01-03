@@ -27,12 +27,6 @@ do
       })
       local topic = self:get_topic()
       topic:increment_from_post(post)
-      do
-        local category = topic:get_category()
-        if category then
-          category:increment_from_post(post)
-        end
-      end
       CommunityUsers:for_user(self:get_user()):increment("posts_count")
       topic:increment_participant(self:get_user())
       self:delete()

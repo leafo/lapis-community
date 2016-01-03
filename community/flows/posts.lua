@@ -92,12 +92,6 @@ do
           parent_post = parent_post
         })
         self.topic:increment_from_post(self.post)
-        do
-          local category = self.topic:get_category()
-          if category then
-            category:increment_from_post(self.post)
-          end
-        end
         CommunityUsers:for_user(self.current_user):increment("posts_count")
         self.topic:increment_participant(self.current_user)
         ActivityLogs:create({
