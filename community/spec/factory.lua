@@ -85,8 +85,6 @@ Posts = function(opts)
     local post = assert(models.Posts:create(opts))
     if topic then
       topic:increment_from_post(post)
-      local category = topic:get_category()
-      category:increment_from_post(post)
     end
     return post
   end

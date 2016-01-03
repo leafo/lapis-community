@@ -60,8 +60,6 @@ Posts = (opts={}) ->
   with post = assert models.Posts\create opts
     if topic
       topic\increment_from_post post
-      category = topic\get_category!
-      category\increment_from_post post
 
 Votes = (opts={}) ->
   opts.positive = true if opts.positive == nil
