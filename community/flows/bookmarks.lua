@@ -53,7 +53,8 @@ do
         prepare_results = function(topics)
           Topics:preload_relations(topics, "category")
           Topics:preload_bans(topics, self.current_user)
-          Categories:preload_bans((function()
+          local categories
+          do
             local _accum_0 = { }
             local _len_0 = 1
             for _index_0 = 1, #topics do
@@ -61,19 +62,12 @@ do
               _accum_0[_len_0] = t:get_category()
               _len_0 = _len_0 + 1
             end
-            return _accum_0
-          end)(), self.current_user)
-          topics = BrowsingFlow(self):preload_topics(topics)
-          local _accum_0 = { }
-          local _len_0 = 1
-          for _index_0 = 1, #topics do
-            local t = topics[_index_0]
-            if t:allowed_to_view(self.current_user) then
-              _accum_0[_len_0] = t
-              _len_0 = _len_0 + 1
-            end
+            categories = _accum_0
           end
-          return _accum_0
+          Categories:preload_bans(categories, self.current_user)
+          Categories:preload_relations(categories, "tags")
+          BrowsingFlow(self):preload_topics(topics)
+          return topics
         end
       })
       assert_page(self)

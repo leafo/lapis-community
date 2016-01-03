@@ -39,7 +39,6 @@ class BookmarksFlow extends Flow
 
     -- TODO: this query can be bad
     -- TODO: not all topics have last post
-    -- TODO: this doesn't preload the category tags
     import Topics, Categories from require "community.models"
 
     @pager = Topics\paginated "
@@ -54,10 +53,12 @@ class BookmarksFlow extends Flow
       prepare_results: (topics) ->
         Topics\preload_relations topics, "category"
         Topics\preload_bans topics, @current_user
-        Categories\preload_bans [t\get_category! for t in *topics], @current_user
 
-        topics = BrowsingFlow(@)\preload_topics topics
-        [t for t in *topics when t\allowed_to_view(@current_user)]
+        categories = [t\get_category! for t in *topics]
+        Categories\preload_bans categories, @current_user
+        Categories\preload_relations categories, "tags"
+        BrowsingFlow(@)\preload_topics topics
+        topics
     }
 
     assert_page @
