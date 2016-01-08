@@ -448,3 +448,61 @@ class Topics extends Model
         sub\delete!
         return true
 
+  move_to_category: (new_category) =>
+    assert new_category, "missing category"
+    return nil, "can't move topic that isn't part of category" unless @category_id
+    return nil, "can't move to directory" if new_category.directory
+
+    -- pending posts
+
+    old_category = @get_category!
+
+    import Posts, CategoryPostLogs, ModerationLogs,
+      PendingPosts, PostReports from require "community.models"
+
+    -- this must happen before updating category id
+    CategoryPostLogs\clear_posts_for_topic @
+
+    @update {
+      category_id: new_category.id
+    }
+
+    @clear_loaded_relation "category"
+
+    new_category\refresh_last_topic!
+    old_category\refresh_last_topic!
+
+    -- moderation logs
+    db.update ModerationLogs\table_name!, {
+      category_id: new_category.id
+    }, {
+      object_type: ModerationLogs.object_types.topic
+      object_id: @id
+      category_id: old_category.id
+    }
+
+    topic_posts = db.list {
+      db.raw db.interpolate_query "
+        select id from #{db.escape_identifier Posts\table_name!}
+        where topic_id = ?
+      ", @id
+    }
+
+    -- post reports
+    db.update PostReports\table_name!, {
+      category_id: new_category.id
+    }, {
+      category_id: old_category.id
+      post_id: topic_posts
+    }
+
+    db.update PendingPosts\table_name!, {
+      category_id: new_category.id
+    }, {
+      topic_id: @id
+      category_id: old_category.id
+    }
+
+
+    CategoryPostLogs\log_topic_posts @
+

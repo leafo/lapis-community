@@ -68,7 +68,7 @@ describe "models.topics", ->
     assert.truthy topic\allowed_to_edit mod_user
     assert.truthy topic\allowed_to_moderate mod_user
 
-    -- 
+    --
 
     assert.truthy topic\allowed_to_post category_user
     assert.truthy topic\allowed_to_view category_user
@@ -462,3 +462,79 @@ describe "models.topics", ->
       topic\subscribe user
 
       assert.same {user.id}, [t.id for t in *topic\notification_target_users!]
+
+  describe "moving topic", ->
+    local old_category, new_category, topic
+
+    before_each ->
+      old_category = factory.Categories!
+      new_category = factory.Categories!
+      topic = factory.Topics category: old_category
+
+    it "should move basic topic", ->
+      topic\move_to_category new_category
+      topic\refresh!
+      assert.same new_category.id, topic.category_id
+
+    it "moves a topic with more relations #ddd", ->
+      import ModerationLogs, PostReports from require "community.models"
+
+      truncate_tables ModerationLogs, PostReports
+
+      mod_log = ModerationLogs\create {
+        object: topic
+        category_id: old_category.id
+        user_id: -1
+        action: "hello.world"
+        reason: "no reason"
+      }
+
+      other_mod_log = ModerationLogs\create {
+        object: factory.Topics!
+        category_id: -1
+        user_id: -1
+        action: "another.world"
+        reason: "some reason"
+      }
+
+      report = factory.PostReports {
+        post_id: factory.Posts(:topic).id
+      }
+
+      other_report = factory.PostReports!
+
+      pending = factory.PendingPosts(:topic)
+      other_pending = factory.PendingPosts!
+
+      -- do the move
+      topic\move_to_category new_category
+      topic\refresh!
+      assert.same new_category.id, topic.category_id
+
+      mod_log\refresh!
+      other_mod_log\refresh!
+
+      assert.same new_category.id, mod_log.category_id
+      assert.same -1, other_mod_log.category_id
+
+      report\refresh!
+      assert.same new_category.id, report.category_id
+
+      old_other_report_category_id = other_report.category_id
+      other_report\refresh!
+      assert.same old_other_report_category_id, other_report.category_id
+
+      pending\refresh!
+      assert.same new_category.id, pending.category_id
+
+      other_pending_category_id = other_pending.category_id
+      other_pending\refresh!
+      assert.same other_pending_category_id, other_pending.category_id
+
+      topic\refresh!
+      assert.same new_category.id, topic.category_id
+      old_category\refresh!
+      new_category\refresh!
+
+      assert.nil old_category.last_topic_id
+      assert.same topic.id, new_category.last_topic_id

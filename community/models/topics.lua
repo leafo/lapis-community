@@ -490,6 +490,51 @@ do
           return true
         end
       end
+    end,
+    move_to_category = function(self, new_category)
+      assert(new_category, "missing category")
+      if not (self.category_id) then
+        return nil, "can't move topic that isn't part of category"
+      end
+      if new_category.directory then
+        return nil, "can't move to directory"
+      end
+      local old_category = self:get_category()
+      local Posts, CategoryPostLogs, ModerationLogs, PendingPosts, PostReports
+      do
+        local _obj_0 = require("community.models")
+        Posts, CategoryPostLogs, ModerationLogs, PendingPosts, PostReports = _obj_0.Posts, _obj_0.CategoryPostLogs, _obj_0.ModerationLogs, _obj_0.PendingPosts, _obj_0.PostReports
+      end
+      CategoryPostLogs:clear_posts_for_topic(self)
+      self:update({
+        category_id = new_category.id
+      })
+      self:clear_loaded_relation("category")
+      new_category:refresh_last_topic()
+      old_category:refresh_last_topic()
+      db.update(ModerationLogs:table_name(), {
+        category_id = new_category.id
+      }, {
+        object_type = ModerationLogs.object_types.topic,
+        object_id = self.id,
+        category_id = old_category.id
+      })
+      local topic_posts = db.list({
+        db.raw(db.interpolate_query("\n        select id from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n        where topic_id = ?\n      ", self.id))
+      })
+      db.update(PostReports:table_name(), {
+        category_id = new_category.id
+      }, {
+        category_id = old_category.id,
+        post_id = topic_posts
+      })
+      db.update(PendingPosts:table_name(), {
+        category_id = new_category.id
+      }, {
+        topic_id = self.id,
+        category_id = old_category.id
+      })
+      return CategoryPostLogs:log_topic_posts(self)
     end
   }
   _base_0.__index = _base_0

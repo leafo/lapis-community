@@ -133,6 +133,11 @@ Bookmarks = (opts={}) ->
   assert models.Bookmarks\create opts
 
 PendingPosts = (opts={}) ->
+  if topic = opts.topic
+    opts.topic = nil
+    opts.topic_id = topic.id
+    opts.category_id = topic.category_id
+
   unless opts.topic_id
     topic = Topics category_id: opts.category_id
     opts.topic_id = topic.id

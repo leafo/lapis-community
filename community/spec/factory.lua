@@ -197,6 +197,14 @@ PendingPosts = function(opts)
   if opts == nil then
     opts = { }
   end
+  do
+    local topic = opts.topic
+    if topic then
+      opts.topic = nil
+      opts.topic_id = topic.id
+      opts.category_id = topic.category_id
+    end
+  end
   if not (opts.topic_id) then
     local topic = Topics({
       category_id = opts.category_id
