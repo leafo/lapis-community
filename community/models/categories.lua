@@ -128,13 +128,7 @@ do
       return false
     end,
     allowed_to_edit_moderators = function(self, user)
-      if not (user) then
-        return nil
-      end
-      if user:is_admin() then
-        return true
-      end
-      if user.id == self.user_id then
+      if self:allowed_to_edit(user) then
         return true
       end
       do
