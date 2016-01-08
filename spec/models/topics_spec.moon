@@ -476,6 +476,9 @@ describe "models.topics", ->
       topic\refresh!
       assert.same new_category.id, topic.category_id
 
+      assert.same 0, old_category.topics_count
+      assert.same 1, new_category.topics_count
+
     it "moves a topic with more relations #ddd", ->
       import ModerationLogs, PostReports from require "community.models"
 
@@ -538,3 +541,9 @@ describe "models.topics", ->
 
       assert.nil old_category.last_topic_id
       assert.same topic.id, new_category.last_topic_id
+
+      assert.same 0, old_category.topics_count
+      assert.same 1, new_category.topics_count
+
+
+

@@ -499,6 +499,9 @@ do
       if new_category.directory then
         return nil, "can't move to directory"
       end
+      if self.deleted then
+        return nil, "can't move deleted topic"
+      end
       local old_category = self:get_category()
       local Posts, CategoryPostLogs, ModerationLogs, PendingPosts, PostReports
       do
@@ -535,6 +538,16 @@ do
         category_id = old_category.id
       })
       CategoryPostLogs:log_topic_posts(self)
+      old_category:update({
+        topics_count = db.raw("topics_count - 1")
+      }, {
+        timestamp = false
+      })
+      new_category:update({
+        topics_count = db.raw("topics_count + 1")
+      }, {
+        timestamp = false
+      })
       return true
     end
   }

@@ -452,6 +452,7 @@ class Topics extends Model
     assert new_category, "missing category"
     return nil, "can't move topic that isn't part of category" unless @category_id
     return nil, "can't move to directory" if new_category.directory
+    return nil, "can't move deleted topic" if @deleted
 
     -- pending posts
 
@@ -504,5 +505,14 @@ class Topics extends Model
     }
 
     CategoryPostLogs\log_topic_posts @
+    old_category\update {
+      topics_count: db.raw "topics_count - 1"
+    }, timestamp: false
+
+    new_category\update {
+      topics_count: db.raw "topics_count + 1"
+    }, timestamp: false
+
+
     true
 
