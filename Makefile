@@ -1,10 +1,11 @@
 
-.PHONY: clean_test test local count build seed
+.PHONY: clean_test test local count build seed schema.sql
 
 clean_test: build
 	-dropdb -U postgres community_test
 	createdb -U postgres community_test
 	LAPIS_SHOW_QUERIES=1 LAPIS_ENVIRONMENT=test lua5.1 -e 'require("schema").make_schema()'
+	make schema.sql
 
 clean_dev:
 	-dropdb -U postgres community
@@ -35,3 +36,8 @@ local: build
 
 annotate_models: clean_dev
 	lapis annotate $$(find community/models -type f | grep moon$$)
+
+# update the schema.sql from schema in dev db
+schema.sql:
+	pg_dump -s -U postgres community_test > schema.sql
+	pg_dump -a -t lapis_migrations -U postgres community_test >> schema.sql
