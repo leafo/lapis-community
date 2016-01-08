@@ -534,7 +534,8 @@ do
         topic_id = self.id,
         category_id = old_category.id
       })
-      return CategoryPostLogs:log_topic_posts(self)
+      CategoryPostLogs:log_topic_posts(self)
+      return true
     end
   }
   _base_0.__index = _base_0

@@ -503,6 +503,6 @@ class Topics extends Model
       category_id: old_category.id
     }
 
-
     CategoryPostLogs\log_topic_posts @
+    true
 
