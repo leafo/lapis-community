@@ -169,6 +169,11 @@ class Posts extends Model
     delta\spanminutes! > 10 or @has_replies! or @has_next_post!
 
   delete: (force) =>
+    @topic = @post\get_topic!
+
+    if @post\is_topic_post! and not @topic.permanent
+      return @topic\delete!
+
     if force != "soft" and (force == "hard" or not @should_soft_delete!)
       return @hard_delete!, "hard"
 
