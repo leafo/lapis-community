@@ -120,9 +120,18 @@ describe "models.posts", ->
       assert.nil topic.last_post_id
 
   describe "delete", ->
-    local post
+    local topic, post
     before_each ->
-      post = factory.Posts!
+      -- permanent so the topic doesn't get deleted with the first poots
+      topic = factory.Topics permanent: true
+      post = factory.Posts :topic
+
+
+    it "deletes topic that is the root of non permanent", ->
+      topic\update permanent: false
+      post\delete!
+      topic\refresh!
+      assert.true topic.deleted
 
     it "soft deletes a post", ->
       post\soft_delete!
@@ -130,9 +139,6 @@ describe "models.posts", ->
       assert.same true, post.deleted
 
     it "hard deletes a post", ->
-      topic = post\get_topic!
-      topic\increment_from_post post
-
       assert.same 1, topic.root_posts_count
       assert.same 1, topic.posts_count
 
