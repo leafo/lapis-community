@@ -6,6 +6,11 @@ do
   local _class_0
   local _parent_0 = Model
   local _base_0 = {
+    recount = function(self)
+      return self.__class:recount({
+        user_id = self.user_id
+      })
+    end,
     increment = function(self, field, amount)
       if amount == nil then
         amount = 1
@@ -95,7 +100,7 @@ do
     end
     return community_user
   end
-  self.recount = function(self)
+  self.recount = function(self, ...)
     local Topics, Posts, Votes
     do
       local _obj_0 = require("community.models")
@@ -106,7 +111,7 @@ do
       posts_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where user_id = " .. tostring(id_field) .. "\n          and not deleted)\n      "),
       votes_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Votes:table_name())) .. "\n          where user_id = " .. tostring(id_field) .. ")\n      "),
       topics_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n          where user_id = " .. tostring(id_field) .. "\n          and not deleted)\n      ")
-    })
+    }, ...)
   end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)

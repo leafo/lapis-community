@@ -49,7 +49,7 @@ class CommunityUsers extends Model
 
     community_user
 
-  @recount: =>
+  @recount: (...) =>
     import Topics, Posts, Votes from require "community.models"
 
     id_field = "#{db.escape_identifier @table_name!}.user_id"
@@ -71,7 +71,10 @@ class CommunityUsers extends Model
           where user_id = #{id_field}
           and not deleted)
       "
-    }
+    }, ...
+
+  recount: =>
+    @@recount user_id: @user_id
 
   increment: (field, amount=1) =>
     @update {
