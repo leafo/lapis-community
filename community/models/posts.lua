@@ -107,8 +107,8 @@ do
       return delta:spanminutes() > 10 or self:has_replies() or self:has_next_post()
     end,
     delete = function(self, force)
-      self.topic = self.post:get_topic()
-      if self.post:is_topic_post() and not self.topic.permanent then
+      self.topic = self:get_topic()
+      if self:is_topic_post() and not self.topic.permanent then
         return self.topic:delete()
       end
       if force ~= "soft" and (force == "hard" or not self:should_soft_delete()) then
@@ -188,7 +188,7 @@ do
               end
             end
           end
-          if not (self.post.deleted) then
+          if not (self.deleted) then
             topic:update({
               posts_count = db.raw("posts_count - 1"),
               root_posts_count = (function()

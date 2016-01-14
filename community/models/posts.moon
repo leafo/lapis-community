@@ -169,9 +169,9 @@ class Posts extends Model
     delta\spanminutes! > 10 or @has_replies! or @has_next_post!
 
   delete: (force) =>
-    @topic = @post\get_topic!
+    @topic = @get_topic!
 
-    if @post\is_topic_post! and not @topic.permanent
+    if @is_topic_post! and not @topic.permanent
       return @topic\delete!
 
     if force != "soft" and (force == "hard" or not @should_soft_delete!)
@@ -232,7 +232,7 @@ class Posts extends Model
           category\refresh_last_topic!
 
       -- it was already soft deleted, no need to update the counts
-      unless @post.deleted
+      unless @deleted
         topic\update {
           posts_count: db.raw "posts_count - 1"
           root_posts_count: if @depth == 1
