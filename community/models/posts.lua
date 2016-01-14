@@ -170,6 +170,7 @@ do
       end
       CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
       CategoryPostLogs:clear_post(self)
+      local orphans = self.__class:select("where parent_post_id = ?", self.id)
       do
         local topic = self:get_topic()
         if topic then
@@ -228,6 +229,10 @@ do
           object_type = model.object_types.post,
           object_id = self.id
         })
+      end
+      for _index_0 = 1, #orphans do
+        local orphan_post = orphans[_index_0]
+        orphan_post:delete("hard")
       end
       return true
     end,

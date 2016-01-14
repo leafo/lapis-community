@@ -221,6 +221,8 @@ class Posts extends Model
     CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
     CategoryPostLogs\clear_post @
 
+    orphans = @@select "where parent_post_id = ?", @id
+
     if topic = @get_topic!
       topic\renumber_posts @get_parent_post!
 
@@ -257,6 +259,9 @@ class Posts extends Model
         object_type: model.object_types.post
         object_id: @id
       }
+
+    for orphan_post in *orphans
+      orphan_post\delete "hard"
 
     true
 

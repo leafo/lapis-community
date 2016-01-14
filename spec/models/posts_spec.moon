@@ -126,12 +126,19 @@ describe "models.posts", ->
       topic = factory.Topics permanent: true
       post = factory.Posts :topic
 
-
     it "deletes topic that is the root of non permanent", ->
       topic\update permanent: false
       post\delete!
       topic\refresh!
       assert.true topic.deleted
+
+    it "deletes orphaned posts when hard deleting", ->
+      other_post = factory.Posts :topic
+
+      child_1 = factory.Posts :topic, parent_post_id: post.id
+      child_2 = factory.Posts :topic, parent_post_id: child_1.id
+      post\hard_delete!
+      assert.same {[other_post.id]: true}, {post.id, true for post in *Posts\select!}
 
     it "soft deletes a post", ->
       post\soft_delete!
