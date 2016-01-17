@@ -158,7 +158,7 @@ class PostsFlow extends Flow
 
   delete_post: require_login =>
     @load_post!
-    assert_error @post\allowed_to_edit(@current_user), "not allowed to edit"
+    assert_error @post\allowed_to_edit(@current_user, "delete"), "not allowed to edit"
 
     @topic = @post\get_topic!
 

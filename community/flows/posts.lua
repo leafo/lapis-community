@@ -202,7 +202,7 @@ do
     end),
     delete_post = require_login(function(self)
       self:load_post()
-      assert_error(self.post:allowed_to_edit(self.current_user), "not allowed to edit")
+      assert_error(self.post:allowed_to_edit(self.current_user, "delete"), "not allowed to edit")
       self.topic = self.post:get_topic()
       if self.post:is_topic_post() and not self.topic.permanent then
         local TopicsFlow = require("community.flows.topics")

@@ -70,7 +70,7 @@ do
         end
       end
     end,
-    allowed_to_edit = function(self, user)
+    allowed_to_edit = function(self, user, action)
       if not (user) then
         return false
       end
@@ -83,7 +83,7 @@ do
       if user.id == self.user_id then
         return true
       end
-      if self.deleted then
+      if action ~= "delete" and self.deleted then
         return false
       end
       local topic = self:get_topic()
