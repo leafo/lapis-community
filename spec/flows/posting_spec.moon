@@ -586,4 +586,16 @@ describe "posting flow", ->
       assert.same p2.id, topic.last_post_id
       assert.same topic.id, category.last_topic_id
 
+    it "hard deletes post that has been soft deleted", ->
+      moderator = factory.Users!
+
+      category = factory.Categories user_id: moderator.id
+      topic = factory.Topics(:category, permanent: true)
+      post = factory.Posts :topic, deleted: true
+
+      res = PostingApp\get moderator, "/delete-post", {
+        post_id: post.id
+      }
+
+      assert.same {}, Posts\select!
 
