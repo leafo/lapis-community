@@ -471,6 +471,16 @@ describe "models.topics", ->
       new_category = factory.Categories!
       topic = factory.Topics category: old_category
 
+    describe "movable_parent_category", ->
+      it "finds top most parent", ->
+        user = factory.Users!
+        c = factory.Categories!
+        c2 = factory.Categories parent_category_id: c.id, user_id: user.id
+        c3 = factory.Categories parent_category_id: c2.id, user_id: user.id
+        topic = factory.Topics category: c3
+        found = topic\movable_parent_category user
+        assert.same c2.id, found.id
+
     it "should move basic topic", ->
       topic\move_to_category new_category
       topic\refresh!
@@ -479,7 +489,7 @@ describe "models.topics", ->
       assert.same 0, old_category.topics_count
       assert.same 1, new_category.topics_count
 
-    it "moves a topic with more relations #ddd", ->
+    it "moves a topic with more relations", ->
       import ModerationLogs, PostReports from require "community.models"
 
       truncate_tables ModerationLogs, PostReports

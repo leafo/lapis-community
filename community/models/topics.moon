@@ -448,6 +448,19 @@ class Topics extends Model
         sub\delete!
         return true
 
+  -- find the highest level category this topic can be moved around in
+  movable_parent_category: (user) =>
+    category = @get_category!
+    return nil, "no category" unless category
+    ancestors = category\get_ancestors!
+
+    for i=#ancestors,1,-1
+      a = ancestors[i]
+      if a\allowed_to_moderate user
+        return a
+
+    category
+
   move_to_category: (new_category) =>
     assert new_category, "missing category"
     return nil, "can't move topic that isn't part of category" unless @category_id

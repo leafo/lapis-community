@@ -491,6 +491,20 @@ do
         end
       end
     end,
+    movable_parent_category = function(self, user)
+      local category = self:get_category()
+      if not (category) then
+        return nil, "no category"
+      end
+      local ancestors = category:get_ancestors()
+      for i = #ancestors, 1, -1 do
+        local a = ancestors[i]
+        if a:allowed_to_moderate(user) then
+          return a
+        end
+      end
+      return category
+    end,
     move_to_category = function(self, new_category)
       assert(new_category, "missing category")
       if not (self.category_id) then
