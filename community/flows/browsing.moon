@@ -231,14 +231,14 @@ class BrowsingFlow extends Flow
     posts
 
   -- TODO: there is no pagination here yet
-  sticky_category_topics: =>
+  sticky_category_topics: (opts={}) =>
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
 
     pager = OrderedPaginator Topics, "category_order", [[
       where category_id = ? and status = ? and not deleted and sticky
     ]], @category.id, Topics.statuses.default, {
-      per_page: limits.TOPICS_PER_PAGE
+      per_page: opts.per_page or limits.TOPICS_PER_PAGE
       prepare_results: @\preload_topics
     }
 
@@ -270,7 +270,7 @@ class BrowsingFlow extends Flow
     pager = OrderedPaginator Topics, "category_order", [[
       where category_id = ? and status = ? and not deleted and not sticky
     ]], @category.id, status, {
-      per_page: limits.TOPICS_PER_PAGE
+      per_page: opts.per_page or limits.TOPICS_PER_PAGE
       prepare_results: @\preload_topics
     }
 

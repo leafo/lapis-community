@@ -367,12 +367,15 @@ do
       end
       return posts
     end,
-    sticky_category_topics = function(self)
+    sticky_category_topics = function(self, opts)
+      if opts == nil then
+        opts = { }
+      end
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()
       local pager = OrderedPaginator(Topics, "category_order", [[      where category_id = ? and status = ? and not deleted and sticky
     ]], self.category.id, Topics.statuses.default, {
-        per_page = limits.TOPICS_PER_PAGE,
+        per_page = opts.per_page or limits.TOPICS_PER_PAGE,
         prepare_results = (function()
           local _base_1 = self
           local _fn_0 = _base_1.preload_topics
@@ -418,7 +421,7 @@ do
       local before, after = self:get_before_after()
       local pager = OrderedPaginator(Topics, "category_order", [[      where category_id = ? and status = ? and not deleted and not sticky
     ]], self.category.id, status, {
-        per_page = limits.TOPICS_PER_PAGE,
+        per_page = opts.per_page or limits.TOPICS_PER_PAGE,
         prepare_results = (function()
           local _base_1 = self
           local _fn_0 = _base_1.preload_topics
