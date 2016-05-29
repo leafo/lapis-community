@@ -12,7 +12,7 @@ import
   Moderators
   Posts
   Topics
-  TopicSubscriptions
+  Subscriptions
   UserTopicLastSeens
   from require "community.models"
 
@@ -25,7 +25,7 @@ describe "models.topics", ->
 
   before_each ->
     truncate_tables Users, Categories, Moderators, CategoryMembers, Topics,
-      Posts, Bans, UserTopicLastSeens, CategoryTags, TopicSubscriptions
+      Posts, Bans, UserTopicLastSeens, CategoryTags, Subscriptions
 
   it "should create a topic", ->
     factory.Topics!
@@ -364,13 +364,13 @@ describe "models.topics", ->
 
   describe "subscribe", ->
     fetch_subs = ->
-      TopicSubscriptions\select "order by user_id, topic_id", fields: "user_id, topic_id, subscribed"
+      Subscriptions\select "order by user_id, object_type, object_id", fields: "user_id, object_type, object_id, subscribed"
 
     it "gets topic subscriptions", ->
       topic = factory.Topics!
       assert.same {}, topic\get_subscriptions!
       topic\refresh!
-      TopicSubscriptions\create user_id: -1, topic_id: topic.id
+      Subscriptions\create user_id: -1, object_id: topic.id, object_type: Subscriptions.object_types.topic
       assert.same 1, #topic\get_subscriptions!
 
     it "subscribes user to topic", ->
@@ -382,7 +382,8 @@ describe "models.topics", ->
         topic\subscribe user
         assert.same {
           {
-            topic_id: topic.id
+            object_type: Subscriptions.object_types.topic
+            object_id: topic.id
             user_id: user.id
             subscribed: true
           }
@@ -411,7 +412,8 @@ describe "models.topics", ->
         topic\unsubscribe user
         assert.same {
           {
-            topic_id: topic.id
+            object_type: Subscriptions.object_types.topic
+            object_id: topic.id
             user_id: user.id
             subscribed: false
           }
@@ -429,7 +431,8 @@ describe "models.topics", ->
 
       assert.same {
         {
-          topic_id: topic.id
+          object_type: Subscriptions.object_types.topic
+          object_id: topic.id
           user_id: user2.id
           subscribed: true
         }

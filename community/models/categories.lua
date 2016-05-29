@@ -593,6 +593,14 @@ do
       "tags",
       has_many = "CategoryTags",
       order = "tag_order asc"
+    },
+    {
+      "subscriptions",
+      has_many = "Subscriptions",
+      key = "object_id",
+      where = {
+        object_type = 2
+      }
     }
   }
   self.next_position = function(self, parent_id)

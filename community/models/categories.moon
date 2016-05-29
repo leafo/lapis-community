@@ -94,6 +94,7 @@ class Categories extends Model
     {"last_topic", belongs_to: "Topics"}
     {"parent_category", belongs_to: "Categories"}
     {"tags", has_many: "CategoryTags", order: "tag_order asc"}
+    {"subscriptions", has_many: "Subscriptions", key: "object_id", where: {object_type: 2}}
   }
 
   @next_position: (parent_id) =>

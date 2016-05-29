@@ -40,7 +40,7 @@ class Topics extends Model
     {"category", belongs_to: "Categories"}
     {"user", belongs_to: "Users"}
     {"last_post", belongs_to: "Posts"}
-    {"subscriptions", has_many: "TopicSubscriptions"}
+    {"subscriptions", has_many: "Subscriptions", key: "object_id", where: {object_type: 1}}
   }
 
   @statuses: enum {
@@ -278,9 +278,9 @@ class Topics extends Model
     @user_topic_last_seen.post_id < @last_post_id
 
   notification_target_users: =>
-    import TopicSubscriptions from require "community.models"
+    import Subscriptions from require "community.models"
     subs = @get_subscriptions!
-    TopicSubscriptions\preload_relations subs, "user"
+    Subscriptions\preload_relations subs, "user"
 
     include_owner = true
     targets = for sub in *subs
@@ -388,9 +388,13 @@ class Topics extends Model
     tags_by_slug = {t.slug, t for t in *category\get_tags!}
     [tags_by_slug[t] for t in *@tags]
 
-  get_subscription: (user) =>
-    import TopicSubscriptions from require "community.models"
-    TopicSubscriptions\find user_id: user.id, topic_id: @id
+  find_subscription: (user) =>
+    import Subscriptions from require "community.models"
+    Subscriptions\find {
+      user_id: user.id
+      object_type: Subscriptions.object_types.topic
+      object_id: @id
+    }
 
   get_bookmark: memoize1 (user) =>
     import Bookmarks from require "community.models"
@@ -399,7 +403,7 @@ class Topics extends Model
   is_subscribed: memoize1 (user) =>
     return nil unless user
 
-    sub = @get_subscription user
+    sub = @find_subscription user
     if user.id == @user_id
       not sub or sub.subscribed
     else
@@ -408,7 +412,7 @@ class Topics extends Model
   subscribe: (user) =>
     return unless @allowed_to_view user
 
-    sub = @get_subscription user
+    sub = @find_subscription user
     if user.id == @user_id
       if sub
         sub\delete!
@@ -421,25 +425,27 @@ class Topics extends Model
     if sub
       sub\update subscribed: true
     else
-      import TopicSubscriptions from require "community.models"
-      TopicSubscriptions\create {
+      import Subscriptions from require "community.models"
+      Subscriptions\create {
         user_id: user.id
-        topic_id: @id
+        object_type: Subscriptions.object_types.topic
+        object_id: @id
       }
 
     true
 
   unsubscribe: (user) =>
-    sub = @get_subscription user
+    sub = @find_subscription user
     if user.id == @user_id
       if sub
         return unless sub.subscribed
         sub\update subscribed: false
       else
-        import TopicSubscriptions from require "community.models"
-        TopicSubscriptions\create {
+        import Subscriptions from require "community.models"
+        Subscriptions\create {
           user_id: user.id
-          topic_id: @id
+          object_type: Subscriptions.object_types.topic
+          object_id: @id
           subscribed: false
         }
       true

@@ -253,10 +253,10 @@ do
       return self.user_topic_last_seen.post_id < self.last_post_id
     end,
     notification_target_users = function(self)
-      local TopicSubscriptions
-      TopicSubscriptions = require("community.models").TopicSubscriptions
+      local Subscriptions
+      Subscriptions = require("community.models").Subscriptions
       local subs = self:get_subscriptions()
-      TopicSubscriptions:preload_relations(subs, "user")
+      Subscriptions:preload_relations(subs, "user")
       local include_owner = true
       local targets
       do
@@ -410,12 +410,13 @@ do
       end
       return _accum_0
     end,
-    get_subscription = function(self, user)
-      local TopicSubscriptions
-      TopicSubscriptions = require("community.models").TopicSubscriptions
-      return TopicSubscriptions:find({
+    find_subscription = function(self, user)
+      local Subscriptions
+      Subscriptions = require("community.models").Subscriptions
+      return Subscriptions:find({
         user_id = user.id,
-        topic_id = self.id
+        object_type = Subscriptions.object_types.topic,
+        object_id = self.id
       })
     end,
     get_bookmark = memoize1(function(self, user)
@@ -427,7 +428,7 @@ do
       if not (user) then
         return nil
       end
-      local sub = self:get_subscription(user)
+      local sub = self:find_subscription(user)
       if user.id == self.user_id then
         return not sub or sub.subscribed
       else
@@ -438,7 +439,7 @@ do
       if not (self:allowed_to_view(user)) then
         return 
       end
-      local sub = self:get_subscription(user)
+      local sub = self:find_subscription(user)
       if user.id == self.user_id then
         if sub then
           sub:delete()
@@ -455,17 +456,18 @@ do
           subscribed = true
         })
       else
-        local TopicSubscriptions
-        TopicSubscriptions = require("community.models").TopicSubscriptions
-        TopicSubscriptions:create({
+        local Subscriptions
+        Subscriptions = require("community.models").Subscriptions
+        Subscriptions:create({
           user_id = user.id,
-          topic_id = self.id
+          object_type = Subscriptions.object_types.topic,
+          object_id = self.id
         })
       end
       return true
     end,
     unsubscribe = function(self, user)
-      local sub = self:get_subscription(user)
+      local sub = self:find_subscription(user)
       if user.id == self.user_id then
         if sub then
           if not (sub.subscribed) then
@@ -475,11 +477,12 @@ do
             subscribed = false
           })
         else
-          local TopicSubscriptions
-          TopicSubscriptions = require("community.models").TopicSubscriptions
-          TopicSubscriptions:create({
+          local Subscriptions
+          Subscriptions = require("community.models").Subscriptions
+          Subscriptions:create({
             user_id = user.id,
-            topic_id = self.id,
+            object_type = Subscriptions.object_types.topic,
+            object_id = self.id,
             subscribed = false
           })
         end
@@ -610,7 +613,11 @@ do
     },
     {
       "subscriptions",
-      has_many = "TopicSubscriptions"
+      has_many = "Subscriptions",
+      key = "object_id",
+      where = {
+        object_type = 1
+      }
     }
   }
   self.statuses = enum({
