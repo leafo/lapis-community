@@ -152,7 +152,6 @@ CategoryTags = (opts={}) ->
   opts.label or= "Some tag #{next_counter "tag"}"
   assert models.CategoryTags\create opts
 
-
 { :next_counter, :next_email,
   :Categories, :Topics, :Posts, :Votes, :Moderators, :PostReports,
   :CategoryMembers, :Blocks, :Bans, :CategoryGroups, :Bookmarks,
