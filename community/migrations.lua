@@ -1013,5 +1013,39 @@ return {
       "PRIMARY KEY (category_id, post_id)"
     })
     return create_index(T("category_post_logs"), "post_id")
+  end,
+  [12] = function(self)
+    create_table(T("subscriptions"), {
+      {
+        "object_type",
+        enum
+      },
+      {
+        "object_id",
+        foreign_key
+      },
+      {
+        "user_id",
+        foreign_key
+      },
+      {
+        "subscribed",
+        boolean({
+          default = true
+        })
+      },
+      {
+        "created_at",
+        time
+      },
+      {
+        "updated_at",
+        time
+      },
+      "PRIMARY KEY (object_type, object_id, user_id)"
+    })
+    create_index(T("subscriptions"), "user_id")
+    db.query("\n      insert into " .. tostring(T("subscriptions")) .. " (created_at, updated_at, subscribed, user_id, object_type, object_id)\n      select created_at, updated_at, subscribed, user_id, 1 as object_type, topic_id as object_id\n      from " .. tostring(T("topic_subscriptions")) .. "\n    ")
+    return drop_table(T("topic_subscriptions"))
   end
 }

@@ -499,5 +499,30 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
     }
 
     create_index T"category_post_logs", "post_id"
+
+  [12]: =>
+    create_table T"subscriptions", {
+      {"object_type", enum}
+      {"object_id", foreign_key}
+      {"user_id", foreign_key}
+
+      {"subscribed", boolean default: true}
+
+      {"created_at", time}
+      {"updated_at", time}
+
+      "PRIMARY KEY (object_type, object_id, user_id)"
+    }
+
+    create_index T"subscriptions", "user_id"
+
+    db.query "
+      insert into #{T"subscriptions"} (created_at, updated_at, subscribed, user_id, object_type, object_id)
+      select created_at, updated_at, subscribed, user_id, 1 as object_type, topic_id as object_id
+      from #{T"topic_subscriptions"}
+    "
+
+    drop_table T"topic_subscriptions"
 }
+
 
