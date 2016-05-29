@@ -3,19 +3,6 @@ import truncate_tables from require "lapis.spec.db"
 
 db = require "lapis.db"
 
-import Users from require "models"
-import
-  Bans
-  Categories
-  CategoryMembers
-  CategoryTags
-  Moderators
-  Posts
-  Topics
-  Subscriptions
-  UserTopicLastSeens
-  from require "community.models"
-
 factory = require "spec.factory"
 
 import Model from require "lapis.db.model"
@@ -23,9 +10,10 @@ import Model from require "lapis.db.model"
 describe "models.topics", ->
   use_test_env!
 
-  before_each ->
-    truncate_tables Users, Categories, Moderators, CategoryMembers, Topics,
-      Posts, Bans, UserTopicLastSeens, CategoryTags, Subscriptions
+  import Users from require "spec.models"
+
+  import Categories, Moderators, CategoryMembers, Topics,
+    Posts, Bans, UserTopicLastSeens, CategoryTags, Subscriptions from require "spec.community_models"
 
   it "should create a topic", ->
     factory.Topics!
@@ -557,6 +545,4 @@ describe "models.topics", ->
 
       assert.same 0, old_category.topics_count
       assert.same 1, new_category.topics_count
-
-
 
