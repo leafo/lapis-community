@@ -413,11 +413,7 @@ do
     find_subscription = function(self, user)
       local Subscriptions
       Subscriptions = require("community.models").Subscriptions
-      return Subscriptions:find({
-        user_id = user.id,
-        object_type = Subscriptions.object_types.topic,
-        object_id = self.id
-      })
+      return Subscriptions:find_subscription(self, user)
     end,
     get_bookmark = memoize1(function(self, user)
       local Bookmarks
@@ -425,74 +421,28 @@ do
       return Bookmarks:get(self, user)
     end),
     is_subscribed = memoize1(function(self, user)
-      if not (user) then
-        return nil
-      end
-      local sub = self:find_subscription(user)
-      if user.id == self.user_id then
-        return not sub or sub.subscribed
-      else
-        return sub and sub.subscribed
-      end
+      local Subscriptions
+      Subscriptions = require("models").Subscriptions
+      return Subscriptions:is_subscribed(self, user)
     end),
     subscribe = function(self, user)
       if not (self:allowed_to_view(user)) then
         return 
       end
-      local sub = self:find_subscription(user)
-      if user.id == self.user_id then
-        if sub then
-          sub:delete()
-          return true
-        else
-          return 
-        end
-      end
-      if sub and sub.subscribed then
+      if not (user) then
         return 
       end
-      if sub then
-        sub:update({
-          subscribed = true
-        })
-      else
-        local Subscriptions
-        Subscriptions = require("community.models").Subscriptions
-        Subscriptions:create({
-          user_id = user.id,
-          object_type = Subscriptions.object_types.topic,
-          object_id = self.id
-        })
-      end
-      return true
+      local Subscriptions
+      Subscriptions = require("community.models").Subscriptions
+      return Subscriptions:subscribe(self, user, user.id == self.user_id)
     end,
     unsubscribe = function(self, user)
-      local sub = self:find_subscription(user)
-      if user.id == self.user_id then
-        if sub then
-          if not (sub.subscribed) then
-            return 
-          end
-          sub:update({
-            subscribed = false
-          })
-        else
-          local Subscriptions
-          Subscriptions = require("community.models").Subscriptions
-          Subscriptions:create({
-            user_id = user.id,
-            object_type = Subscriptions.object_types.topic,
-            object_id = self.id,
-            subscribed = false
-          })
-        end
-        return true
-      else
-        if sub then
-          sub:delete()
-          return true
-        end
+      if not (user) then
+        return 
       end
+      local Subscriptions
+      Subscriptions = require("community.models").Subscriptions
+      return Subscriptions:unsubscribe(self, user, user.id == self.user_id)
     end,
     movable_parent_category = function(self, user)
       local category = self:get_category()

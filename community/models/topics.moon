@@ -390,69 +390,26 @@ class Topics extends Model
 
   find_subscription: (user) =>
     import Subscriptions from require "community.models"
-    Subscriptions\find {
-      user_id: user.id
-      object_type: Subscriptions.object_types.topic
-      object_id: @id
-    }
+    Subscriptions\find_subscription @, user
 
   get_bookmark: memoize1 (user) =>
     import Bookmarks from require "community.models"
     Bookmarks\get @, user
 
   is_subscribed: memoize1 (user) =>
-    return nil unless user
-
-    sub = @find_subscription user
-    if user.id == @user_id
-      not sub or sub.subscribed
-    else
-      sub and sub.subscribed
+    import Subscriptions from require "models"
+    Subscriptions\is_subscribed @, user
 
   subscribe: (user) =>
     return unless @allowed_to_view user
-
-    sub = @find_subscription user
-    if user.id == @user_id
-      if sub
-        sub\delete!
-        return true
-      else
-        return
-
-    return if sub and sub.subscribed
-
-    if sub
-      sub\update subscribed: true
-    else
-      import Subscriptions from require "community.models"
-      Subscriptions\create {
-        user_id: user.id
-        object_type: Subscriptions.object_types.topic
-        object_id: @id
-      }
-
-    true
+    return unless user
+    import Subscriptions from require "community.models"
+    Subscriptions\subscribe @, user, user.id == @user_id
 
   unsubscribe: (user) =>
-    sub = @find_subscription user
-    if user.id == @user_id
-      if sub
-        return unless sub.subscribed
-        sub\update subscribed: false
-      else
-        import Subscriptions from require "community.models"
-        Subscriptions\create {
-          user_id: user.id
-          object_type: Subscriptions.object_types.topic
-          object_id: @id
-          subscribed: false
-        }
-      true
-    else
-      if sub
-        sub\delete!
-        return true
+    return unless user
+    import Subscriptions from require "community.models"
+    Subscriptions\unsubscribe @, user, user.id == @user_id
 
   -- find the highest level category this topic can be moved around in
   movable_parent_category: (user) =>

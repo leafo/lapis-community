@@ -63,14 +63,92 @@ do
     }
   }
   self.create = safe_insert
+  self.find_subscription = function(self, object, user)
+    if not (user) then
+      return nil
+    end
+    return self:find({
+      user_id = user.id,
+      object_type = self:object_type_for_object(object),
+      object_id = object.id
+    })
+  end
+  self.is_subscribed = function(self, object, user, subscribed_by_default)
+    if subscribed_by_default == nil then
+      subscribed_by_default = false
+    end
+    if not (user) then
+      return 
+    end
+    local sub = self:find_subscription(object, user)
+    if subscribed_by_default then
+      return not sub or sub.subscribed
+    else
+      return sub and sub.subscribed
+    end
+  end
   self.subscribe = function(self, object, user, subscribed_by_default)
     if subscribed_by_default == nil then
       subscribed_by_default = false
     end
+    if not (user) then
+      return 
+    end
+    local sub = self:find_subscription(object, user)
+    if subscribed_by_default then
+      if sub then
+        sub:delete()
+        return true
+      else
+        return 
+      end
+    end
+    if sub and sub.subscribed then
+      return 
+    end
+    if sub then
+      sub:update({
+        subscribed = true
+      })
+    else
+      self:create({
+        user_id = user.id,
+        object_type = self:object_type_for_object(object),
+        object_id = object.id
+      })
+    end
+    return true
   end
   self.unsubscribe = function(self, object, user, subscribed_by_default)
     if subscribed_by_default == nil then
       subscribed_by_default = false
+    end
+    if not (user) then
+      return 
+    end
+    local sub = self:find_subscription(object, user)
+    if subscribed_by_default then
+      if sub then
+        if not (sub.subscribed) then
+          return 
+        end
+        sub:update({
+          subscribed = false
+        })
+      else
+        self:create({
+          user_id = user.id,
+          object_type = self:object_type_for_object(object),
+          object_id = object.id,
+          subscribed = false
+        })
+      end
+      return true
+    else
+      if sub then
+        sub:delete()
+        return true
+      end
     end
   end
   if _parent_0.__inherited then

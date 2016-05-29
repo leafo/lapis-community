@@ -32,5 +32,67 @@ class Subscriptions extends Model
 
   @create: safe_insert
 
+  @find_subscription: (object, user) =>
+    return nil unless user
+
+    @find {
+      user_id: user.id
+      object_type: @object_type_for_object object
+      object_id: object.id
+    }
+
+  @is_subscribed: (object, user, subscribed_by_default=false) =>
+    return unless user
+
+    sub = @find_subscription object, user
+    if subscribed_by_default
+      not sub or sub.subscribed
+    else
+      sub and sub.subscribed
+
   @subscribe: (object, user, subscribed_by_default=false) =>
+    return unless user
+
+    sub = @find_subscription object, user
+
+    if subscribed_by_default
+      if sub
+        sub\delete!
+        return true
+      else
+        return
+
+    return if sub and sub.subscribed
+
+    if sub
+      sub\update subscribed: true
+    else
+      @create {
+        user_id: user.id
+        object_type: @object_type_for_object object
+        object_id: object.id
+      }
+
+    true
+
   @unsubscribe: (object, user, subscribed_by_default=false) =>
+    return unless user
+    sub = @find_subscription object, user
+
+    if subscribed_by_default
+      if sub
+        return unless sub.subscribed
+        sub\update subscribed: false
+      else
+        @create {
+          user_id: user.id
+          object_type: @object_type_for_object object
+          object_id: object.id
+          subscribed: false
+        }
+      true
+    else
+      if sub
+        sub\delete!
+        return true
+
