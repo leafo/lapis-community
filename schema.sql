@@ -2,12 +2,16 @@
 -- PostgreSQL database dump
 --
 
+-- Dumped from database version 9.5.2
+-- Dumped by pg_dump version 9.5.2
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
+SET row_security = off;
 
 --
 -- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
@@ -30,7 +34,7 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: community_activity_logs; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_activity_logs; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_activity_logs (
@@ -70,7 +74,7 @@ ALTER SEQUENCE community_activity_logs_id_seq OWNED BY community_activity_logs.i
 
 
 --
--- Name: community_bans; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_bans; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_bans (
@@ -87,7 +91,7 @@ CREATE TABLE community_bans (
 ALTER TABLE community_bans OWNER TO postgres;
 
 --
--- Name: community_blocks; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_blocks; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_blocks (
@@ -101,7 +105,7 @@ CREATE TABLE community_blocks (
 ALTER TABLE community_blocks OWNER TO postgres;
 
 --
--- Name: community_bookmarks; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_bookmarks; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_bookmarks (
@@ -116,7 +120,7 @@ CREATE TABLE community_bookmarks (
 ALTER TABLE community_bookmarks OWNER TO postgres;
 
 --
--- Name: community_categories; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_categories; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_categories (
@@ -170,7 +174,7 @@ ALTER SEQUENCE community_categories_id_seq OWNED BY community_categories.id;
 
 
 --
--- Name: community_category_group_categories; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_category_group_categories; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_category_group_categories (
@@ -184,7 +188,7 @@ CREATE TABLE community_category_group_categories (
 ALTER TABLE community_category_group_categories OWNER TO postgres;
 
 --
--- Name: community_category_groups; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_category_groups; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_category_groups (
@@ -223,7 +227,7 @@ ALTER SEQUENCE community_category_groups_id_seq OWNED BY community_category_grou
 
 
 --
--- Name: community_category_members; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_category_members; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_category_members (
@@ -238,7 +242,7 @@ CREATE TABLE community_category_members (
 ALTER TABLE community_category_members OWNER TO postgres;
 
 --
--- Name: community_category_post_logs; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_category_post_logs; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_category_post_logs (
@@ -250,7 +254,7 @@ CREATE TABLE community_category_post_logs (
 ALTER TABLE community_category_post_logs OWNER TO postgres;
 
 --
--- Name: community_category_tags; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_category_tags; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_category_tags (
@@ -290,7 +294,7 @@ ALTER SEQUENCE community_category_tags_id_seq OWNED BY community_category_tags.i
 
 
 --
--- Name: community_moderation_log_objects; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_moderation_log_objects; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_moderation_log_objects (
@@ -305,7 +309,7 @@ CREATE TABLE community_moderation_log_objects (
 ALTER TABLE community_moderation_log_objects OWNER TO postgres;
 
 --
--- Name: community_moderation_logs; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_moderation_logs; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_moderation_logs (
@@ -345,7 +349,7 @@ ALTER SEQUENCE community_moderation_logs_id_seq OWNED BY community_moderation_lo
 
 
 --
--- Name: community_moderators; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_moderators; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_moderators (
@@ -362,7 +366,7 @@ CREATE TABLE community_moderators (
 ALTER TABLE community_moderators OWNER TO postgres;
 
 --
--- Name: community_pending_posts; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_pending_posts; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_pending_posts (
@@ -402,7 +406,7 @@ ALTER SEQUENCE community_pending_posts_id_seq OWNED BY community_pending_posts.i
 
 
 --
--- Name: community_post_edits; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_post_edits; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_post_edits (
@@ -440,7 +444,7 @@ ALTER SEQUENCE community_post_edits_id_seq OWNED BY community_post_edits.id;
 
 
 --
--- Name: community_post_reports; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_post_reports; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_post_reports (
@@ -482,7 +486,7 @@ ALTER SEQUENCE community_post_reports_id_seq OWNED BY community_post_reports.id;
 
 
 --
--- Name: community_posts; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_posts; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_posts (
@@ -529,7 +533,23 @@ ALTER SEQUENCE community_posts_id_seq OWNED BY community_posts.id;
 
 
 --
--- Name: community_topic_participants; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_subscriptions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE community_subscriptions (
+    object_type smallint NOT NULL,
+    object_id integer NOT NULL,
+    user_id integer NOT NULL,
+    subscribed boolean DEFAULT true NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE community_subscriptions OWNER TO postgres;
+
+--
+-- Name: community_topic_participants; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_topic_participants (
@@ -544,22 +564,7 @@ CREATE TABLE community_topic_participants (
 ALTER TABLE community_topic_participants OWNER TO postgres;
 
 --
--- Name: community_topic_subscriptions; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE community_topic_subscriptions (
-    topic_id integer NOT NULL,
-    user_id integer NOT NULL,
-    subscribed boolean DEFAULT true NOT NULL,
-    created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
-);
-
-
-ALTER TABLE community_topic_subscriptions OWNER TO postgres;
-
---
--- Name: community_topics; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_topics; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_topics (
@@ -610,7 +615,7 @@ ALTER SEQUENCE community_topics_id_seq OWNED BY community_topics.id;
 
 
 --
--- Name: community_user_category_last_seens; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_user_category_last_seens; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_user_category_last_seens (
@@ -624,7 +629,7 @@ CREATE TABLE community_user_category_last_seens (
 ALTER TABLE community_user_category_last_seens OWNER TO postgres;
 
 --
--- Name: community_user_topic_last_seens; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_user_topic_last_seens; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_user_topic_last_seens (
@@ -637,7 +642,7 @@ CREATE TABLE community_user_topic_last_seens (
 ALTER TABLE community_user_topic_last_seens OWNER TO postgres;
 
 --
--- Name: community_users; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_users; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_users (
@@ -654,7 +659,7 @@ CREATE TABLE community_users (
 ALTER TABLE community_users OWNER TO postgres;
 
 --
--- Name: community_votes; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_votes; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE community_votes (
@@ -670,7 +675,7 @@ CREATE TABLE community_votes (
 ALTER TABLE community_votes OWNER TO postgres;
 
 --
--- Name: lapis_migrations; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: lapis_migrations; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE lapis_migrations (
@@ -681,7 +686,7 @@ CREATE TABLE lapis_migrations (
 ALTER TABLE lapis_migrations OWNER TO postgres;
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE users (
@@ -793,7 +798,7 @@ ALTER TABLE ONLY users ALTER COLUMN id SET DEFAULT nextval('users_id_seq'::regcl
 
 
 --
--- Name: community_activity_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_activity_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_activity_logs
@@ -801,7 +806,7 @@ ALTER TABLE ONLY community_activity_logs
 
 
 --
--- Name: community_bans_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_bans_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_bans
@@ -809,7 +814,7 @@ ALTER TABLE ONLY community_bans
 
 
 --
--- Name: community_blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_blocks
@@ -817,7 +822,7 @@ ALTER TABLE ONLY community_blocks
 
 
 --
--- Name: community_bookmarks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_bookmarks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_bookmarks
@@ -825,7 +830,7 @@ ALTER TABLE ONLY community_bookmarks
 
 
 --
--- Name: community_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_categories
@@ -833,7 +838,7 @@ ALTER TABLE ONLY community_categories
 
 
 --
--- Name: community_category_group_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_category_group_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_category_group_categories
@@ -841,7 +846,7 @@ ALTER TABLE ONLY community_category_group_categories
 
 
 --
--- Name: community_category_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_category_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_category_groups
@@ -849,7 +854,7 @@ ALTER TABLE ONLY community_category_groups
 
 
 --
--- Name: community_category_members_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_category_members_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_category_members
@@ -857,7 +862,7 @@ ALTER TABLE ONLY community_category_members
 
 
 --
--- Name: community_category_post_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_category_post_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_category_post_logs
@@ -865,7 +870,7 @@ ALTER TABLE ONLY community_category_post_logs
 
 
 --
--- Name: community_category_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_category_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_category_tags
@@ -873,7 +878,7 @@ ALTER TABLE ONLY community_category_tags
 
 
 --
--- Name: community_moderation_log_objects_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_moderation_log_objects_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_moderation_log_objects
@@ -881,7 +886,7 @@ ALTER TABLE ONLY community_moderation_log_objects
 
 
 --
--- Name: community_moderation_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_moderation_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_moderation_logs
@@ -889,7 +894,7 @@ ALTER TABLE ONLY community_moderation_logs
 
 
 --
--- Name: community_moderators_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_moderators_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_moderators
@@ -897,7 +902,7 @@ ALTER TABLE ONLY community_moderators
 
 
 --
--- Name: community_pending_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_pending_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_pending_posts
@@ -905,7 +910,7 @@ ALTER TABLE ONLY community_pending_posts
 
 
 --
--- Name: community_post_edits_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_post_edits_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_post_edits
@@ -913,7 +918,7 @@ ALTER TABLE ONLY community_post_edits
 
 
 --
--- Name: community_post_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_post_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_post_reports
@@ -921,7 +926,7 @@ ALTER TABLE ONLY community_post_reports
 
 
 --
--- Name: community_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_posts
@@ -929,7 +934,15 @@ ALTER TABLE ONLY community_posts
 
 
 --
--- Name: community_topic_participants_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_subscriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY community_subscriptions
+    ADD CONSTRAINT community_subscriptions_pkey PRIMARY KEY (object_type, object_id, user_id);
+
+
+--
+-- Name: community_topic_participants_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_topic_participants
@@ -937,15 +950,7 @@ ALTER TABLE ONLY community_topic_participants
 
 
 --
--- Name: community_topic_subscriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY community_topic_subscriptions
-    ADD CONSTRAINT community_topic_subscriptions_pkey PRIMARY KEY (topic_id, user_id);
-
-
---
--- Name: community_topics_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_topics_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_topics
@@ -953,7 +958,7 @@ ALTER TABLE ONLY community_topics
 
 
 --
--- Name: community_user_category_last_seens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_user_category_last_seens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_user_category_last_seens
@@ -961,7 +966,7 @@ ALTER TABLE ONLY community_user_category_last_seens
 
 
 --
--- Name: community_user_topic_last_seens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_user_topic_last_seens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_user_topic_last_seens
@@ -969,7 +974,7 @@ ALTER TABLE ONLY community_user_topic_last_seens
 
 
 --
--- Name: community_users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_users
@@ -977,7 +982,7 @@ ALTER TABLE ONLY community_users
 
 
 --
--- Name: community_votes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_votes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_votes
@@ -985,7 +990,7 @@ ALTER TABLE ONLY community_votes
 
 
 --
--- Name: lapis_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: lapis_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY lapis_migrations
@@ -993,7 +998,7 @@ ALTER TABLE ONLY lapis_migrations
 
 
 --
--- Name: users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY users
@@ -1001,203 +1006,203 @@ ALTER TABLE ONLY users
 
 
 --
--- Name: community_activity_logs_user_id_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_activity_logs_user_id_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_activity_logs_user_id_id_idx ON community_activity_logs USING btree (user_id, id);
 
 
 --
--- Name: community_bans_banned_user_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_bans_banned_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_bans_banned_user_id_idx ON community_bans USING btree (banned_user_id);
 
 
 --
--- Name: community_bans_banning_user_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_bans_banning_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_bans_banning_user_id_idx ON community_bans USING btree (banning_user_id);
 
 
 --
--- Name: community_bans_object_type_object_id_created_at_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_bans_object_type_object_id_created_at_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_bans_object_type_object_id_created_at_idx ON community_bans USING btree (object_type, object_id, created_at);
 
 
 --
--- Name: community_bookmarks_user_id_created_at_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_bookmarks_user_id_created_at_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_bookmarks_user_id_created_at_idx ON community_bookmarks USING btree (user_id, created_at);
 
 
 --
--- Name: community_categories_parent_category_id_position_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_categories_parent_category_id_position_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_categories_parent_category_id_position_idx ON community_categories USING btree (parent_category_id, "position") WHERE (parent_category_id IS NOT NULL);
 
 
 --
--- Name: community_category_group_categories_category_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_category_group_categories_category_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE UNIQUE INDEX community_category_group_categories_category_id_idx ON community_category_group_categories USING btree (category_id);
 
 
 --
--- Name: community_category_members_category_id_user_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_category_members_category_id_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_category_members_category_id_user_id_idx ON community_category_members USING btree (category_id, user_id) WHERE accepted;
 
 
 --
--- Name: community_category_post_logs_post_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_category_post_logs_post_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_category_post_logs_post_id_idx ON community_category_post_logs USING btree (post_id);
 
 
 --
--- Name: community_category_tags_category_id_slug_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_category_tags_category_id_slug_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE UNIQUE INDEX community_category_tags_category_id_slug_idx ON community_category_tags USING btree (category_id, slug);
 
 
 --
--- Name: community_moderation_logs_category_id_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_moderation_logs_category_id_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_moderation_logs_category_id_id_idx ON community_moderation_logs USING btree (category_id, id) WHERE (category_id IS NOT NULL);
 
 
 --
--- Name: community_moderation_logs_object_type_object_id_action_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_moderation_logs_object_type_object_id_action_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_moderation_logs_object_type_object_id_action_id_idx ON community_moderation_logs USING btree (object_type, object_id, action, id);
 
 
 --
--- Name: community_moderation_logs_user_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_moderation_logs_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_moderation_logs_user_id_idx ON community_moderation_logs USING btree (user_id);
 
 
 --
--- Name: community_moderators_object_type_object_id_created_at_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_moderators_object_type_object_id_created_at_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_moderators_object_type_object_id_created_at_idx ON community_moderators USING btree (object_type, object_id, created_at);
 
 
 --
--- Name: community_pending_posts_category_id_status_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_pending_posts_category_id_status_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_pending_posts_category_id_status_id_idx ON community_pending_posts USING btree (category_id, status, id) WHERE (category_id IS NOT NULL);
 
 
 --
--- Name: community_pending_posts_topic_id_status_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_pending_posts_topic_id_status_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_pending_posts_topic_id_status_id_idx ON community_pending_posts USING btree (topic_id, status, id);
 
 
 --
--- Name: community_post_edits_post_id_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_post_edits_post_id_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE UNIQUE INDEX community_post_edits_post_id_id_idx ON community_post_edits USING btree (post_id, id);
 
 
 --
--- Name: community_post_reports_category_id_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_post_reports_category_id_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_post_reports_category_id_id_idx ON community_post_reports USING btree (category_id, id) WHERE (category_id IS NOT NULL);
 
 
 --
--- Name: community_post_reports_post_id_id_status_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_post_reports_post_id_id_status_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_post_reports_post_id_id_status_idx ON community_post_reports USING btree (post_id, id, status);
 
 
 --
--- Name: community_posts_parent_post_id_post_number_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_posts_parent_post_id_post_number_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE UNIQUE INDEX community_posts_parent_post_id_post_number_idx ON community_posts USING btree (parent_post_id, post_number);
 
 
 --
--- Name: community_posts_parent_post_id_status_post_number_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_posts_parent_post_id_status_post_number_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_posts_parent_post_id_status_post_number_idx ON community_posts USING btree (parent_post_id, status, post_number);
 
 
 --
--- Name: community_posts_topic_id_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_posts_topic_id_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_posts_topic_id_id_idx ON community_posts USING btree (topic_id, id) WHERE (NOT deleted);
 
 
 --
--- Name: community_posts_topic_id_parent_post_id_depth_post_number_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_posts_topic_id_parent_post_id_depth_post_number_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE UNIQUE INDEX community_posts_topic_id_parent_post_id_depth_post_number_idx ON community_posts USING btree (topic_id, parent_post_id, depth, post_number);
 
 
 --
--- Name: community_posts_topic_id_parent_post_id_depth_status_post_numbe; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_posts_topic_id_parent_post_id_depth_status_post_numbe; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_posts_topic_id_parent_post_id_depth_status_post_numbe ON community_posts USING btree (topic_id, parent_post_id, depth, status, post_number);
 
 
 --
--- Name: community_posts_user_id_status_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_posts_user_id_status_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_posts_user_id_status_id_idx ON community_posts USING btree (user_id, status, id) WHERE (NOT deleted);
 
 
 --
--- Name: community_topic_subscriptions_user_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_subscriptions_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE INDEX community_topic_subscriptions_user_id_idx ON community_topic_subscriptions USING btree (user_id);
+CREATE INDEX community_subscriptions_user_id_idx ON community_subscriptions USING btree (user_id);
 
 
 --
--- Name: community_topics_category_id_sticky_status_category_order_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_topics_category_id_sticky_status_category_order_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_topics_category_id_sticky_status_category_order_idx ON community_topics USING btree (category_id, sticky, status, category_order) WHERE ((NOT deleted) AND (category_id IS NOT NULL));
 
 
 --
--- Name: community_votes_object_type_object_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: community_votes_object_type_object_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX community_votes_object_type_object_id_idx ON community_votes USING btree (object_type, object_id);
 
 
 --
--- Name: users_lower_username_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: users_lower_username_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE UNIQUE INDEX users_lower_username_idx ON users USING btree (lower((username)::text));
@@ -1221,12 +1226,16 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 -- PostgreSQL database dump
 --
 
+-- Dumped from database version 9.5.2
+-- Dumped by pg_dump version 9.5.2
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
+SET row_security = off;
 
 SET search_path = public, pg_catalog;
 
@@ -1246,6 +1255,7 @@ community_8
 community_9
 community_10
 community_11
+community_12
 \.
 
 
