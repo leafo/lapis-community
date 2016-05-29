@@ -1,6 +1,7 @@
 db = require "lapis.db"
 import enum from require "lapis.db.model"
 import Model from require "community.model"
+import memoize1 from require "community.helpers.models"
 
 import slugify from require "lapis.util"
 
@@ -521,5 +522,23 @@ class Categories extends Model
 
   should_log_posts: =>
     @directory
+
+  find_subscription: (user) =>
+    import Subscriptions from require "community.models"
+    Subscriptions\find_subscription @, user
+
+  is_subscribed: memoize1 (user) =>
+    @find_subscription user
+
+  subscribe: (user) =>
+    return unless @allowed_to_view user
+    return unless user
+    import Subscriptions from require "community.models"
+    Subscriptions\subscribe @, user, user.id == @user_id
+
+  unsubscribe: (user) =>
+    return unless user
+    import Subscriptions from require "community.models"
+    Subscriptions\unsubscribe @, user, user.id == @user_id
 
 

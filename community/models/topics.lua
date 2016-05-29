@@ -410,20 +410,18 @@ do
       end
       return _accum_0
     end,
-    find_subscription = function(self, user)
-      local Subscriptions
-      Subscriptions = require("community.models").Subscriptions
-      return Subscriptions:find_subscription(self, user)
-    end,
     get_bookmark = memoize1(function(self, user)
       local Bookmarks
       Bookmarks = require("community.models").Bookmarks
       return Bookmarks:get(self, user)
     end),
-    is_subscribed = memoize1(function(self, user)
+    find_subscription = function(self, user)
       local Subscriptions
-      Subscriptions = require("models").Subscriptions
-      return Subscriptions:is_subscribed(self, user)
+      Subscriptions = require("community.models").Subscriptions
+      return Subscriptions:find_subscription(self, user)
+    end,
+    is_subscribed = memoize1(function(self, user)
+      return self:find_subscription(user)
     end),
     subscribe = function(self, user)
       if not (self:allowed_to_view(user)) then

@@ -3,6 +3,8 @@ local enum
 enum = require("lapis.db.model").enum
 local Model
 Model = require("community.model").Model
+local memoize1
+memoize1 = require("community.helpers.models").memoize1
 local slugify
 slugify = require("lapis.util").slugify
 local parent_enum
@@ -505,6 +507,33 @@ do
     end,
     should_log_posts = function(self)
       return self.directory
+    end,
+    find_subscription = function(self, user)
+      local Subscriptions
+      Subscriptions = require("community.models").Subscriptions
+      return Subscriptions:find_subscription(self, user)
+    end,
+    is_subscribed = memoize1(function(self, user)
+      return self:find_subscription(user)
+    end),
+    subscribe = function(self, user)
+      if not (self:allowed_to_view(user)) then
+        return 
+      end
+      if not (user) then
+        return 
+      end
+      local Subscriptions
+      Subscriptions = require("community.models").Subscriptions
+      return Subscriptions:subscribe(self, user, user.id == self.user_id)
+    end,
+    unsubscribe = function(self, user)
+      if not (user) then
+        return 
+      end
+      local Subscriptions
+      Subscriptions = require("community.models").Subscriptions
+      return Subscriptions:unsubscribe(self, user, user.id == self.user_id)
     end
   }
   _base_0.__index = _base_0

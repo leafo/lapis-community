@@ -1,32 +1,21 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-
-import
-  Bans
-  Categories
-  CategoryGroupCategories
-  CategoryGroups
-  CategoryMembers
-  CategoryTags
-  Moderators
-  UserCategoryLastSeens
-  from require "community.models"
 
 factory = require "spec.factory"
 
 describe "models.categories", ->
   use_test_env!
 
-  before_each ->
-    truncate_tables Users, Categories, Moderators, CategoryMembers, Bans,
-      CategoryGroups, CategoryGroupCategories, UserCategoryLastSeens
+  import Users from require "spec.models"
+  import Categories, Moderators, CategoryMembers, Bans,
+    CategoryGroups, CategoryGroupCategories, UserCategoryLastSeens
+    from require "spec.community_models"
 
   it "should create a category", ->
     factory.Categories!
 
   describe "tags", ->
+    import CategoryTags from require "spec.community_models"
+
     it "should parse tags", ->
       category = factory.Categories!
       factory.CategoryTags slug: "hello", category_id: category.id
@@ -498,4 +487,47 @@ describe "models.categories", ->
       assert.same {[user.id]: false}, categories[2].user_bans
       assert.same {[user.id]: b2}, categories[3].user_bans
       assert.same {[user.id]: b3}, categories[2]\get_parent_category!.user_bans
+
+  describe "subscriptions", ->
+    import Subscriptions from require "spec.community_models"
+
+    local category
+
+    before_each ->
+      category = factory.Categories!
+
+    it "gets subscriptions", ->
+      assert.same {}, category\get_subscriptions!
+      category\refresh!
+      Subscriptions\create {
+        object_type: Subscriptions.object_types.category
+        object_id: category.id
+        user_id: -1
+      }
+
+      assert.same 1, #category\get_subscriptions!
+
+    it "subscribes user to topic", ->
+      user = factory.Users!
+      category\subscribe user
+      s = unpack Subscriptions\select "", fields: "user_id, object_type, object_id, subscribed"
+
+      assert.same {
+        user_id: user.id
+        object_id: category.id
+        object_type: Subscriptions.object_types.category
+        subscribed: true
+      }, s
+
+    it "unsubscribes user from topic", ->
+      user = factory.Users!
+
+      Subscriptions\create {
+        object_type: Subscriptions.object_types.category
+        object_id: category.id
+        user_id: user.id
+      }
+
+      category\unsubscribe user
+      assert.same {}, category\get_subscriptions!
 

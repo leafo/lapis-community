@@ -388,17 +388,17 @@ class Topics extends Model
     tags_by_slug = {t.slug, t for t in *category\get_tags!}
     [tags_by_slug[t] for t in *@tags]
 
-  find_subscription: (user) =>
-    import Subscriptions from require "community.models"
-    Subscriptions\find_subscription @, user
 
   get_bookmark: memoize1 (user) =>
     import Bookmarks from require "community.models"
     Bookmarks\get @, user
 
+  find_subscription: (user) =>
+    import Subscriptions from require "community.models"
+    Subscriptions\find_subscription @, user
+
   is_subscribed: memoize1 (user) =>
-    import Subscriptions from require "models"
-    Subscriptions\is_subscribed @, user
+    @find_subscription user
 
   subscribe: (user) =>
     return unless @allowed_to_view user

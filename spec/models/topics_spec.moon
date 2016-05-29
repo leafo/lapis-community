@@ -13,7 +13,7 @@ describe "models.topics", ->
   import Users from require "spec.models"
 
   import Categories, Moderators, CategoryMembers, Topics,
-    Posts, Bans, UserTopicLastSeens, CategoryTags, Subscriptions from require "spec.community_models"
+    Posts, Bans, UserTopicLastSeens, CategoryTags from require "spec.community_models"
 
   it "should create a topic", ->
     factory.Topics!
@@ -351,6 +351,8 @@ describe "models.topics", ->
 
 
   describe "subscribe", ->
+    import Subscriptions from require "spec.community_models"
+
     fetch_subs = ->
       Subscriptions\select "order by user_id, object_type, object_id", fields: "user_id, object_type, object_id, subscribed"
 
@@ -358,7 +360,11 @@ describe "models.topics", ->
       topic = factory.Topics!
       assert.same {}, topic\get_subscriptions!
       topic\refresh!
-      Subscriptions\create user_id: -1, object_id: topic.id, object_type: Subscriptions.object_types.topic
+      Subscriptions\create {
+        user_id: -1
+        object_id: topic.id
+        object_type: Subscriptions.object_types.topic
+      }
       assert.same 1, #topic\get_subscriptions!
 
     it "subscribes user to topic", ->
