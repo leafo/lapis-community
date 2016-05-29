@@ -408,8 +408,38 @@ class Categories extends Model
         last_topic_id: post.topic_id
       }, timestamp: false
 
+  -- includes the owners of each category along with any category subscriptions
+  -- applied
   notification_target_users: =>
-    { @get_user! }
+    -- this puts prececence on the nearest categories, an unsub in an inner
+    -- category will negate a sub in an outer one
+    hierarchy = { @, unpack @get_ancestors! }
+    import Subscriptions from require "community.models"
+
+    @@preload_relations hierarchy, "subscriptions", "user"
+
+    seen_targets = {}
+    subs = {}
+
+    for c in *hierarchy
+      for sub in *c\get_subscriptions!
+        table.insert subs, sub
+
+    Subscriptions\preload_relations subs, "user"
+
+    targets = for sub in *subs
+      continue if seen_targets[sub.user_id]
+      seen_targets[sub.user_id] = true
+      continue unless sub.subscribed
+      sub\get_user!
+
+    -- add the owners
+    for c in *hierarchy
+      continue unless c.user_id
+      continue if seen_targets[c.user_id]
+      table.insert targets, c\get_user!
+
+    targets
 
   get_category_ids: =>
     if @parent_category_id

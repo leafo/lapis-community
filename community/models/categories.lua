@@ -315,9 +315,72 @@ do
       end
     end,
     notification_target_users = function(self)
-      return {
-        self:get_user()
+      local hierarchy = {
+        self,
+        unpack(self:get_ancestors())
       }
+      local Subscriptions
+      Subscriptions = require("community.models").Subscriptions
+      self.__class:preload_relations(hierarchy, "subscriptions", "user")
+      local seen_targets = { }
+      local subs = { }
+      for _index_0 = 1, #hierarchy do
+        local c = hierarchy[_index_0]
+        local _list_0 = c:get_subscriptions()
+        for _index_1 = 1, #_list_0 do
+          local sub = _list_0[_index_1]
+          table.insert(subs, sub)
+        end
+      end
+      Subscriptions:preload_relations(subs, "user")
+      local targets
+      do
+        local _accum_0 = { }
+        local _len_0 = 1
+        for _index_0 = 1, #subs do
+          local _continue_0 = false
+          repeat
+            local sub = subs[_index_0]
+            if seen_targets[sub.user_id] then
+              _continue_0 = true
+              break
+            end
+            seen_targets[sub.user_id] = true
+            if not (sub.subscribed) then
+              _continue_0 = true
+              break
+            end
+            local _value_0 = sub:get_user()
+            _accum_0[_len_0] = _value_0
+            _len_0 = _len_0 + 1
+            _continue_0 = true
+          until true
+          if not _continue_0 then
+            break
+          end
+        end
+        targets = _accum_0
+      end
+      for _index_0 = 1, #hierarchy do
+        local _continue_0 = false
+        repeat
+          local c = hierarchy[_index_0]
+          if not (c.user_id) then
+            _continue_0 = true
+            break
+          end
+          if seen_targets[c.user_id] then
+            _continue_0 = true
+            break
+          end
+          table.insert(targets, c:get_user())
+          _continue_0 = true
+        until true
+        if not _continue_0 then
+          break
+        end
+      end
+      return targets
     end,
     get_category_ids = function(self)
       if self.parent_category_id then

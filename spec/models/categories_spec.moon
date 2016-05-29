@@ -494,7 +494,9 @@ describe "models.categories", ->
     local category
 
     before_each ->
-      category = factory.Categories!
+      category = factory.Categories {
+        user_id: factory.Users!.id
+      }
 
     it "gets subscriptions", ->
       assert.same {}, category\get_subscriptions!
@@ -530,4 +532,54 @@ describe "models.categories", ->
 
       category\unsubscribe user
       assert.same {}, category\get_subscriptions!
+
+    it "gets notification targets when there are no subscribers", ->
+      users = category\notification_target_users!
+      users = {u.id, true for u in *users}
+
+      assert.same {
+        [category.user_id]: true
+      }, users
+
+    it "gets notification targets when there are subscriptions in hierarchy #ddd", ->
+      category_owner = category\get_user!
+      one_owner = factory.Users!
+      two_owner = factory.Users!
+
+      one = factory.Categories {
+        title: "one"
+        parent_category_id: category.id
+        user_id: one_owner.id
+      }
+
+      two = factory.Categories {
+        title: "two"
+        parent_category_id: one.id
+        user_id: two_owner.id
+      }
+
+      user1 = factory.Users!
+      user2 = factory.Users!
+
+      -- one_owner not subscribes
+      category\subscribe one_owner
+      one\unsubscribe one_owner
+
+      two\subscribe user1
+      one\subscribe user2
+
+      -- two onwner not subscribed
+      two\unsubscribe two_owner
+      category\subscribe two_owner
+
+      users = two\notification_target_users!
+      users = {u.id, true for u in *users}
+
+      assert.same {
+        [category_owner.id]: true
+        [user1.id]: true
+        [user2.id]: true
+      }, users
+
+
 
