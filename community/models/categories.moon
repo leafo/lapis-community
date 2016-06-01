@@ -558,7 +558,9 @@ class Categories extends Model
     Subscriptions\find_subscription @, user
 
   is_subscribed: memoize1 (user) =>
-    @find_subscription user
+    import Subscriptions from require "community.models"
+    return unless user
+    Subscriptions\is_subscribed @, user, user.id == @user_id
 
   subscribe: (user) =>
     return unless @allowed_to_view user

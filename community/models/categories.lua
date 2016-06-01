@@ -577,7 +577,12 @@ do
       return Subscriptions:find_subscription(self, user)
     end,
     is_subscribed = memoize1(function(self, user)
-      return self:find_subscription(user)
+      local Subscriptions
+      Subscriptions = require("community.models").Subscriptions
+      if not (user) then
+        return 
+      end
+      return Subscriptions:is_subscribed(self, user, user.id == self.user_id)
     end),
     subscribe = function(self, user)
       if not (self:allowed_to_view(user)) then
