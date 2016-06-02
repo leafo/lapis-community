@@ -1,18 +1,16 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-import Votes, Posts, Topics from require "community.models"
 
 factory = require "spec.factory"
 
 describe "models.votes", ->
   use_test_env!
 
+  import Users from require "spec.models"
+  import Votes, Posts, Topics from require "spec.community_models"
+
   local current_user
 
   before_each ->
-    truncate_tables Users, Topics, Posts
     current_user = factory.Users!
 
   it "should create vote for post", ->

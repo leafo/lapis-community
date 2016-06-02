@@ -1,16 +1,12 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-import Categories, Topics, Posts, CategoryPostLogs from require "community.models"
 
 factory = require "spec.factory"
 
 describe "models.category_tags", ->
   use_test_env!
 
-  before_each ->
-    truncate_tables Users, Categories, Topics, Posts, CategoryPostLogs
+  import Users from require "spec.models"
+  import Categories, Topics, Posts, CategoryPostLogs from require "spec.community_models"
 
   it "doesn't create post log for post with no loggable ancestors", ->
     post = factory.Posts!

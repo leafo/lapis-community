@@ -1,16 +1,13 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-import Categories, CategoryGroups, CategoryGroupCategories from require "community.models"
 
 factory = require "spec.factory"
 
 describe "models.category_groups", ->
   use_test_env!
 
-  before_each ->
-    truncate_tables Categories, CategoryGroups, CategoryGroupCategories
+  import Users from require "spec.models"
+  import Categories, CategoryGroups,
+    CategoryGroupCategories from require "spec.community_models"
 
   it "should create category group", ->
     group = factory.CategoryGroups!

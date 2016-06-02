@@ -1,16 +1,12 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-import TopicParticipants from require "community.models"
 
 factory = require "spec.factory"
 
 describe "models.topic_participants", ->
   use_test_env!
 
-  before_each ->
-    truncate_tables TopicParticipants
+  import Users from require "spec.models"
+  import TopicParticipants from require "spec.community_models"
 
   it "should participate a user", ->
     TopicParticipants\increment -1, 1

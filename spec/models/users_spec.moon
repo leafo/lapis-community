@@ -1,18 +1,19 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-import CommunityUsers from require "community.models"
 
 factory = require "spec.factory"
 
 describe "models.users", ->
   use_test_env!
 
-  before_each ->
-    truncate_tables Users, CommunityUsers
+  import Users from require "spec.models"
+  import CommunityUsers from require "spec.community_models"
 
   it "should create a user", ->
     factory.Users!
+
+  it "creates a community user", ->
+    user = factory.Users!
+    cu = CommunityUsers\for_user user.id
+    assert.same user.id, cu.user_id
 
 

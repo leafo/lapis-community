@@ -1,18 +1,13 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-import Categories, Topics, Posts from require "community.models"
 
 db = require "lapis.db"
-
 factory = require "spec.factory"
 
 describe "models.posts", ->
   use_test_env!
 
-  before_each ->
-    truncate_tables Users, Categories, Topics, Posts
+  import Users from require "spec.models"
+  import Categories, Topics, Posts from require "spec.community_models"
 
   it "checks permissions", ->
     post_user = factory.Users!
@@ -274,6 +269,8 @@ describe "models.posts", ->
     assert.same {}, usernames[4]
 
   describe "mention targets", ->
+    import CategoryGroupCategories, CategoryGroups from require "spec.community_models"
+
     it "gets no targets for first post", ->
       post = factory.Posts!
       assert.same {}, post\notification_targets!
@@ -321,9 +318,6 @@ describe "models.posts", ->
       assert.same category.id, tuple[3].id
 
     it "gets target for category group owner owner", ->
-      import CategoryGroupCategories, CategoryGroups from require "community.models"
-      truncate_tables CategoryGroupCategories, CategoryGroups
-
       category_group_user = factory.Users!
       group = factory.CategoryGroups user_id: category_group_user.id
       category = factory.Categories!

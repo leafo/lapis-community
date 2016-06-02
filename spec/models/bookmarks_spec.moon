@@ -1,17 +1,12 @@
 import use_test_env from require "lapis.spec"
-import request from require "lapis.spec.server"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-import Bookmarks, Topics from require "community.models"
 
 factory = require "spec.factory"
 
 describe "models.bookmarks", ->
   use_test_env!
 
-  before_each ->
-    truncate_tables Topics, Users, Bookmarks
+  import Users from require "spec.models"
+  import Topics, Bookmarks from require "spec.community_models"
 
   it "create a bookmark", ->
     user = factory.Users!

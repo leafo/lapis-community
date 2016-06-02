@@ -1,18 +1,16 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-import Categories, Moderators, Posts, Topics from require "community.models"
 
 factory = require "spec.factory"
 
 describe "models.moderators", ->
   use_test_env!
 
+  import Users from require "spec.models"
+  import Categories, Moderators, Posts, Topics from require "spec.community_models"
+
   local current_user, mod
 
   before_each ->
-    truncate_tables Users, Categories, Moderators, Posts, Topics
     current_user = factory.Users!
     mod = factory.Moderators user_id: current_user.id
 

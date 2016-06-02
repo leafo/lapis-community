@@ -1,5 +1,4 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
 
 db = require "lapis.db"
 
@@ -463,6 +462,8 @@ describe "models.topics", ->
   describe "moving topic", ->
     local old_category, new_category, topic
 
+    import ModerationLogs, PostReports from require "spec.community_models"
+
     before_each ->
       old_category = factory.Categories!
       new_category = factory.Categories!
@@ -487,10 +488,6 @@ describe "models.topics", ->
       assert.same 1, new_category.topics_count
 
     it "moves a topic with more relations", ->
-      import ModerationLogs, PostReports from require "community.models"
-
-      truncate_tables ModerationLogs, PostReports
-
       mod_log = ModerationLogs\create {
         object: topic
         category_id: old_category.id

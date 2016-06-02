@@ -1,18 +1,13 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-import PendingPosts, Categories, Topics, Posts from require "community.models"
 
 db = require "lapis.db"
-
 factory = require "spec.factory"
 
 describe "models.pending_posts", ->
   use_test_env!
 
-  before_each ->
-    truncate_tables Users, PendingPosts, Categories, Topics, Posts
+  import Users from require "spec.models"
+  import PendingPosts, Categories, Topics, Posts from require "spec.community_models"
 
   it "creates a pending post", ->
     factory.PendingPosts!
