@@ -1,8 +1,4 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-import Categories, Topics, Posts, Votes, UserCategoryLastSeens, UserTopicLastSeens from require "community.models"
 
 factory = require "spec.factory"
 
@@ -14,6 +10,8 @@ import capture_errors_json from require "lapis.application"
 import TestApp from require "spec.helpers"
 
 import filter_bans from require "spec.helpers"
+
+import Users from require "models"
 
 class BrowsingApp extends TestApp
   @before_filter =>
@@ -73,8 +71,9 @@ class BrowsingApp extends TestApp
 describe "browsing flow", ->
   use_test_env!
 
-  before_each ->
-    truncate_tables Users, Categories, Topics, Posts, Votes, UserCategoryLastSeens, UserTopicLastSeens
+  import Users from require "spec.models"
+  import Categories, Topics, Posts, Votes,
+    UserCategoryLastSeens, UserTopicLastSeens from require "spec.community_models"
 
   for logged_in in *{true, nil} -- false
     local current_user

@@ -1,15 +1,4 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-
-import
-  Votes
-  Posts
-  Topics
-  Categories
-  CommunityUsers
-  from require "community.models"
 
 factory = require "spec.factory"
 
@@ -19,6 +8,8 @@ import capture_errors_json from require "lapis.application"
 import TestApp from require "spec.helpers"
 
 VotesFlow = require "community.flows.votes"
+
+import Users from require "models"
 
 class VotingApp extends TestApp
   @before_filter =>
@@ -34,8 +25,17 @@ describe "votes flow", ->
 
   local current_user
 
+  import Users from require "spec.models"
+
+  import
+    Votes
+    Posts
+    Topics
+    Categories
+    CommunityUsers
+    from require "spec.community_models"
+
   before_each ->
-    truncate_tables Users, Votes, Posts, Topics, Categories, CommunityUsers
     current_user = factory.Users!
 
   it "should vote on a post", ->

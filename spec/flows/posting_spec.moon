@@ -2,21 +2,6 @@
 import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
-import Users from require "models"
-
-import
-  Categories
-  CategoryTags
-  Moderators
-  CommunityUsers
-  PostEdits
-  Votes
-  Posts
-  TopicParticipants
-  Topics
-  ActivityLogs
-  from require "community.models"
-
 factory = require "spec.factory"
 
 import Application from require "lapis"
@@ -26,6 +11,8 @@ import TestApp from require "spec.helpers"
 
 TopicsFlow = require "community.flows.topics"
 PostsFlow = require "community.flows.posts"
+
+import Users from require "models"
 
 class PostingApp extends TestApp
   @before_filter =>
@@ -65,10 +52,22 @@ describe "posting flow", ->
 
   local current_user
 
-  before_each ->
-    truncate_tables Users, Categories, Topics, Posts, Votes, Moderators,
-      PostEdits, CommunityUsers, TopicParticipants, ActivityLogs, CategoryTags
+  import Users from require "spec.models"
 
+  import
+    Categories
+    CategoryTags
+    Moderators
+    CommunityUsers
+    PostEdits
+    Votes
+    Posts
+    TopicParticipants
+    Topics
+    ActivityLogs
+    from require "spec.community_models"
+
+  before_each ->
     current_user = factory.Users!
 
   describe "new topic", ->

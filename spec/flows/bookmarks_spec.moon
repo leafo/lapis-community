@@ -1,9 +1,5 @@
 import use_test_env from require "lapis.spec"
 import request from require "lapis.spec.server"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-import Bookmarks, Topics from require "community.models"
 
 factory = require "spec.factory"
 
@@ -37,10 +33,12 @@ class BookmarksApp extends TestApp
 describe "flows.bookmarks", ->
   use_test_env!
 
+  import Users from require "spec.models"
+  import Bookmarks, Topics from require "spec.community_models"
+
   local current_user
 
   before_each ->
-    truncate_tables Topics, Users, Bookmarks
     current_user = factory.Users!
 
   describe "show #ddd", ->

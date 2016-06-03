@@ -3,7 +3,6 @@ import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
 import Users from require "models"
-import Categories, Topics, Posts, PostReports, ModerationLogs from require "community.models"
 import TestApp from require "spec.helpers"
 
 factory = require "spec.factory"
@@ -44,8 +43,10 @@ describe "reports", ->
 
   local current_user
 
+  import Users from require "spec.models"
+  import Categories, Topics, Posts, PostReports, ModerationLogs from require "spec.community_models"
+
   before_each ->
-    truncate_tables Users, Categories, Topics, Posts, PostReports, ModerationLogs
     current_user = factory.Users!
 
   describe "report", ->

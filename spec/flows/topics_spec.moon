@@ -1,9 +1,5 @@
 
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-import Categories, Topics, Posts, ModerationLogs, ModerationLogObjects from require "community.models"
 
 import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
@@ -47,8 +43,11 @@ describe "topics", ->
 
   local current_user, topic
 
+  import Users from require "spec.models"
+  import Categories, Topics, Posts,
+    ModerationLogs, ModerationLogObjects from require "spec.community_models"
+
   before_each ->
-    truncate_tables Users, Categories, Topics, Posts,  ModerationLogs, ModerationLogObjects
     current_user = factory.Users!
 
     category = factory.Categories user_id: current_user.id

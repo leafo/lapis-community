@@ -1,8 +1,4 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-import Bans, Categories, ModerationLogs, ModerationLogObjects, CategoryGroups from require "community.models"
 
 import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
@@ -47,10 +43,13 @@ class CategoryBansApp extends TestApp
 describe "bans", ->
   use_test_env!
 
+  import Users from require "spec.models"
+  import Bans, Categories, ModerationLogs,
+    ModerationLogObjects, CategoryGroups from require "spec.community_models"
+
   local current_user
 
   before_each =>
-    truncate_tables Users, Bans, Categories, ModerationLogs, ModerationLogObjects
     current_user = factory.Users!
 
   assert_log_contains_user = (log, user) ->
@@ -229,7 +228,6 @@ describe "bans", ->
     local category_group
 
     before_each ->
-      truncate_tables CategoryGroups
       category_group = factory.CategoryGroups user_id: current_user.id
 
     it "bans user from category group", ->

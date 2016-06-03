@@ -6,9 +6,6 @@ factory = require "spec.factory"
 import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
 
-import Users from require "models"
-import Categories, CategoryGroups, CategoryGroupCategories from require "community.models"
-
 class CategoryGroupApp extends TestApp
   @require_user!
 
@@ -33,8 +30,11 @@ describe "category groups flow", ->
 
   local current_user
 
+  import Users from require "spec.models"
+  import Categories, CategoryGroups,
+    CategoryGroupCategories from require "spec.community_models"
+
   before_each ->
-    truncate_tables Users, Categories, CategoryGroups, CategoryGroupCategories
     current_user = factory.Users!
 
   it "should show categories", ->

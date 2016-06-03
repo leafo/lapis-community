@@ -1,8 +1,4 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
-import Users from require "models"
-import Blocks from require "community.models"
 
 import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
@@ -31,10 +27,12 @@ class BlocksApp extends TestApp
 describe "blocks", ->
   use_test_env!
 
+  import Users from require "spec.models"
+  import Blocks from require "spec.community_models"
+
   local current_user
 
   before_each =>
-    truncate_tables Users, Blocks
     current_user = factory.Users!
 
   it "should block user", ->

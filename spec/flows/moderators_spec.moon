@@ -1,13 +1,6 @@
 import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
 
-import Users from require "models"
-
-import
-  Categories
-  Moderators
-  from require "community.models"
-
 factory = require "spec.factory"
 
 import mock_request from require "lapis.spec.request"
@@ -45,9 +38,14 @@ describe "moderators flow", ->
 
   local current_user
 
-  before_each ->
-    truncate_tables Users, Moderators, Categories
+  import Users from require "spec.models"
 
+  import
+    Categories
+    Moderators
+    from require "spec.community_models"
+
+  before_each ->
     current_user = factory.Users!
   
   describe "add_moderator", ->

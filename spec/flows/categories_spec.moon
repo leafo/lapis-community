@@ -1,27 +1,10 @@
 import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
 
 db = require "lapis.db"
 factory = require "spec.factory"
 
 import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
-
-import Users from require "models"
-
-import
-  ActivityLogs
-  Categories
-  CategoryMembers
-  CategoryTags
-  CategoryPostLogs
-  ModerationLogObjects
-  ModerationLogs
-  Moderators
-  PendingPosts
-  Posts
-  Topics
-  from require "community.models"
 
 import filter_bans from require "spec.helpers"
 
@@ -97,11 +80,23 @@ describe "categories", ->
 
   local current_user
 
-  before_each ->
-    truncate_tables Users, Categories, Posts, Topics, CategoryMembers,
-      Moderators, ActivityLogs, ModerationLogs, ModerationLogObjects,
-      PendingPosts, CategoryTags, CategoryPostLogs
+  import Users from require "spec.models"
 
+  import
+    ActivityLogs
+    Categories
+    CategoryMembers
+    CategoryTags
+    CategoryPostLogs
+    ModerationLogObjects
+    ModerationLogs
+    Moderators
+    PendingPosts
+    Posts
+    Topics
+    from require "spec.community_models"
+
+  before_each ->
     current_user = factory.Users!
 
   it "should create category", ->
