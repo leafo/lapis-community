@@ -2,6 +2,9 @@ import Flow from require "lapis.flow"
 db = require "lapis.db"
 
 import assert_page from require "community.helpers.app"
+import assert_valid from require "lapis.validate"
+
+import Subscriptions from require "community.models"
 
 class SubscriptionsFlow extends Flow
   expose_assigns: true
@@ -10,8 +13,23 @@ class SubscriptionsFlow extends Flow
     super req
     assert @current_user, "missing current user for bookmarks flow"
 
+  find_subscription: =>
+    return @subscription if @subscription
+
+    assert_valid @params, {
+      {"object_id", is_integer: true}
+      {"object_type", one_of: Subscriptions.object_types}
+    }
+
+    @subscription = Subscriptions\find {
+      object_type: Subscriptions.object_types\for_db @params.object_type
+      object_id: @params.object_id
+      user_id: @current_user.id
+    }
+
+    @subscription
+
   show_subscriptions: =>
-    import Subscriptions from require "community.models"
     -- TODO: there's no index on order
     @pager = Subscriptions\paginated "
       where user_id = ? and subscribed

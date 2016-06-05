@@ -3,15 +3,38 @@ Flow = require("lapis.flow").Flow
 local db = require("lapis.db")
 local assert_page
 assert_page = require("community.helpers.app").assert_page
+local assert_valid
+assert_valid = require("lapis.validate").assert_valid
+local Subscriptions
+Subscriptions = require("community.models").Subscriptions
 local SubscriptionsFlow
 do
   local _class_0
   local _parent_0 = Flow
   local _base_0 = {
     expose_assigns = true,
+    find_subscription = function(self)
+      if self.subscription then
+        return self.subscription
+      end
+      assert_valid(self.params, {
+        {
+          "object_id",
+          is_integer = true
+        },
+        {
+          "object_type",
+          one_of = Subscriptions.object_types
+        }
+      })
+      self.subscription = Subscriptions:find({
+        object_type = Subscriptions.object_types:for_db(self.params.object_type),
+        object_id = self.params.object_id,
+        user_id = self.current_user.id
+      })
+      return self.subscription
+    end,
     show_subscriptions = function(self)
-      local Subscriptions
-      Subscriptions = require("community.models").Subscriptions
       self.pager = Subscriptions:paginated("\n      where user_id = ? and subscribed\n      order by created_at desc\n    ", self.current_user.id, {
         per_page = 50,
         prepare_results = function(subs)
