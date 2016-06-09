@@ -397,6 +397,9 @@ do
     end,
     is_default = function(self)
       return self.status == self.__class.statuses.default
+    end,
+    vote_score = function(self)
+      return self.up_votes_count - self.down_votes_count
     end
   }
   _base_0.__index = _base_0

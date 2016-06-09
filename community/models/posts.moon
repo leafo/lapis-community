@@ -377,3 +377,6 @@ class Posts extends Model
 
   is_default: =>
     @status == @@statuses.default
+
+  vote_score: =>
+    @up_votes_count - @down_votes_count
