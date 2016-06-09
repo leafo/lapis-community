@@ -18,6 +18,12 @@ describe "models.topics", ->
     factory.Topics!
     factory.Topics category: false
 
+  it "gets topic post #ddd", ->
+    topic = factory.Topics!
+    post = factory.Posts topic_id: topic.id
+    tp = topic\get_topic_post!
+    assert.same tp.id, post.id
+
   it "gets category tags", ->
     topic = factory.Topics!
     category = topic\get_category!

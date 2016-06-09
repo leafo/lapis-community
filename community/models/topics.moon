@@ -39,6 +39,11 @@ class Topics extends Model
   @relations: {
     {"category", belongs_to: "Categories"}
     {"user", belongs_to: "Users"}
+    {"topic_post", has_one: "Posts", key: "topic_id", where: {
+      parent_post_id: db.NULL
+      post_number: 1
+      depth: 1
+    }}
     {"last_post", belongs_to: "Posts"}
     {"subscriptions", has_many: "Subscriptions", key: "object_id", where: {object_type: 1}}
   }
@@ -298,18 +303,6 @@ class Topics extends Model
     unpack Posts\select "
       where topic_id = ? and depth = 1 order by post_number desc limit 1
     ", @id
-
-  get_topic_post: =>
-    unless @topic_post
-      import Posts from require "community.models"
-      @topic_post = Posts\find {
-        topic_id: @id
-        depth: 1
-        post_number: 1
-        parent_post_id: db.NULL
-      }
-
-    @topic_post
 
   renumber_posts: (parent_post) =>
     import Posts from require "community.models"

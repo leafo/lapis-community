@@ -294,19 +294,6 @@ do
       Posts = require("community.models").Posts
       return unpack(Posts:select("\n      where topic_id = ? and depth = 1 order by post_number desc limit 1\n    ", self.id))
     end,
-    get_topic_post = function(self)
-      if not (self.topic_post) then
-        local Posts
-        Posts = require("community.models").Posts
-        self.topic_post = Posts:find({
-          topic_id = self.id,
-          depth = 1,
-          post_number = 1,
-          parent_post_id = db.NULL
-        })
-      end
-      return self.topic_post
-    end,
     renumber_posts = function(self, parent_post)
       local Posts
       Posts = require("community.models").Posts
@@ -559,6 +546,16 @@ do
     {
       "user",
       belongs_to = "Users"
+    },
+    {
+      "topic_post",
+      has_one = "Posts",
+      key = "topic_id",
+      where = {
+        parent_post_id = db.NULL,
+        post_number = 1,
+        depth = 1
+      }
     },
     {
       "last_post",
