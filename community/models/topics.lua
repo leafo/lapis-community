@@ -434,6 +434,30 @@ do
       Subscriptions = require("community.models").Subscriptions
       return Subscriptions:unsubscribe(self, user, user.id == self.user_id)
     end,
+    can_move_to = function(self, user, target_category)
+      if not (target_category) then
+        return nil, "missing category"
+      end
+      if target_category.id == self.category_id then
+        return nil, "can't move to same category"
+      end
+      local parent = self:movable_parent_category(user)
+      local valid_children
+      do
+        local _tbl_0 = { }
+        local _list_0 = parent:get_flat_children()
+        for _index_0 = 1, #_list_0 do
+          local c = _list_0[_index_0]
+          _tbl_0[c.id] = true
+        end
+        valid_children = _tbl_0
+      end
+      valid_children[parent.id] = true
+      if not (valid_children[target_category.id]) then
+        return nil, "invalid parent category"
+      end
+      return true
+    end,
     movable_parent_category = function(self, user)
       local category = self:get_category()
       if not (category) then

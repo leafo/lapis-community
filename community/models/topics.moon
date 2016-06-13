@@ -406,6 +406,18 @@ class Topics extends Model
     import Subscriptions from require "community.models"
     Subscriptions\unsubscribe @, user, user.id == @user_id
 
+  can_move_to: (user, target_category) =>
+    return nil, "missing category" unless target_category
+    return nil, "can't move to same category" if target_category.id == @category_id
+
+    parent = @movable_parent_category user
+
+    valid_children = {c.id, true for c in *parent\get_flat_children!}
+    valid_children[parent.id] = true
+
+    return nil, "invalid parent category" unless valid_children[target_category.id]
+    true
+
   -- find the highest level category this topic can be moved around in
   movable_parent_category: (user) =>
     category = @get_category!
@@ -419,6 +431,7 @@ class Topics extends Model
 
     category
 
+  -- moves without checking permissio:
   move_to_category: (new_category) =>
     assert new_category, "missing category"
     return nil, "can't move topic that isn't part of category" unless @category_id

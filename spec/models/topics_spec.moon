@@ -18,7 +18,7 @@ describe "models.topics", ->
     factory.Topics!
     factory.Topics category: false
 
-  it "gets topic post #ddd", ->
+  it "gets topic post", ->
     topic = factory.Topics!
     post = factory.Posts topic_id: topic.id
     tp = topic\get_topic_post!
@@ -466,14 +466,66 @@ describe "models.topics", ->
       assert.same {user.id}, [t.id for t in *topic\notification_target_users!]
 
   describe "moving topic", ->
-    local old_category, new_category, topic
 
     import ModerationLogs, PostReports from require "spec.community_models"
 
-    before_each ->
-      old_category = factory.Categories!
-      new_category = factory.Categories!
-      topic = factory.Topics category: old_category
+    describe "can_move_to", ->
+      it "doesn't let you move to same category", ->
+        user = factory.Users!
+        top = factory.Categories user_id: user.id
+        topic = factory.Topics category: top
+
+        assert.nil (topic\can_move_to user, top)
+
+      it "allows move to adjacent", ->
+        user = factory.Users!
+        top = factory.Categories {
+          user_id: user.id
+          title: "top"
+        }
+
+        a = factory.Categories parent_category_id: top.id, user_id: user.id
+        b = factory.Categories parent_category_id: top.id, user_id: user.id
+
+        topic = factory.Topics category: a
+        assert topic\can_move_to user, b
+
+      it "allows move to subchild", ->
+        user = factory.Users!
+        top = factory.Categories {
+          user_id: user.id
+          title: "top"
+        }
+
+        a = factory.Categories parent_category_id: top.id, user_id: user.id
+
+        topic = factory.Topics category: top
+        assert topic\can_move_to user, a
+
+      it "allows move to parent", ->
+        user = factory.Users!
+        top = factory.Categories {
+          user_id: user.id
+          title: "top"
+        }
+
+        a = factory.Categories parent_category_id: top.id, user_id: user.id
+
+        topic = factory.Topics category: a
+        assert topic\can_move_to user, top
+
+      it "doesn't allow move to unrelated hierarchy", ->
+        user = factory.Users!
+        hierarchies = for i=1,2
+          top = factory.Categories {
+            user_id: user.id
+            title: "top"
+          }
+          a = factory.Categories parent_category_id: top.id, user_id: user.id
+          {top, a}
+
+        topic = factory.Topics category: hierarchies[1][2]
+        assert.nil (topic\can_move_to user, hierarchies[2][2])
 
     describe "movable_parent_category", ->
       it "finds top most parent", ->
@@ -485,73 +537,81 @@ describe "models.topics", ->
         found = topic\movable_parent_category user
         assert.same c2.id, found.id
 
-    it "should move basic topic", ->
-      topic\move_to_category new_category
-      topic\refresh!
-      assert.same new_category.id, topic.category_id
+    describe "with topic", ->
+      local old_category, new_category, topic
 
-      assert.same 0, old_category.topics_count
-      assert.same 1, new_category.topics_count
+      before_each ->
+        old_category = factory.Categories!
+        new_category = factory.Categories!
+        topic = factory.Topics category: old_category
 
-    it "moves a topic with more relations", ->
-      mod_log = ModerationLogs\create {
-        object: topic
-        category_id: old_category.id
-        user_id: -1
-        action: "hello.world"
-        reason: "no reason"
-      }
+      it "should move basic topic", ->
+        topic\move_to_category new_category
+        topic\refresh!
+        assert.same new_category.id, topic.category_id
 
-      other_mod_log = ModerationLogs\create {
-        object: factory.Topics!
-        category_id: -1
-        user_id: -1
-        action: "another.world"
-        reason: "some reason"
-      }
+        assert.same 0, old_category.topics_count
+        assert.same 1, new_category.topics_count
 
-      report = factory.PostReports {
-        post_id: factory.Posts(:topic).id
-      }
+      it "moves a topic with more relations", ->
+        mod_log = ModerationLogs\create {
+          object: topic
+          category_id: old_category.id
+          user_id: -1
+          action: "hello.world"
+          reason: "no reason"
+        }
 
-      other_report = factory.PostReports!
+        other_mod_log = ModerationLogs\create {
+          object: factory.Topics!
+          category_id: -1
+          user_id: -1
+          action: "another.world"
+          reason: "some reason"
+        }
 
-      pending = factory.PendingPosts(:topic)
-      other_pending = factory.PendingPosts!
+        report = factory.PostReports {
+          post_id: factory.Posts(:topic).id
+        }
 
-      -- do the move
-      topic\move_to_category new_category
-      topic\refresh!
-      assert.same new_category.id, topic.category_id
+        other_report = factory.PostReports!
 
-      mod_log\refresh!
-      other_mod_log\refresh!
+        pending = factory.PendingPosts(:topic)
+        other_pending = factory.PendingPosts!
 
-      assert.same new_category.id, mod_log.category_id
-      assert.same -1, other_mod_log.category_id
+        -- do the move
+        topic\move_to_category new_category
+        topic\refresh!
+        assert.same new_category.id, topic.category_id
 
-      report\refresh!
-      assert.same new_category.id, report.category_id
+        mod_log\refresh!
+        other_mod_log\refresh!
 
-      old_other_report_category_id = other_report.category_id
-      other_report\refresh!
-      assert.same old_other_report_category_id, other_report.category_id
+        assert.same new_category.id, mod_log.category_id
+        assert.same -1, other_mod_log.category_id
 
-      pending\refresh!
-      assert.same new_category.id, pending.category_id
+        report\refresh!
+        assert.same new_category.id, report.category_id
 
-      other_pending_category_id = other_pending.category_id
-      other_pending\refresh!
-      assert.same other_pending_category_id, other_pending.category_id
+        old_other_report_category_id = other_report.category_id
+        other_report\refresh!
+        assert.same old_other_report_category_id, other_report.category_id
 
-      topic\refresh!
-      assert.same new_category.id, topic.category_id
-      old_category\refresh!
-      new_category\refresh!
+        pending\refresh!
+        assert.same new_category.id, pending.category_id
 
-      assert.nil old_category.last_topic_id
-      assert.same topic.id, new_category.last_topic_id
+        other_pending_category_id = other_pending.category_id
+        other_pending\refresh!
+        assert.same other_pending_category_id, other_pending.category_id
 
-      assert.same 0, old_category.topics_count
-      assert.same 1, new_category.topics_count
+        topic\refresh!
+        assert.same new_category.id, topic.category_id
+        old_category\refresh!
+        new_category\refresh!
+
+        assert.nil old_category.last_topic_id
+        assert.same topic.id, new_category.last_topic_id
+
+        assert.same 0, old_category.topics_count
+        assert.same 1, new_category.topics_count
 
