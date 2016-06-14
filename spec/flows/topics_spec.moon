@@ -37,6 +37,9 @@ class TopicsApp extends TestApp
     @flow\unarchive_topic!
     json: { success: true }
 
+  "/move-topic": capture_errors_json =>
+    @flow\move_topic!
+    json: { success: true }
 
 describe "topics", ->
   use_test_env!
@@ -49,7 +52,6 @@ describe "topics", ->
 
   before_each ->
     current_user = factory.Users!
-
     category = factory.Categories user_id: current_user.id
     topic = factory.Topics category_id: category.id
 
@@ -190,4 +192,30 @@ describe "topics", ->
 
       topic\refresh!
       assert.false topic\is_archived!
+
+  describe "move", ->
+    it "moves topic", ->
+      old_cateory_id = topic.category_id
+      other_category = factory.Categories {
+        parent_category_id: topic.category_id
+        user_id: current_user.id
+      }
+
+      res = TopicsApp\get current_user, "/move-topic", {
+        topic_id: topic.id
+        target_category_id: other_category.id
+      }
+
+      topic\refresh!
+      assert.same other_category.id, topic.category_id
+
+      logs = ModerationLogs\select!
+      assert.same 1, #logs
+      log = unpack logs
+
+      assert.same topic.id, log.object_id
+      assert.same ModerationLogs.object_types.topic, log.object_type
+      assert.same "topic.move", log.action
+      assert.same current_user.id, log.user_id
+      assert.same old_cateory_id, log.category_id
 

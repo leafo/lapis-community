@@ -45,17 +45,23 @@ do
       self:load_topic()
       return assert_error(self.topic:allowed_to_moderate(self.current_user), "invalid user")
     end,
-    write_moderation_log = function(self, action, reason)
+    write_moderation_log = function(self, action, reason, extra_params)
       self:load_topic()
       local ModerationLogs
       ModerationLogs = require("community.models").ModerationLogs
-      return ModerationLogs:create({
+      local params = {
         user_id = self.current_user.id,
         object = self.topic,
         category_id = self.topic.category_id,
         action = action,
         reason = reason
-      })
+      }
+      if extra_params then
+        for k, v in pairs(extra_params) do
+          params[k] = v
+        end
+      end
+      return ModerationLogs:create(params)
     end,
     new_topic = require_login(function(self)
       local CategoriesFlow = require("community.flows.categories")
@@ -229,11 +235,14 @@ do
           is_integer = true
         }
       })
+      local old_category_id = self.topic.category_id
       self.target_category = Categories:find(self.params.target_category_id)
       assert_error(self.target_category:allowed_to_moderate(self.current_user), "invalid category")
       assert_error(self.topic:can_move_to(self.current_user, self.target_category))
       assert_error(self.topic:move_to_category(self.target_category))
-      self:write_moderation_log("topic.move")
+      self:write_moderation_log("topic.move", nil, {
+        category_id = old_category_id
+      })
       return true
     end
   }

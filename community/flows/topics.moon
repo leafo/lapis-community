@@ -35,17 +35,23 @@ class TopicsFlow extends Flow
     @load_topic!
     assert_error @topic\allowed_to_moderate(@current_user), "invalid user"
 
-  write_moderation_log: (action, reason) =>
+  write_moderation_log: (action, reason, extra_params) =>
     @load_topic!
 
     import ModerationLogs from require "community.models"
-    ModerationLogs\create {
+    params = {
       user_id: @current_user.id
       object: @topic
       category_id: @topic.category_id
       :action
       :reason
     }
+
+    if extra_params
+      for k, v in pairs extra_params
+        params[k] = v
+
+    ModerationLogs\create params
 
   new_topic: require_login =>
     CategoriesFlow = require "community.flows.categories"
@@ -198,6 +204,8 @@ class TopicsFlow extends Flow
       {"target_category_id", is_integer: true}
     }
 
+    old_category_id = @topic.category_id
+
     @target_category = Categories\find @params.target_category_id
     assert_error @target_category\allowed_to_moderate(@current_user),
       "invalid category"
@@ -205,7 +213,9 @@ class TopicsFlow extends Flow
     assert_error @topic\can_move_to @current_user, @target_category
     assert_error @topic\move_to_category @target_category
 
-    @write_moderation_log "topic.move"
+    @write_moderation_log "topic.move", nil, {
+      category_id: old_category_id
+    }
 
     true
 
