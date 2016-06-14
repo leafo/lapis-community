@@ -218,6 +218,23 @@ do
       self.topic:set_status("default")
       self:write_moderation_log("topic.unarchive")
       return true
+    end,
+    move_topic = function(self, category)
+      local Categories
+      Categories = require("community.models").Categories
+      self:load_topic_for_moderation()
+      assert_valid(self.params, {
+        {
+          "target_category_id",
+          is_integer = true
+        }
+      })
+      self.target_category = Categories:find(self.params.target_category_id)
+      assert_error(self.target_category:allowed_to_moderate(self.current_user), "invalid category")
+      assert_error(self.topic:can_move_to(self.current_user, self.target_category))
+      assert_error(self.topic:move_to_category(self.target_category))
+      self:write_moderation_log("topic.move")
+      return true
     end
   }
   _base_0.__index = _base_0

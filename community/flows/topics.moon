@@ -190,3 +190,22 @@ class TopicsFlow extends Flow
     @write_moderation_log "topic.unarchive"
     true
 
+  move_topic: (category) =>
+    import Categories from require "community.models"
+    @load_topic_for_moderation!
+
+    assert_valid @params, {
+      {"target_category_id", is_integer: true}
+    }
+
+    @target_category = Categories\find @params.target_category_id
+    assert_error @target_category\allowed_to_moderate(@current_user),
+      "invalid category"
+
+    assert_error @topic\can_move_to @current_user, @target_category
+    assert_error @topic\move_to_category @target_category
+
+    @write_moderation_log "topic.move"
+
+    true
+
