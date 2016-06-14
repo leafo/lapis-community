@@ -241,7 +241,10 @@ do
       assert_error(self.topic:can_move_to(self.current_user, self.target_category))
       assert_error(self.topic:move_to_category(self.target_category))
       self:write_moderation_log("topic.move", nil, {
-        category_id = old_category_id
+        category_id = old_category_id,
+        data = {
+          target_category_id = self.target_category.id
+        }
       })
       return true
     end

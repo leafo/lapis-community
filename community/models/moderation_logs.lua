@@ -2,6 +2,8 @@ local enum
 enum = require("lapis.db.model").enum
 local Model
 Model = require("community.model").Model
+local to_json
+to_json = require("lapis.util").to_json
 local ModerationLogs
 do
   local _class_0
@@ -91,6 +93,9 @@ do
     end
     assert(opts.user_id, "missing user_id")
     assert(opts.action, "missing action")
+    if type(opts.data) == "table" then
+      opts.data = to_json(opts.data)
+    end
     local object = assert(opts.object, "missing object")
     opts.object = nil
     opts.object_id = object.id

@@ -321,7 +321,8 @@ CREATE TABLE community_moderation_logs (
     action character varying(255) NOT NULL,
     reason text,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    data jsonb
 );
 
 
@@ -1256,6 +1257,7 @@ community_9
 community_10
 community_11
 community_12
+community_13
 \.
 
 

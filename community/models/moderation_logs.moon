@@ -1,5 +1,6 @@
 import enum from require "lapis.db.model"
 import Model from require "community.model"
+import to_json from require "lapis.util"
 
 -- Generated schema dump: (do not edit)
 --
@@ -39,6 +40,9 @@ class ModerationLogs extends Model
   @create: (opts={}) =>
     assert opts.user_id, "missing user_id"
     assert opts.action, "missing action"
+
+    if type(opts.data) == "table"
+      opts.data = to_json opts.data
 
     object = assert opts.object, "missing object"
     opts.object = nil

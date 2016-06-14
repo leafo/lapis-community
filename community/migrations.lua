@@ -1047,5 +1047,8 @@ return {
     create_index(T("subscriptions"), "user_id")
     db.query("\n      insert into " .. tostring(T("subscriptions")) .. " (created_at, updated_at, subscribed, user_id, object_type, object_id)\n      select created_at, updated_at, subscribed, user_id, 1 as object_type, topic_id as object_id\n      from " .. tostring(T("topic_subscriptions")) .. "\n    ")
     return drop_table(T("topic_subscriptions"))
+  end,
+  [13] = function(self)
+    return add_column(T("moderation_logs"), "data", "jsonb")
   end
 }

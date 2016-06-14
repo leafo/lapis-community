@@ -218,4 +218,5 @@ describe "topics", ->
       assert.same "topic.move", log.action
       assert.same current_user.id, log.user_id
       assert.same old_cateory_id, log.category_id
+      assert.same { target_category_id: other_category.id }, log.data
 

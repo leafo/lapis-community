@@ -523,6 +523,9 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
     "
 
     drop_table T"topic_subscriptions"
+
+  [13]: =>
+    add_column T"moderation_logs", "data", "jsonb"
 }
 
 

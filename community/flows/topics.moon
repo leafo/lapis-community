@@ -215,6 +215,7 @@ class TopicsFlow extends Flow
 
     @write_moderation_log "topic.move", nil, {
       category_id: old_category_id
+      data: { target_category_id: @target_category.id }
     }
 
     true
