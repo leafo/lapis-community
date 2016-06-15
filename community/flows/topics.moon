@@ -196,7 +196,7 @@ class TopicsFlow extends Flow
     @write_moderation_log "topic.unarchive"
     true
 
-  move_topic: (category) =>
+  move_topic: =>
     import Categories from require "community.models"
     @load_topic_for_moderation!
 

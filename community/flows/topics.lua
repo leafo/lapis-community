@@ -225,7 +225,7 @@ do
       self:write_moderation_log("topic.unarchive")
       return true
     end,
-    move_topic = function(self, category)
+    move_topic = function(self)
       local Categories
       Categories = require("community.models").Categories
       self:load_topic_for_moderation()
