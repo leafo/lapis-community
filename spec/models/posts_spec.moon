@@ -380,3 +380,15 @@ describe "models.posts", ->
     assert.same root_post.id, ancestor.id
     assert.same 1, ancestor.depth
 
+  it "gets vote score", ->
+    post = factory.Posts!
+    post\refresh!
+    assert.same 0, post\vote_score!
+
+    post\update {
+      up_votes_count: 3
+      down_votes_count: 1
+    }
+
+    assert.same 2, post\vote_score!
+
