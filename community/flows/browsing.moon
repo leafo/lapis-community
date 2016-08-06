@@ -257,8 +257,8 @@ class BrowsingFlow extends Flow
       {"status", optional: true, one_of: {"archived"}}
     }
 
-    @topics_status = @params.status or "default"
-    status = Topics.statuses\for_db @params.status or "default"
+    @topics_status = opts.status or @params.status or "default"
+    status = Topics.statuses\for_db @topics_status
 
     if view_counter = @view_counter!
       key = "category:#{@category.id}"

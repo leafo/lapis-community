@@ -407,8 +407,8 @@ do
           }
         }
       })
-      self.topics_status = self.params.status or "default"
-      local status = Topics.statuses:for_db(self.params.status or "default")
+      self.topics_status = opts.status or self.params.status or "default"
+      local status = Topics.statuses:for_db(self.topics_status)
       do
         local view_counter = self:view_counter()
         if view_counter then
