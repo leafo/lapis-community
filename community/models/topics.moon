@@ -39,6 +39,7 @@ class Topics extends Model
   @relations: {
     {"category", belongs_to: "Categories"}
     {"user", belongs_to: "Users"}
+    {"posts", has_many: "Posts"}
     {"topic_post", has_one: "Posts", key: "topic_id", where: {
       parent_post_id: db.NULL
       post_number: 1

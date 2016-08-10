@@ -572,6 +572,10 @@ do
       belongs_to = "Users"
     },
     {
+      "posts",
+      has_many = "Posts"
+    },
+    {
       "topic_post",
       has_one = "Posts",
       key = "topic_id",
