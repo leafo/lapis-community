@@ -15,7 +15,7 @@ before_install:
   - source .travis/setenv_lua.sh
 
 install:
-  - luarocks install https://luarocks.org/manifests/olivine-labs/busted-2.0.rc12-1.rockspec
+  - luarocks install busted
   - luarocks install https://raw.githubusercontent.com/leafo/lapis/master/lapis-dev-1.rockspec
   - luarocks install moonscript
   - luarocks install date
