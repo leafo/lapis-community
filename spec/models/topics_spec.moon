@@ -196,39 +196,41 @@ describe "models.topics", ->
     topic\refresh_last_post!
     assert.nil topic.last_post_id
 
-  it "should not mark for no last post", ->
-    user = factory.Users!
-    topic = factory.Topics!
-    topic\set_seen user
+  describe "set_seen", ->
+    it "should not mark for no last post", ->
+      user = factory.Users!
+      topic = factory.Topics!
+      topic\set_seen user
+      assert.same 0, UserTopicLastSeens\count!
 
-  it "should mark topic last seen", ->
-    user = factory.Users!
-    topic = factory.Topics!
-    post = factory.Posts topic_id: topic.id
-    topic\increment_from_post post
+    it "should mark topic last seen", ->
+      user = factory.Users!
+      topic = factory.Topics!
+      post = factory.Posts topic_id: topic.id
+      topic\increment_from_post post
 
-    topic\set_seen user
-    last_seen = unpack UserTopicLastSeens\select!
-    assert.same user.id, last_seen.user_id
-    assert.same topic.id, last_seen.topic_id
-    assert.same post.id, last_seen.post_id
+      topic\set_seen user
+      last_seen = unpack UserTopicLastSeens\select!
+      assert.same user.id, last_seen.user_id
+      assert.same topic.id, last_seen.topic_id
+      assert.same post.id, last_seen.post_id
 
-    -- noop
-    topic\set_seen user
+      -- noop
+      topic\set_seen user
 
-    -- update
+      -- update
 
-    post2 = factory.Posts topic_id: topic.id
-    topic\increment_from_post post2
+      post2 = factory.Posts topic_id: topic.id
+      topic\increment_from_post post2
 
-    topic\set_seen user
+      topic\set_seen user
 
-    assert.same 1, UserTopicLastSeens\count!
-    last_seen = unpack UserTopicLastSeens\select!
+      assert.same 1, UserTopicLastSeens\count!
+      last_seen = unpack UserTopicLastSeens\select!
 
-    assert.same user.id, last_seen.user_id
-    assert.same topic.id, last_seen.topic_id
-    assert.same post2.id, last_seen.post_id
+      assert.same user.id, last_seen.user_id
+      assert.same topic.id, last_seen.topic_id
+      assert.same post2.id, last_seen.post_id
 
   describe "delete", ->
     it "deletes a topic", ->

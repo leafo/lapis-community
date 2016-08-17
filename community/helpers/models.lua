@@ -268,5 +268,6 @@ return {
   safe_insert = safe_insert,
   filter_update = filter_update,
   soft_delete = soft_delete,
-  memoize1 = memoize1
+  memoize1 = memoize1,
+  insert_on_conflict_update = insert_on_conflict_update
 }

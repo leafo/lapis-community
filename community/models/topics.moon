@@ -265,12 +265,13 @@ class Topics extends Model
     return unless user
     return unless @last_post_id
 
-    import upsert from require "community.helpers.models"
+    import insert_on_conflict_update from require "community.helpers.models"
     import UserTopicLastSeens from require "community.models"
 
-    upsert UserTopicLastSeens, {
+    insert_on_conflict_update UserTopicLastSeens, {
       user_id: user.id
       topic_id: @id
+    }, {
       post_id: @last_post_id
     }
 

@@ -181,4 +181,4 @@ insert_on_conflict_update = (model, primary, create, update) ->
 
 
 
-{ :upsert, :safe_insert, :filter_update, :soft_delete, :memoize1 }
+{ :upsert, :safe_insert, :filter_update, :soft_delete, :memoize1, :insert_on_conflict_update }

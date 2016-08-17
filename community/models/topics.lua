@@ -229,13 +229,14 @@ do
       if not (self.last_post_id) then
         return 
       end
-      local upsert
-      upsert = require("community.helpers.models").upsert
+      local insert_on_conflict_update
+      insert_on_conflict_update = require("community.helpers.models").insert_on_conflict_update
       local UserTopicLastSeens
       UserTopicLastSeens = require("community.models").UserTopicLastSeens
-      return upsert(UserTopicLastSeens, {
+      return insert_on_conflict_update(UserTopicLastSeens, {
         user_id = user.id,
-        topic_id = self.id,
+        topic_id = self.id
+      }, {
         post_id = self.last_post_id
       })
     end,
