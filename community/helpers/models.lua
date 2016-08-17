@@ -206,6 +206,63 @@ memoize1 = function(fn)
     return unpack(res)
   end
 end
+local insert_on_conflict_update
+insert_on_conflict_update = function(model, primary, create, update)
+  local encode_values, encode_assigns
+  do
+    local _obj_0 = require("lapis.db")
+    encode_values, encode_assigns = _obj_0.encode_values, _obj_0.encode_assigns
+  end
+  local full_insert
+  do
+    local _tbl_0 = { }
+    for k, v in pairs(primary) do
+      _tbl_0[k] = v
+    end
+    full_insert = _tbl_0
+  end
+  if create then
+    for k, v in pairs(create) do
+      full_insert[k] = v
+    end
+  end
+  local full_update = update or (function()
+    local _tbl_0 = { }
+    for k, v in pairs(full_insert) do
+      if not primary[k] then
+        _tbl_0[k] = v
+      end
+    end
+    return _tbl_0
+  end)()
+  if model.timestamp then
+    local d = db.format_date()
+    full_insert.created_at = d
+    full_insert.updated_at = d
+    full_update.updated_at = d
+  end
+  local buffer = {
+    "insert into ",
+    db.escape_identifier(model:table_name()),
+    " "
+  }
+  encode_values(full_insert, buffer)
+  insert(buffer, " on conflict (")
+  for k in pairs(primary) do
+    insert(buffer, db.escape_identifier(k))
+    insert(buffer, ", ")
+  end
+  buffer[#buffer] = ") do update set "
+  encode_assigns(full_update, buffer)
+  insert(buffer, " returning *")
+  local q = concat(buffer)
+  local res = db.query(q)
+  if res.affected_rows and res.affected_rows > 0 then
+    return model:load(res[1])
+  else
+    return nil, res
+  end
+end
 return {
   upsert = upsert,
   safe_insert = safe_insert,
