@@ -51,14 +51,16 @@ do
     }
   }
   self.increment = function(self, topic_id, user_id)
-    local upsert
-    upsert = require("community.helpers.models").upsert
-    return upsert(self, {
+    local insert_on_conflict_update
+    insert_on_conflict_update = require("community.helpers.models").insert_on_conflict_update
+    local col = tostring(self:table_name()) .. ".posts_count"
+    return insert_on_conflict_update(self, {
       user_id = user_id,
-      topic_id = topic_id,
+      topic_id = topic_id
+    }, {
       posts_count = 1
     }, {
-      posts_count = db.raw("posts_count + 1")
+      posts_count = db.raw(tostring(col) .. " + 1")
     })
   end
   self.decrement = function(self, topic_id, user_id)

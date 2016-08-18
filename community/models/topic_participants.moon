@@ -24,13 +24,16 @@ class TopicParticipants extends Model
   }
 
   @increment: (topic_id, user_id) =>
-    import upsert from require "community.helpers.models"
+    import insert_on_conflict_update from require "community.helpers.models"
 
-    upsert @, {
+    col = "#{@table_name!}.posts_count"
+
+    insert_on_conflict_update @, {
       :user_id, :topic_id
+    }, {
       posts_count: 1
     }, {
-      posts_count: db.raw "posts_count + 1"
+      posts_count: db.raw "#{col} + 1"
     }
 
   @decrement: (topic_id, user_id) =>
