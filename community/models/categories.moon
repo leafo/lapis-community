@@ -524,14 +524,15 @@ class Categories extends Model
     return unless user
     return unless @last_topic_id
 
-    import upsert from require "community.helpers.models"
+    import insert_on_conflict_update from require "community.helpers.models"
     import UserCategoryLastSeens from require "community.models"
 
     last_topic = @get_last_topic!
 
-    upsert UserCategoryLastSeens, {
+    insert_on_conflict_update UserCategoryLastSeens, {
       user_id: user.id
       category_id: @id
+    }, {
       topic_id: last_topic.id
       category_order: last_topic.category_order
     }
