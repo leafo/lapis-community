@@ -1,5 +1,6 @@
 import use_test_env from require "lapis.spec"
 
+db = require "lapis.db"
 factory = require "spec.factory"
 
 describe "models.categories", ->
@@ -541,7 +542,7 @@ describe "models.categories", ->
         [category.user_id]: true
       }, users
 
-    it "gets notification targets when there are subscriptions in hierarchy #ddd", ->
+    it "gets notification targets when there are subscriptions in hierarchy", ->
       category_owner = category\get_user!
       one_owner = factory.Users!
       two_owner = factory.Users!
@@ -581,5 +582,26 @@ describe "models.categories", ->
         [user2.id]: true
       }, users
 
+  describe "refresh_topic_category_order", ->
+    local category
 
+    before_each ->
+      category =factory.Categories!
+
+    it "refreshes category orders", ->
+      -- create some topics in reverse chronological order to be fixed
+      topics = for i=1,3
+        topic = factory.Topics {
+          category_id: category.id
+          created_at: db.raw "now() at time zone 'utc' - '#{i} day'::interval"
+        }
+        category\increment_from_topic topic
+        topic
+
+      assert.same topics[3].id,  category\get_last_topic!.id
+
+      category\refresh_topic_category_order!
+      category\refresh!
+
+      assert.same topics[1].id, category\get_last_topic!.id
 

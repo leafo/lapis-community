@@ -374,6 +374,32 @@ class Categories extends Model
       else
         {}
 
+  refresh_topic_category_order: =>
+    import Topics, Posts from require "community.models"
+    tname = db.escape_identifier Topics\table_name!
+    posts_tname = db.escape_identifier Posts\table_name!
+
+    db.query "
+      update #{tname}
+      set category_order = k.category_order
+      from (
+        select id, row_number() over (order by last_post_at asc) as category_order
+        from
+        (
+          select
+            inside.id,
+            coalesce(
+              (select created_at from #{posts_tname} as posts where posts.id = last_post_id),
+              inside.created_at
+            ) as last_post_at
+          from #{tname} as inside where category_id = ?
+        ) as t
+      ) k
+      where #{tname}.id = k.id
+    ", @id
+
+    @refresh_last_topic!
+
   refresh_last_topic: =>
     import Topics from require "community.models"
 

@@ -282,6 +282,17 @@ do
         return { }
       end
     end,
+    refresh_topic_category_order = function(self)
+      local Topics, Posts
+      do
+        local _obj_0 = require("community.models")
+        Topics, Posts = _obj_0.Topics, _obj_0.Posts
+      end
+      local tname = db.escape_identifier(Topics:table_name())
+      local posts_tname = db.escape_identifier(Posts:table_name())
+      db.query("\n      update " .. tostring(tname) .. "\n      set category_order = k.category_order\n      from (\n        select id, row_number() over (order by last_post_at asc) as category_order\n        from\n        (\n          select\n            inside.id,\n            coalesce(\n              (select created_at from " .. tostring(posts_tname) .. " as posts where posts.id = last_post_id),\n              inside.created_at\n            ) as last_post_at\n          from " .. tostring(tname) .. " as inside where category_id = ?\n        ) as t\n      ) k\n      where " .. tostring(tname) .. ".id = k.id\n    ", self.id)
+      return self:refresh_last_topic()
+    end,
     refresh_last_topic = function(self)
       local Topics
       Topics = require("community.models").Topics
