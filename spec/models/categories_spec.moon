@@ -586,7 +586,7 @@ describe "models.categories", ->
     local category
 
     before_each ->
-      category =factory.Categories!
+      category = factory.Categories!
 
     it "refreshes category orders", ->
       -- create some topics in reverse chronological order to be fixed

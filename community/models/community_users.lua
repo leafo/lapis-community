@@ -20,6 +20,20 @@ do
       }, {
         timestamp = false
       })
+    end,
+    purge_posts = function(self)
+      local Posts
+      Posts = require("community.models").Posts
+      local posts = Posts:select("where user_id = ?", self.user_id)
+      for _index_0 = 1, #posts do
+        local post = posts[_index_0]
+        post:delete("hard")
+      end
+      self:update({
+        posts_count = 0,
+        topics_count = 0
+      })
+      return true
     end
   }
   _base_0.__index = _base_0

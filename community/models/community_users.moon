@@ -81,5 +81,19 @@ class CommunityUsers extends Model
       [field]: db.raw db.interpolate_query "#{db.escape_identifier field} + ?", amount
     }, timestamp: false
 
+  -- remove every single post
+  purge_posts: =>
+    import Posts from require "community.models"
+
+    posts = Posts\select "where user_id = ?", @user_id
+    for post in *posts
+      post\delete "hard"
+
+    @update {
+      posts_count: 0
+      topics_count: 0
+    }
+
+    true
 
 
