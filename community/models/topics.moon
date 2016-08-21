@@ -187,7 +187,42 @@ class Topics extends Model
       )", @id, @@statuses.default
     }, timestamp: false
 
-  delete: =>
+  delete: (force) =>
+    if force == "hard"
+      @hard_delete!
+    else
+      @soft_delete!
+
+  hard_delete: =>
+    return false unless super.delete @
+    for post in *@get_posts!
+      post\hard_delete!
+
+    import
+      PendingPosts
+      TopicParticipants
+      UserTopicLastSeens
+      CategoryPostLogs
+      CommunityUsers
+      from require "community.models"
+
+    CategoryPostLogs\clear_posts_for_topic @
+
+    if @user_id
+      CommunityUsers\for_user(@get_user!)\increment "topics_count", -1
+
+    if category = @get_category!
+      if category.last_topic_id == @id
+        category\refresh_last_topic!
+
+    for model in *{
+      PendingPosts
+      TopicParticipants
+      UserTopicLastSeens
+    }
+      db.delete model\table_name!, topic_id: @id
+
+  soft_delete: =>
     import soft_delete from require "community.helpers.models"
 
     if soft_delete @

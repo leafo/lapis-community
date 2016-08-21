@@ -261,7 +261,7 @@ class Posts extends Model
       }
 
     for orphan_post in *orphans
-      orphan_post\delete "hard"
+      orphan_post\hard_delete!
 
     true
 

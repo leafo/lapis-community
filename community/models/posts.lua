@@ -232,7 +232,7 @@ do
       end
       for _index_0 = 1, #orphans do
         local orphan_post = orphans[_index_0]
-        orphan_post:delete("hard")
+        orphan_post:hard_delete()
       end
       return true
     end,

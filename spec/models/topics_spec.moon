@@ -233,6 +233,8 @@ describe "models.topics", ->
       assert.same post2.id, last_seen.post_id
 
   describe "delete", ->
+    import PendingPosts, TopicParticipants from require "spec.community_models"
+
     it "deletes a topic", ->
       topic = factory.Topics!
       topic\delete!
@@ -249,6 +251,26 @@ describe "models.topics", ->
       t2\delete!
       category\refresh!
       assert.same t1.id, category.last_topic_id
+
+    it "hard deletes a topic", ->
+      category = factory.Categories!
+      topic = factory.Topics category_id: category.id
+      post = factory.Posts topic_id: topic.id
+
+      topic\increment_from_post post
+      category\increment_from_topic topic
+
+      TopicParticipants\increment topic.id, post.user_id
+      topic\set_seen factory.Users!
+
+      factory.PendingPosts topic: topic
+
+      topic\hard_delete!
+
+      assert.same 0, Posts\count!
+      assert.same 0, PendingPosts\count!
+      assert.same 0, TopicParticipants\count!
+      assert.same 0, UserTopicLastSeens\count!
 
   describe "renumber_posts", ->
     it "renumbers root posts", ->

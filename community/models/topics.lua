@@ -129,7 +129,52 @@ do
         timestamp = false
       })
     end,
-    delete = function(self)
+    delete = function(self, force)
+      if force == "hard" then
+        return self:hard_delete()
+      else
+        return self:soft_delete()
+      end
+    end,
+    hard_delete = function(self)
+      if not (_class_0.__parent.delete(self)) then
+        return false
+      end
+      local _list_0 = self:get_posts()
+      for _index_0 = 1, #_list_0 do
+        local post = _list_0[_index_0]
+        post:hard_delete()
+      end
+      local PendingPosts, TopicParticipants, UserTopicLastSeens, CategoryPostLogs, CommunityUsers
+      do
+        local _obj_0 = require("community.models")
+        PendingPosts, TopicParticipants, UserTopicLastSeens, CategoryPostLogs, CommunityUsers = _obj_0.PendingPosts, _obj_0.TopicParticipants, _obj_0.UserTopicLastSeens, _obj_0.CategoryPostLogs, _obj_0.CommunityUsers
+      end
+      CategoryPostLogs:clear_posts_for_topic(self)
+      if self.user_id then
+        CommunityUsers:for_user(self:get_user()):increment("topics_count", -1)
+      end
+      do
+        local category = self:get_category()
+        if category then
+          if category.last_topic_id == self.id then
+            category:refresh_last_topic()
+          end
+        end
+      end
+      local _list_1 = {
+        PendingPosts,
+        TopicParticipants,
+        UserTopicLastSeens
+      }
+      for _index_0 = 1, #_list_1 do
+        local model = _list_1[_index_0]
+        db.delete(model:table_name(), {
+          topic_id = self.id
+        })
+      end
+    end,
+    soft_delete = function(self)
       local soft_delete
       soft_delete = require("community.helpers.models").soft_delete
       if soft_delete(self) then
