@@ -1,35 +1,12 @@
 language: c
+sudo: required
 
-sudo: false
-
-addons:
-  postgresql: "9.4"
-
-env:
-  global:
-    - LUAROCKS=2.2.2
-  matrix:
-    - LUA=luajit2.1
-
-before_install:
-  - source .travis/setenv_lua.sh
+services:
+  - docker
 
 install:
-  - luarocks install busted
-  - luarocks install https://raw.githubusercontent.com/leafo/lapis/master/lapis-dev-1.rockspec
-  - luarocks install moonscript
-  - luarocks install date
-  - luarocks make
+  - docker build -t lapis-community-test .
 
-before_script:
-  - moonc schema.moon
-  - moonc config.moon
-  - moonc community
-  - createdb -U postgres community_test
-  - LAPIS_SHOW_QUERIES=1 LAPIS_ENVIRONMENT=test luajit -e 'require("schema").make_schema()'
-
-script: 
-  - busted
-
-
+script:
+  - docker run lapis-community-test
 
