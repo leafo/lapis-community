@@ -271,6 +271,20 @@ describe "categories", ->
         -- created a new second one
         assert.not.same existing[1].id, second.id
 
+      it "rejects tag that is too long", ->
+        res = CategoryApp\get current_user, "/set-tags", {
+          category_id: category.id
+          "category_tags[1][label]": "the first one"
+          "category_tags[1][color]": "#daddad"
+          "category_tags[2][label]": "new one one one one one one oen oen oen eone n two three four file ve islfwele"
+        }
+
+        assert.same {
+          errors: {
+            "topic tag must be at most 30 charcaters"
+          }
+        }, res
+
       it "doesn't fail when recreating tag of same slug", ->
         existing = factory.CategoryTags category_id: category.id
 

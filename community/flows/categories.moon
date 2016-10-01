@@ -1,5 +1,6 @@
 import Flow from require "lapis.flow"
 
+
 import Users from require "models"
 import Categories, CategoryMembers, ActivityLogs from require "community.models"
 
@@ -252,7 +253,9 @@ class CategoriesFlow extends Flow
       trim_filter tag, { "label", "id", "color" }
       assert_valid tag, {
         {"id", is_integer: true, optional: true}
-        {"label", exists: "true", type: "string"}
+        {"label",
+          exists: "true", type: "string", max_length: limits.MAX_TAG_LEN
+          "topic tag must be at most #{limits.MAX_TAG_LEN} charcaters"}
         {"color", is_color: true, optional: true}
       }
 
