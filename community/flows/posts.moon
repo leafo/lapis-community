@@ -91,6 +91,7 @@ class PostsFlow extends Flow
 
     @topic = @post\get_topic!
 
+    update_tags = @params.post.tags
     post_update = trim_filter @params.post
     assert_valid post_update, {
       {"body", exists: true, max_length: limits.MAX_BODY_LEN}
@@ -128,11 +129,13 @@ class PostsFlow extends Flow
         opts.title = post_update.title
         opts.slug = slugify post_update.title
 
-      if post_update.tags
+      if update_tags
         category = @topic\get_category!
         tags = category\parse_tags post_update.tags
-        if tags
-          opts.tags = db.array [t.slug for t in *tags]
+        opts.tags = if tags and next tags
+          db.array [t.slug for t in *tags]
+        else
+          db.NULL
 
       import filter_update from require "community.helpers.models"
       @topic\update filter_update @topic, opts

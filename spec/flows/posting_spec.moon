@@ -4,6 +4,8 @@ import truncate_tables from require "lapis.spec.db"
 
 factory = require "spec.factory"
 
+db = require "lapis.db"
+
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
 
@@ -337,6 +339,23 @@ describe "posting flow", ->
       topic\refresh!
       assert.same {"hello", "zone"}, topic.tags
       assert.same 2, #topic\get_tags!
+
+    it "should clear post tags", ->
+      post = factory.Posts user_id: current_user.id
+      topic = post\get_topic!
+      category = topic\get_category!
+      tag = factory.CategoryTags category_id: category.id
+
+      topic\update tags: db.array { tag.slug }
+
+      res = PostingApp\get current_user, "/edit-post", {
+        post_id: post.id
+        "post[body]": "good stuff"
+        "post[tags]": ""
+      }
+
+      topic\refresh!
+      assert.nil topic.tags
 
     it "should edit post with reason", ->
       post = factory.Posts user_id: current_user.id

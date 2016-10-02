@@ -112,6 +112,7 @@ do
         }
       })
       self.topic = self.post:get_topic()
+      local update_tags = self.params.post.tags
       local post_update = trim_filter(self.params.post)
       assert_valid(post_update, {
         {
@@ -159,10 +160,10 @@ do
           opts.title = post_update.title
           opts.slug = slugify(post_update.title)
         end
-        if post_update.tags then
+        if update_tags then
           local category = self.topic:get_category()
           local tags = category:parse_tags(post_update.tags)
-          if tags then
+          if tags and next(tags) then
             opts.tags = db.array((function()
               local _accum_0 = { }
               local _len_0 = 1
@@ -173,6 +174,8 @@ do
               end
               return _accum_0
             end)())
+          else
+            opts.tags = db.NULL
           end
         end
         local filter_update
