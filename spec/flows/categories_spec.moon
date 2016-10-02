@@ -581,6 +581,59 @@ describe "categories", ->
         {title: "beta"}
       }, category
 
+    it "doesn't too deeply nested categories", ->
+      limits = require "community.limits"
+
+      keys = {}
+      for i=1,limits.MAX_CATEGORY_DEPTH+1
+        if last = keys[#keys]
+          table.insert keys, "#{last}[children][1]"
+        else
+          table.insert keys, "categories[1]"
+
+      params = { category_id: category.id }
+      for key in *keys
+        params["#{key}[title]"] = "hello world"
+
+      res = CategoryApp\get current_user, "/set-children", params
+      assert.same {
+        errors: {
+          "category depth must be at most 4"
+        }
+      }, res
+
+    it "doesn't set too many categories", ->
+      limits = require "community.limits"
+      params = { category_id: category.id }
+
+      for i=1,limits.MAX_CATEGORY_CHILDREN+1
+        params["categories[#{i}][title]"] = "category #{i}"
+
+      res = CategoryApp\get current_user, "/set-children", params
+      assert.same {
+        errors: {
+          "category can have at most 12 children"
+        }
+      }, res
+
+    it "doesn't set too many categories in child", ->
+      limits = require "community.limits"
+      params = {
+        category_id: category.id
+        "categories[1][title]": "hello world"
+      }
+
+      for i=1,limits.MAX_CATEGORY_CHILDREN+1
+        params["categories[1][children][#{i}][title]"] = "category #{i}"
+
+      res = CategoryApp\get current_user, "/set-children", params
+      assert.same {
+        errors: {
+          "category can have at most 12 children"
+        }
+      }, res
+
+
     it "creates new categories with nesting", ->
       res = CategoryApp\get current_user, "/set-children", {
         category_id: category.id

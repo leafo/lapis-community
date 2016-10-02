@@ -335,7 +335,14 @@ class CategoriesFlow extends Flow
 
     convert_arrays @params
 
-    validate_category_params = (params) ->
+    assert_categores_length = (categories) ->
+      assert_error #categories <= limits.MAX_CATEGORY_CHILDREN,
+        "category can have at most #{limits.MAX_CATEGORY_CHILDREN} children"
+
+    validate_category_params = (params, depth=1) ->
+      assert_error depth <= limits.MAX_CATEGORY_DEPTH,
+        "category depth must be at most #{limits.MAX_CATEGORY_DEPTH}"
+
       -- TODO: synchronize with the other validate
       assert_valid params, {
         {"id", optional: true, is_integer: true}
@@ -348,11 +355,16 @@ class CategoriesFlow extends Flow
       }
 
       if params.children
-        for child in *params.children
-          validate_category_params child
+        assert_categores_length params.children
 
+        for child in *params.children
+          validate_category_params child, depth + 1
+
+    assert_categores_length @params.categories
+
+    initial_depth = #@category\get_ancestors! + 1
     for category in *@params.categories
-      validate_category_params category
+      validate_category_params category, initial_depth
 
     existing = @category\get_flat_children!
     existing_by_id = {c.id, c for c in *existing}
@@ -391,6 +403,7 @@ class CategoriesFlow extends Flow
           set_children c.category, c.children
 
     set_children @category, @params.categories
+
     orphans = for c in *existing
       continue if existing_assigned[c.id]
       c

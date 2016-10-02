@@ -463,8 +463,16 @@ do
         }
       })
       convert_arrays(self.params)
+      local assert_categores_length
+      assert_categores_length = function(categories)
+        return assert_error(#categories <= limits.MAX_CATEGORY_CHILDREN, "category can have at most " .. tostring(limits.MAX_CATEGORY_CHILDREN) .. " children")
+      end
       local validate_category_params
-      validate_category_params = function(params)
+      validate_category_params = function(params, depth)
+        if depth == nil then
+          depth = 1
+        end
+        assert_error(depth <= limits.MAX_CATEGORY_DEPTH, "category depth must be at most " .. tostring(limits.MAX_CATEGORY_DEPTH))
         assert_valid(params, {
           {
             "id",
@@ -503,17 +511,20 @@ do
           }
         })
         if params.children then
+          assert_categores_length(params.children)
           local _list_0 = params.children
           for _index_0 = 1, #_list_0 do
             local child = _list_0[_index_0]
-            validate_category_params(child)
+            validate_category_params(child, depth + 1)
           end
         end
       end
+      assert_categores_length(self.params.categories)
+      local initial_depth = #self.category:get_ancestors() + 1
       local _list_0 = self.params.categories
       for _index_0 = 1, #_list_0 do
         local category = _list_0[_index_0]
-        validate_category_params(category)
+        validate_category_params(category, initial_depth)
       end
       local existing = self.category:get_flat_children()
       local existing_by_id
