@@ -352,7 +352,9 @@ do
           {
             "label",
             exists = "true",
-            type = "string"
+            type = "string",
+            max_length = limits.MAX_TAG_LEN,
+            "topic tag must be at most " .. tostring(limits.MAX_TAG_LEN) .. " charcaters"
           },
           {
             "color",
