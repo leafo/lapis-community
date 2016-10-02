@@ -182,6 +182,41 @@ describe "categories", ->
         category\refresh!
         assert.false category.hidden
 
+      it "should make category a directory", ->
+        res = CategoryApp\get current_user, "/edit-category", {
+          category_id: category.id
+          "category[type]": "directory"
+        }
+
+        category\refresh!
+        assert.true category.directory
+
+        -- back to post list
+        res = CategoryApp\get current_user, "/edit-category", {
+          category_id: category.id
+          "category[type]": "post_list"
+        }
+
+        category\refresh!
+        assert.false category.directory
+
+      it "should not let child category edit type", ->
+        child = factory.Categories {
+          parent_category_id: category.id
+          user_id: current_user.id
+        }
+
+        res = CategoryApp\get current_user, "/edit-category", {
+          category_id: child.id
+          "category[type]": "directory"
+        }
+
+        assert.same {
+          errors: {
+            "only root category can have type set"
+          }
+        }, res
+
       it "should noop edit", ->
         res = CategoryApp\get current_user, "/edit-category", {
           category_id: category.id

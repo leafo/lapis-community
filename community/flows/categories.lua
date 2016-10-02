@@ -268,7 +268,8 @@ do
         "short_description",
         "archived",
         "hidden",
-        "rules"
+        "rules",
+        "type"
       })
       assert_valid(category_params, (function()
         local _accum_0 = { }
@@ -308,6 +309,22 @@ do
       end
       if has_field.rules then
         category_params.rules = category_params.rules or db.NULL
+      end
+      if has_field.type then
+        if self.category then
+          assert_error(not self.category.parent_category_id, "only root category can have type set")
+        end
+        assert_valid(category_params, {
+          {
+            "type",
+            one_of = {
+              "directory",
+              "post_list"
+            }
+          }
+        })
+        category_params.directory = category_params.type == "directory"
+        category_params.type = nil
       end
       return category_params
     end,

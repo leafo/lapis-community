@@ -25,7 +25,6 @@ VALIDATIONS = {
   {"voting_type", one_of: Categories.voting_types}
 }
 
-
 class CategoriesFlow extends Flow
   expose_assigns: true
 
@@ -186,6 +185,7 @@ class CategoriesFlow extends Flow
       "archived"
       "hidden"
       "rules"
+      "type"
     }
 
     assert_valid category_params, [v for v in *VALIDATIONS when has_field[v]]
@@ -217,6 +217,21 @@ class CategoriesFlow extends Flow
     if has_field.rules
       category_params.rules or= db.NULL
 
+    if has_field.type
+      if @category
+        assert_error not @category.parent_category_id,
+          "only root category can have type set"
+
+      assert_valid category_params, {
+        {"type", one_of: {
+          "directory"
+          "post_list"
+        }}
+      }
+
+      category_params.directory = category_params.type == "directory"
+      category_params.type = nil
+
     category_params
 
   new_category: require_login =>
@@ -231,7 +246,6 @@ class CategoriesFlow extends Flow
     }
 
     true
-
 
   -- category_tags[1][label] = "what"
   -- category_tags[1][id] = 1123
