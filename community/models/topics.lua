@@ -384,10 +384,10 @@ do
       end
     end,
     is_archived = function(self)
-      return self.status == self.__class.statuses.archived
+      return self.status == self.__class.statuses.archived or (self:get_category() and self:get_category().archived)
     end,
     is_default = function(self)
-      return self.status == self.__class.statuses.default
+      return self.status == self.__class.statuses.default and not self:is_archived()
     end,
     set_status = function(self, status)
       self:update({

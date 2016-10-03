@@ -387,10 +387,10 @@ class Topics extends Model
       res.min, res.max
 
   is_archived: =>
-    @status == @@statuses.archived
+    @status == @@statuses.archived or (@get_category! and @get_category!.archived)
 
   is_default: =>
-    @status == @@statuses.default
+    @status == @@statuses.default and not @is_archived!
 
   set_status: (status) =>
     @update status: @@statuses\for_db status

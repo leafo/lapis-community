@@ -86,6 +86,24 @@ describe "models.topics", ->
     assert.false topic\allowed_to_edit mod_user
     assert.true topic\allowed_to_moderate mod_user
 
+  it "doesn't allow post when category is archived", ->
+    category = factory.Categories user_id: factory.Users!.id
+    category\update archived: true
+
+    topic = factory.Topics category_id: category.id, locked: true
+
+    user = factory.Users!
+    topic_user = topic\get_user!
+    cateogry_user = category\get_user!
+
+    assert.false topic\allowed_to_post user
+    assert.false topic\allowed_to_post topic_user
+    assert.false topic\allowed_to_post category_user
+
+    assert.false topic\allowed_to_edit user
+    assert.false topic\allowed_to_edit topic_user
+    assert.false topic\allowed_to_edit category_user
+
   it "doesn't allow posts in locked topics", ->
     category_user = factory.Users!
     category = factory.Categories user_id: category_user.id
