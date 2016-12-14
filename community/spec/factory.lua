@@ -39,6 +39,7 @@ Categories = function(opts)
     opts = { }
   end
   opts.title = opts.title or "Category " .. tostring(next_counter("category"))
+  opts.category_order_type = "post_date"
   return assert(models.Categories:create(opts))
 end
 Topics = function(opts)

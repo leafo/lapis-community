@@ -283,6 +283,29 @@ do
       end
     end,
     refresh_topic_category_order = function(self)
+      local _exp_0 = self.category_order_type
+      if self.__class.category_order_types.post_date == _exp_0 then
+        return self:refresh_topic_category_order_by_post_date()
+      elseif self.__class.category_order_types.topic_score == _exp_0 then
+        return self:refresh_topic_category_order_by_topic_score()
+      else
+        return error("unknown category order type")
+      end
+    end,
+    refresh_topic_category_order_by_topic_score = function(self)
+      local Topics, Posts
+      do
+        local _obj_0 = require("community.models")
+        Topics, Posts = _obj_0.Topics, _obj_0.Posts
+      end
+      local tname = db.escape_identifier(Topics:table_name())
+      local posts_tname = db.escape_identifier(Posts:table_name())
+      local start = 1134028003
+      local time_bucket = 45000
+      local score_query = "(\n      select up_votes_count - down_votes_count\n      from " .. tostring(posts_tname) .. " where topic_id = " .. tostring(tname) .. ".id and post_number = 1 and depth = 1 and parent_post_id is null\n    )"
+      return db.query("\n      update " .. tostring(tname) .. "\n      set category_order =\n        (\n          (extract(epoch from created_at) - ?) / ? +\n          2 * (case when " .. tostring(score_query) .. " > 0 then 1 else -1 end) * log(greatest(abs(" .. tostring(score_query) .. "), 1))\n        ) * 1000 + (random() * 100)\n      where category_id = ?\n    ", start, time_bucket, self.id)
+    end,
+    refresh_topic_category_order_by_post_date = function(self)
       local Topics, Posts
       do
         local _obj_0 = require("community.models")
@@ -673,7 +696,7 @@ do
     })
   })
   self.category_order_types = enum({
-    last_post = 1,
+    post_date = 1,
     topic_score = 2
   })
   self.relations = {

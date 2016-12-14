@@ -534,6 +534,12 @@ class Topics extends Model
       topics_count: db.raw "topics_count + 1"
     }, timestamp: false
 
-
     true
+
+  get_score: =>
+    post = @get_topic_post!
+
+    return 0 unless post
+    post.up_votes_count - post.down_votes_count
+
 

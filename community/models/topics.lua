@@ -576,6 +576,13 @@ do
         timestamp = false
       })
       return true
+    end,
+    get_score = function(self)
+      local post = self:get_topic_post()
+      if not (post) then
+        return 0
+      end
+      return post.up_votes_count - post.down_votes_count
     end
   }
   _base_0.__index = _base_0

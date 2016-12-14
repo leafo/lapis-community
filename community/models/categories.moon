@@ -87,7 +87,7 @@ class Categories extends Model
   }
 
   @category_order_types: enum {
-    last_post: 1
+    post_date: 1
     topic_score: 2
   }
 
@@ -384,6 +384,40 @@ class Categories extends Model
         {}
 
   refresh_topic_category_order: =>
+    switch @category_order_type
+      when @@category_order_types.post_date
+        @refresh_topic_category_order_by_post_date()
+      when @@category_order_types.topic_score
+        @refresh_topic_category_order_by_topic_score()
+      else
+        error "unknown category order type"
+
+  refresh_topic_category_order_by_topic_score: =>
+    import Topics, Posts from require "community.models"
+    -- timestamp * 1000
+
+    tname = db.escape_identifier Topics\table_name!
+    posts_tname = db.escape_identifier Posts\table_name!
+
+    start = 1134028003
+    time_bucket = 45000
+
+    score_query = "(
+      select up_votes_count - down_votes_count
+      from #{posts_tname} where topic_id = #{tname}.id and post_number = 1 and depth = 1 and parent_post_id is null
+    )"
+
+    db.query "
+      update #{tname}
+      set category_order =
+        (
+          (extract(epoch from created_at) - ?) / ? +
+          2 * (case when #{score_query} > 0 then 1 else -1 end) * log(greatest(abs(#{score_query}), 1))
+        ) * 1000 + (random() * 100)
+      where category_id = ?
+    ", start, time_bucket, @id
+
+  refresh_topic_category_order_by_post_date: =>
     import Topics, Posts from require "community.models"
     tname = db.escape_identifier Topics\table_name!
     posts_tname = db.escape_identifier Posts\table_name!

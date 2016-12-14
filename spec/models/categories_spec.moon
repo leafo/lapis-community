@@ -8,7 +8,7 @@ describe "models.categories", ->
 
   import Users from require "spec.models"
   import Categories, Moderators, CategoryMembers, Bans,
-    CategoryGroups, CategoryGroupCategories, UserCategoryLastSeens
+    CategoryGroups, CategoryGroupCategories, UserCategoryLastSeens, Topics
     from require "spec.community_models"
 
   it "should create a category", ->
@@ -588,7 +588,7 @@ describe "models.categories", ->
     before_each ->
       category = factory.Categories!
 
-    it "refreshes category orders", ->
+    it "refreshes category order by post date", ->
       -- create some topics in reverse chronological order to be fixed
       topics = for i=1,3
         topic = factory.Topics {
@@ -604,4 +604,31 @@ describe "models.categories", ->
       category\refresh!
 
       assert.same topics[1].id, category\get_last_topic!.id
+
+    it "refreshes category order by topic score #ddd", ->
+      category\update category_order_type: assert Categories.category_order_types.topic_score
+
+      topics = for i=1,3
+        topic = factory.Topics {
+          category_id: category.id
+        }
+
+        post = factory.Posts {
+          topic_id: topic.id
+          up_votes_count: 10 * (3 - i)
+        }
+
+        category\increment_from_topic topic
+        topic\increment_from_post post
+        topic
+
+      category\refresh_topic_category_order!
+      category\refresh!
+
+      assert.same {
+        topics[1].id
+        topics[2].id
+        topics[3].id
+      }, [topic.id for topic in *Topics\select "order by category_order desc"]
+
 

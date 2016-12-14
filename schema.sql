@@ -147,7 +147,8 @@ CREATE TABLE community_categories (
     approval_type smallint,
     "position" integer DEFAULT 0 NOT NULL,
     directory boolean DEFAULT false NOT NULL,
-    topic_posting_type smallint
+    topic_posting_type smallint,
+    category_order_type smallint DEFAULT 1 NOT NULL
 );
 
 
@@ -1250,6 +1251,7 @@ community_10
 community_11
 community_12
 community_13
+community_14
 \.
 
 
