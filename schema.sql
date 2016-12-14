@@ -2,11 +2,12 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.5.2
--- Dumped by pg_dump version 9.5.2
+-- Dumped from database version 9.6.1
+-- Dumped by pg_dump version 9.6.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
@@ -722,84 +723,84 @@ ALTER SEQUENCE users_id_seq OWNED BY users.id;
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: community_activity_logs id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_activity_logs ALTER COLUMN id SET DEFAULT nextval('community_activity_logs_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: community_categories id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_categories ALTER COLUMN id SET DEFAULT nextval('community_categories_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: community_category_groups id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_category_groups ALTER COLUMN id SET DEFAULT nextval('community_category_groups_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: community_category_tags id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_category_tags ALTER COLUMN id SET DEFAULT nextval('community_category_tags_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: community_moderation_logs id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_moderation_logs ALTER COLUMN id SET DEFAULT nextval('community_moderation_logs_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: community_pending_posts id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_pending_posts ALTER COLUMN id SET DEFAULT nextval('community_pending_posts_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: community_post_edits id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_post_edits ALTER COLUMN id SET DEFAULT nextval('community_post_edits_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: community_post_reports id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_post_reports ALTER COLUMN id SET DEFAULT nextval('community_post_reports_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: community_posts id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_posts ALTER COLUMN id SET DEFAULT nextval('community_posts_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: community_topics id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_topics ALTER COLUMN id SET DEFAULT nextval('community_topics_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY users ALTER COLUMN id SET DEFAULT nextval('users_id_seq'::regclass);
 
 
 --
--- Name: community_activity_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_activity_logs community_activity_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_activity_logs
@@ -807,7 +808,7 @@ ALTER TABLE ONLY community_activity_logs
 
 
 --
--- Name: community_bans_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_bans community_bans_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_bans
@@ -815,7 +816,7 @@ ALTER TABLE ONLY community_bans
 
 
 --
--- Name: community_blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_blocks community_blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_blocks
@@ -823,7 +824,7 @@ ALTER TABLE ONLY community_blocks
 
 
 --
--- Name: community_bookmarks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_bookmarks community_bookmarks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_bookmarks
@@ -831,7 +832,7 @@ ALTER TABLE ONLY community_bookmarks
 
 
 --
--- Name: community_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_categories community_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_categories
@@ -839,7 +840,7 @@ ALTER TABLE ONLY community_categories
 
 
 --
--- Name: community_category_group_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_category_group_categories community_category_group_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_category_group_categories
@@ -847,7 +848,7 @@ ALTER TABLE ONLY community_category_group_categories
 
 
 --
--- Name: community_category_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_category_groups community_category_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_category_groups
@@ -855,7 +856,7 @@ ALTER TABLE ONLY community_category_groups
 
 
 --
--- Name: community_category_members_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_category_members community_category_members_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_category_members
@@ -863,7 +864,7 @@ ALTER TABLE ONLY community_category_members
 
 
 --
--- Name: community_category_post_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_category_post_logs community_category_post_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_category_post_logs
@@ -871,7 +872,7 @@ ALTER TABLE ONLY community_category_post_logs
 
 
 --
--- Name: community_category_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_category_tags community_category_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_category_tags
@@ -879,7 +880,7 @@ ALTER TABLE ONLY community_category_tags
 
 
 --
--- Name: community_moderation_log_objects_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_moderation_log_objects community_moderation_log_objects_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_moderation_log_objects
@@ -887,7 +888,7 @@ ALTER TABLE ONLY community_moderation_log_objects
 
 
 --
--- Name: community_moderation_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_moderation_logs community_moderation_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_moderation_logs
@@ -895,7 +896,7 @@ ALTER TABLE ONLY community_moderation_logs
 
 
 --
--- Name: community_moderators_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_moderators community_moderators_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_moderators
@@ -903,7 +904,7 @@ ALTER TABLE ONLY community_moderators
 
 
 --
--- Name: community_pending_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_pending_posts community_pending_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_pending_posts
@@ -911,7 +912,7 @@ ALTER TABLE ONLY community_pending_posts
 
 
 --
--- Name: community_post_edits_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_post_edits community_post_edits_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_post_edits
@@ -919,7 +920,7 @@ ALTER TABLE ONLY community_post_edits
 
 
 --
--- Name: community_post_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_post_reports community_post_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_post_reports
@@ -927,7 +928,7 @@ ALTER TABLE ONLY community_post_reports
 
 
 --
--- Name: community_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_posts community_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_posts
@@ -935,7 +936,7 @@ ALTER TABLE ONLY community_posts
 
 
 --
--- Name: community_subscriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_subscriptions community_subscriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_subscriptions
@@ -943,7 +944,7 @@ ALTER TABLE ONLY community_subscriptions
 
 
 --
--- Name: community_topic_participants_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_topic_participants community_topic_participants_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_topic_participants
@@ -951,7 +952,7 @@ ALTER TABLE ONLY community_topic_participants
 
 
 --
--- Name: community_topics_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_topics community_topics_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_topics
@@ -959,7 +960,7 @@ ALTER TABLE ONLY community_topics
 
 
 --
--- Name: community_user_category_last_seens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_user_category_last_seens community_user_category_last_seens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_user_category_last_seens
@@ -967,7 +968,7 @@ ALTER TABLE ONLY community_user_category_last_seens
 
 
 --
--- Name: community_user_topic_last_seens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_user_topic_last_seens community_user_topic_last_seens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_user_topic_last_seens
@@ -975,7 +976,7 @@ ALTER TABLE ONLY community_user_topic_last_seens
 
 
 --
--- Name: community_users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_users community_users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_users
@@ -983,7 +984,7 @@ ALTER TABLE ONLY community_users
 
 
 --
--- Name: community_votes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: community_votes community_votes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY community_votes
@@ -991,7 +992,7 @@ ALTER TABLE ONLY community_votes
 
 
 --
--- Name: lapis_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: lapis_migrations lapis_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY lapis_migrations
@@ -999,7 +1000,7 @@ ALTER TABLE ONLY lapis_migrations
 
 
 --
--- Name: users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY users
@@ -1210,16 +1211,6 @@ CREATE UNIQUE INDEX users_lower_username_idx ON users USING btree (lower((userna
 
 
 --
--- Name: public; Type: ACL; Schema: -; Owner: postgres
---
-
-REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM postgres;
-GRANT ALL ON SCHEMA public TO postgres;
-GRANT ALL ON SCHEMA public TO PUBLIC;
-
-
---
 -- PostgreSQL database dump complete
 --
 
@@ -1227,11 +1218,12 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.5.2
--- Dumped by pg_dump version 9.5.2
+-- Dumped from database version 9.6.1
+-- Dumped by pg_dump version 9.6.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
