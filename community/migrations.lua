@@ -1050,5 +1050,10 @@ return {
   end,
   [13] = function(self)
     return add_column(T("moderation_logs"), "data", "jsonb")
+  end,
+  [14] = function(self)
+    return add_column(T("categories"), "category_order_type", enum({
+      default = 1
+    }))
   end
 }

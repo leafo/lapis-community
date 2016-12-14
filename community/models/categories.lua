@@ -672,6 +672,10 @@ do
       pending = 2
     })
   })
+  self.category_order_types = enum({
+    last_post = 1,
+    topic_score = 2
+  })
   self.relations = {
     {
       "moderators",
@@ -733,6 +737,9 @@ do
     end
     if opts.parent_category_id and not opts.position then
       opts.position = self:next_position(opts.parent_category_id)
+    end
+    if opts.category_order_type then
+      opts.category_order_type = self.category_order_types:for_db(opts.category_order_type)
     end
     return Model.create(self, opts)
   end

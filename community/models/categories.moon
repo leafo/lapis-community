@@ -46,7 +46,8 @@ parent_enum = (property_name, default, opts) =>
 --   approval_type smallint,
 --   "position" integer DEFAULT 0 NOT NULL,
 --   directory boolean DEFAULT false NOT NULL,
---   topic_posting_type smallint
+--   topic_posting_type smallint,
+--   category_order_type smallint DEFAULT 1 NOT NULL
 -- );
 -- ALTER TABLE ONLY community_categories
 --   ADD CONSTRAINT community_categories_pkey PRIMARY KEY (id);
@@ -85,6 +86,11 @@ class Categories extends Model
     }
   }
 
+  @category_order_types: enum {
+    last_post: 1
+    topic_score: 2
+  }
+
   @relations: {
     -- TODO: don't hardcode 1
     -- TODO: rename to accepted_moderators
@@ -119,6 +125,9 @@ class Categories extends Model
 
     if opts.parent_category_id and not opts.position
       opts.position = @next_position opts.parent_category_id
+
+    if opts.category_order_type
+      opts.category_order_type = @category_order_types\for_db opts.category_order_type
 
     Model.create @, opts
 

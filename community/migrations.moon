@@ -526,6 +526,9 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
 
   [13]: =>
     add_column T"moderation_logs", "data", "jsonb"
+
+  [14]: =>
+    add_column T"categories", "category_order_type", enum default: 1
 }
 
 
