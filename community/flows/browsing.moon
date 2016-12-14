@@ -208,17 +208,8 @@ class BrowsingFlow extends Flow
     CommunityUsers\preload_users [p.user for p in *posts when p.user]
 
     if @current_user
-      posts_with_votes = [p for p in *posts when p.down_votes_count > 0 or p.up_votes_count > 0]
-
       import Blocks, Votes from require "community.models"
-
-      Votes\include_in posts_with_votes, "object_id", {
-        flip: true
-        where: {
-          object_type: Votes.object_types.post
-          user_id: @current_user.id
-        }
-      }
+      Votes\preload_post_votes posts, @current_user
 
       Blocks\include_in posts, "blocked_user_id", {
         flip: true

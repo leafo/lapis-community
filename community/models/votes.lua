@@ -85,6 +85,31 @@ do
       }
     }
   }
+  self.preload_post_votes = function(self, posts, user_id)
+    if not (user_id) then
+      return 
+    end
+    local posts_with_votes
+    do
+      local _accum_0 = { }
+      local _len_0 = 1
+      for _index_0 = 1, #posts do
+        local p = posts[_index_0]
+        if p.down_votes_count > 0 or p.up_votes_count > 0 then
+          _accum_0[_len_0] = p
+          _len_0 = _len_0 + 1
+        end
+      end
+      posts_with_votes = _accum_0
+    end
+    return self:include_in(posts_with_votes, "object_id", {
+      flip = true,
+      where = {
+        object_type = Votes.object_types.post,
+        user_id = user_id
+      }
+    })
+  end
   self.create = function(self, opts)
     if opts == nil then
       opts = { }

@@ -332,31 +332,12 @@ do
         return _accum_0
       end)())
       if self.current_user then
-        local posts_with_votes
-        do
-          local _accum_0 = { }
-          local _len_0 = 1
-          for _index_0 = 1, #posts do
-            local p = posts[_index_0]
-            if p.down_votes_count > 0 or p.up_votes_count > 0 then
-              _accum_0[_len_0] = p
-              _len_0 = _len_0 + 1
-            end
-          end
-          posts_with_votes = _accum_0
-        end
         local Blocks, Votes
         do
           local _obj_0 = require("community.models")
           Blocks, Votes = _obj_0.Blocks, _obj_0.Votes
         end
-        Votes:include_in(posts_with_votes, "object_id", {
-          flip = true,
-          where = {
-            object_type = Votes.object_types.post,
-            user_id = self.current_user.id
-          }
-        })
+        Votes:preload_post_votes(posts, self.current_user)
         Blocks:include_in(posts, "blocked_user_id", {
           flip = true,
           local_key = "user_id",

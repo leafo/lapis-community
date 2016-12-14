@@ -27,6 +27,18 @@ class Votes extends Model
     }}
   }
 
+  @preload_post_votes: (posts, user_id) =>
+    return unless user_id
+    posts_with_votes = [p for p in *posts when p.down_votes_count > 0 or p.up_votes_count > 0]
+
+    @include_in posts_with_votes, "object_id", {
+      flip: true
+      where: {
+        object_type: Votes.object_types.post
+        :user_id
+      }
+    }
+
   @create: (opts={}) =>
     assert opts.user_id, "missing user id"
 
