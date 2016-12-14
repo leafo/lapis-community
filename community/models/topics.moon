@@ -542,4 +542,16 @@ class Topics extends Model
     return 0 unless post
     post.up_votes_count - post.down_votes_count
 
+  calculate_score_category_order: =>
+    score = @get_score!
 
+    start = 1134028003
+    time_bucket = 45000
+
+    e = date.epoch!
+
+    time_score = (date.diff(date(@created_at), e)\spanseconds! - start) / time_bucket
+    adjusted_score = 2 * math.log10 math.max 1, math.abs score
+    adjusted_score = -adjusted_score unless score > 0
+
+    math.floor (time_score + adjusted_score) * 1000

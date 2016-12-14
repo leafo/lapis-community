@@ -657,3 +657,23 @@ describe "models.topics", ->
         assert.same 0, old_category.topics_count
         assert.same 1, new_category.topics_count
 
+
+  describe "calculate_score_category_order", ->
+    local topic
+    before_each ->
+      topic = factory.Topics!
+      post = factory.Posts {
+        topic_id: topic.id
+      }
+
+      topic\increment_from_post post
+
+    it "calculates score for topic with no votes", ->
+      initial = topic\calculate_score_category_order!
+
+      post = topic\get_topic_post!
+      post\update up_votes_count: 10
+
+      after = topic\calculate_score_category_order!
+      assert initial < after
+

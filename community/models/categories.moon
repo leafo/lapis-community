@@ -413,7 +413,7 @@ class Categories extends Model
         (
           (extract(epoch from created_at) - ?) / ? +
           2 * (case when #{score_query} > 0 then 1 else -1 end) * log(greatest(abs(#{score_query}), 1))
-        ) * 1000 + (random() * 100)
+        ) * 1000
       where category_id = ?
     ", start, time_bucket, @id
 
