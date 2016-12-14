@@ -13,7 +13,8 @@ import to_json from require "lapis.util"
 --   action character varying(255) NOT NULL,
 --   reason text,
 --   created_at timestamp without time zone NOT NULL,
---   updated_at timestamp without time zone NOT NULL
+--   updated_at timestamp without time zone NOT NULL,
+--   data jsonb
 -- );
 -- ALTER TABLE ONLY community_moderation_logs
 --   ADD CONSTRAINT community_moderation_logs_pkey PRIMARY KEY (id);
