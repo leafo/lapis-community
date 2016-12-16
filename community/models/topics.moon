@@ -170,7 +170,10 @@ class Topics extends Model
     assert post.topic_id == @id, "invalid post sent to topic"
 
     category_order = unless opts and opts.update_category_order == false
-      Topics\update_category_order_sql @category_id
+      import Categories from require "community.models"
+      category = @get_category!
+      if category and category\order_by_date!
+        Topics\update_category_order_sql @category_id
 
     @update {
       posts_count: db.raw "posts_count + 1"
