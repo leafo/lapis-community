@@ -149,7 +149,7 @@ describe "models.topics", ->
     assert.falsy topic\allowed_to_edit other_user
     assert.falsy topic\allowed_to_moderate other_user
 
-  it "should set category order #ddd", ->
+  it "should set category order", ->
     category = factory.Categories!
 
     one = factory.Topics category_id: category.id

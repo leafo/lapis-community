@@ -380,3 +380,7 @@ class Posts extends Model
 
   vote_score: =>
     @up_votes_count - @down_votes_count
+
+  on_vote_callback: (vote) =>
+
+

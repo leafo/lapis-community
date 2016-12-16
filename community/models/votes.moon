@@ -98,25 +98,37 @@ class Votes extends Model
   name: =>
     @positive and "up" or "down"
 
+  trigger_vote_callback: (res) =>
+    object = unpack res
+    return unless object
+
+    model = @@model_for_object_type @object_type
+    model\load object
+
+    if object.on_vote_callback
+      object\on_vote_callback @
+
+    res
+
   increment: =>
     model = @@model_for_object_type @object_type
     counter_name = @post_counter_name!
 
-    db.update model\table_name!, {
+    @trigger_vote_callback db.update model\table_name!, {
       [counter_name]: db.raw "#{db.escape_identifier counter_name} + 1"
     }, {
       id: @object_id
-    }
+    }, db.raw "*"
 
   decrement: =>
     model = @@model_for_object_type @object_type
     counter_name = @post_counter_name!
 
-    db.update model\table_name!, {
+    @trigger_vote_callback db.update model\table_name!, {
       [counter_name]: db.raw "#{db.escape_identifier counter_name} - 1"
     }, {
       id: @object_id
-    }
+    }, db.raw "*"
 
   post_counter_name: =>
     if @positive
