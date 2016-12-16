@@ -605,7 +605,7 @@ describe "models.categories", ->
 
       assert.same topics[1].id, category\get_last_topic!.id
 
-    it "refreshes category order by topic score #ddd", ->
+    it "refreshes category order by topic score", ->
       category\update category_order_type: assert Categories.category_order_types.topic_score
 
       topics = for i=1,3

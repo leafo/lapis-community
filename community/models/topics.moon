@@ -60,7 +60,7 @@ class Topics extends Model
       opts.slug or= slugify opts.title
 
     opts.status = opts.status and @statuses\for_db opts.status
-    opts.category_order = @update_category_order_sql opts.category_id
+    opts.category_order or= @update_category_order_sql opts.category_id
 
     Model.create @, opts, returning: {"status"}
 
@@ -72,6 +72,18 @@ class Topics extends Model
       from #{db.escape_identifier @table_name!}
       where category_id = ?)
     ", category_id
+
+  @calculate_score_category_order: (score, created_at) =>
+    start = 1134028003
+    time_bucket = 45000
+
+    e = date.epoch!
+
+    time_score = (date.diff(date(created_at), e)\spanseconds! - start) / time_bucket
+    adjusted_score = 2 * math.log10 math.max 1, math.abs score
+    adjusted_score = -adjusted_score unless score > 0
+
+    math.floor (time_score + adjusted_score) * 1000
 
   @recount: (where) =>
     import Posts from require "community.models"
@@ -543,15 +555,4 @@ class Topics extends Model
     post.up_votes_count - post.down_votes_count
 
   calculate_score_category_order: =>
-    score = @get_score!
-
-    start = 1134028003
-    time_bucket = 45000
-
-    e = date.epoch!
-
-    time_score = (date.diff(date(@created_at), e)\spanseconds! - start) / time_bucket
-    adjusted_score = 2 * math.log10 math.max 1, math.abs score
-    adjusted_score = -adjusted_score unless score > 0
-
-    math.floor (time_score + adjusted_score) * 1000
+    @@calculate_score_category_order @get_score!, @created_at

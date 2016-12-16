@@ -643,4 +643,13 @@ class Categories extends Model
     import Subscriptions from require "community.models"
     Subscriptions\unsubscribe @, user, user.id == @user_id
 
+  -- this is for a brand new topic, so it has no votes and create date is right now
+  next_topic_category_order: =>
+    import Topics from require "models"
+
+    switch @category_order_type
+      when @@category_order_types.topic_score
+        Topics\calculate_score_category_order 0, db.format_date!
+      when @@category_order_types.post_date
+        Topics\update_category_order_sql @id
 
