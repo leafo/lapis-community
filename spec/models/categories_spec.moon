@@ -631,4 +631,8 @@ describe "models.categories", ->
         topics[3].id
       }, [topic.id for topic in *Topics\select "order by category_order desc"]
 
+      -- it has the same value as the one calculated in lua
+      for topic in *topics
+        topic\refresh!
+        assert.same topic.category_order, topic\calculate_score_category_order!
 
