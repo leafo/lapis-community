@@ -149,10 +149,12 @@ describe "models.topics", ->
     assert.falsy topic\allowed_to_edit other_user
     assert.falsy topic\allowed_to_moderate other_user
 
-  it "should set category order", ->
-    one = factory.Topics category_id: 123
-    two = factory.Topics category_id: 123
-    three = factory.Topics category_id: 123
+  it "should set category order #ddd", ->
+    category = factory.Categories!
+
+    one = factory.Topics category_id: category.id
+    two = factory.Topics category_id: category.id
+    three = factory.Topics category_id: category.id
 
     assert.same 1, one.category_order
     assert.same 2, two.category_order
@@ -162,7 +164,7 @@ describe "models.topics", ->
     one\increment_from_post post
     assert.same 4, one.category_order
 
-    four = factory.Topics category_id: 123
+    four = factory.Topics category_id: category.id
     assert.same 5, four.category_order
 
   it "should check permission for banned user", ->
