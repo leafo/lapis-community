@@ -382,5 +382,12 @@ class Posts extends Model
     @up_votes_count - @down_votes_count
 
   on_vote_callback: (vote) =>
+    if topic = @is_topic_post! and @get_topic!
+      topic.topic_post = @
 
+      category = topic\get_category!
+      if category and category\order_by_score!
+        topic\update {
+          category_order: topic\calculate_score_category_order!
+        }
 
