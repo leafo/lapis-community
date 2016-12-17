@@ -94,7 +94,7 @@ describe "models.topics", ->
 
     user = factory.Users!
     topic_user = topic\get_user!
-    cateogry_user = category\get_user!
+    category_user = category\get_user!
 
     assert.false topic\allowed_to_post user
     assert.false topic\allowed_to_post topic_user

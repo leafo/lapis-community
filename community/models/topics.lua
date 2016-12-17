@@ -688,6 +688,7 @@ do
   self.calculate_score_category_order = function(self, score, created_at)
     local start = 1134028003
     local time_bucket = 45000
+    local date = require("date")
     local e = date.epoch()
     local time_score = (date.diff(date(created_at), e):spanseconds() - start) / time_bucket
     local adjusted_score = 2 * math.log10(math.max(1, math.abs(score) + 1))

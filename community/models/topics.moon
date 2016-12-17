@@ -77,6 +77,8 @@ class Topics extends Model
     start = 1134028003
     time_bucket = 45000
 
+    date = require "date"
+
     e = date.epoch!
 
     time_score = (date.diff(date(created_at), e)\spanseconds! - start) / time_bucket
