@@ -167,6 +167,47 @@ describe "models.topics", ->
     four = factory.Topics category_id: category.id
     assert.same 5, four.category_order
 
+  describe "with votes", ->
+    import Votes from require "spec.community_models"
+
+    local category
+
+    before_each ->
+      category = factory.Categories {
+        category_order_type: "topic_score"
+      }
+
+    it "creates topic with score ordering", ->
+      topic = Topics\create {
+        title: "hello world"
+        category_order: category\next_topic_category_order!
+      }
+
+      assert.not.same 1, topic.category_order
+
+    it "increments order when voted on", ->
+      topic = factory.Topics {
+        category_id: category.id
+        category_order: category\next_topic_category_order!
+      }
+
+      initial = topic.category_order
+
+      -- adding a post does not increment it
+      post = factory.Posts {
+        topic_id: topic.id
+      }
+
+      topic\increment_from_post post
+      topic\refresh!
+
+      assert.same initial, topic.category_order
+
+      Votes\vote post, factory.Users!
+      topic\refresh!
+
+      assert initial < topic.category_order
+
   it "should check permission for banned user", ->
     topic = factory.Topics!
     banned_user = factory.Users!

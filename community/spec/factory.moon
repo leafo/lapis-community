@@ -25,7 +25,7 @@ CommunityUsers = (opts={}) ->
 
 Categories = (opts={}) ->
   opts.title or= "Category #{next_counter "category"}"
-  opts.category_order_type = "post_date"
+  opts.category_order_type or= "post_date"
   assert models.Categories\create opts
 
 Topics = (opts={}) ->

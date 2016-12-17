@@ -634,5 +634,5 @@ describe "models.categories", ->
       -- it has the same value as the one calculated in lua
       for topic in *topics
         topic\refresh!
-        assert.same topic.category_order, topic\calculate_score_category_order!
+        assert 1 >= math.abs topic.category_order - topic\calculate_score_category_order!
 
