@@ -170,6 +170,21 @@ describe "posting flow", ->
       topic = unpack Topics\select!
       assert.same {"hello"}, [t.slug for t in *topic\get_tags!]
 
+    it "posts new topic with score based category order #ddd", ->
+      category = factory.Categories  category_order_type: "topic_score"
+
+      res = PostingApp\get current_user, "/new-topic", {
+        current_user_id: current_user.id
+        category_id: category.id
+        "topic[title]": "Hello world"
+        "topic[body]": "This is the body"
+      }
+
+      assert.truthy res.success
+
+      topic = unpack Topics\select!
+      assert.not.same 1, topic.category_order
+
   describe "new post", ->
     local topic
 

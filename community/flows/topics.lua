@@ -114,6 +114,7 @@ do
           end
           return _accum_0
         end)()) or nil,
+        category_order = self.category:next_topic_category_order(),
         sticky = sticky,
         locked = locked
       })

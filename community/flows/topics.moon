@@ -87,6 +87,7 @@ class TopicsFlow extends Flow
       category_id: @category.id
       title: new_topic.title
       tags: next(tags) and db.array([t.slug for t in *tags]) or nil
+      category_order: @category\next_topic_category_order!
       :sticky
       :locked
     }
