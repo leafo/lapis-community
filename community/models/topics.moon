@@ -80,7 +80,7 @@ class Topics extends Model
     e = date.epoch!
 
     time_score = (date.diff(date(created_at), e)\spanseconds! - start) / time_bucket
-    adjusted_score = 2 * math.log10 math.max 1, math.abs score
+    adjusted_score = 2 * math.log10 math.max 1, math.abs(score) + 1
     adjusted_score = -adjusted_score unless score > 0
 
     math.floor (time_score + adjusted_score) * 1000

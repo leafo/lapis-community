@@ -412,7 +412,7 @@ class Categories extends Model
       set category_order =
         (
           (extract(epoch from created_at) - ?) / ? +
-          2 * (case when #{score_query} > 0 then 1 else -1 end) * log(greatest(abs(#{score_query}), 1))
+          2 * (case when #{score_query} > 0 then 1 else -1 end) * log(greatest(abs(#{score_query}) + 1, 1))
         ) * 1000
       where category_id = ?
     ", start, time_bucket, @id
@@ -651,7 +651,7 @@ class Categories extends Model
 
   -- this is for a brand new topic, so it has no votes and create date is right now
   next_topic_category_order: =>
-    import Topics from require "models"
+    import Topics from require "community.models"
 
     switch @category_order_type
       when @@category_order_types.topic_score
