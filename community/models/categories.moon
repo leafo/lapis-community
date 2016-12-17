@@ -389,7 +389,7 @@ class Categories extends Model
       when @@voting_types.up
         VOTE_TYPES_UP
       when @@voting_types.up_down_first_post
-        if post\is_topic_post!
+        if post and post\is_topic_post!
           VOTE_TYPES_BOTH
         else
           VOTE_TYPES_NONE

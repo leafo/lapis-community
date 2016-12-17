@@ -286,7 +286,7 @@ do
       elseif self.__class.voting_types.up == _exp_0 then
         return VOTE_TYPES_UP
       elseif self.__class.voting_types.up_down_first_post == _exp_0 then
-        if post:is_topic_post() then
+        if post and post:is_topic_post() then
           return VOTE_TYPES_BOTH
         else
           return VOTE_TYPES_NONE
