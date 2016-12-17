@@ -5,6 +5,10 @@ import memoize1 from require "community.helpers.models"
 
 import slugify from require "lapis.util"
 
+VOTE_TYPES_UP = { up: true }
+VOTE_TYPES_BOTH = { up: true, down: true }
+VOTE_TYPES_NONE = { }
+
 parent_enum = (property_name, default, opts) =>
   enum_name = next opts
   @["default_#{property_name}"] = default
@@ -76,6 +80,7 @@ class Categories extends Model
       up_down: 1
       up: 2
       disabled: 3
+      up_down_first_post: 4
     }
   }
 
@@ -250,7 +255,7 @@ class Categories extends Model
 
     true
 
-  allowed_to_vote: (user, direction) =>
+  allowed_to_vote: (user, direction, post) =>
     return false unless user
     return true if direction == "remove"
 
@@ -259,6 +264,9 @@ class Categories extends Model
         true
       when @@voting_types.up
         direction == "up"
+      when @@voting_types.up_down_first_post
+        if post and post\is_topic_post!
+          true
       else
         false
 
@@ -374,14 +382,19 @@ class Categories extends Model
 
     ranges
 
-  available_vote_types: =>
+  available_vote_types: (post) =>
     switch @get_voting_type!
       when @@voting_types.up_down
-        { up: true, down: true }
+        VOTE_TYPES_BOTH
       when @@voting_types.up
-        { up: true }
+        VOTE_TYPES_UP
+      when @@voting_types.up_down_first_post
+        if post\is_topic_post!
+          VOTE_TYPES_BOTH
+        else
+          VOTE_TYPES_NONE
       else
-        {}
+        VOTE_TYPES_NONE
 
   refresh_topic_category_order: =>
     switch @category_order_type

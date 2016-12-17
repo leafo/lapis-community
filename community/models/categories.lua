@@ -7,6 +7,14 @@ local memoize1
 memoize1 = require("community.helpers.models").memoize1
 local slugify
 slugify = require("lapis.util").slugify
+local VOTE_TYPES_UP = {
+  up = true
+}
+local VOTE_TYPES_BOTH = {
+  up = true,
+  down = true
+}
+local VOTE_TYPES_NONE = { }
 local parent_enum
 parent_enum = function(self, property_name, default, opts)
   local enum_name = next(opts)
@@ -101,7 +109,7 @@ do
       end
       return true
     end,
-    allowed_to_vote = function(self, user, direction)
+    allowed_to_vote = function(self, user, direction, post)
       if not (user) then
         return false
       end
@@ -113,6 +121,10 @@ do
         return true
       elseif self.__class.voting_types.up == _exp_0 then
         return direction == "up"
+      elseif self.__class.voting_types.up_down_first_post == _exp_0 then
+        if post and post:is_topic_post() then
+          return true
+        end
       else
         return false
       end
@@ -267,19 +279,20 @@ do
       end
       return ranges
     end,
-    available_vote_types = function(self)
+    available_vote_types = function(self, post)
       local _exp_0 = self:get_voting_type()
       if self.__class.voting_types.up_down == _exp_0 then
-        return {
-          up = true,
-          down = true
-        }
+        return VOTE_TYPES_BOTH
       elseif self.__class.voting_types.up == _exp_0 then
-        return {
-          up = true
-        }
+        return VOTE_TYPES_UP
+      elseif self.__class.voting_types.up_down_first_post == _exp_0 then
+        if post:is_topic_post() then
+          return VOTE_TYPES_BOTH
+        else
+          return VOTE_TYPES_NONE
+        end
       else
-        return { }
+        return VOTE_TYPES_NONE
       end
     end,
     refresh_topic_category_order = function(self)
@@ -712,7 +725,8 @@ do
     voting_types = enum({
       up_down = 1,
       up = 2,
-      disabled = 3
+      disabled = 3,
+      up_down_first_post = 4
     })
   })
   parent_enum(self, "approval_type", "none", {

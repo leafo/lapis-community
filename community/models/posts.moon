@@ -140,7 +140,7 @@ class Posts extends Model
     topic = @get_topic!
 
     if category = @topic\get_category!
-      category\allowed_to_vote user, direction
+      category\allowed_to_vote user, direction, @
     else
       true
 

@@ -259,11 +259,11 @@ do
       end
       return self.sticky_log
     end,
-    available_vote_types = function(self)
+    available_vote_types = function(self, post)
       do
         local category = self:get_category()
         if category then
-          return category:available_vote_types()
+          return category:available_vote_types(post)
         else
           return {
             down = true,

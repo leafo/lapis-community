@@ -307,9 +307,9 @@ class Topics extends Model
 
     @sticky_log
 
-  available_vote_types: =>
+  available_vote_types: (post) =>
     if category = @get_category!
-      category\available_vote_types!
+      category\available_vote_types post
     else
       { down: true, up: true }
 

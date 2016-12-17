@@ -64,7 +64,7 @@ do
       do
         local category = self.topic:get_category()
         if category then
-          return category:allowed_to_vote(user, direction)
+          return category:allowed_to_vote(user, direction, self)
         else
           return true
         end
