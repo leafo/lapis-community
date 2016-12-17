@@ -99,7 +99,12 @@ do
       assert(post.topic_id == self.id, "invalid post sent to topic")
       local category_order
       if not (opts and opts.update_category_order == false) then
-        category_order = Topics:update_category_order_sql(self.category_id)
+        local Categories
+        Categories = require("community.models").Categories
+        local category = self:get_category()
+        if category and category:order_by_date() then
+          category_order = Topics:update_category_order_sql(self.category_id)
+        end
       end
       self:update({
         posts_count = db.raw("posts_count + 1"),
@@ -583,6 +588,9 @@ do
         return 0
       end
       return post.up_votes_count - post.down_votes_count
+    end,
+    calculate_score_category_order = function(self)
+      return self.__class:calculate_score_category_order(self:get_score(), self.created_at)
     end
   }
   _base_0.__index = _base_0
@@ -664,7 +672,7 @@ do
       opts.slug = opts.slug or slugify(opts.title)
     end
     opts.status = opts.status and self.statuses:for_db(opts.status)
-    opts.category_order = self:update_category_order_sql(opts.category_id)
+    opts.category_order = opts.category_order or self:update_category_order_sql(opts.category_id)
     return Model.create(self, opts, {
       returning = {
         "status"
@@ -676,6 +684,17 @@ do
       return nil
     end
     return db.raw(db.interpolate_query("\n      (select coalesce(max(category_order), 0) + 1\n      from " .. tostring(db.escape_identifier(self:table_name())) .. "\n      where category_id = ?)\n    ", category_id))
+  end
+  self.calculate_score_category_order = function(self, score, created_at)
+    local start = 1134028003
+    local time_bucket = 45000
+    local e = date.epoch()
+    local time_score = (date.diff(date(created_at), e):spanseconds() - start) / time_bucket
+    local adjusted_score = 2 * math.log10(math.max(1, math.abs(score) + 1))
+    if not (score > 0) then
+      adjusted_score = -adjusted_score
+    end
+    return math.floor((time_score + adjusted_score) * 1000)
   end
   self.recount = function(self, where)
     local Posts

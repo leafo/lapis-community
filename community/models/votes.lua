@@ -9,23 +9,35 @@ do
     name = function(self)
       return self.positive and "up" or "down"
     end,
+    trigger_vote_callback = function(self, res)
+      local object = unpack(res)
+      if not (object) then
+        return 
+      end
+      local model = self.__class:model_for_object_type(self.object_type)
+      model:load(object)
+      if object.on_vote_callback then
+        object:on_vote_callback(self)
+      end
+      return res
+    end,
     increment = function(self)
       local model = self.__class:model_for_object_type(self.object_type)
       local counter_name = self:post_counter_name()
-      return db.update(model:table_name(), {
+      return self:trigger_vote_callback(db.update(model:table_name(), {
         [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " + 1")
       }, {
         id = self.object_id
-      })
+      }, db.raw("*")))
     end,
     decrement = function(self)
       local model = self.__class:model_for_object_type(self.object_type)
       local counter_name = self:post_counter_name()
-      return db.update(model:table_name(), {
+      return self:trigger_vote_callback(db.update(model:table_name(), {
         [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " - 1")
       }, {
         id = self.object_id
-      })
+      }, db.raw("*")))
     end,
     post_counter_name = function(self)
       if self.positive then

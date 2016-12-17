@@ -303,7 +303,7 @@ do
       local start = 1134028003
       local time_bucket = 45000
       local score_query = "(\n      select up_votes_count - down_votes_count\n      from " .. tostring(posts_tname) .. " where topic_id = " .. tostring(tname) .. ".id and post_number = 1 and depth = 1 and parent_post_id is null\n    )"
-      return db.query("\n      update " .. tostring(tname) .. "\n      set category_order =\n        (\n          (extract(epoch from created_at) - ?) / ? +\n          2 * (case when " .. tostring(score_query) .. " > 0 then 1 else -1 end) * log(greatest(abs(" .. tostring(score_query) .. "), 1))\n        ) * 1000 + (random() * 100)\n      where category_id = ?\n    ", start, time_bucket, self.id)
+      return db.query("\n      update " .. tostring(tname) .. "\n      set category_order =\n        (\n          (extract(epoch from created_at) - ?) / ? +\n          2 * (case when " .. tostring(score_query) .. " > 0 then 1 else -1 end) * log(greatest(abs(" .. tostring(score_query) .. ") + 1, 1))\n        ) * 1000\n      where category_id = ?\n    ", start, time_bucket, self.id)
     end,
     refresh_topic_category_order_by_post_date = function(self)
       local Topics, Posts
@@ -637,6 +637,32 @@ do
       local Subscriptions
       Subscriptions = require("community.models").Subscriptions
       return Subscriptions:unsubscribe(self, user, user.id == self.user_id)
+    end,
+    order_by_score = function(self)
+      return self.category_order_type == self.__class.category_order_types.topic_score
+    end,
+    order_by_date = function(self)
+      return self.category_order_type == self.__class.category_order_types.post_date
+    end,
+    next_topic_category_order = function(self)
+      local Topics
+      Topics = require("community.models").Topics
+      local _exp_0 = self.category_order_type
+      if self.__class.category_order_types.topic_score == _exp_0 then
+        return Topics:calculate_score_category_order(0, db.format_date())
+      elseif self.__class.category_order_types.post_date == _exp_0 then
+        return Topics:update_category_order_sql(self.id)
+      end
+    end,
+    update_category_order_type = function(self, category_order)
+      category_order = self.__class.category_order_types:for_db(category_order)
+      if category_order == self.category_order_type then
+        return 
+      end
+      self:update({
+        category_order_type = category_order
+      })
+      return self:refresh_topic_category_order()
     end
   }
   _base_0.__index = _base_0

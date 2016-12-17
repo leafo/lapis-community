@@ -400,6 +400,20 @@ do
     end,
     vote_score = function(self)
       return self.up_votes_count - self.down_votes_count
+    end,
+    on_vote_callback = function(self, vote)
+      do
+        local topic = self:is_topic_post() and self:get_topic()
+        if topic then
+          topic.topic_post = self
+          local category = topic:get_category()
+          if category and category:order_by_score() then
+            return topic:update({
+              category_order = topic:calculate_score_category_order()
+            })
+          end
+        end
+      end
     end
   }
   _base_0.__index = _base_0
