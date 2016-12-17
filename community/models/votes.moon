@@ -9,7 +9,8 @@ import Model from require "community.model"
 --   object_id integer NOT NULL,
 --   positive boolean DEFAULT false NOT NULL,
 --   created_at timestamp without time zone NOT NULL,
---   updated_at timestamp without time zone NOT NULL
+--   updated_at timestamp without time zone NOT NULL,
+--   ip inet
 -- );
 -- ALTER TABLE ONLY community_votes
 --   ADD CONSTRAINT community_votes_pkey PRIMARY KEY (user_id, object_type, object_id);
@@ -18,6 +19,9 @@ import Model from require "community.model"
 class Votes extends Model
   @timestamp: true
   @primary_key: {"user_id", "object_type", "object_id"}
+
+  @current_ip_address: =>
+    ngx and ngx.var.remote_addr
 
   @relations: {
     {"user", belongs_to: "Users"}
@@ -49,7 +53,9 @@ class Votes extends Model
       opts.object = nil
 
     opts.object_type = @object_types\for_db opts.object_type
-    Model.create @, opts
+    opts.ip or= @current_ip_address!
+
+    super opts
 
   @vote: (object, user, positive=true) =>
     import upsert from require "community.helpers.models"
@@ -62,6 +68,7 @@ class Votes extends Model
       object_id: object.id
       user_id: user.id
       positive: not not positive
+      ip: @current_ip_address!
     }
 
     action, vote = upsert @, params

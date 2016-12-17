@@ -529,6 +529,9 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
 
   [14]: =>
     add_column T"categories", "category_order_type", enum default: 1
+
+  [15]: =>
+    add_column T"votes", "ip", "inet"
 }
 
 

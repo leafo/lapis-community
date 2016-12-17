@@ -82,6 +82,9 @@ do
     "object_type",
     "object_id"
   }
+  self.current_ip_address = function(self)
+    return ngx and ngx.var.remote_addr
+  end
   self.relations = {
     {
       "user",
@@ -134,7 +137,8 @@ do
       opts.object = nil
     end
     opts.object_type = self.object_types:for_db(opts.object_type)
-    return Model.create(self, opts)
+    opts.ip = opts.ip or self:current_ip_address()
+    return _class_0.__parent.create(self, opts)
   end
   self.vote = function(self, object, user, positive)
     if positive == nil then
@@ -148,7 +152,8 @@ do
       object_type = object_type,
       object_id = object.id,
       user_id = user.id,
-      positive = not not positive
+      positive = not not positive,
+      ip = self:current_ip_address()
     }
     local action, vote = upsert(self, params)
     if action == "update" and old_vote then

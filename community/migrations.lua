@@ -1055,5 +1055,8 @@ return {
     return add_column(T("categories"), "category_order_type", enum({
       default = 1
     }))
+  end,
+  [15] = function(self)
+    return add_column(T("votes"), "ip", "inet")
   end
 }
