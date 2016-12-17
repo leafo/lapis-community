@@ -337,7 +337,7 @@ do
           local _obj_0 = require("community.models")
           Blocks, Votes = _obj_0.Blocks, _obj_0.Votes
         end
-        Votes:preload_post_votes(posts, self.current_user)
+        Votes:preload_post_votes(posts, self.current_user.id)
         Blocks:include_in(posts, "blocked_user_id", {
           flip = true,
           local_key = "user_id",

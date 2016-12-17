@@ -209,7 +209,7 @@ class BrowsingFlow extends Flow
 
     if @current_user
       import Blocks, Votes from require "community.models"
-      Votes\preload_post_votes posts, @current_user
+      Votes\preload_post_votes posts, @current_user.id
 
       Blocks\include_in posts, "blocked_user_id", {
         flip: true
