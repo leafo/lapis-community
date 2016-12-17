@@ -458,6 +458,14 @@ do
     {
       "parent_post",
       belongs_to = "Posts"
+    },
+    {
+      "votes",
+      has_many = "Votes",
+      key = "object_id",
+      where = {
+        object_type = 1
+      }
     }
   }
   self.statuses = enum({
