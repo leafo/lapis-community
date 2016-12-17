@@ -636,3 +636,35 @@ describe "models.categories", ->
         topic\refresh!
         assert 1 >= math.abs topic.category_order - topic\calculate_score_category_order!
 
+  describe "update_category_order_type", ->
+    local category, topics
+
+    before_each ->
+      category = factory.Categories!
+
+      topics = for i=1,4
+        topic = factory.Topics {
+          category_id: category.id
+          created_at: db.raw db.interpolate_query "
+            now() at time zone 'utc' - ?::interval
+          ", "#{i} days"
+        }
+
+        post = factory.Posts {
+          topic_id: topic.id
+          up_votes_count: i
+        }
+
+        category\increment_from_topic topic
+        topic\increment_from_post post
+        topic
+
+    it "updates to score order and back #ddd", ->
+      category\update_category_order_type "topic_score"
+      category\update_category_order_type "post_date"
+
+      for t in *topics
+        t\refresh!
+
+      order = [t.category_order for t in *topics]
+      assert.same { 1,2,3,4 }, order

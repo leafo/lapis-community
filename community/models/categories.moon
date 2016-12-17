@@ -659,3 +659,15 @@ class Categories extends Model
       when @@category_order_types.post_date
         Topics\update_category_order_sql @id
 
+  update_category_order_type: (category_order) =>
+    category_order = @@category_order_types\for_db category_order
+    return if category_order == @category_order_type
+
+    @update {
+      category_order_type: category_order
+    }
+
+    @refresh_topic_category_order!
+
+
+
