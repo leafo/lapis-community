@@ -532,6 +532,9 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
 
   [15]: =>
     add_column T"votes", "ip", "inet"
+
+  [16]: =>
+    add_column T"topics", "rank_adjustment", integer default: 0
 }
 
 

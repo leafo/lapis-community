@@ -315,7 +315,7 @@ do
       local posts_tname = db.escape_identifier(Posts:table_name())
       local start = 1134028003
       local time_bucket = 45000
-      local score_query = "(\n      select up_votes_count - down_votes_count\n      from " .. tostring(posts_tname) .. " where topic_id = " .. tostring(tname) .. ".id and post_number = 1 and depth = 1 and parent_post_id is null\n    )"
+      local score_query = "(\n      select up_votes_count - down_votes_count + rank_adjustment\n      from " .. tostring(posts_tname) .. " where topic_id = " .. tostring(tname) .. ".id and post_number = 1 and depth = 1 and parent_post_id is null\n    )"
       return db.query("\n      update " .. tostring(tname) .. "\n      set category_order =\n        (\n          (extract(epoch from created_at) - ?) / ? +\n          2 * (case when " .. tostring(score_query) .. " > 0 then 1 else -1 end) * log(greatest(abs(" .. tostring(score_query) .. ") + 1, 1))\n        ) * 1000\n      where category_id = ?\n    ", start, time_bucket, self.id)
     end,
     refresh_topic_category_order_by_post_date = function(self)

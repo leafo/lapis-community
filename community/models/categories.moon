@@ -416,7 +416,7 @@ class Categories extends Model
     time_bucket = 45000
 
     score_query = "(
-      select up_votes_count - down_votes_count
+      select up_votes_count - down_votes_count + rank_adjustment
       from #{posts_tname} where topic_id = #{tname}.id and post_number = 1 and depth = 1 and parent_post_id is null
     )"
 

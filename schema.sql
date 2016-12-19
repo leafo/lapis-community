@@ -590,7 +590,8 @@ CREATE TABLE community_topics (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     status smallint DEFAULT 1 NOT NULL,
-    tags character varying(255)[]
+    tags character varying(255)[],
+    rank_adjustment integer DEFAULT 0 NOT NULL
 );
 
 
@@ -1254,6 +1255,7 @@ community_12
 community_13
 community_14
 community_15
+community_16
 \.
 
 

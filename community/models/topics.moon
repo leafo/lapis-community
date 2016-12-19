@@ -560,4 +560,6 @@ class Topics extends Model
     post.up_votes_count - post.down_votes_count
 
   calculate_score_category_order: =>
-    @@calculate_score_category_order @get_score!, @created_at
+    adjust = @rank_adjustment or 0
+    @@calculate_score_category_order @get_score! + adjust, @created_at
+

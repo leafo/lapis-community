@@ -590,7 +590,8 @@ do
       return post.up_votes_count - post.down_votes_count
     end,
     calculate_score_category_order = function(self)
-      return self.__class:calculate_score_category_order(self:get_score(), self.created_at)
+      local adjust = self.rank_adjustment or 0
+      return self.__class:calculate_score_category_order(self:get_score() + adjust, self.created_at)
     end
   }
   _base_0.__index = _base_0

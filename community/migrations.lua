@@ -1058,5 +1058,10 @@ return {
   end,
   [15] = function(self)
     return add_column(T("votes"), "ip", "inet")
+  end,
+  [16] = function(self)
+    return add_column(T("topics"), "rank_adjustment", integer({
+      default = 0
+    }))
   end
 }
