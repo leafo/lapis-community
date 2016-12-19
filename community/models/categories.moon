@@ -681,6 +681,3 @@ class Categories extends Model
     }
 
     @refresh_topic_category_order!
-
-
-

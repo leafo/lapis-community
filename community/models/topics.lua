@@ -592,6 +592,20 @@ do
     calculate_score_category_order = function(self)
       local adjust = self.rank_adjustment or 0
       return self.__class:calculate_score_category_order(self:get_score() + adjust, self.created_at)
+    end,
+    update_rank_adjustment = function(self, amount)
+      local category = self:get_category()
+      if not (category) then
+        return nil, "no category"
+      end
+      if not (category:order_by_score()) then
+        return nil, "category not ranked by score"
+      end
+      self.rank_adjustment = amount or 0
+      return self:update({
+        rank_adjustment = amount,
+        category_order = self:calculate_score_category_order()
+      })
     end
   }
   _base_0.__index = _base_0

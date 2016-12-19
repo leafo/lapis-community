@@ -720,3 +720,15 @@ describe "models.topics", ->
       after = topic\calculate_score_category_order!
       assert initial < after
 
+    it "updates rank adjustment", ->
+      category = topic\get_category!
+      category\update category_order_type: Categories.category_order_types.topic_score
+
+      before = topic\calculate_score_category_order!
+
+      assert topic\update_rank_adjustment 100
+
+      assert.same 4009, topic.category_order - before
+
+
+

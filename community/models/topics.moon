@@ -563,3 +563,15 @@ class Topics extends Model
     adjust = @rank_adjustment or 0
     @@calculate_score_category_order @get_score! + adjust, @created_at
 
+  update_rank_adjustment: (amount) =>
+    category = @get_category!
+    return nil, "no category" unless category
+    return nil, "category not ranked by score" unless category\order_by_score!
+
+    @rank_adjustment = amount or 0
+
+    @update {
+      rank_adjustment: amount
+      category_order: @calculate_score_category_order!
+    }
+
