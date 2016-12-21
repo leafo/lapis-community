@@ -727,8 +727,7 @@ describe "models.topics", ->
       before = topic\calculate_score_category_order!
 
       assert topic\update_rank_adjustment 100
-
-      assert.same 4009, topic.category_order - before
+      assert 2 > math.abs 4009 - (topic.category_order - before)
 
 
 
