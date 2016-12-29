@@ -591,7 +591,7 @@ do
     end,
     calculate_score_category_order = function(self)
       local adjust = self.rank_adjustment or 0
-      return self.__class:calculate_score_category_order(self:get_score() + adjust, self.created_at)
+      return self.__class:calculate_score_category_order(self:get_score() + adjust, self.created_at, self:get_category():topic_score_bucket_size())
     end,
     update_rank_adjustment = function(self, amount)
       local category = self:get_category()
@@ -700,9 +700,10 @@ do
     end
     return db.raw(db.interpolate_query("\n      (select coalesce(max(category_order), 0) + 1\n      from " .. tostring(db.escape_identifier(self:table_name())) .. "\n      where category_id = ?)\n    ", category_id))
   end
-  self.calculate_score_category_order = function(self, score, created_at)
-    local start = 1134028003
-    local time_bucket = 45000
+  self.calculate_score_category_order = function(self, score, created_at, time_bucket)
+    local Categories
+    Categories = require("community.models").Categories
+    local start = Categories.score_starting_date
     local date = require("date")
     local e = date.epoch()
     local time_score = (date.diff(date(created_at), e):spanseconds() - start) / time_bucket

@@ -305,6 +305,9 @@ do
         return error("unknown category order type")
       end
     end,
+    topic_score_bucket_size = function(self)
+      return 45000
+    end,
     refresh_topic_category_order_by_topic_score = function(self)
       local Topics, Posts
       do
@@ -313,8 +316,8 @@ do
       end
       local tname = db.escape_identifier(Topics:table_name())
       local posts_tname = db.escape_identifier(Posts:table_name())
-      local start = 1134028003
-      local time_bucket = 45000
+      local start = self.__class.score_starting_date
+      local time_bucket = self:topic_score_bucket_size()
       local score_query = "(\n      select up_votes_count - down_votes_count + rank_adjustment\n      from " .. tostring(posts_tname) .. " where topic_id = " .. tostring(tname) .. ".id and post_number = 1 and depth = 1 and parent_post_id is null\n    )"
       return db.query("\n      update " .. tostring(tname) .. "\n      set category_order =\n        (\n          (extract(epoch from created_at) - ?) / ? +\n          2 * (case when " .. tostring(score_query) .. " > 0 then 1 else -1 end) * log(greatest(abs(" .. tostring(score_query) .. ") + 1, 1))\n        ) * 1000\n      where category_id = ?\n    ", start, time_bucket, self.id)
     end,
@@ -662,7 +665,7 @@ do
       Topics = require("community.models").Topics
       local _exp_0 = self.category_order_type
       if self.__class.category_order_types.topic_score == _exp_0 then
-        return Topics:calculate_score_category_order(0, db.format_date())
+        return Topics:calculate_score_category_order(0, db.format_date(), self:topic_score_bucket_size())
       elseif self.__class.category_order_types.post_date == _exp_0 then
         return Topics:update_category_order_sql(self.id)
       end
@@ -708,6 +711,7 @@ do
   _base_0.__class = _class_0
   local self = _class_0
   self.timestamp = true
+  self.score_starting_date = 1134028003
   parent_enum(self, "membership_type", "public", {
     membership_types = enum({
       public = 1,
