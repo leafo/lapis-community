@@ -73,9 +73,9 @@ class Topics extends Model
       where category_id = ?)
     ", category_id
 
-  @calculate_score_category_order: (score, created_at) =>
-    start = 1134028003
-    time_bucket = 45000
+  @calculate_score_category_order: (score, created_at, time_bucket) =>
+    import Categories from require "community.models"
+    start = Categories.score_starting_date
 
     date = require "date"
 
@@ -561,7 +561,7 @@ class Topics extends Model
 
   calculate_score_category_order: =>
     adjust = @rank_adjustment or 0
-    @@calculate_score_category_order @get_score! + adjust, @created_at
+    @@calculate_score_category_order @get_score! + adjust, @created_at, @get_category!\topic_score_bucket_size!
 
   update_rank_adjustment: (amount) =>
     category = @get_category!

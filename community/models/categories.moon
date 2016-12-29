@@ -59,6 +59,7 @@ parent_enum = (property_name, default, opts) =>
 --
 class Categories extends Model
   @timestamp: true
+  @score_starting_date: 1134028003
 
   parent_enum @, "membership_type", "public", {
     membership_types: enum {
@@ -405,15 +406,17 @@ class Categories extends Model
       else
         error "unknown category order type"
 
+  topic_score_bucket_size: =>
+    45000
+
   refresh_topic_category_order_by_topic_score: =>
     import Topics, Posts from require "community.models"
-    -- timestamp * 1000
 
     tname = db.escape_identifier Topics\table_name!
     posts_tname = db.escape_identifier Posts\table_name!
 
-    start = 1134028003
-    time_bucket = 45000
+    start = @@score_starting_date
+    time_bucket = @topic_score_bucket_size!
 
     score_query = "(
       select up_votes_count - down_votes_count + rank_adjustment
@@ -668,7 +671,7 @@ class Categories extends Model
 
     switch @category_order_type
       when @@category_order_types.topic_score
-        Topics\calculate_score_category_order 0, db.format_date!
+        Topics\calculate_score_category_order 0, db.format_date!, @topic_score_bucket_size!
       when @@category_order_types.post_date
         Topics\update_category_order_sql @id
 
