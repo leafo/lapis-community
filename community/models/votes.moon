@@ -121,21 +121,39 @@ class Votes extends Model
     model = @@model_for_object_type @object_type
     counter_name = @post_counter_name!
 
-    @trigger_vote_callback db.update model\table_name!, {
-      [counter_name]: db.raw "#{db.escape_identifier counter_name} + 1"
-    }, {
-      id: @object_id
-    }, db.raw "*"
+    unless @counted == false
+      @trigger_vote_callback db.update model\table_name!, {
+        [counter_name]: db.raw "#{db.escape_identifier counter_name} + 1"
+      }, {
+        id: @object_id
+      }, db.raw "*"
 
   decrement: =>
     model = @@model_for_object_type @object_type
     counter_name = @post_counter_name!
 
-    @trigger_vote_callback db.update model\table_name!, {
-      [counter_name]: db.raw "#{db.escape_identifier counter_name} - 1"
+    unless @counted == false
+      @trigger_vote_callback db.update model\table_name!, {
+        [counter_name]: db.raw "#{db.escape_identifier counter_name} - 1"
+      }, {
+        id: @object_id
+      }, db.raw "*"
+
+  updated_counted: (counted) =>
+    res = db.update @@table_name!, {
+      :counted
     }, {
-      id: @object_id
-    }, db.raw "*"
+      user_id: @user_id
+      object_type: @object_type
+      object_id: @object_type
+      counted: not counted
+    }
+
+    if res.affected_rows and res.affected_rows > 0
+      if counted
+        @increment!
+      else
+        @decrement!
 
   post_counter_name: =>
     if @positive

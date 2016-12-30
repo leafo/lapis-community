@@ -1063,5 +1063,10 @@ return {
     return add_column(T("topics"), "rank_adjustment", integer({
       default = 0
     }))
+  end,
+  [17] = function(self)
+    return add_column(T("votes"), "counted", boolean({
+      default = true
+    }))
   end
 }

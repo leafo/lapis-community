@@ -24,20 +24,41 @@ do
     increment = function(self)
       local model = self.__class:model_for_object_type(self.object_type)
       local counter_name = self:post_counter_name()
-      return self:trigger_vote_callback(db.update(model:table_name(), {
-        [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " + 1")
-      }, {
-        id = self.object_id
-      }, db.raw("*")))
+      if not (self.counted == false) then
+        return self:trigger_vote_callback(db.update(model:table_name(), {
+          [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " + 1")
+        }, {
+          id = self.object_id
+        }, db.raw("*")))
+      end
     end,
     decrement = function(self)
       local model = self.__class:model_for_object_type(self.object_type)
       local counter_name = self:post_counter_name()
-      return self:trigger_vote_callback(db.update(model:table_name(), {
-        [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " - 1")
+      if not (self.counted == false) then
+        return self:trigger_vote_callback(db.update(model:table_name(), {
+          [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " - 1")
+        }, {
+          id = self.object_id
+        }, db.raw("*")))
+      end
+    end,
+    updated_counted = function(self, counted)
+      local res = db.update(self.__class:table_name(), {
+        counted = counted
       }, {
-        id = self.object_id
-      }, db.raw("*")))
+        user_id = self.user_id,
+        object_type = self.object_type,
+        object_id = self.object_type,
+        counted = not counted
+      })
+      if res.affected_rows and res.affected_rows > 0 then
+        if counted then
+          return self:increment()
+        else
+          return self:decrement()
+        end
+      end
     end,
     post_counter_name = function(self)
       if self.positive then
