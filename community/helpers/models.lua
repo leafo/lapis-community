@@ -263,11 +263,36 @@ insert_on_conflict_update = function(model, primary, create, update)
     return nil, res
   end
 end
+local encode_value_list
+encode_value_list = function(tuples)
+  local buffer = {
+    "VALUES ("
+  }
+  local i = 2
+  for j, t in ipairs(tuples) do
+    if j > 1 then
+      buffer[i] = "), ("
+      i = i + 1
+    end
+    for k, v in ipairs(t) do
+      if k > 1 then
+        buffer[i] = ", "
+        i = i + 1
+      end
+      buffer[i] = db.escape_literal(v)
+      i = i + 1
+    end
+  end
+  buffer[i] = ")"
+  i = i + 1
+  return table.concat(buffer)
+end
 return {
   upsert = upsert,
   safe_insert = safe_insert,
   filter_update = filter_update,
   soft_delete = soft_delete,
   memoize1 = memoize1,
-  insert_on_conflict_update = insert_on_conflict_update
+  insert_on_conflict_update = insert_on_conflict_update,
+  encode_value_list = encode_value_list
 }

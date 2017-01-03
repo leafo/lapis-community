@@ -179,6 +179,27 @@ insert_on_conflict_update = (model, primary, create, update) ->
   else
     nil, res
 
+encode_value_list = (tuples) ->
+  buffer = {"VALUES ("}
+  i = 2
 
+  for j, t in ipairs tuples
+    if j > 1
+      buffer[i] = "), ("
+      i += 1
 
-{ :upsert, :safe_insert, :filter_update, :soft_delete, :memoize1, :insert_on_conflict_update }
+    for k, v in ipairs t
+      if k > 1
+        buffer[i] = ", "
+        i += 1
+
+      buffer[i] = db.escape_literal v
+      i += 1
+
+  buffer[i] = ")"
+  i += 1
+
+  table.concat buffer
+
+{ :upsert, :safe_insert, :filter_update, :soft_delete, :memoize1,
+  :insert_on_conflict_update, :encode_value_list }
