@@ -235,6 +235,38 @@ class BrowsingFlow extends Flow
 
     @sticky_topics = pager\before!
 
+  -- get's posts from all subcategories
+  preview_category_topics: (@category, limit=5) =>
+    assert @category, "missing category"
+    status = Topics.statuses\for_db "default"
+    ids = [c.id for c in *@category\get_flat_children!]
+
+    table.insert ids, @category.id
+
+    import encode_value_list from require "community.helpers.models"
+
+    -- TODO: check query indexe because of sticky
+    topic_tuples = db.query "
+      select unnest(array(
+        select row_to_json(community_topics) from community_topics
+        where category_id = t.category_id
+        and status = ?
+        and not deleted
+        and last_post_id is not null
+        order by category_order
+        limit ?
+      )) as topic
+      from (#{encode_value_list [{id} for id in *ids]}) as t(category_id)
+    ", Topics.statuses.default, limit
+
+    table.sort topic_tuples, (a,b) ->
+      a.topic.last_post_id > b.topic.last_post_id
+
+    topics = [Topics\load(t.topic) for t in *topic_tuples[1,limit] when t]
+    @preload_topics topics
+
+    topics
+
   category_topics: (opts={}) =>
     mark_seen = if opts.mark_seen == nil
       true

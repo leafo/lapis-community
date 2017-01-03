@@ -37,6 +37,15 @@ class BrowsingApp extends TestApp
       category: @category
     }
 
+  "/category-preview": capture_errors_json =>
+    CategoriesFlow = require "community.flows.categories"
+    CategoriesFlow(@)\load_category!
+
+    json: {
+      success: true
+      topics: @flow\preview_category_topics @category
+    }
+
   "/topic-posts": capture_errors_json =>
     @flow\topic_posts {
       order: @params.order
@@ -231,6 +240,36 @@ describe "browsing flow", ->
 
           nesting = flatten res.posts
           assert.same expected_nesting, nesting
+
+      describe "preview category topics", ->
+        it "gets empty category", ->
+          category = factory.Categories!
+          res = BrowsingApp\get current_user, "/category-preview", category_id: category.id
+          assert.truthy res.success
+          assert.same 0, #res.topics
+          assert.same 0, UserCategoryLastSeens\count!
+
+        it "gets some topics #ddd", ->
+          local category, topics
+          for i=1,2
+            category = factory.Categories!
+            topics = for i=1,4
+              with topic = factory.Topics category_id: category.id
+                category\increment_from_topic topic
+                post = factory.Posts topic_id: topic.id
+                topic\increment_from_post post
+
+
+          topics[2]\delete!
+          topics[2]\refresh!
+
+          res = BrowsingApp\get current_user, "/category-preview", category_id: category.id
+
+          assert.truthy res.success
+          assert.same 3, #res.topics
+          assert.same { t.id, true for t in *topics when not t.deleted },
+            {t.id, true for t in *res.topics}
+
 
       describe "category topics", ->
         it "gets empty category", ->

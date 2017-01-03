@@ -367,6 +367,60 @@ do
       })
       self.sticky_topics = pager:before()
     end,
+    preview_category_topics = function(self, category, limit)
+      if limit == nil then
+        limit = 5
+      end
+      self.category = category
+      assert(self.category, "missing category")
+      local status = Topics.statuses:for_db("default")
+      local ids
+      do
+        local _accum_0 = { }
+        local _len_0 = 1
+        local _list_0 = self.category:get_flat_children()
+        for _index_0 = 1, #_list_0 do
+          local c = _list_0[_index_0]
+          _accum_0[_len_0] = c.id
+          _len_0 = _len_0 + 1
+        end
+        ids = _accum_0
+      end
+      table.insert(ids, self.category.id)
+      local encode_value_list
+      encode_value_list = require("community.helpers.models").encode_value_list
+      local topic_tuples = db.query("\n      select unnest(array(\n        select row_to_json(community_topics) from community_topics\n        where category_id = t.category_id\n        and status = ?\n        and not deleted\n        and last_post_id is not null\n        order by category_order\n        limit ?\n      )) as topic\n      from (" .. tostring(encode_value_list((function()
+        local _accum_0 = { }
+        local _len_0 = 1
+        for _index_0 = 1, #ids do
+          local id = ids[_index_0]
+          _accum_0[_len_0] = {
+            id
+          }
+          _len_0 = _len_0 + 1
+        end
+        return _accum_0
+      end)())) .. ") as t(category_id)\n    ", Topics.statuses.default, limit)
+      table.sort(topic_tuples, function(a, b)
+        return a.topic.last_post_id > b.topic.last_post_id
+      end)
+      local topics
+      do
+        local _accum_0 = { }
+        local _len_0 = 1
+        local _max_0 = limit
+        for _index_0 = 1, _max_0 < 0 and #topic_tuples + _max_0 or _max_0 do
+          local t = topic_tuples[_index_0]
+          if t then
+            _accum_0[_len_0] = Topics:load(t.topic)
+            _len_0 = _len_0 + 1
+          end
+        end
+        topics = _accum_0
+      end
+      self:preload_topics(topics)
+      return topics
+    end,
     category_topics = function(self, opts)
       if opts == nil then
         opts = { }
