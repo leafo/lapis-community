@@ -10,7 +10,8 @@ import Model from require "community.model"
 --   positive boolean DEFAULT false NOT NULL,
 --   created_at timestamp without time zone NOT NULL,
 --   updated_at timestamp without time zone NOT NULL,
---   ip inet
+--   ip inet,
+--   counted boolean DEFAULT true NOT NULL
 -- );
 -- ALTER TABLE ONLY community_votes
 --   ADD CONSTRAINT community_votes_pkey PRIMARY KEY (user_id, object_type, object_id);
