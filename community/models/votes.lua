@@ -169,12 +169,14 @@ do
     upsert = require("community.helpers.models").upsert
     local object_type = self:object_type_for_object(object)
     local old_vote = self:find(user.id, object_type, object.id)
+    local counted = object.user_id ~= user.id
     local params = {
       object_type = object_type,
       object_id = object.id,
       user_id = user.id,
       positive = not not positive,
-      ip = self:current_ip_address()
+      ip = self:current_ip_address(),
+      counted = counted
     }
     local action, vote = upsert(self, params)
     if action == "update" and old_vote then

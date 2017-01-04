@@ -24,6 +24,9 @@ describe "models.votes", ->
     assert.same 1, post.up_votes_count
     assert.same 0, post.down_votes_count
 
+    vote = unpack Votes\select!
+    assert.true vote.counted
+
     -- no-op
     Votes\vote post, current_user, true
 
@@ -37,6 +40,41 @@ describe "models.votes", ->
     post\refresh!
     assert.same 0, post.up_votes_count
     assert.same 1, post.down_votes_count
+
+  it "should make a uncounted vote", ->
+    post = factory.Posts!
+    user = post\get_user!
+
+    for i=1,2 -- twice to test noop
+      Votes\vote post, user, true
+      post\refresh!
+
+      assert.same 0, post.up_votes_count
+      assert.same 0, post.down_votes_count
+
+      vote = unpack Votes\select!
+      assert.false vote.counted
+
+    -- convert vote to down vote
+    Votes\vote post, user, false
+
+    post\refresh!
+
+    assert.same 0, post.up_votes_count
+    assert.same 0, post.down_votes_count
+
+    vote = unpack Votes\select!
+    assert.false vote.counted
+
+    -- remove the vote
+    Votes\unvote post, user
+
+    post\refresh!
+
+    assert.same 0, post.up_votes_count
+    assert.same 0, post.down_votes_count
+
+    assert.same 0, Votes\count!
 
 
 

@@ -44,6 +44,7 @@ class Votes extends Model
       }
     }
 
+  -- NOTE: vote and unvote are the public interface
   @create: (opts={}) =>
     assert opts.user_id, "missing user id"
 
@@ -64,12 +65,15 @@ class Votes extends Model
     object_type = @object_type_for_object object
     old_vote = @find user.id, object_type, object.id
 
+    counted = object.user_id != user.id
+
     params = {
       :object_type
       object_id: object.id
       user_id: user.id
       positive: not not positive
       ip: @current_ip_address!
+      :counted
     }
 
     action, vote = upsert @, params
