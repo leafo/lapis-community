@@ -674,7 +674,8 @@ CREATE TABLE community_votes (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     ip inet,
-    counted boolean DEFAULT true NOT NULL
+    counted boolean DEFAULT true NOT NULL,
+    score integer
 );
 
 
@@ -1258,6 +1259,7 @@ community_14
 community_15
 community_16
 community_17
+community_18
 \.
 
 
