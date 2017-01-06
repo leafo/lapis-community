@@ -539,6 +539,9 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
   [17]: =>
     add_column T"votes", "counted", boolean default: true
 
+  [18]: =>
+    add_column T"votes", "score", integer null: true, default: db.NULL
+
 }
 
 

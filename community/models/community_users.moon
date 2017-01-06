@@ -81,6 +81,9 @@ class CommunityUsers extends Model
       [field]: db.raw db.interpolate_query "#{db.escape_identifier field} + ?", amount
     }, timestamp: false
 
+  -- how much do their votes count for, an override point
+  get_vote_score: (object) => 1
+
   -- remove every single post
   purge_posts: =>
     import Posts from require "community.models"

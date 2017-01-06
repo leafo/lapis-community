@@ -24,9 +24,10 @@ do
     increment = function(self)
       local model = self.__class:model_for_object_type(self.object_type)
       local counter_name = self:post_counter_name()
+      local score = self.score or 1
       if not (self.counted == false) then
         return self:trigger_vote_callback(db.update(model:table_name(), {
-          [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " + 1")
+          [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " + " .. tostring(db.escape_literal(score)))
         }, {
           id = self.object_id
         }, db.raw("*")))
@@ -35,9 +36,10 @@ do
     decrement = function(self)
       local model = self.__class:model_for_object_type(self.object_type)
       local counter_name = self:post_counter_name()
+      local score = self.score or 1
       if not (self.counted == false) then
         return self:trigger_vote_callback(db.update(model:table_name(), {
-          [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " - 1")
+          [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " - " .. tostring(db.escape_literal(score)))
         }, {
           id = self.object_id
         }, db.raw("*")))
@@ -170,13 +172,17 @@ do
     local object_type = self:object_type_for_object(object)
     local old_vote = self:find(user.id, object_type, object.id)
     local counted = object.user_id ~= user.id
+    local CommunityUsers
+    CommunityUsers = require("community.models").CommunityUsers
+    local cu = CommunityUsers:for_user(user)
     local params = {
       object_type = object_type,
       object_id = object.id,
       user_id = user.id,
       positive = not not positive,
       ip = self:current_ip_address(),
-      counted = counted
+      counted = counted,
+      score = cu:get_vote_score()
     }
     local action, vote = upsert(self, params)
     if action == "update" and old_vote then

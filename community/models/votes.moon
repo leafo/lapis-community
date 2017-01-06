@@ -67,6 +67,9 @@ class Votes extends Model
 
     counted = object.user_id != user.id
 
+    import CommunityUsers from require "community.models"
+    cu = CommunityUsers\for_user user
+
     params = {
       :object_type
       object_id: object.id
@@ -74,6 +77,7 @@ class Votes extends Model
       positive: not not positive
       ip: @current_ip_address!
       :counted
+      score: cu\get_vote_score!
     }
 
     action, vote = upsert @, params
@@ -126,9 +130,11 @@ class Votes extends Model
     model = @@model_for_object_type @object_type
     counter_name = @post_counter_name!
 
+    score = @score or 1
+
     unless @counted == false
       @trigger_vote_callback db.update model\table_name!, {
-        [counter_name]: db.raw "#{db.escape_identifier counter_name} + 1"
+        [counter_name]: db.raw "#{db.escape_identifier counter_name} + #{db.escape_literal score}"
       }, {
         id: @object_id
       }, db.raw "*"
@@ -137,9 +143,11 @@ class Votes extends Model
     model = @@model_for_object_type @object_type
     counter_name = @post_counter_name!
 
+    score = @score or 1
+
     unless @counted == false
       @trigger_vote_callback db.update model\table_name!, {
-        [counter_name]: db.raw "#{db.escape_identifier counter_name} - 1"
+        [counter_name]: db.raw "#{db.escape_identifier counter_name} - #{db.escape_literal score}"
       }, {
         id: @object_id
       }, db.raw "*"

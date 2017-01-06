@@ -21,6 +21,9 @@ do
         timestamp = false
       })
     end,
+    get_vote_score = function(self, object)
+      return 1
+    end,
     purge_posts = function(self)
       local Posts
       Posts = require("community.models").Posts

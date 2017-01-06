@@ -1068,5 +1068,11 @@ return {
     return add_column(T("votes"), "counted", boolean({
       default = true
     }))
+  end,
+  [18] = function(self)
+    return add_column(T("votes"), "score", integer({
+      null = true,
+      default = db.NULL
+    }))
   end
 }
