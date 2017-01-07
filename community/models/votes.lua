@@ -88,6 +88,9 @@ do
           down_score = down_score - adjustment
         end
       end
+      if not (self.positive) then
+        adjustment = -adjustment
+      end
       return up_score, down_score, adjustment
     end
   }

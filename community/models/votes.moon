@@ -193,5 +193,6 @@ class Votes extends Model
       else
         down_score -= adjustment
 
+    adjustment = -adjustment unless @positive
     up_score, down_score, adjustment
 
