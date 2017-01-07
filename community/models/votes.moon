@@ -76,7 +76,7 @@ class Votes extends Model
       positive: not not positive
       ip: @current_ip_address!
       counted: cu\count_vote_for object
-      score: cu\get_vote_score object
+      score: cu\get_vote_score object, positive
     }
 
     action, vote = upsert @, params

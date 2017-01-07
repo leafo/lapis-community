@@ -82,7 +82,7 @@ class CommunityUsers extends Model
     }, timestamp: false
 
   -- how much do their votes count for, an override point
-  get_vote_score: (object) => 1
+  get_vote_score: (object, positive) => 1
 
   count_vote_for: (object) =>
     object.user_id != @user_id

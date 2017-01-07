@@ -21,7 +21,7 @@ do
         timestamp = false
       })
     end,
-    get_vote_score = function(self, object)
+    get_vote_score = function(self, object, positive)
       return 1
     end,
     count_vote_for = function(self, object)
