@@ -84,6 +84,9 @@ class CommunityUsers extends Model
   -- how much do their votes count for, an override point
   get_vote_score: (object) => 1
 
+  count_vote_for: (object) =>
+    object.user_id != @user_id
+
   -- remove every single post
   purge_posts: =>
     import Posts from require "community.models"

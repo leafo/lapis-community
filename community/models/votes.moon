@@ -66,8 +66,6 @@ class Votes extends Model
     object_type = @object_type_for_object object
     old_vote = @find user.id, object_type, object.id
 
-    counted = object.user_id != user.id
-
     import CommunityUsers from require "community.models"
     cu = CommunityUsers\for_user user
 
@@ -77,7 +75,7 @@ class Votes extends Model
       user_id: user.id
       positive: not not positive
       ip: @current_ip_address!
-      :counted
+      counted: cu\count_vote_for object
       score: cu\get_vote_score object
     }
 

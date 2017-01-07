@@ -24,6 +24,9 @@ do
     get_vote_score = function(self, object)
       return 1
     end,
+    count_vote_for = function(self, object)
+      return object.user_id ~= self.user_id
+    end,
     purge_posts = function(self)
       local Posts
       Posts = require("community.models").Posts

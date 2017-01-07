@@ -171,7 +171,6 @@ do
     upsert = require("community.helpers.models").upsert
     local object_type = self:object_type_for_object(object)
     local old_vote = self:find(user.id, object_type, object.id)
-    local counted = object.user_id ~= user.id
     local CommunityUsers
     CommunityUsers = require("community.models").CommunityUsers
     local cu = CommunityUsers:for_user(user)
@@ -181,7 +180,7 @@ do
       user_id = user.id,
       positive = not not positive,
       ip = self:current_ip_address(),
-      counted = counted,
+      counted = cu:count_vote_for(object),
       score = cu:get_vote_score(object)
     }
     local action, vote = upsert(self, params)
