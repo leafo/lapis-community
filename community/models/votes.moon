@@ -78,7 +78,7 @@ class Votes extends Model
       positive: not not positive
       ip: @current_ip_address!
       :counted
-      score: cu\get_vote_score!
+      score: cu\get_vote_score object
     }
 
     action, vote = upsert @, params

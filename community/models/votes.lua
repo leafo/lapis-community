@@ -182,7 +182,7 @@ do
       positive = not not positive,
       ip = self:current_ip_address(),
       counted = counted,
-      score = cu:get_vote_score()
+      score = cu:get_vote_score(object)
     }
     local action, vote = upsert(self, params)
     if action == "update" and old_vote then
