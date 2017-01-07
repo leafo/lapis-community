@@ -133,7 +133,7 @@ do
       local _len_0 = 1
       for _index_0 = 1, #posts do
         local p = posts[_index_0]
-        if p.down_votes_count > 0 or p.up_votes_count > 0 then
+        if p.down_votes_count > 0 or p.up_votes_count > 0 or p.user_id == user_id then
           _accum_0[_len_0] = p
           _len_0 = _len_0 + 1
         end

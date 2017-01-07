@@ -35,7 +35,7 @@ class Votes extends Model
 
   @preload_post_votes: (posts, user_id) =>
     return unless user_id
-    posts_with_votes = [p for p in *posts when p.down_votes_count > 0 or p.up_votes_count > 0]
+    posts_with_votes = [p for p in *posts when p.down_votes_count > 0 or p.up_votes_count > 0 or p.user_id == user_id]
 
     @include_in posts_with_votes, "object_id", {
       flip: true
