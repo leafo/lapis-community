@@ -129,7 +129,7 @@ class Votes extends Model
     model = @@model_for_object_type @object_type
     counter_name = @post_counter_name!
 
-    score = @score or 1
+    score = @score_adjustment!
 
     unless @counted == false
       @trigger_vote_callback db.update model\table_name!, {
@@ -142,7 +142,7 @@ class Votes extends Model
     model = @@model_for_object_type @object_type
     counter_name = @post_counter_name!
 
-    score = @score or 1
+    score = @score_adjustment!
 
     unless @counted == false
       @trigger_vote_callback db.update model\table_name!, {
@@ -172,3 +172,26 @@ class Votes extends Model
       "up_votes_count"
     else
       "down_votes_count"
+
+  score_adjustment: =>
+    @score or 1
+
+  -- returns up/down score without contribution, and then vote's contribution
+  base_and_adjustment: (object=@get_object!) =>
+    assert @object_type == @@object_type_for_object(object), "invalid object type"
+    assert @object_id == object.id, "invalid object id"
+
+    up_score = object.up_votes_count or 0
+    down_score = object.down_votes_count or 0
+
+    adjustment = @score_adjustment!
+
+    -- if we're counted, remove it
+    if @counted
+      if @positive
+        up_score -= adjustment
+      else
+        down_score -= adjustment
+
+    up_score, down_score, adjustment
+

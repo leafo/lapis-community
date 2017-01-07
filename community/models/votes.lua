@@ -24,7 +24,7 @@ do
     increment = function(self)
       local model = self.__class:model_for_object_type(self.object_type)
       local counter_name = self:post_counter_name()
-      local score = self.score or 1
+      local score = self:score_adjustment()
       if not (self.counted == false) then
         return self:trigger_vote_callback(db.update(model:table_name(), {
           [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " + " .. tostring(db.escape_literal(score)))
@@ -36,7 +36,7 @@ do
     decrement = function(self)
       local model = self.__class:model_for_object_type(self.object_type)
       local counter_name = self:post_counter_name()
-      local score = self.score or 1
+      local score = self:score_adjustment()
       if not (self.counted == false) then
         return self:trigger_vote_callback(db.update(model:table_name(), {
           [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " - " .. tostring(db.escape_literal(score)))
@@ -68,6 +68,27 @@ do
       else
         return "down_votes_count"
       end
+    end,
+    score_adjustment = function(self)
+      return self.score or 1
+    end,
+    base_and_adjustment = function(self, object)
+      if object == nil then
+        object = self:get_object()
+      end
+      assert(self.object_type == self.__class:object_type_for_object(object), "invalid object type")
+      assert(self.object_id == object.id, "invalid object id")
+      local up_score = object.up_votes_count or 0
+      local down_score = object.down_votes_count or 0
+      local adjustment = self:score_adjustment()
+      if self.counted then
+        if self.positive then
+          up_score = up_score - adjustment
+        else
+          down_score = down_score - adjustment
+        end
+      end
+      return up_score, down_score, adjustment
     end
   }
   _base_0.__index = _base_0
