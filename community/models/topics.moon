@@ -171,18 +171,19 @@ class Topics extends Model
 
   increment_from_post: (post, opts) =>
     assert post.topic_id == @id, "invalid post sent to topic"
+    is_moderation_log = post.moderation_log_id
 
-    category_order = unless opts and opts.update_category_order == false
+    category_order = unless is_moderation_log or (opts and opts.update_category_order == false)
       import Categories from require "community.models"
       category = @get_category!
       if category and category\order_by_date!
         Topics\update_category_order_sql @category_id
 
     @update {
-      posts_count: db.raw "posts_count + 1"
+      posts_count: not is_moderation_log and db.raw("posts_count + 1") or nil
       root_posts_count: if post.depth == 1
         db.raw "root_posts_count + 1"
-      last_post_id: post.id
+      last_post_id: not is_moderation_log and post.id or nil
       :category_order
     }, timestamp: false
 
@@ -199,6 +200,7 @@ class Topics extends Model
           topic_id = ? and
             not deleted and
             status = ? and
+            moderation_log_id is null and
             (depth != 1 or post_number != 1)
         order by id desc
         limit 1

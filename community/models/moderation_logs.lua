@@ -20,6 +20,22 @@ do
           object_id = o.id
         })
       end
+    end,
+    create_backing_post = function(self)
+      if not (self.object_type == self.__class.object_types.topic) then
+        return nil, "not a topic moderation"
+      end
+      local Posts
+      Posts = require("community.models").Posts
+      local post = Posts:create({
+        moderation_log_id = self.id,
+        body = "",
+        topic_id = self.object_id,
+        user_id = self.user_id
+      })
+      local topic = self:get_object()
+      topic:increment_from_post(post)
+      return post
     end
   }
   _base_0.__index = _base_0
@@ -103,7 +119,7 @@ do
     local log_objects = opts.log_objects
     opts.log_objects = nil
     do
-      local l = Model.create(self, opts)
+      local l = _class_0.__parent.create(self, opts)
       if log_objects then
         l:set_log_objects(log_objects)
       end

@@ -53,7 +53,7 @@ class ModerationLogs extends Model
     log_objects = opts.log_objects
     opts.log_objects = nil
 
-    with l = Model.create @, opts
+    with l = super opts
       if log_objects
         l\set_log_objects log_objects
 
@@ -66,4 +66,19 @@ class ModerationLogs extends Model
         object_type: ModerationLogObjects\object_type_for_object o
         object_id: o.id
       }
+
+  create_backing_post: =>
+    return nil, "not a topic moderation" unless @object_type == @@object_types.topic
+    import Posts from require "community.models"
+
+    post = Posts\create {
+      moderation_log_id: @id
+      body: ""
+      topic_id: @object_id
+      user_id: @user_id
+    }
+
+    topic = @get_object!
+    topic\increment_from_post post
+    post
 

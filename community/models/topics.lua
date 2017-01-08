@@ -97,8 +97,9 @@ do
     end,
     increment_from_post = function(self, post, opts)
       assert(post.topic_id == self.id, "invalid post sent to topic")
+      local is_moderation_log = post.moderation_log_id
       local category_order
-      if not (opts and opts.update_category_order == false) then
+      if not (is_moderation_log or (opts and opts.update_category_order == false)) then
         local Categories
         Categories = require("community.models").Categories
         local category = self:get_category()
@@ -107,13 +108,13 @@ do
         end
       end
       self:update({
-        posts_count = db.raw("posts_count + 1"),
+        posts_count = not is_moderation_log and db.raw("posts_count + 1") or nil,
         root_posts_count = (function()
           if post.depth == 1 then
             return db.raw("root_posts_count + 1")
           end
         end)(),
-        last_post_id = post.id,
+        last_post_id = not is_moderation_log and post.id or nil,
         category_order = category_order
       }, {
         timestamp = false
@@ -129,7 +130,7 @@ do
       local Posts
       Posts = require("community.models").Posts
       return self:update({
-        last_post_id = db.raw(db.interpolate_query("(\n        select id from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n        where\n          topic_id = ? and\n            not deleted and\n            status = ? and\n            (depth != 1 or post_number != 1)\n        order by id desc\n        limit 1\n      )", self.id, self.__class.statuses.default))
+        last_post_id = db.raw(db.interpolate_query("(\n        select id from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n        where\n          topic_id = ? and\n            not deleted and\n            status = ? and\n            moderation_log_id is null and\n            (depth != 1 or post_number != 1)\n        order by id desc\n        limit 1\n      )", self.id, self.__class.statuses.default))
       }, {
         timestamp = false
       })

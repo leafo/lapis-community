@@ -84,6 +84,17 @@ Moderators = (opts={}) ->
   opts.accepted = true if opts.accepted == nil
   assert models.Moderators\create opts
 
+
+ModerationLogs = (opts={}) ->
+  opts.user_id or= Users!.id
+
+  unless opts.object
+    opts.object = Topics status: "archived"
+    opts.action = 'topic.archive'
+    opts.category_id = opts.object.category_id
+
+  assert models.ModerationLogs\create opts
+
 PostReports = (opts={}) ->
   if opts.category_id
     assert not opts.post_id, "no post id please"
@@ -156,4 +167,4 @@ CategoryTags = (opts={}) ->
 { :next_counter, :next_email,
   :Categories, :Topics, :Posts, :Votes, :Moderators, :PostReports,
   :CategoryMembers, :Blocks, :Bans, :CategoryGroups, :Bookmarks,
-  :CommunityUsers, :PendingPosts, :CategoryTags }
+  :CommunityUsers, :PendingPosts, :CategoryTags, :ModerationLogs }

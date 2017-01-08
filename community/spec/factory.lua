@@ -23,7 +23,7 @@ local next_email
 next_email = function()
   return "me-" .. tostring(next_counter("email")) .. "@example.com"
 end
-local Users, CommunityUsers, Categories, Topics, Posts, Votes, Moderators, PostReports, CategoryMembers, Blocks, Bans, CategoryGroups, Bookmarks, PendingPosts, CategoryTags
+local Users, CommunityUsers, Categories, Topics, Posts, Votes, Moderators, ModerationLogs, PostReports, CategoryMembers, Blocks, Bans, CategoryGroups, Bookmarks, PendingPosts, CategoryTags
 Users = function(...)
   return require("spec.factory").Users(...)
 end
@@ -117,6 +117,20 @@ Moderators = function(opts)
     opts.accepted = true
   end
   return assert(models.Moderators:create(opts))
+end
+ModerationLogs = function(opts)
+  if opts == nil then
+    opts = { }
+  end
+  opts.user_id = opts.user_id or Users().id
+  if not (opts.object) then
+    opts.object = Topics({
+      status = "archived"
+    })
+    opts.action = 'topic.archive'
+    opts.category_id = opts.object.category_id
+  end
+  return assert(models.ModerationLogs:create(opts))
 end
 PostReports = function(opts)
   if opts == nil then
@@ -241,5 +255,6 @@ return {
   Bookmarks = Bookmarks,
   CommunityUsers = CommunityUsers,
   PendingPosts = PendingPosts,
-  CategoryTags = CategoryTags
+  CategoryTags = CategoryTags,
+  ModerationLogs = ModerationLogs
 }
