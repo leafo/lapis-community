@@ -3,7 +3,7 @@
     ["."]: { "ngx" }
 
     ["spec/"]: {
-      "it", "describe", "before_each", "after_each", "setup", "teardown"
+      "it", "describe", "before_each", "after_each", "setup", "teardown", "stub"
     }
   }
 }
