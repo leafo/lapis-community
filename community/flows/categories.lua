@@ -177,6 +177,7 @@ do
       local ModerationLogs
       ModerationLogs = require("community.models").ModerationLogs
       self.pager = ModerationLogs:paginated("\n      where category_id in ? order by id desc\n    ", db.list(category_ids), {
+        per_page = 50,
         prepare_results = function(logs)
           ModerationLogs:preload_relations(logs, "object", "user")
           return logs

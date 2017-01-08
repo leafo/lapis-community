@@ -106,9 +106,12 @@ class CategoriesFlow extends Flow
     import ModerationLogs from require "community.models"
     @pager = ModerationLogs\paginated "
       where category_id in ? order by id desc
-    ", db.list(category_ids), prepare_results: (logs) ->
-      ModerationLogs\preload_relations logs, "object", "user"
-      logs
+    ", db.list(category_ids), {
+      per_page: 50
+      prepare_results: (logs) ->
+        ModerationLogs\preload_relations logs, "object", "user"
+        logs
+    }
 
     @moderation_logs = @pager\get_page @page
 
