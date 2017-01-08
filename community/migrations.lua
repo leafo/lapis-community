@@ -1074,5 +1074,11 @@ return {
       null = true,
       default = db.NULL
     }))
+  end,
+  [19] = function(self)
+    return add_column(T("posts"), "moderation_log_id", foreign_key({
+      null = true,
+      unique = true
+    }))
   end
 }

@@ -542,6 +542,8 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
   [18]: =>
     add_column T"votes", "score", integer null: true, default: db.NULL
 
+  [19]: =>
+    add_column T"posts", "moderation_log_id", foreign_key null: true, unique: true
 }
 
 
