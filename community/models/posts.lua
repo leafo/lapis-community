@@ -51,6 +51,9 @@ do
       return self.post_number == 1 and self.depth == 1
     end,
     allowed_to_vote = function(self, user, direction)
+      if self:is_moderation_event() then
+        return false
+      end
       if not (user) then
         return false
       end
@@ -93,6 +96,9 @@ do
       return false
     end,
     allowed_to_reply = function(self, user)
+      if self:is_moderation_event() then
+        return false
+      end
       if not (user) then
         return false
       end
@@ -103,6 +109,9 @@ do
       return topic:allowed_to_post(user)
     end,
     should_soft_delete = function(self)
+      if self:is_moderation_event() then
+        return false
+      end
       local delta = date.diff(date(true), date(self.created_at))
       return delta:spanminutes() > 10 or self:has_replies() or self:has_next_post()
     end,
@@ -130,30 +139,32 @@ do
           local _obj_0 = require("community.models")
           CommunityUsers, Topics, CategoryPostLogs = _obj_0.CommunityUsers, _obj_0.Topics, _obj_0.CategoryPostLogs
         end
-        CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
-        CategoryPostLogs:clear_post(self)
-        do
-          local topic = self:get_topic()
-          if topic then
-            if topic.last_post_id == self.id then
-              topic:refresh_last_post()
-            end
-            do
-              local category = topic:get_category()
-              if category then
-                do
-                  category.last_topic_id = topic.id
-                  if category.last_topic_id then
-                    category:refresh_last_topic()
+        if not (self:is_moderation_event()) then
+          CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
+          CategoryPostLogs:clear_post(self)
+          do
+            local topic = self:get_topic()
+            if topic then
+              if topic.last_post_id == self.id then
+                topic:refresh_last_post()
+              end
+              do
+                local category = topic:get_category()
+                if category then
+                  do
+                    category.last_topic_id = topic.id
+                    if category.last_topic_id then
+                      category:refresh_last_topic()
+                    end
                   end
                 end
               end
+              topic:update({
+                deleted_posts_count = db.raw("deleted_posts_count + 1")
+              }, {
+                timestamp = false
+              })
             end
-            topic:update({
-              deleted_posts_count = db.raw("deleted_posts_count + 1")
-            }, {
-              timestamp = false
-            })
           end
         end
         return true
@@ -191,7 +202,7 @@ do
           end
           if not (self.deleted) then
             topic:update({
-              posts_count = db.raw("posts_count - 1"),
+              posts_count = not self:is_moderation_event() and db.raw("posts_count - 1") or nil,
               root_posts_count = (function()
                 if self.depth == 1 then
                   return db.raw("root_posts_count - 1")
@@ -237,6 +248,9 @@ do
       return true
     end,
     allowed_to_report = function(self, user)
+      if self:is_moderation_event() then
+        return false
+      end
       if not (user) then
         return false
       end
@@ -255,6 +269,9 @@ do
       return self:get_topic():allowed_to_view(user)
     end,
     notification_targets = function(self, extra_targets)
+      if self:is_moderation_event() then
+        return { }
+      end
       local targets = { }
       local _list_0 = self:get_mentioned_users()
       for _index_0 = 1, #_list_0 do

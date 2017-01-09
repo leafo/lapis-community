@@ -139,6 +139,7 @@ class Posts extends Model
     @post_number == 1 and @depth == 1
 
   allowed_to_vote: (user, direction) =>
+    return false if @is_moderation_event!
     return false unless user
     return false if @deleted
     return false if @is_archived!
@@ -164,12 +165,15 @@ class Posts extends Model
     false
 
   allowed_to_reply: (user) =>
+    return false if @is_moderation_event!
     return false unless user
     return false unless @is_default!
     topic = @get_topic!
     topic\allowed_to_post user
 
   should_soft_delete: =>
+    return false if @is_moderation_event!
+
     -- older than 10 mins or has replies
     delta = date.diff date(true), date(@created_at)
     delta\spanminutes! > 10 or @has_replies! or @has_next_post!
@@ -192,20 +196,21 @@ class Posts extends Model
       @update { deleted_at: db.format_date! }, timestamp: false
       import CommunityUsers, Topics, CategoryPostLogs from require "community.models"
 
-      CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
-      CategoryPostLogs\clear_post @
+      unless @is_moderation_event!
+        CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
+        CategoryPostLogs\clear_post @
 
-      if topic = @get_topic!
-        if topic.last_post_id == @id
-          topic\refresh_last_post!
+        if topic = @get_topic!
+          if topic.last_post_id == @id
+            topic\refresh_last_post!
 
-        if category = topic\get_category!
-          if category.last_topic_id = topic.id
-            category\refresh_last_topic!
+          if category = topic\get_category!
+            if category.last_topic_id = topic.id
+              category\refresh_last_topic!
 
-        topic\update {
-          deleted_posts_count: db.raw "deleted_posts_count + 1"
-        }, timestamp: false
+          topic\update {
+            deleted_posts_count: db.raw "deleted_posts_count + 1"
+          }, timestamp: false
 
       return true
 
@@ -242,7 +247,7 @@ class Posts extends Model
       -- it was already soft deleted, no need to update the counts
       unless @deleted
         topic\update {
-          posts_count: db.raw "posts_count - 1"
+          posts_count: not @is_moderation_event! and db.raw("posts_count - 1") or nil
           root_posts_count: if @depth == 1
             db.raw "root_posts_count - 1"
         }, timestamp: false
@@ -272,6 +277,7 @@ class Posts extends Model
     true
 
   allowed_to_report: (user) =>
+    return false if @is_moderation_event!
     return false unless user
     return false if user.id == @user_id
     return false unless @is_default!
@@ -282,6 +288,8 @@ class Posts extends Model
     @get_topic!\allowed_to_view user
 
   notification_targets: (extra_targets) =>
+    return {} if @is_moderation_event!
+
     targets = {}
 
     for user in *@get_mentioned_users!
