@@ -484,6 +484,9 @@ class Categories extends Model
     }, timestamp: false
 
   increment_from_post: (post) =>
+    if post\is_moderation_event!
+      return
+
     import CategoryPostLogs from require "community.models"
     CategoryPostLogs\log_post post
 

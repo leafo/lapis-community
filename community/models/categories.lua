@@ -352,6 +352,9 @@ do
       })
     end,
     increment_from_post = function(self, post)
+      if post:is_moderation_event() then
+        return 
+      end
       local CategoryPostLogs
       CategoryPostLogs = require("community.models").CategoryPostLogs
       CategoryPostLogs:log_post(post)

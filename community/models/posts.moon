@@ -397,3 +397,6 @@ class Posts extends Model
           category_order: topic\calculate_score_category_order!
         }
 
+  is_moderation_event: =>
+    not not @moderation_log_id
+

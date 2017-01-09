@@ -97,7 +97,7 @@ do
     end,
     increment_from_post = function(self, post, opts)
       assert(post.topic_id == self.id, "invalid post sent to topic")
-      local is_moderation_log = post.moderation_log_id
+      local is_moderation_log = post:is_moderation_event()
       local category_order
       if not (is_moderation_log or (opts and opts.update_category_order == false)) then
         local Categories

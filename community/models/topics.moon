@@ -173,7 +173,7 @@ class Topics extends Model
 
   increment_from_post: (post, opts) =>
     assert post.topic_id == @id, "invalid post sent to topic"
-    is_moderation_log = post.moderation_log_id
+    is_moderation_log = post\is_moderation_event!
 
     category_order = unless is_moderation_log or (opts and opts.update_category_order == false)
       import Categories from require "community.models"

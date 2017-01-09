@@ -414,6 +414,9 @@ do
           end
         end
       end
+    end,
+    is_moderation_event = function(self)
+      return not not self.moderation_log_id
     end
   }
   _base_0.__index = _base_0
