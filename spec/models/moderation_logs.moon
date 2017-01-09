@@ -47,6 +47,14 @@ describe "models.moderation_logs", ->
       topic\refresh_last_post!
       assert.same posts[2].id, topic.last_post_id
 
+      assert.same 2, topic.posts_count
+      assert.same 3, topic.root_posts_count
+
+      Topics\recount id: topic.id
+
+      topic\refresh!
+      assert.same 2, topic.posts_count
+      assert.same 3, topic.root_posts_count
 
 
 

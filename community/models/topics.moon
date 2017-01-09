@@ -99,7 +99,7 @@ class Topics extends Model
 
       posts_count: db.raw "
         (select count(*) from #{db.escape_identifier Posts\table_name!}
-          where topic_id = #{db.escape_identifier @table_name!}.id)
+          where topic_id = #{db.escape_identifier @table_name!}.id and moderation_log_id is null)
       "
     }, where
 
