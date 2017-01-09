@@ -719,7 +719,7 @@ do
     Posts = require("community.models").Posts
     return db.update(self:table_name(), {
       root_posts_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where topic_id = " .. tostring(db.escape_identifier(self:table_name())) .. ".id\n          and depth = 1)\n      "),
-      posts_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where topic_id = " .. tostring(db.escape_identifier(self:table_name())) .. ".id and moderation_log_id is null)\n      ")
+      posts_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where topic_id = " .. tostring(db.escape_identifier(self:table_name())) .. ".id and\n            not deleted and\n            moderation_log_id is null)\n      ")
     }, where)
   end
   self.preload_bans = function(self, topics, user)
