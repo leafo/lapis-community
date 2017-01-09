@@ -97,6 +97,13 @@ class Topics extends Model
           and depth = 1)
       "
 
+      deleted_posts_count: db.raw "
+        (select count(*) from #{db.escape_identifier Posts\table_name!}
+          where topic_id = #{db.escape_identifier @table_name!}.id and
+            deleted and
+            moderation_log_id is null)
+      "
+
       posts_count: db.raw "
         (select count(*) from #{db.escape_identifier Posts\table_name!}
           where topic_id = #{db.escape_identifier @table_name!}.id and
