@@ -508,7 +508,8 @@ CREATE TABLE community_posts (
     deleted_at timestamp without time zone,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    status smallint DEFAULT 1 NOT NULL
+    status smallint DEFAULT 1 NOT NULL,
+    moderation_log_id integer
 );
 
 
@@ -933,6 +934,14 @@ ALTER TABLE ONLY community_post_reports
 
 
 --
+-- Name: community_posts community_posts_moderation_log_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY community_posts
+    ADD CONSTRAINT community_posts_moderation_log_id_key UNIQUE (moderation_log_id);
+
+
+--
 -- Name: community_posts community_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1260,6 +1269,7 @@ community_15
 community_16
 community_17
 community_18
+community_19
 \.
 
 
