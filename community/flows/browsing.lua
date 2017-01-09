@@ -313,7 +313,7 @@ do
       return topics
     end,
     preload_posts = function(self, posts)
-      Posts:preload_relations(posts, "user")
+      Posts:preload_relations(posts, "user", "moderation_log")
       for _index_0 = 1, #posts do
         local p = posts[_index_0]
         p.topic = self.topic

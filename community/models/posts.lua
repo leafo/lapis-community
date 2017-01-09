@@ -466,6 +466,10 @@ do
       where = {
         object_type = 1
       }
+    },
+    {
+      "moderation_log",
+      belongs_to = "ModerationLogs"
     }
   }
   self.statuses = enum({

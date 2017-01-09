@@ -44,6 +44,8 @@ class Posts extends Model
     {"votes", has_many: "Votes", key: "object_id", where: {
       object_type: 1
     }}
+
+    {"moderation_log", belongs_to: "ModerationLogs"}
   }
 
   @statuses: enum {

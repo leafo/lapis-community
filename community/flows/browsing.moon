@@ -200,7 +200,8 @@ class BrowsingFlow extends Flow
     topics
 
   preload_posts: (posts) =>
-    Posts\preload_relations posts, "user"
+    Posts\preload_relations posts, "user", "moderation_log"
+
     for p in *posts
       p.topic = @topic
 
