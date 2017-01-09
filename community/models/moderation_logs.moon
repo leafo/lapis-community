@@ -38,6 +38,15 @@ class ModerationLogs extends Model
     }}
   }
 
+  -- actions to create post for
+  @create_post_for: {
+    "topic.move": true
+    "topic.archive": true
+    "topic.unarchive": true
+    "topic.lock": true
+    "topic.unlock": true
+  }
+
   @create: (opts={}) =>
     assert opts.user_id, "missing user_id"
     assert opts.action, "missing action"
@@ -56,6 +65,9 @@ class ModerationLogs extends Model
     with l = super opts
       if log_objects
         l\set_log_objects log_objects
+
+      if @create_post_for[l.action]
+        l\create_backing_post!
 
   set_log_objects: (objects) =>
     import ModerationLogObjects from require "community.models"

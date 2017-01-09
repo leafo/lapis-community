@@ -103,6 +103,13 @@ do
       }
     }
   }
+  self.create_post_for = {
+    ["topic.move"] = true,
+    ["topic.archive"] = true,
+    ["topic.unarchive"] = true,
+    ["topic.lock"] = true,
+    ["topic.unlock"] = true
+  }
   self.create = function(self, opts)
     if opts == nil then
       opts = { }
@@ -122,6 +129,9 @@ do
       local l = _class_0.__parent.create(self, opts)
       if log_objects then
         l:set_log_objects(log_objects)
+      end
+      if self.create_post_for[l.action] then
+        l:create_backing_post()
       end
       return l
     end
