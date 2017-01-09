@@ -55,7 +55,7 @@ do
       return self:get_target_category()
     end,
     get_target_category = function(self)
-      if not (action == "topic.move" and self.data and self.data.target_category_id) then
+      if not (self.action == "topic.move" and self.data and self.data.target_category_id) then
         return nil, "no target category"
       end
       if self.target_category == nil then
@@ -154,12 +154,14 @@ do
     opts.object_type = self:object_type_for_object(object)
     local log_objects = opts.log_objects
     opts.log_objects = nil
+    local create_backing_post = opts.backing_post ~= false
+    opts.backing_post = nil
     do
       local l = _class_0.__parent.create(self, opts)
       if log_objects then
         l:set_log_objects(log_objects)
       end
-      if self.create_post_for[l.action] then
+      if create_backing_post and self.create_post_for[l.action] then
         l:create_backing_post()
       end
       return l

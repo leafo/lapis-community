@@ -62,11 +62,14 @@ class ModerationLogs extends Model
     log_objects = opts.log_objects
     opts.log_objects = nil
 
+    create_backing_post = opts.backing_post != false
+    opts.backing_post = nil
+
     with l = super opts
       if log_objects
         l\set_log_objects log_objects
 
-      if @create_post_for[l.action]
+      if create_backing_post and @create_post_for[l.action]
         l\create_backing_post!
 
   set_log_objects: (objects) =>
@@ -111,7 +114,7 @@ class ModerationLogs extends Model
     @get_target_category!
 
   get_target_category: =>
-    unless action == "topic.move" and @data and @data.target_category_id
+    unless @action == "topic.move" and @data and @data.target_category_id
       return nil, "no target category"
 
     if @target_category == nil

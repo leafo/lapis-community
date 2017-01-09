@@ -90,8 +90,8 @@ ModerationLogs = (opts={}) ->
 
   unless opts.object
     opts.object = Topics status: "archived"
-    opts.action = 'topic.archive'
-    opts.category_id = opts.object.category_id
+    opts.action or= 'topic.archive'
+    opts.category_id or= opts.object.category_id
 
   assert models.ModerationLogs\create opts
 

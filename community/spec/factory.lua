@@ -127,8 +127,8 @@ ModerationLogs = function(opts)
     opts.object = Topics({
       status = "archived"
     })
-    opts.action = 'topic.archive'
-    opts.category_id = opts.object.category_id
+    opts.action = opts.action or 'topic.archive'
+    opts.category_id = opts.category_id or opts.object.category_id
   end
   return assert(models.ModerationLogs:create(opts))
 end

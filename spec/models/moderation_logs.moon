@@ -12,9 +12,25 @@ describe "models.moderation_logs", ->
     ModerationLogObjects, Posts
     from require "spec.community_models"
 
+  describe "target action", ->
+    it "gets action target", ->
+      category = factory.Categories!
+
+      log = factory.ModerationLogs {
+        action: "topic.move"
+        data: {
+          target_category_id: category.id
+        }
+      }
+
+      log\refresh! -- reload the json object
+      assert.same "moved this topic to", log\get_action_text!
+      target = assert log\get_action_target!
+      assert.same category.id, target.id
+
   describe "create_backing_post", ->
     it "creates backing post", ->
-      log = factory.ModerationLogs!
+      log = factory.ModerationLogs backing_post: false
       topic = log\get_object!
       category_order = topic.category_order
 
@@ -33,7 +49,7 @@ describe "models.moderation_logs", ->
 
 
     it "doesn't set last post to moderation log", ->
-      log = factory.ModerationLogs!
+      log = factory.ModerationLogs backing_post: false
       topic = log\get_object!
 
       posts = for i=1,2
