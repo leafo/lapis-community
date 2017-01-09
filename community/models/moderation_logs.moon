@@ -94,3 +94,30 @@ class ModerationLogs extends Model
     topic\increment_from_post post
     post
 
+  get_action_text: =>
+    switch @action
+      when "topic.move"
+        "moved this topic to"
+      when "topic.archive"
+        "archived this topic"
+      when "topic.unarchive"
+        "unarchived this topic"
+      when "topic.lock"
+        "locked this topic"
+      when "topic.unlock"
+        "unlocked this topic"
+
+  get_action_target: =>
+    @get_target_category!
+
+  get_target_category: =>
+    unless action == "topic.move" and @data and @data.target_category_id
+      return nil, "no target category"
+
+    if @target_category == nil
+      import Categories from require "community.models"
+      @target_category = Categories\find @data.target_category_id
+      @target_category or= false
+
+    @target_category
+

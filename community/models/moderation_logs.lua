@@ -36,6 +36,35 @@ do
       local topic = self:get_object()
       topic:increment_from_post(post)
       return post
+    end,
+    get_action_text = function(self)
+      local _exp_0 = self.action
+      if "topic.move" == _exp_0 then
+        return "moved this topic to"
+      elseif "topic.archive" == _exp_0 then
+        return "archived this topic"
+      elseif "topic.unarchive" == _exp_0 then
+        return "unarchived this topic"
+      elseif "topic.lock" == _exp_0 then
+        return "locked this topic"
+      elseif "topic.unlock" == _exp_0 then
+        return "unlocked this topic"
+      end
+    end,
+    get_action_target = function(self)
+      return self:get_target_category()
+    end,
+    get_target_category = function(self)
+      if not (action == "topic.move" and self.data and self.data.target_category_id) then
+        return nil, "no target category"
+      end
+      if self.target_category == nil then
+        local Categories
+        Categories = require("community.models").Categories
+        self.target_category = Categories:find(self.data.target_category_id)
+        self.target_category = self.target_category or false
+      end
+      return self.target_category
     end
   }
   _base_0.__index = _base_0
