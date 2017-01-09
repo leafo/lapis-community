@@ -121,6 +121,15 @@ describe "models.posts", ->
       topic = factory.Topics permanent: true
       post = factory.Posts :topic
 
+    assert_topic_counts = (counts) ->
+      topic\refresh!
+
+      assert.same counts, {
+        root_posts_count: topic.root_posts_count
+        posts_count: topic.posts_count
+        deleted_posts_count: topic.deleted_posts_count
+      }
+
     it "deletes topic that is the root of non permanent", ->
       topic\update permanent: false
       post\delete!
@@ -151,8 +160,21 @@ describe "models.posts", ->
       assert.same 0, topic.posts_count
 
     it "hard deletes young post with no replies", ->
+      assert_topic_counts {
+        posts_count: 1
+        root_posts_count: 1
+        deleted_posts_count: 0
+      }
+
       post\delete!
       assert.same nil, (Posts\find post.id)
+
+      assert_topic_counts {
+        posts_count: 0
+        root_posts_count: 0
+        deleted_posts_count: 0
+      }
+
 
     it "soft deletes for posts with next post", ->
       factory.Posts topic_id: post.topic_id
@@ -171,9 +193,48 @@ describe "models.posts", ->
         created_at: db.raw "now() at time zone 'utc' - '1.5 hours'::interval"
       }
 
+      assert_topic_counts {
+        posts_count: 1
+        root_posts_count: 1
+        deleted_posts_count: 0
+      }
+
       post\delete!
       post\refresh!
       assert.same true, post.deleted
+
+      assert_topic_counts {
+        posts_count: 1
+        root_posts_count: 1
+        deleted_posts_count: 1
+      }
+
+
+    it "deletes a moderation log post", ->
+      event_post = factory.Posts {
+        moderation_log_id: 0
+        topic_id: topic.id
+      }
+
+      topic\increment_from_post event_post
+      topic\refresh!
+
+      assert_topic_counts {
+        posts_count: 1
+        root_posts_count: 2
+        deleted_posts_count: 0
+      }
+
+      event_post\delete!
+      assert.same 1, Posts\count! -- it hard deleted
+
+      topic\refresh!
+
+      assert_topic_counts {
+        posts_count: 1
+        root_posts_count: 1
+        deleted_posts_count: 0
+      }
 
   it "should create a series of posts in same topic", ->
     posts = for i=1,5
