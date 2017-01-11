@@ -19,20 +19,24 @@ describe "models.users", ->
   describe "recount", ->
     import Topics, Posts from require "spec.community_models"
 
+    assert_counts = (cu, counts) ->
+      cu\refresh!
+      assert.same counts, {
+        votes_count: cu.votes_count
+        topics_count: cu.topics_count
+        posts_count: cu.posts_count
+      }
+
     it "recounts individual user", ->
       user = factory.Users!
       cu = CommunityUsers\for_user user.id
       CommunityUsers\recount user_id: cu.user_id
       cu\refresh!
 
-      assert.same {
+      assert_counts cu, {
         posts_count: 0
         votes_count: 0
         topics_count: 0
-      }, {
-        votes_count: cu.votes_count
-        topics_count: cu.topics_count
-        posts_count: cu.posts_count
       }
 
       factory.Posts user_id: cu.user_id
@@ -41,16 +45,24 @@ describe "models.users", ->
       CommunityUsers\recount user_id: cu.user_id
       cu\refresh!
 
-      assert.same {
+      assert_counts cu, {
         posts_count: 1
         votes_count: 0
         topics_count: 2
-      }, {
-        votes_count: cu.votes_count
-        topics_count: cu.topics_count
-        posts_count: cu.posts_count
       }
 
+    it "doesn't include moderation log events in count", ->
+      user = factory.Users!
+      cu = CommunityUsers\for_user user.id
 
+      factory.ModerationLogs user_id: cu.user_id
+      assert.same 1, Posts\count!
 
+      CommunityUsers\recount user_id: cu.user_id
+
+      assert_counts cu, {
+        posts_count: 0
+        votes_count: 0
+        topics_count: 0
+      }
 

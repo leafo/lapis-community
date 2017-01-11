@@ -58,7 +58,7 @@ class CommunityUsers extends Model
       posts_count: db.raw "
         (select count(*) from #{db.escape_identifier Posts\table_name!}
           where user_id = #{id_field}
-          and not deleted)
+          and not deleted and moderation_log_id is null)
       "
 
       votes_count: db.raw "
