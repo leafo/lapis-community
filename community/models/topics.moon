@@ -5,6 +5,8 @@ import slugify from require "lapis.util"
 import memoize1 from require "community.helpers.models"
 import enum from require "lapis.db.model"
 
+VOTE_TYPES_DEFAULT = { down: true, up: true }
+
 -- Generated schema dump: (do not edit)
 --
 -- CREATE TABLE community_topics (
@@ -323,7 +325,7 @@ class Topics extends Model
     if category = @get_category!
       category\available_vote_types post
     else
-      { down: true, up: true }
+      VOTE_TYPES_DEFAULT
 
   set_seen: (user) =>
     return unless user

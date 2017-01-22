@@ -7,6 +7,10 @@ local memoize1
 memoize1 = require("community.helpers.models").memoize1
 local enum
 enum = require("lapis.db.model").enum
+local VOTE_TYPES_DEFAULT = {
+  down = true,
+  up = true
+}
 local Topics
 do
   local _class_0
@@ -266,10 +270,7 @@ do
         if category then
           return category:available_vote_types(post)
         else
-          return {
-            down = true,
-            up = true
-          }
+          return VOTE_TYPES_DEFAULT
         end
       end
     end,
