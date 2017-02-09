@@ -170,7 +170,7 @@ describe "posting flow", ->
       topic = unpack Topics\select!
       assert.same {"hello"}, [t.slug for t in *topic\get_tags!]
 
-    it "posts new topic with score based category order #ddd", ->
+    it "posts new topic with score based category order", ->
       category = factory.Categories  category_order_type: "topic_score"
 
       res = PostingApp\get current_user, "/new-topic", {
@@ -474,15 +474,19 @@ describe "posting flow", ->
       assert.same before_title, topic.title
 
     it "softs delete post with replies", ->
+      topic = factory.Topics user_id: current_user.id
+
+      -- first post
+      factory.Posts(user_id: current_user.id, topic_id: topic.id)
+
       -- creates second post
       post = factory.Posts {
         user_id: current_user.id
-        topic_id: factory.Posts(user_id: current_user.id).topic_id
+        topic_id: topic.id
       }
 
       factory.Posts topic_id: post.topic_id, parent_post_id: post.id
 
-      topic = post\get_topic!
       topic\increment_participant current_user
 
       res = PostingApp\get current_user, "/delete-post", {
@@ -494,6 +498,7 @@ describe "posting flow", ->
       assert.truthy post.deleted
       assert.truthy post.deleted_at
 
+      -- -1 because we never incremented
       assert.same -1, CommunityUsers\for_user(current_user).posts_count
 
       tps = TopicParticipants\select "where topic_id = ?", topic.id
@@ -511,13 +516,17 @@ describe "posting flow", ->
 
 
     it "should hard delete post", ->
+      topic = factory.Topics user_id: current_user.id
+
+      -- first post
+      factory.Posts(user_id: current_user.id, topic_id: topic.id)
+
       -- creates second post
       post = factory.Posts {
         user_id: current_user.id
-        topic_id: factory.Posts(user_id: current_user.id).topic_id
+        topic_id: topic.id
       }
 
-      topic = post\get_topic!
       topic\increment_participant current_user
 
       res = PostingApp\get current_user, "/delete-post", {

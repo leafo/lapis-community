@@ -54,14 +54,15 @@ Posts = (opts={}) ->
     topic = opts.topic
     opts.topic_id = topic.id
     opts.topic = nil
-  else
-    opts.topic_id or= Topics(user_id: opts.user_id).id
+  elseif not opts.topic_id
+    topic = Topics(user_id: opts.user_id)
+    opts.topic_id = topic.id
 
   opts.body or= "Post #{next_counter "post"} body"
 
   with post = assert models.Posts\create opts
-    post.topic = topic
     if topic
+      post.topic = topic
       topic\increment_from_post post
 
 Votes = (opts={}) ->

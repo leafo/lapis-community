@@ -77,16 +77,17 @@ Posts = function(opts)
     topic = opts.topic
     opts.topic_id = topic.id
     opts.topic = nil
-  else
-    opts.topic_id = opts.topic_id or Topics({
+  elseif not opts.topic_id then
+    topic = Topics({
       user_id = opts.user_id
-    }).id
+    })
+    opts.topic_id = topic.id
   end
   opts.body = opts.body or "Post " .. tostring(next_counter("post")) .. " body"
   do
     local post = assert(models.Posts:create(opts))
-    post.topic = topic
     if topic then
+      post.topic = topic
       topic:increment_from_post(post)
     end
     return post
