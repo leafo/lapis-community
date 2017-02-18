@@ -54,7 +54,7 @@ class CategoriesFlow extends Flow
     assert_error @category, "invalid category"
     assert_error @category\allowed_to_view(@current_user), "invalid category"
 
-  recent_posts: =>
+  recent_posts: (opts) =>
     @load_category!
     assert_error @category\should_log_posts!, "category has no log"
 
@@ -64,7 +64,7 @@ class CategoriesFlow extends Flow
     @pager = OrderedPaginator CategoryPostLogs, "post_id", "
       where category_id = ?
     ", @category.id, {
-      per_page: limits.TOPICS_PER_PAGE
+      per_page: opts and opts.per_page or limits.TOPICS_PER_PAGE
       order: "desc"
       prepare_results: (logs) ->
         CategoryPostLogs\preload_relation logs, "post"
@@ -73,7 +73,7 @@ class CategoriesFlow extends Flow
         posts
     }
 
-    @posts = @pager\get_page!
+    @posts = @pager\get_page opts and opts.page
     true
 
   preload_post_log: (posts) =>

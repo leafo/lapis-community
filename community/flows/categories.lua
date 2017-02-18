@@ -88,7 +88,7 @@ do
       assert_error(self.category, "invalid category")
       return assert_error(self.category:allowed_to_view(self.current_user), "invalid category")
     end,
-    recent_posts = function(self)
+    recent_posts = function(self, opts)
       self:load_category()
       assert_error(self.category:should_log_posts(), "category has no log")
       local CategoryPostLogs
@@ -96,7 +96,7 @@ do
       local OrderedPaginator
       OrderedPaginator = require("lapis.db.pagination").OrderedPaginator
       self.pager = OrderedPaginator(CategoryPostLogs, "post_id", "\n      where category_id = ?\n    ", self.category.id, {
-        per_page = limits.TOPICS_PER_PAGE,
+        per_page = opts and opts.per_page or limits.TOPICS_PER_PAGE,
         order = "desc",
         prepare_results = function(logs)
           CategoryPostLogs:preload_relation(logs, "post")
@@ -115,7 +115,7 @@ do
           return posts
         end
       })
-      self.posts = self.pager:get_page()
+      self.posts = self.pager:get_page(opts and opts.page)
       return true
     end,
     preload_post_log = function(self, posts)
