@@ -22,8 +22,11 @@ date = require "date"
 --   deleted_at timestamp without time zone,
 --   created_at timestamp without time zone NOT NULL,
 --   updated_at timestamp without time zone NOT NULL,
---   status smallint DEFAULT 1 NOT NULL
+--   status smallint DEFAULT 1 NOT NULL,
+--   moderation_log_id integer
 -- );
+-- ALTER TABLE ONLY community_posts
+--   ADD CONSTRAINT community_posts_moderation_log_id_key UNIQUE (moderation_log_id);
 -- ALTER TABLE ONLY community_posts
 --   ADD CONSTRAINT community_posts_pkey PRIMARY KEY (id);
 -- CREATE UNIQUE INDEX community_posts_parent_post_id_post_number_idx ON community_posts USING btree (parent_post_id, post_number);
