@@ -176,6 +176,9 @@ do
           self.next_page = {
             after = next_after
           }
+          self.last_page = {
+            before = max_range + 1
+          }
         end
         if next_before then
           self.prev_page = {
@@ -220,6 +223,9 @@ do
         if next_before then
           self.next_page = {
             before = next_before
+          }
+          self.last_page = {
+            after = 0
           }
         end
         if next_after then

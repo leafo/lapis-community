@@ -125,6 +125,10 @@ class BrowsingFlow extends Flow
             after: next_after
           }
 
+          @last_page = {
+            before: max_range + 1
+          }
+
         if next_before
           -- we remove before and give empty params so first page just goes to plain URL
           @prev_page = {
@@ -148,7 +152,10 @@ class BrowsingFlow extends Flow
 
         next_after = nil if next_after == max_range
 
-        @next_page = { before: next_before } if next_before
+        if next_before
+          @next_page = { before: next_before }
+          @last_page = { after: 0}
+
         @prev_page = { after: next_after } if next_after
       else
         error "unknown order: #{order}"
