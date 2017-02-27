@@ -347,7 +347,10 @@ do
       Posts = require("community.models").Posts
       return unpack(Posts:select("\n      where topic_id = ? and depth = 1 order by post_number desc limit 1\n    ", self.id))
     end,
-    renumber_posts = function(self, parent_post)
+    renumber_posts = function(self, parent_post, field)
+      if field == nil then
+        field = "post_number"
+      end
       local Posts
       Posts = require("community.models").Posts
       local cond
@@ -364,7 +367,8 @@ do
         }
       end
       local tbl = db.escape_identifier(Posts:table_name())
-      return db.query("\n      update " .. tostring(tbl) .. " as posts set post_number = new_number from (\n        select id, row_number() over () as new_number\n        from " .. tostring(tbl) .. "\n        where " .. tostring(db.encode_clause(cond)) .. "\n        order by post_number asc\n      ) foo\n      where posts.id = foo.id and posts.post_number != new_number\n    ")
+      local order = "order by " .. tostring(db.escape_identifier(field)) .. " asc"
+      return db.query("\n      update " .. tostring(tbl) .. " as posts set post_number = new_number from (\n        select id, row_number() over (" .. tostring(order) .. ") as new_number\n        from " .. tostring(tbl) .. "\n        where " .. tostring(db.encode_clause(cond)) .. "\n        " .. tostring(order) .. "\n      ) foo\n      where posts.id = foo.id and posts.post_number != new_number\n    ")
     end,
     post_needs_approval = function(self)
       local category = self:get_category()

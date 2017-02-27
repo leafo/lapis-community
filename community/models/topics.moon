@@ -372,7 +372,7 @@ class Topics extends Model
       where topic_id = ? and depth = 1 order by post_number desc limit 1
     ", @id
 
-  renumber_posts: (parent_post) =>
+  renumber_posts: (parent_post, field="post_number") =>
     import Posts from require "community.models"
     cond = if parent_post
       assert parent_post.topic_id == @id, "expecting"
@@ -388,12 +388,14 @@ class Topics extends Model
 
     tbl = db.escape_identifier Posts\table_name!
 
+    order = "order by #{db.escape_identifier field} asc"
+
     db.query "
       update #{tbl} as posts set post_number = new_number from (
-        select id, row_number() over () as new_number
+        select id, row_number() over (#{order}) as new_number
         from #{tbl}
         where #{db.encode_clause cond}
-        order by post_number asc
+        #{order}
       ) foo
       where posts.id = foo.id and posts.post_number != new_number
     "
