@@ -376,6 +376,21 @@ describe "models.topics", ->
       posts = Posts\select "where parent_post_id = ? order by post_number", p2.id
       assert.same {1,2}, [p.post_number for p in *posts]
 
+    it "renumbers posts by created at", ->
+      topic = factory.Topics!
+      p1 = factory.Posts topic_id: topic.id, created_at: db.raw "date_trunc('second', now() - '2 minutes'::interval)"
+      p2 = factory.Posts topic_id: topic.id, created_at: db.raw "date_trunc('second', now() - '5 minutes'::interval)"
+
+      topic\renumber_posts nil, "created_at"
+
+      p1\refresh!
+      p2\refresh!
+
+      assert.same {2,1}, {
+        p1.post_number
+        p2.post_number
+      }
+
   describe "get_root_order_ranges", ->
     it "gets order ranges in empty topic", ->
       topic = factory.Topics!
