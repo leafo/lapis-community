@@ -480,6 +480,11 @@ do
       belongs_to = "Posts"
     },
     {
+      "edits",
+      has_many = "PostEdits",
+      order = "id asc"
+    },
+    {
       "votes",
       has_many = "Votes",
       key = "object_id",

@@ -43,6 +43,7 @@ class Posts extends Model
     {"topic", belongs_to: "Topics"}
     {"user", belongs_to: "Users"}
     {"parent_post", belongs_to: "Posts"}
+    {"edits", has_many: "PostEdits", order: "id asc"}
 
     {"votes", has_many: "Votes", key: "object_id", where: {
       object_type: 1
