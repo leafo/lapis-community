@@ -187,7 +187,7 @@ do
     opts.ip = opts.ip or self:current_ip_address()
     return _class_0.__parent.create(self, opts)
   end
-  self.vote = function(self, object, user, positive)
+  self.vote = function(self, object, user, positive, opts)
     if positive == nil then
       positive = true
     end
@@ -197,15 +197,28 @@ do
     local old_vote = self:find(user.id, object_type, object.id)
     local CommunityUsers
     CommunityUsers = require("community.models").CommunityUsers
-    local cu = CommunityUsers:for_user(user)
+    local score
+    if opts and opts.score ~= nil then
+      score = opts.score
+    else
+      local cu = cu or CommunityUsers:for_user(user)
+      score = cu:get_vote_score(object, positive)
+    end
+    local counted
+    if opts and opts.counted ~= nil then
+      counted = opts.counted
+    else
+      local cu = cu or CommunityUsers:for_user(user)
+      counted = cu:count_vote_for(object)
+    end
     local params = {
       object_type = object_type,
       object_id = object.id,
       user_id = user.id,
       positive = not not positive,
       ip = self:current_ip_address(),
-      counted = cu:count_vote_for(object),
-      score = cu:get_vote_score(object, positive)
+      counted = counted,
+      score = score
     }
     local action, vote = upsert(self, params)
     if action == "update" and old_vote then

@@ -60,14 +60,25 @@ class Votes extends Model
 
     super opts
 
-  @vote: (object, user, positive=true) =>
+  @vote: (object, user, positive=true, opts) =>
     import upsert from require "community.helpers.models"
 
     object_type = @object_type_for_object object
     old_vote = @find user.id, object_type, object.id
 
     import CommunityUsers from require "community.models"
-    cu = CommunityUsers\for_user user
+
+    score = if opts and opts.score != nil
+      opts.score
+    else
+      cu or= CommunityUsers\for_user user
+      cu\get_vote_score object, positive
+
+    counted = if opts and opts.counted != nil
+      opts.counted
+    else
+      cu or= CommunityUsers\for_user user
+      cu\count_vote_for object
 
     params = {
       :object_type
@@ -75,8 +86,8 @@ class Votes extends Model
       user_id: user.id
       positive: not not positive
       ip: @current_ip_address!
-      counted: cu\count_vote_for object
-      score: cu\get_vote_score object, positive
+      :counted
+      :score
     }
 
     action, vote = upsert @, params
