@@ -108,6 +108,7 @@ class Categories extends Model
     {"parent_category", belongs_to: "Categories"}
     {"tags", has_many: "CategoryTags", order: "tag_order asc"}
     {"subscriptions", has_many: "Subscriptions", key: "object_id", where: {object_type: 2}}
+    {"topics", has_many: "Topics", order: "category_order desc"}
   }
 
   @next_position: (parent_id) =>

@@ -784,6 +784,11 @@ do
       where = {
         object_type = 2
       }
+    },
+    {
+      "topics",
+      has_many = "Topics",
+      order = "category_order desc"
     }
   }
   self.next_position = function(self, parent_id)
