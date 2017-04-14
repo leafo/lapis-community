@@ -69,10 +69,11 @@ class BrowsingFlow extends Flow
     TopicsFlow(@)\load_topic!
     assert_error @topic\allowed_to_view(@current_user), "not allowed to view"
 
-    if view_counter = @view_counter!
-      key = "topic:#{@topic.id}"
-      unless @throttle_view_count key
-        view_counter\increment key
+    if opts.increment_views != false
+      if view_counter = @view_counter!
+        key = "topic:#{@topic.id}"
+        unless @throttle_view_count key
+          view_counter\increment key
 
     before, after = @get_before_after!
 
@@ -291,10 +292,11 @@ class BrowsingFlow extends Flow
     @topics_status = opts.status or @params.status or "default"
     status = Topics.statuses\for_db @topics_status
 
-    if view_counter = @view_counter!
-      key = "category:#{@category.id}"
-      unless @throttle_view_count key
-        view_counter\increment key
+    if opts.increment_views != false
+      if view_counter = @view_counter!
+        key = "category:#{@category.id}"
+        unless @throttle_view_count key
+          view_counter\increment key
 
     before, after = @get_before_after!
 

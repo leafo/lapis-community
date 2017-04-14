@@ -95,12 +95,14 @@ do
       local TopicsFlow = require("community.flows.topics")
       TopicsFlow(self):load_topic()
       assert_error(self.topic:allowed_to_view(self.current_user), "not allowed to view")
-      do
-        local view_counter = self:view_counter()
-        if view_counter then
-          local key = "topic:" .. tostring(self.topic.id)
-          if not (self:throttle_view_count(key)) then
-            view_counter:increment(key)
+      if opts.increment_views ~= false then
+        do
+          local view_counter = self:view_counter()
+          if view_counter then
+            local key = "topic:" .. tostring(self.topic.id)
+            if not (self:throttle_view_count(key)) then
+              view_counter:increment(key)
+            end
           end
         end
       end
@@ -450,12 +452,14 @@ do
       })
       self.topics_status = opts.status or self.params.status or "default"
       local status = Topics.statuses:for_db(self.topics_status)
-      do
-        local view_counter = self:view_counter()
-        if view_counter then
-          local key = "category:" .. tostring(self.category.id)
-          if not (self:throttle_view_count(key)) then
-            view_counter:increment(key)
+      if opts.increment_views ~= false then
+        do
+          local view_counter = self:view_counter()
+          if view_counter then
+            local key = "category:" .. tostring(self.category.id)
+            if not (self:throttle_view_count(key)) then
+              view_counter:increment(key)
+            end
           end
         end
       end
