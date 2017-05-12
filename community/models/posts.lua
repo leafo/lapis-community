@@ -12,11 +12,9 @@ do
     get_mentioned_users = function(self)
       if not (self.mentioned_users) then
         local usernames = self.__class:_parse_usernames(self.body)
-        local Users
-        Users = require("models").Users
-        self.mentioned_users = Users:find_all(usernames, {
-          key = "username"
-        })
+        local CommunityUsers
+        CommunityUsers = require("community.models").CommunityUsers
+        self.mentioned_users = CommunityUsers:find_users_by_name(usernames)
       end
       return self.mentioned_users
     end,

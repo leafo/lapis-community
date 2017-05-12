@@ -133,6 +133,13 @@ do
       topics_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n          where user_id = " .. tostring(id_field) .. "\n          and not deleted)\n      ")
     }, ...)
   end
+  self.find_users_by_name = function(self, names)
+    local Users
+    Users = require("models").Users
+    return Users:find_all(names, {
+      key = "username"
+    })
+  end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end

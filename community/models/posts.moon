@@ -120,8 +120,8 @@ class Posts extends Model
   get_mentioned_users: =>
     unless @mentioned_users
       usernames = @@_parse_usernames @body
-      import Users from require "models"
-      @mentioned_users = Users\find_all usernames, key: "username"
+      import CommunityUsers from require "community.models"
+      @mentioned_users = CommunityUsers\find_users_by_name usernames
 
     @mentioned_users
 

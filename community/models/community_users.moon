@@ -73,6 +73,10 @@ class CommunityUsers extends Model
       "
     }, ...
 
+  @find_users_by_name: (names) =>
+    import Users from require "models"
+    Users\find_all names, key: "username"
+
   recount: =>
     @@recount user_id: @user_id
 
