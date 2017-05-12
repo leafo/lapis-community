@@ -542,8 +542,8 @@ do
     })
   end
   self.preload_mentioned_users = function(self, posts)
-    local Users
-    Users = require("models").Users
+    local CommunityUsers
+    CommunityUsers = require("community.models").CommunityUsers
     local all_usernames = { }
     local usernames_by_post = { }
     for _index_0 = 1, #posts do
@@ -557,9 +557,7 @@ do
         end
       end
     end
-    local users = Users:find_all(all_usernames, {
-      key = "username"
-    })
+    local users = CommunityUsers:find_users_by_name(all_usernames)
     local users_by_username
     do
       local _tbl_0 = { }

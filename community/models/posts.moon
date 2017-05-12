@@ -93,7 +93,8 @@ class Posts extends Model
     Model.create @, opts, returning: {"status"}
 
   @preload_mentioned_users: (posts) =>
-    import Users from require "models"
+    import CommunityUsers from require "community.models"
+
     all_usernames = {}
     usernames_by_post = {}
 
@@ -104,7 +105,7 @@ class Posts extends Model
         for u in *usernames
           table.insert all_usernames, u
 
-    users = Users\find_all all_usernames, key: "username"
+    users = CommunityUsers\find_users_by_name all_usernames
     users_by_username = {u.username, u for u in *users}
 
     for post in *posts
