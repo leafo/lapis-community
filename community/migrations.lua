@@ -1080,5 +1080,15 @@ return {
       null = true,
       unique = true
     }))
+  end,
+  [20] = function(self)
+    db.query("alter table " .. tostring(T("pending_posts")) .. "\n      alter column topic_id drop not null\n    ")
+    drop_index(T("pending_posts"), "topic_id", "status", "id")
+    create_index(T("pending_posts"), "topic_id", "status", "id", {
+      where = "topic_id is not null"
+    })
+    return add_column(T("pending_posts"), "title", varchar({
+      null = true
+    }))
   end
 }

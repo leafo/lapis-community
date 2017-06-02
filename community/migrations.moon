@@ -544,6 +544,16 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
 
   [19]: =>
     add_column T"posts", "moderation_log_id", foreign_key null: true, unique: true
+
+  [20]: =>
+    db.query "alter table #{T"pending_posts"}
+      alter column topic_id drop not null
+    "
+
+    drop_index T"pending_posts", "topic_id", "status", "id"
+    create_index T"pending_posts", "topic_id", "status", "id", where: "topic_id is not null"
+
+    add_column T"pending_posts", "title", varchar null: true
 }
 
 
