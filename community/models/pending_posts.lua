@@ -9,14 +9,33 @@ do
   local _parent_0 = Model
   local _base_0 = {
     allowed_to_moderate = function(self, user)
-      local topic = self:get_topic()
-      return topic:allowed_to_moderate(user)
+      do
+        local parent = self:get_topic() or self:get_category()
+        if parent then
+          if parent:allowed_to_moderate(user) then
+            return true
+          end
+        end
+      end
+      return false
     end,
     promote = function(self)
-      local Posts, CommunityUsers
+      local Posts, Topics, CommunityUsers
       do
         local _obj_0 = require("community.models")
-        Posts, CommunityUsers = _obj_0.Posts, _obj_0.CommunityUsers
+        Posts, Topics, CommunityUsers = _obj_0.Posts, _obj_0.Topics, _obj_0.CommunityUsers
+      end
+      local topic = self:get_topic()
+      local created_topic = false
+      if not (topic) then
+        local category = assert(self:get_category(), "attempting to create new pending topic but there is no category_id")
+        created_topic = true
+        topic = Topics:create({
+          user_id = self.user_id,
+          category_id = self.category_id,
+          category_order = category:next_topic_category_order(),
+          title = assert(self.title, "missing title for pending topic")
+        })
       end
       local post = Posts:create({
         topic_id = self.topic_id,
@@ -25,9 +44,15 @@ do
         body = self.body,
         created_at = self.created_at
       })
-      local topic = self:get_topic()
-      topic:increment_from_post(post)
-      CommunityUsers:for_user(self:get_user()):increment("posts_count")
+      topic:increment_from_post(post, {
+        category_order = false
+      })
+      if created_topic then
+        category:increment_from_topic(topic)
+        CommunityUsers:for_user(self:get_user()):increment("topics_count")
+      else
+        CommunityUsers:for_user(self:get_user()):increment("posts_count")
+      end
       topic:increment_participant(self:get_user())
       self:delete()
       return post

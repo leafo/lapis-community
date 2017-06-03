@@ -43,12 +43,28 @@ class PendingPosts extends Model
     Model.create @, opts
 
   allowed_to_moderate: (user) =>
-    topic = @get_topic!
-    topic\allowed_to_moderate user
+    if parent = @get_topic! or @get_category!
+      if parent\allowed_to_moderate user
+        return true
+
+    false
 
   -- convert to real post
   promote: =>
-    import Posts, CommunityUsers from require "community.models"
+    import Posts, Topics, CommunityUsers from require "community.models"
+
+    topic = @get_topic!
+    created_topic = false
+    unless topic
+      category = assert @get_category!, "attempting to create new pending topic but there is no category_id"
+      created_topic = true
+
+      topic = Topics\create {
+        user_id: @user_id
+        category_id: @category_id
+        category_order: category\next_topic_category_order!
+        title: assert @title, "missing title for pending topic"
+      }
 
     post = Posts\create {
       topic_id: @topic_id
@@ -58,14 +74,16 @@ class PendingPosts extends Model
       created_at: @created_at
     }
 
-    topic = @get_topic!
+    topic\increment_from_post post, category_order: false
 
-    topic\increment_from_post post
+    if created_topic
+      category\increment_from_topic topic
+      CommunityUsers\for_user(@get_user!)\increment "topics_count"
+    else
+      CommunityUsers\for_user(@get_user!)\increment "posts_count"
 
-    CommunityUsers\for_user(@get_user!)\increment "posts_count"
     topic\increment_participant @get_user!
 
     @delete!
     post
-
 
