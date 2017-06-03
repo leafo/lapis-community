@@ -7,7 +7,7 @@ describe "models.pending_posts", ->
   use_test_env!
 
   import Users from require "spec.models"
-  import PendingPosts, Categories, Topics, Posts from require "spec.community_models"
+  import PendingPosts, Categories, Topics, Posts, CommunityUsers from require "spec.community_models"
 
   it "creates a pending post", ->
     factory.PendingPosts!
@@ -50,4 +50,37 @@ describe "models.pending_posts", ->
 
     assert.same 2, Posts\count!
     assert.same 0, PendingPosts\count!
+
+  it "promotes a pending topic", ->
+    category = factory.Categories!
+    pending = factory.PendingPosts {
+      topic_id: db.NULL
+      category_id: category.id
+      title: "Hello world topic"
+    }
+
+    pending\promote!
+
+    assert.same 1, Posts\count!
+    assert.same 0, PendingPosts\count!
+
+    post = unpack Posts\select!
+    topic = post\get_topic!
+
+    assert.same pending.title, topic.title
+    assert.same pending.category_id, topic.category_id
+
+    assert.same pending.body, post.body
+
+    category\refresh!
+    assert.same 1, category.topics_count
+    assert.same topic.id, category.last_topic_id
+
+    cu = CommunityUsers\for_user pending\get_user!
+
+    assert.same 1, cu.topics_count
+    assert.same 0, cu.posts_count
+
+
+
 

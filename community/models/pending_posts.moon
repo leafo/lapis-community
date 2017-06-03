@@ -67,7 +67,7 @@ class PendingPosts extends Model
       }
 
     post = Posts\create {
-      topic_id: @topic_id
+      topic_id: topic.id
       user_id: @user_id
       parent_post: @parent_post
       body: @body
@@ -77,7 +77,7 @@ class PendingPosts extends Model
     topic\increment_from_post post, category_order: false
 
     if created_topic
-      category\increment_from_topic topic
+      @get_category!\increment_from_topic topic
       CommunityUsers\for_user(@get_user!)\increment "topics_count"
     else
       CommunityUsers\for_user(@get_user!)\increment "posts_count"
