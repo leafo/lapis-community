@@ -38,7 +38,7 @@ do
         })
       end
       local post = Posts:create({
-        topic_id = self.topic_id,
+        topic_id = topic.id,
         user_id = self.user_id,
         parent_post = self.parent_post,
         body = self.body,
@@ -48,7 +48,7 @@ do
         category_order = false
       })
       if created_topic then
-        category:increment_from_topic(topic)
+        self:get_category():increment_from_topic(topic)
         CommunityUsers:for_user(self:get_user()):increment("topics_count")
       else
         CommunityUsers:for_user(self:get_user()):increment("posts_count")
