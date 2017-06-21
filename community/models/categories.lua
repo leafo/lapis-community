@@ -18,7 +18,8 @@ local VOTE_TYPES_NONE = { }
 local parent_enum
 parent_enum = function(self, property_name, default, opts)
   local enum_name = next(opts)
-  self["default_" .. tostring(property_name)] = default
+  local default_key = "default_" .. tostring(property_name)
+  self[default_key] = default
   self[enum_name] = opts[enum_name]
   local method_name = "get_" .. tostring(property_name)
   self.__base[method_name] = function(self)
@@ -30,7 +31,7 @@ parent_enum = function(self, property_name, default, opts)
         local parent = self:get_parent_category()
         return parent[method_name](parent)
       else
-        return self.__class[enum_name][default]
+        return self.__class[enum_name]:for_db(self.__class[default_key])
       end
     end
   end

@@ -11,7 +11,9 @@ VOTE_TYPES_NONE = { }
 
 parent_enum = (property_name, default, opts) =>
   enum_name = next opts
-  @["default_#{property_name}"] = default
+  default_key = "default_#{property_name}"
+
+  @[default_key] = default
   @[enum_name] = opts[enum_name]
 
   method_name = "get_#{property_name}"
@@ -23,7 +25,7 @@ parent_enum = (property_name, default, opts) =>
       parent = @get_parent_category!
       parent[method_name] parent
     else
-      @@[enum_name][default]
+      @@[enum_name]\for_db @@[default_key]
 
 -- Generated schema dump: (do not edit)
 --
