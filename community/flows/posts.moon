@@ -83,7 +83,7 @@ class PostsFlow extends Flow
 
   edit_post: require_login =>
     @load_post!
-    assert_error @post\allowed_to_edit(@current_user), "not allowed to edit"
+    assert_error @post\allowed_to_edit(@current_user, "edit"), "not allowed to edit"
 
     assert_valid @params, {
       {"post", type: "table"}
@@ -155,7 +155,7 @@ class PostsFlow extends Flow
     }
 
     @pending_post = assert_error PendingPosts\find @params.post_id
-    assert_error @pending_post\allowed_to_edit(@current_user), "not allowed to edit"
+    assert_error @pending_post\allowed_to_edit(@current_user, "delete"), "not allowed to edit"
     @pending_post\delete!
     true
 

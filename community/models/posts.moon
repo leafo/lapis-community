@@ -156,7 +156,7 @@ class Posts extends Model
     else
       true
 
-  allowed_to_edit: (user, action) =>
+  allowed_to_edit: (user, action="edit") =>
     return false unless user
     return true if user\is_admin!
     return false if @is_archived!

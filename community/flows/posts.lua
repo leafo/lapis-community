@@ -104,7 +104,7 @@ do
     end),
     edit_post = require_login(function(self)
       self:load_post()
-      assert_error(self.post:allowed_to_edit(self.current_user), "not allowed to edit")
+      assert_error(self.post:allowed_to_edit(self.current_user, "edit"), "not allowed to edit")
       assert_valid(self.params, {
         {
           "post",
@@ -199,7 +199,7 @@ do
         }
       })
       self.pending_post = assert_error(PendingPosts:find(self.params.post_id))
-      assert_error(self.pending_post:allowed_to_edit(self.current_user), "not allowed to edit")
+      assert_error(self.pending_post:allowed_to_edit(self.current_user, "delete"), "not allowed to edit")
       self.pending_post:delete()
       return true
     end),

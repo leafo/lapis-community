@@ -72,6 +72,9 @@ do
       end
     end,
     allowed_to_edit = function(self, user, action)
+      if action == nil then
+        action = "edit"
+      end
       if not (user) then
         return false
       end
