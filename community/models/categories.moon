@@ -111,6 +111,16 @@ class Categories extends Model
     {"tags", has_many: "CategoryTags", order: "tag_order asc"}
     {"subscriptions", has_many: "Subscriptions", key: "object_id", where: {object_type: 2}}
     {"topics", has_many: "Topics", order: "category_order desc"}
+
+    {"active_moderators", fetch: =>
+      import Moderators from require "community.models"
+      import encode_clause from require "lapis.db"
+      Moderators\select "where #{encode_clause {
+        accepted: true
+        object_type: Moderators.object_types.category
+        object_id: @parent_category_id and db.list(@get_category_ids!) or @id
+      }}"
+    }
   }
 
   @next_position: (parent_id) =>

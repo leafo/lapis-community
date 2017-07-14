@@ -790,6 +790,20 @@ do
       "topics",
       has_many = "Topics",
       order = "category_order desc"
+    },
+    {
+      "active_moderators",
+      fetch = function(self)
+        local Moderators
+        Moderators = require("community.models").Moderators
+        local encode_clause
+        encode_clause = require("lapis.db").encode_clause
+        return Moderators:select("where " .. tostring(encode_clause({
+          accepted = true,
+          object_type = Moderators.object_types.category,
+          object_id = self.parent_category_id and db.list(self:get_category_ids()) or self.id
+        })))
+      end
     }
   }
   self.next_position = function(self, parent_id)
