@@ -51,15 +51,7 @@ do
       belongs_to = "Categories"
     }
   }
-  self.log_post = function(self, post)
-    local topic = post:get_topic()
-    if not (topic) then
-      return 
-    end
-    local category = topic:get_category()
-    if not (category) then
-      return 
-    end
+  self.categories_to_log = function(self, category)
     local category_ids
     do
       local _accum_0 = { }
@@ -77,6 +69,18 @@ do
     if category:should_log_posts() then
       table.insert(category_ids, category.id)
     end
+    return category_ids
+  end
+  self.log_post = function(self, post)
+    local topic = post:get_topic()
+    if not (topic) then
+      return 
+    end
+    local category = topic:get_category()
+    if not (category) then
+      return 
+    end
+    local category_ids = self:categories_to_log(category)
     if not (next(category_ids)) then
       return 
     end
@@ -84,7 +88,8 @@ do
     do
       local _accum_0 = { }
       local _len_0 = 1
-      for id in category_ids do
+      for _index_0 = 1, #category_ids do
+        local id = category_ids[_index_0]
         _accum_0[_len_0] = db.interpolate_query("?", db.list({
           post.id,
           id
@@ -93,7 +98,6 @@ do
       end
       tuples = _accum_0
     end
-    error(tuples)
     local tbl = db.escape_identifier(self:table_name())
     return db.query("\n      insert into " .. tostring(tbl) .. " (post_id, category_id)\n      values  " .. tostring(table.concat(tuples, ", ")) .. "\n      on conflict do nothing\n    ", post.id)
   end
@@ -102,39 +106,27 @@ do
     if not (category) then
       return 
     end
-    local ids
-    do
-      local _accum_0 = { }
-      local _len_0 = 1
-      local _list_0 = category:get_ancestors()
-      for _index_0 = 1, #_list_0 do
-        local c = _list_0[_index_0]
-        if c:should_log_posts() then
-          _accum_0[_len_0] = c.id
-          _len_0 = _len_0 + 1
-        end
-      end
-      ids = _accum_0
-    end
-    if not (next(ids)) then
+    local category_ids = self:categories_to_log(category)
+    if not (next(category_ids)) then
       return 
     end
+    local tuples
     do
       local _accum_0 = { }
       local _len_0 = 1
-      for _index_0 = 1, #ids do
-        local id = ids[_index_0]
-        _accum_0[_len_0] = db.escape_literal(id)
+      for _index_0 = 1, #category_ids do
+        local id = category_ids[_index_0]
+        _accum_0[_len_0] = db.interpolate_query("?", db.list({
+          id
+        }))
         _len_0 = _len_0 + 1
       end
-      ids = _accum_0
+      tuples = _accum_0
     end
-    local tbl = db.escape_identifier(self:table_name())
-    local category_ids = ""
     local Posts
     Posts = require("community.models").Posts
-    tbl = db.escape_identifier(self:table_name())
-    return db.query("\n      insert into " .. tostring(tbl) .. " (post_id, category_id)\n      select topic_post_ids.post_id, category_ids.category_id from\n        (select id as post_id from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where topic_id = ? and status = 1 and not deleted) as topic_post_ids(post_id),\n        (values (" .. tostring(table.concat(ids, "), (")) .. ")) as category_ids(category_id)\n        where not exists (select 1 from " .. tostring(tbl) .. " where category_id = category_ids.category_id and post_id = topic_post_ids.post_id)\n    ", topic.id)
+    local tbl = db.escape_identifier(self:table_name())
+    return db.query("\n      insert into " .. tostring(tbl) .. " (post_id, category_id)\n      select topic_post_ids.post_id, category_ids.category_id from\n        (select id as post_id from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where topic_id = ? and status = 1 and not deleted) as topic_post_ids(post_id),\n        (values " .. tostring(table.concat(tuples, ", ")) .. ") as category_ids(category_id)\n      on conflict do nothing\n    ", topic.id)
   end
   self.clear_post = function(self, post)
     return db.delete(self:table_name(), {
