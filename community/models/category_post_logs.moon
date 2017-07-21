@@ -22,20 +22,29 @@ class CategoryPostLogs extends Model
     {"category", belongs_to: "Categories"}
   }
 
+  @categories_to_log: (category) =>
+    category_ids = [c.id for c in *category\get_ancestors! when c\should_log_posts!]
+    if category\should_log_posts!
+      table.insert category_ids, category.id
+
+    category_ids
+
   @log_post: (post) =>
     topic = post\get_topic!
     return unless topic
     category = topic\get_category!
     return unless category
-    ids = [c.id for c in *category\get_ancestors! when c\should_log_posts!]
-    return unless next ids
-    ids = [db.escape_literal id for id in *ids]
+
+    category_ids = @categories_to_log category
+    return unless next category_ids
+
+    tuples = for id in *category_ids
+      db.interpolate_query "?", db.list {post.id, id}
 
     tbl = db.escape_identifier @table_name!
     db.query "
       insert into #{tbl} (post_id, category_id)
-      select ?, foo.category_id from 
-      (values (#{table.concat ids, "), ("})) as foo(category_id)
+      values  #{table.concat tuples, ", "}
       on conflict do nothing
     ", post.id
 

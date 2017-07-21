@@ -60,7 +60,7 @@ do
     if not (category) then
       return 
     end
-    local ids
+    local category_ids
     do
       local _accum_0 = { }
       local _len_0 = 1
@@ -72,23 +72,30 @@ do
           _len_0 = _len_0 + 1
         end
       end
-      ids = _accum_0
+      category_ids = _accum_0
     end
-    if not (next(ids)) then
+    if category:should_log_posts() then
+      table.insert(category_ids, category.id)
+    end
+    if not (next(category_ids)) then
       return 
     end
+    local tuples
     do
       local _accum_0 = { }
       local _len_0 = 1
-      for _index_0 = 1, #ids do
-        local id = ids[_index_0]
-        _accum_0[_len_0] = db.escape_literal(id)
+      for id in category_ids do
+        _accum_0[_len_0] = db.interpolate_query("?", db.list({
+          post.id,
+          id
+        }))
         _len_0 = _len_0 + 1
       end
-      ids = _accum_0
+      tuples = _accum_0
     end
+    error(tuples)
     local tbl = db.escape_identifier(self:table_name())
-    return db.query("\n      insert into " .. tostring(tbl) .. " (post_id, category_id)\n      select ?, foo.category_id from \n      (values (" .. tostring(table.concat(ids, "), (")) .. ")) as foo(category_id)\n      on conflict do nothing\n    ", post.id)
+    return db.query("\n      insert into " .. tostring(tbl) .. " (post_id, category_id)\n      values  " .. tostring(table.concat(tuples, ", ")) .. "\n      on conflict do nothing\n    ", post.id)
   end
   self.log_topic_posts = function(self, topic)
     local category = topic:get_category()
