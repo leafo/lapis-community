@@ -51,12 +51,12 @@ class CategoryPostLogs extends Model
   @log_topic_posts: (topic) =>
     category = topic\get_category!
     return unless category
-    ids = [c.id for c in *category\get_ancestors! when c\should_log_posts!]
-    return unless next ids
-    ids = [db.escape_literal id for id in *ids]
 
-    tbl = db.escape_identifier @table_name!
-    category_ids = ""
+    category_ids = @categories_to_log category
+    return unless next category_ids
+
+    tuples = for id in *category_ids
+      db.interpolate_query "?", db.list {id}
 
     import Posts from require "community.models"
 
@@ -66,10 +66,9 @@ class CategoryPostLogs extends Model
       select topic_post_ids.post_id, category_ids.category_id from
         (select id as post_id from #{db.escape_identifier Posts\table_name!}
           where topic_id = ? and status = 1 and not deleted) as topic_post_ids(post_id),
-        (values (#{table.concat ids, "), ("})) as category_ids(category_id)
-        where not exists (select 1 from #{tbl} where category_id = category_ids.category_id and post_id = topic_post_ids.post_id)
+        (values #{table.concat tuples, ", "}) as category_ids(category_id)
+      on conflict do nothing
     ", topic.id
-
 
   @clear_post: (post) =>
     db.delete @table_name!, {
