@@ -36,9 +36,8 @@ class CategoryPostLogs extends Model
       insert into #{tbl} (post_id, category_id)
       select ?, foo.category_id from 
       (values (#{table.concat ids, "), ("})) as foo(category_id)
-      where not exists(select 1 from #{tbl}
-        where category_id = foo.category_id and post_id = ?)
-    ", post.id, post.id
+      on conflict do nothing
+    ", post.id
 
   @log_topic_posts: (topic) =>
     category = topic\get_category!

@@ -88,7 +88,7 @@ do
       ids = _accum_0
     end
     local tbl = db.escape_identifier(self:table_name())
-    return db.query("\n      insert into " .. tostring(tbl) .. " (post_id, category_id)\n      select ?, foo.category_id from \n      (values (" .. tostring(table.concat(ids, "), (")) .. ")) as foo(category_id)\n      where not exists(select 1 from " .. tostring(tbl) .. "\n        where category_id = foo.category_id and post_id = ?)\n    ", post.id, post.id)
+    return db.query("\n      insert into " .. tostring(tbl) .. " (post_id, category_id)\n      select ?, foo.category_id from \n      (values (" .. tostring(table.concat(ids, "), (")) .. ")) as foo(category_id)\n      on conflict do nothing\n    ", post.id)
   end
   self.log_topic_posts = function(self, topic)
     local category = topic:get_category()
