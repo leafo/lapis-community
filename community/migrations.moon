@@ -554,6 +554,10 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
     create_index T"pending_posts", "topic_id", "status", "id", where: "topic_id is not null"
 
     add_column T"pending_posts", "title", varchar null: true
+
+  [21]: =>
+    add_column T"topics", "protected", boolean default: false
+
 }
 
 

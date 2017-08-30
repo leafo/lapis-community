@@ -1090,5 +1090,10 @@ return {
     return add_column(T("pending_posts"), "title", varchar({
       null = true
     }))
+  end,
+  [21] = function(self)
+    return add_column(T("topics"), "protected", boolean({
+      default = false
+    }))
   end
 }
