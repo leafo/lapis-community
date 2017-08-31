@@ -161,6 +161,7 @@ class Posts extends Model
     return true if user\is_admin!
     return false if @is_archived!
     return true if user.id == @user_id
+    return false if @is_protected!
     return false if action != "delete" and @deleted
 
     topic = @get_topic!
@@ -396,6 +397,9 @@ class Posts extends Model
 
   is_default: =>
     @status == @@statuses.default
+
+  is_protected: =>
+    @get_topic!\is_protected!
 
   vote_score: =>
     @up_votes_count - @down_votes_count

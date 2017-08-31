@@ -30,7 +30,8 @@ VOTE_TYPES_DEFAULT = { down: true, up: true }
 --   updated_at timestamp without time zone NOT NULL,
 --   status smallint DEFAULT 1 NOT NULL,
 --   tags character varying(255)[],
---   rank_adjustment integer DEFAULT 0 NOT NULL
+--   rank_adjustment integer DEFAULT 0 NOT NULL,
+--   protected boolean DEFAULT false NOT NULL
 -- );
 -- ALTER TABLE ONLY community_topics
 --   ADD CONSTRAINT community_topics_pkey PRIMARY KEY (id);
@@ -155,6 +156,7 @@ class Topics extends Model
     return false if @deleted
     return false unless user
     return true if user\is_admin!
+    return false if @is_protected!
     return false if @is_archived!
     return true if user.id == @user_id
     return true if @allowed_to_moderate user
@@ -421,6 +423,9 @@ class Topics extends Model
 
   is_archived: =>
     @status == @@statuses.archived or (@get_category! and @get_category!.archived)
+
+  is_protected: =>
+    @protected
 
   is_default: =>
     @status == @@statuses.default and not @is_archived!

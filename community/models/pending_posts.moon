@@ -9,18 +9,19 @@ import enum from require "lapis.db.model"
 -- CREATE TABLE community_pending_posts (
 --   id integer NOT NULL,
 --   category_id integer,
---   topic_id integer NOT NULL,
+--   topic_id integer,
 --   user_id integer NOT NULL,
 --   parent_post_id integer,
 --   status smallint NOT NULL,
 --   body text NOT NULL,
 --   created_at timestamp without time zone NOT NULL,
---   updated_at timestamp without time zone NOT NULL
+--   updated_at timestamp without time zone NOT NULL,
+--   title character varying(255)
 -- );
 -- ALTER TABLE ONLY community_pending_posts
 --   ADD CONSTRAINT community_pending_posts_pkey PRIMARY KEY (id);
 -- CREATE INDEX community_pending_posts_category_id_status_id_idx ON community_pending_posts USING btree (category_id, status, id) WHERE (category_id IS NOT NULL);
--- CREATE INDEX community_pending_posts_topic_id_status_id_idx ON community_pending_posts USING btree (topic_id, status, id);
+-- CREATE INDEX community_pending_posts_topic_id_status_id_idx ON community_pending_posts USING btree (topic_id, status, id) WHERE (topic_id IS NOT NULL);
 --
 class PendingPosts extends Model
   @timestamp: true
