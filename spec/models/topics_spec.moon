@@ -130,6 +130,33 @@ describe "models.topics", ->
       assert.false topic\allowed_to_edit category_user
       assert.true topic\allowed_to_moderate category_user
 
+    it "checks permissions for deleted topic", ->
+      topic\update deleted: true
+
+      assert.false topic\allowed_to_post nil
+      assert.false topic\allowed_to_view nil
+      assert.false topic\allowed_to_edit nil
+      assert.false topic\allowed_to_moderate nil
+
+      assert.false topic\allowed_to_post topic_user
+      assert.false topic\allowed_to_view topic_user
+      assert.false topic\allowed_to_edit topic_user
+      assert.false topic\allowed_to_moderate topic_user
+
+      assert.false topic\allowed_to_post some_user
+      assert.false topic\allowed_to_view some_user
+      assert.false topic\allowed_to_edit some_user
+      assert.false topic\allowed_to_moderate some_user
+
+      assert.false topic\allowed_to_post mod_user
+      assert.false topic\allowed_to_view mod_user
+      assert.false topic\allowed_to_edit mod_user
+      assert.false topic\allowed_to_moderate mod_user
+
+      assert.false topic\allowed_to_post category_user
+      assert.false topic\allowed_to_view category_user
+      assert.false topic\allowed_to_edit category_user
+      assert.false topic\allowed_to_moderate category_user
 
   it "doesn't allow post when category is archived", ->
     category = factory.Categories user_id: factory.Users!.id

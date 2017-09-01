@@ -164,6 +164,7 @@ class Topics extends Model
     false
 
   allowed_to_moderate: memoize1 (user) =>
+    return false if @deleted
     return false unless user
     return true if user\is_admin!
     return false unless @category_id
