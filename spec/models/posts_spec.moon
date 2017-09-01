@@ -7,14 +7,20 @@ describe "models.posts", ->
   use_test_env!
 
   import Users from require "spec.models"
-  import Categories, Topics, Posts from require "spec.community_models"
+  import Categories, Topics, Posts, Moderators from require "spec.community_models"
 
   it "checks permissions", ->
     post_user = factory.Users!
-    topic = factory.Topics!
+    category_user = factory.Users!
+    category = factory.Categories user_id: category_user.id
+    topic = factory.Topics category_id: category.id
     post = factory.Posts user_id: post_user.id, topic_id: topic.id
     topic_user = post\get_topic!\get_user!
     some_user = factory.Users!
+
+    category_user = assert topic\get_category!\get_user!, "missing user"
+    mod = factory.Moderators object: topic\get_category!
+    mod_user = mod\get_user!
 
     admin_user = with factory.Users!
       .is_admin = => true
@@ -24,17 +30,23 @@ describe "models.posts", ->
     assert.false post\allowed_to_edit some_user
     assert.true post\allowed_to_edit post_user
     assert.true post\allowed_to_edit admin_user
+    assert.true post\allowed_to_edit category_user
+    assert.true post\allowed_to_edit mod_user
     -- otherwise hits topic\allowed_to_moderate
 
     assert.false post\allowed_to_reply nil
     assert.true post\allowed_to_reply post_user
     assert.true post\allowed_to_reply topic_user
     assert.true post\allowed_to_reply some_user
+    assert.true post\allowed_to_reply category_user
+    assert.true post\allowed_to_reply mod_user
 
     assert.false post\allowed_to_report nil
     assert.false post\allowed_to_report post_user
     assert.true post\allowed_to_report topic_user
     assert.true post\allowed_to_report some_user
+    assert.true post\allowed_to_report category_user
+    assert.true post\allowed_to_report mod_user
 
     -- archived
     post\archive!
@@ -45,6 +57,8 @@ describe "models.posts", ->
     assert.false post\allowed_to_edit some_user
     assert.false post\allowed_to_edit post_user
     assert.true post\allowed_to_edit admin_user
+    assert.false post\allowed_to_edit category_user
+    assert.false post\allowed_to_edit mod_user
     -- otherwise hits topic\allowed_to_moderate
 
     assert.false post\allowed_to_reply nil
@@ -52,12 +66,47 @@ describe "models.posts", ->
     assert.false post\allowed_to_reply topic_user
     assert.false post\allowed_to_reply some_user
     assert.false post\allowed_to_reply admin_user
+    assert.false post\allowed_to_reply category_user
+    assert.false post\allowed_to_reply mod_user
 
     assert.false post\allowed_to_report nil
     assert.false post\allowed_to_report post_user
     assert.false post\allowed_to_report topic_user
     assert.false post\allowed_to_report some_user
     assert.false post\allowed_to_report admin_user
+    assert.false post\allowed_to_report category_user
+    assert.false post\allowed_to_report mod_user
+
+    -- protected
+    post\update {
+      status: Posts.statuses.default
+    }
+
+    post\get_topic!\update protected: true
+    post = Posts\find post.id
+
+    assert.false post\allowed_to_edit nil
+    assert.false post\allowed_to_edit topic_user
+    assert.false post\allowed_to_edit some_user
+    assert.true post\allowed_to_edit post_user
+    assert.true post\allowed_to_edit admin_user
+    assert.false post\allowed_to_edit category_user
+    assert.false post\allowed_to_edit mod_user
+    -- otherwise hits topic\allowed_to_moderate
+
+    assert.false post\allowed_to_reply nil
+    assert.true post\allowed_to_reply post_user
+    assert.true post\allowed_to_reply topic_user
+    assert.true post\allowed_to_reply some_user
+    assert.true post\allowed_to_reply category_user
+    assert.true post\allowed_to_reply mod_user
+
+    assert.false post\allowed_to_report nil
+    assert.false post\allowed_to_report post_user
+    assert.true post\allowed_to_report topic_user
+    assert.true post\allowed_to_report some_user
+    assert.true post\allowed_to_report category_user
+    assert.true post\allowed_to_report mod_user
 
   describe "has_replies", ->
     it "with no replies", ->
