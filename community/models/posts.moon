@@ -157,7 +157,7 @@ class Posts extends Model
       true
 
   allowed_to_edit: (user, action="edit") =>
-    return false if @deleted
+    return false if @deleted and action != "delete"
     return false unless user
     return true if user\is_admin!
     return false if @is_archived!

@@ -73,6 +73,9 @@ do
       return false
     end),
     allowed_to_moderate = memoize1(function(self, user)
+      if self.deleted then
+        return false
+      end
       if not (user) then
         return false
       end

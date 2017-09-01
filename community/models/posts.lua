@@ -75,6 +75,9 @@ do
       if action == nil then
         action = "edit"
       end
+      if self.deleted and action ~= "delete" then
+        return false
+      end
       if not (user) then
         return false
       end
@@ -100,6 +103,9 @@ do
       return false
     end,
     allowed_to_reply = function(self, user)
+      if self.deleted then
+        return false
+      end
       if self:is_moderation_event() then
         return false
       end
@@ -252,6 +258,9 @@ do
       return true
     end,
     allowed_to_report = function(self, user)
+      if self.deleted then
+        return false
+      end
       if self:is_moderation_event() then
         return false
       end
