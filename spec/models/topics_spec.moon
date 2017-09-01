@@ -34,57 +34,87 @@ describe "models.topics", ->
     assert.same 1, #tags
     assert.same tag.label,tags[1].label
 
-  it "should check permissions of topic with category", ->
-    category_user = factory.Users!
-    category = factory.Categories user_id: category_user.id
+  describe "permissions with category", ->
+    local category, topic, category_user, topic_user, some_user, mod_user
+    before_each ->
+      category_user = factory.Users!
+      category = factory.Categories user_id: category_user.id
+      topic_user = factory.Users!
+      topic = factory.Topics category_id: category.id, user_id: topic_user.id
 
-    topic = factory.Topics category_id: category.id
-    topic_user = topic\get_user!
+      some_user = factory.Users!
+      mod = factory.Moderators object: topic\get_category!
+      mod_user = mod\get_user!
 
-    assert.truthy topic\allowed_to_post topic_user
-    assert.truthy topic\allowed_to_view topic_user
-    assert.truthy topic\allowed_to_edit topic_user
-    assert.falsy topic\allowed_to_moderate topic_user
+    it "checks permissions of regular topic", ->
+      assert.true topic\allowed_to_post topic_user
+      assert.true topic\allowed_to_view topic_user
+      assert.true topic\allowed_to_edit topic_user
+      assert.false topic\allowed_to_moderate topic_user
 
-    some_user = factory.Users!
+      assert.true topic\allowed_to_post some_user
+      assert.true topic\allowed_to_view some_user
+      assert.false topic\allowed_to_edit some_user
+      assert.false topic\allowed_to_moderate some_user
 
-    assert.truthy topic\allowed_to_post some_user
-    assert.truthy topic\allowed_to_view some_user
-    assert.falsy topic\allowed_to_edit some_user
-    assert.falsy topic\allowed_to_moderate some_user
+      assert.true topic\allowed_to_post mod_user
+      assert.true topic\allowed_to_view mod_user
+      assert.true topic\allowed_to_edit mod_user
+      assert.true topic\allowed_to_moderate mod_user
 
-    mod = factory.Moderators object: topic\get_category!
-    mod_user = mod\get_user!
+      assert.true topic\allowed_to_post category_user
+      assert.true topic\allowed_to_view category_user
+      assert.true topic\allowed_to_edit category_user
+      assert.true topic\allowed_to_moderate category_user
 
-    assert.truthy topic\allowed_to_post mod_user
-    assert.truthy topic\allowed_to_view mod_user
-    assert.truthy topic\allowed_to_edit mod_user
-    assert.truthy topic\allowed_to_moderate mod_user
+    it "checks permissions of archived topic", ->
+      -- archived topic
+      topic\archive!
+      topic = Topics\find topic.id -- clear memoized cache
 
-    --
+      assert.false topic\allowed_to_post topic_user
+      assert.true topic\allowed_to_view topic_user
+      assert.false topic\allowed_to_edit topic_user
+      assert.false topic\allowed_to_moderate topic_user
 
-    assert.truthy topic\allowed_to_post category_user
-    assert.truthy topic\allowed_to_view category_user
-    assert.truthy topic\allowed_to_edit category_user
-    assert.truthy topic\allowed_to_moderate category_user
+      assert.false topic\allowed_to_post some_user
+      assert.true topic\allowed_to_view some_user
+      assert.false topic\allowed_to_edit some_user
+      assert.false topic\allowed_to_moderate some_user
 
-    topic\archive!
-    topic = Topics\find topic.id -- clear memoized cache
+      assert.false topic\allowed_to_post mod_user
+      assert.true topic\allowed_to_view mod_user
+      assert.false topic\allowed_to_edit mod_user
+      assert.true topic\allowed_to_moderate mod_user
 
-    assert.false topic\allowed_to_post topic_user
-    assert.true topic\allowed_to_view topic_user
-    assert.false topic\allowed_to_edit topic_user
-    assert.false topic\allowed_to_moderate topic_user
+      assert.false topic\allowed_to_post category_user
+      assert.true topic\allowed_to_view category_user
+      assert.false topic\allowed_to_edit category_user
+      assert.true topic\allowed_to_moderate category_user
 
-    assert.false topic\allowed_to_post some_user
-    assert.true topic\allowed_to_view some_user
-    assert.false topic\allowed_to_edit some_user
-    assert.false topic\allowed_to_moderate some_user
+    it "checks  permissions of protected topic", ->
+      topic\update protected: true
 
-    assert.false topic\allowed_to_post mod_user
-    assert.true topic\allowed_to_view mod_user
-    assert.false topic\allowed_to_edit mod_user
-    assert.true topic\allowed_to_moderate mod_user
+      assert.true topic\allowed_to_post topic_user
+      assert.true topic\allowed_to_view topic_user
+      assert.false topic\allowed_to_edit topic_user
+      assert.false topic\allowed_to_moderate topic_user
+
+      assert.true topic\allowed_to_post some_user
+      assert.true topic\allowed_to_view some_user
+      assert.false topic\allowed_to_edit some_user
+      assert.false topic\allowed_to_moderate some_user
+
+      assert.true topic\allowed_to_post mod_user
+      assert.true topic\allowed_to_view mod_user
+      assert.false topic\allowed_to_edit mod_user
+      assert.true topic\allowed_to_moderate mod_user
+
+      assert.true topic\allowed_to_post category_user
+      assert.true topic\allowed_to_view category_user
+      assert.false topic\allowed_to_edit category_user
+      assert.true topic\allowed_to_moderate category_user
+
 
   it "doesn't allow post when category is archived", ->
     category = factory.Categories user_id: factory.Users!.id
