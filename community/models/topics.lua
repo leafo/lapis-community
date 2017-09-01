@@ -58,6 +58,9 @@ do
       if user:is_admin() then
         return true
       end
+      if self:is_protected() then
+        return false
+      end
       if self:is_archived() then
         return false
       end
@@ -396,6 +399,9 @@ do
     end,
     is_archived = function(self)
       return self.status == self.__class.statuses.archived or (self:get_category() and self:get_category().archived)
+    end,
+    is_protected = function(self)
+      return self.protected
     end,
     is_default = function(self)
       return self.status == self.__class.statuses.default and not self:is_archived()

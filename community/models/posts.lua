@@ -87,6 +87,9 @@ do
       if user.id == self.user_id then
         return true
       end
+      if self:is_protected() then
+        return false
+      end
       if action ~= "delete" and self.deleted then
         return false
       end
@@ -415,6 +418,9 @@ do
     end,
     is_default = function(self)
       return self.status == self.__class.statuses.default
+    end,
+    is_protected = function(self)
+      return self:get_topic():is_protected()
     end,
     vote_score = function(self)
       return self.up_votes_count - self.down_votes_count
