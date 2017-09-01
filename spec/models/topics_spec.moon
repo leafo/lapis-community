@@ -47,6 +47,11 @@ describe "models.topics", ->
       mod_user = mod\get_user!
 
     it "checks permissions of regular topic", ->
+      assert.false topic\allowed_to_post nil
+      assert.true topic\allowed_to_view nil
+      assert.false topic\allowed_to_edit nil
+      assert.false topic\allowed_to_moderate nil
+
       assert.true topic\allowed_to_post topic_user
       assert.true topic\allowed_to_view topic_user
       assert.true topic\allowed_to_edit topic_user
@@ -72,6 +77,11 @@ describe "models.topics", ->
       topic\archive!
       topic = Topics\find topic.id -- clear memoized cache
 
+      assert.false topic\allowed_to_post nil
+      assert.true topic\allowed_to_view nil
+      assert.false topic\allowed_to_edit nil
+      assert.false topic\allowed_to_moderate nil
+
       assert.false topic\allowed_to_post topic_user
       assert.true topic\allowed_to_view topic_user
       assert.false topic\allowed_to_edit topic_user
@@ -94,6 +104,11 @@ describe "models.topics", ->
 
     it "checks  permissions of protected topic", ->
       topic\update protected: true
+
+      assert.false topic\allowed_to_post nil
+      assert.true topic\allowed_to_view nil
+      assert.false topic\allowed_to_edit nil
+      assert.false topic\allowed_to_moderate nil
 
       assert.true topic\allowed_to_post topic_user
       assert.true topic\allowed_to_view topic_user
