@@ -833,11 +833,19 @@ do
     end
     return Model.create(self, opts)
   end
-  self.recount = function(self)
+  self.recount = function(self, category_id)
     local Topics
     Topics = require("community.models").Topics
+    if type(category_id) == "table" then
+      category_id = db.list(category_id)
+    else
+      category_id = category_id
+    end
     return db.update(self:table_name(), {
-      topics_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n          where category_id = " .. tostring(db.escape_identifier(self:table_name())) .. ".id)\n      ")
+      topics_count = db.raw("(\n        select count(*) from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n          where category_id = " .. tostring(db.escape_identifier(self:table_name())) .. ".id\n        )"),
+      deleted_topics_count = db.raw("(\n        select count(*) from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n          where category_id = " .. tostring(db.escape_identifier(self:table_name())) .. ".id\n          and deleted\n        )")
+    }, {
+      id = category_id
     })
   end
   self.preload_ancestors = function(self, categories)

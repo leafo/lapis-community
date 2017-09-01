@@ -14,6 +14,18 @@ describe "models.categories", ->
   it "should create a category", ->
     factory.Categories!
 
+  describe "recount", ->
+    it "recounts all categoriers", ->
+      factory.Categories!
+      Categories\recount!
+
+    it "recounts specific categoriers", ->
+      cat = factory.Categories!
+      cat2 = factory.Categories!
+
+      Categories\recount cat.id
+      Categories\recount { cat.id, cat2.id }
+
   describe "tags", ->
     import CategoryTags from require "spec.community_models"
 
@@ -659,7 +671,7 @@ describe "models.categories", ->
         topic\increment_from_post post
         topic
 
-    it "updates to score order and back #ddd", ->
+    it "updates to score order and back", ->
       category\update_category_order_type "topic_score"
       category\update_category_order_type "post_date"
 
