@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.1
--- Dumped by pg_dump version 9.6.1
+-- Dumped from database version 9.6.4
+-- Dumped by pg_dump version 9.6.4
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -375,13 +375,14 @@ ALTER TABLE community_moderators OWNER TO postgres;
 CREATE TABLE community_pending_posts (
     id integer NOT NULL,
     category_id integer,
-    topic_id integer NOT NULL,
+    topic_id integer,
     user_id integer NOT NULL,
     parent_post_id integer,
     status smallint NOT NULL,
     body text NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    title character varying(255)
 );
 
 
@@ -592,7 +593,8 @@ CREATE TABLE community_topics (
     updated_at timestamp without time zone NOT NULL,
     status smallint DEFAULT 1 NOT NULL,
     tags character varying(255)[],
-    rank_adjustment integer DEFAULT 0 NOT NULL
+    rank_adjustment integer DEFAULT 0 NOT NULL,
+    protected boolean DEFAULT false NOT NULL
 );
 
 
@@ -1130,7 +1132,7 @@ CREATE INDEX community_pending_posts_category_id_status_id_idx ON community_pend
 -- Name: community_pending_posts_topic_id_status_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE INDEX community_pending_posts_topic_id_status_id_idx ON community_pending_posts USING btree (topic_id, status, id);
+CREATE INDEX community_pending_posts_topic_id_status_id_idx ON community_pending_posts USING btree (topic_id, status, id) WHERE (topic_id IS NOT NULL);
 
 
 --
@@ -1232,8 +1234,8 @@ CREATE UNIQUE INDEX users_lower_username_idx ON users USING btree (lower((userna
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.1
--- Dumped by pg_dump version 9.6.1
+-- Dumped from database version 9.6.4
+-- Dumped by pg_dump version 9.6.4
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1270,6 +1272,8 @@ community_16
 community_17
 community_18
 community_19
+community_20
+community_21
 \.
 
 
