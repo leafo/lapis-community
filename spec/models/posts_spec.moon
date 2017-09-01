@@ -83,7 +83,7 @@ describe "models.posts", ->
       assert.false post\allowed_to_report category_user
       assert.false post\allowed_to_report mod_user
 
-    it "checks permissions for protected topic", ->
+    it "checks permissions for protected post", ->
       post\get_topic!\update protected: true
       post = Posts\find post.id
 
@@ -109,6 +109,41 @@ describe "models.posts", ->
       assert.true post\allowed_to_report some_user
       assert.true post\allowed_to_report category_user
       assert.true post\allowed_to_report mod_user
+
+    it "checks permissions for deleted post", ->
+      post\update deleted: true
+
+      assert.false post\allowed_to_edit nil
+      assert.false post\allowed_to_edit topic_user
+      assert.false post\allowed_to_edit some_user
+      assert.false post\allowed_to_edit post_user
+      assert.false post\allowed_to_edit admin_user
+      assert.false post\allowed_to_edit category_user
+      assert.false post\allowed_to_edit mod_user
+
+      assert.false post\allowed_to_reply nil
+      assert.false post\allowed_to_reply post_user
+      assert.false post\allowed_to_reply topic_user
+      assert.false post\allowed_to_reply some_user
+      assert.false post\allowed_to_reply category_user
+      assert.false post\allowed_to_reply mod_user
+
+      assert.false post\allowed_to_report nil
+      assert.false post\allowed_to_report post_user
+      assert.false post\allowed_to_report topic_user
+      assert.false post\allowed_to_report some_user
+      assert.false post\allowed_to_report category_user
+      assert.false post\allowed_to_report mod_user
+
+      -- this is bizarre, this will let the post render but the post will be
+      -- rendered as a "this post is deleted" block. Consider changing this in
+      -- the future
+      assert.true post\allowed_to_view nil
+      assert.true post\allowed_to_view post_user
+      assert.true post\allowed_to_view topic_user
+      assert.true post\allowed_to_view some_user
+      assert.true post\allowed_to_view category_user
+      assert.true post\allowed_to_view mod_user
 
   describe "has_replies", ->
     it "with no replies", ->

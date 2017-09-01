@@ -157,6 +157,7 @@ class Posts extends Model
       true
 
   allowed_to_edit: (user, action="edit") =>
+    return false if @deleted
     return false unless user
     return true if user\is_admin!
     return false if @is_archived!
@@ -171,6 +172,7 @@ class Posts extends Model
     false
 
   allowed_to_reply: (user) =>
+    return false if @deleted
     return false if @is_moderation_event!
     return false unless user
     return false unless @is_default!
@@ -283,6 +285,7 @@ class Posts extends Model
     true
 
   allowed_to_report: (user) =>
+    return false if @deleted
     return false if @is_moderation_event!
     return false unless user
     return false if user.id == @user_id
