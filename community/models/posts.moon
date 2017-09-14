@@ -58,6 +58,11 @@ class Posts extends Model
     spam: 2
   }
 
+  @body_formats: enum {
+    html: 1
+    markdown: 2
+  }
+
   @create: (opts={}) =>
     assert opts.topic_id, "missing topic id"
     assert opts.user_id, "missing user id"

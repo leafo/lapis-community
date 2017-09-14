@@ -1095,5 +1095,10 @@ return {
     return add_column(T("topics"), "protected", boolean({
       default = false
     }))
+  end,
+  [22] = function(self)
+    return add_column(T("posts"), "body_format", enum({
+      default = 1
+    }))
   end
 }

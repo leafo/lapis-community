@@ -518,6 +518,10 @@ do
     archived = 2,
     spam = 2
   })
+  self.body_formats = enum({
+    html = 1,
+    markdown = 2
+  })
   self.create = function(self, opts)
     if opts == nil then
       opts = { }

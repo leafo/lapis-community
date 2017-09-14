@@ -558,6 +558,9 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
   [21]: =>
     add_column T"topics", "protected", boolean default: false
 
+  [22]: =>
+    add_column T"posts", "body_format", enum default: 1
+
 }
 
 
