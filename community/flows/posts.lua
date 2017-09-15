@@ -121,6 +121,11 @@ do
           max_length = limits.MAX_BODY_LEN
         },
         {
+          "body_format",
+          exists = true,
+          one_of = Posts.body_formats
+        },
+        {
           "reason",
           optional = true,
           max_length = limits.MAX_BODY_LEN
@@ -132,13 +137,19 @@ do
         PostEdits:create({
           user_id = self.current_user.id,
           body_before = self.post.body,
+          body_format = self.post.body_format,
           reason = post_update.reason,
           post_id = self.post.id
         })
         self.post:update({
           body = post_update.body,
           edits_count = db.raw("edits_count + 1"),
-          last_edited_at = db.format_date()
+          last_edited_at = db.format_date(),
+          body_format = (function()
+            if post_update.body_format then
+              return Posts.body_formats:to_db(post_update.body_format)
+            end
+          end)()
         })
         edited = true
       end

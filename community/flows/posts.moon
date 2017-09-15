@@ -95,6 +95,7 @@ class PostsFlow extends Flow
     post_update = trim_filter @params.post
     assert_valid post_update, {
       {"body", exists: true, max_length: limits.MAX_BODY_LEN}
+      {"body_format", exists: true, one_of: Posts.body_formats}
       {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
     }
 
@@ -105,6 +106,7 @@ class PostsFlow extends Flow
       PostEdits\create {
         user_id: @current_user.id
         body_before: @post.body
+        body_format: @post.body_format
         reason: post_update.reason
         post_id: @post.id
       }
@@ -113,6 +115,8 @@ class PostsFlow extends Flow
         body: post_update.body
         edits_count: db.raw "edits_count + 1"
         last_edited_at: db.format_date!
+        body_format: if post_update.body_format
+          Posts.body_formats\to_db post_update.body_format
       }
 
       true

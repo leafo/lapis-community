@@ -52,7 +52,10 @@ do
     assert(opts.post_id, "missing post_id")
     assert(opts.user_id, "missing user_id")
     assert(opts.body_before, "missing body_before")
-    return Model.create(self, opts)
+    local Posts
+    Posts = require("community.models").Posts
+    opts.body_format = opts.body_format or Posts.body_formats.html
+    return _class_0.__parent.create(self, self, opts)
   end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
