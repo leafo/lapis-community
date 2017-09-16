@@ -62,6 +62,12 @@ do
           type = "string",
           exists = true,
           max_length = limits.MAX_BODY_LEN
+        },
+        {
+          "body_format",
+          exists = true,
+          one_of = Posts.body_formats,
+          optional = true
         }
       })
       assert_error(not is_empty_html(new_post.body), "body must be provided")
@@ -82,6 +88,11 @@ do
           topic_id = self.topic.id,
           category_id = self.topic.category_id,
           body = new_post.body,
+          body_format = (function()
+            if post_update.body_format then
+              return Posts.body_formats:to_db(post_update.body_format)
+            end
+          end)(),
           parent_post = parent_post
         })
       else
@@ -89,6 +100,11 @@ do
           user_id = self.current_user.id,
           topic_id = self.topic.id,
           body = new_post.body,
+          body_format = (function()
+            if post_update.body_format then
+              return Posts.body_formats:to_db(post_update.body_format)
+            end
+          end)(),
           parent_post = parent_post
         })
         self.topic:increment_from_post(self.post)
@@ -123,7 +139,8 @@ do
         {
           "body_format",
           exists = true,
-          one_of = Posts.body_formats
+          one_of = Posts.body_formats,
+          optional = true
         },
         {
           "reason",

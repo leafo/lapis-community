@@ -41,7 +41,7 @@ class PendingPosts extends Model
 
   @create: (opts={}) =>
     opts.status = @statuses\for_db opts.status or "pending"
-    Model.create @, opts
+    super @, opts
 
   allowed_to_moderate: (user) =>
     if parent = @get_topic! or @get_category!

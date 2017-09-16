@@ -39,6 +39,7 @@ class PostsFlow extends Flow
     new_post = trim_filter @params.post
     assert_valid new_post, {
       {"body", type: "string", exists: true, max_length: limits.MAX_BODY_LEN}
+      {"body_format", exists: true, one_of: Posts.body_formats, optional: true}
     }
 
     assert_error not is_empty_html(new_post.body), "body must be provided"
@@ -59,6 +60,8 @@ class PostsFlow extends Flow
         topic_id: @topic.id
         category_id: @topic.category_id
         body: new_post.body
+        body_format: if post_update.body_format
+          Posts.body_formats\to_db post_update.body_format
         :parent_post
       }
     else
@@ -66,6 +69,8 @@ class PostsFlow extends Flow
         user_id: @current_user.id
         topic_id: @topic.id
         body: new_post.body
+        body_format: if post_update.body_format
+          Posts.body_formats\to_db post_update.body_format
         :parent_post
       }
 
@@ -95,7 +100,7 @@ class PostsFlow extends Flow
     post_update = trim_filter @params.post
     assert_valid post_update, {
       {"body", exists: true, max_length: limits.MAX_BODY_LEN}
-      {"body_format", exists: true, one_of: Posts.body_formats}
+      {"body_format", exists: true, one_of: Posts.body_formats, optional: true}
       {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
     }
 

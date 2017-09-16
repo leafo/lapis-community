@@ -1100,7 +1100,10 @@ return {
     add_column(T("posts"), "body_format", enum({
       default = 1
     }))
-    return add_column(T("post_edits"), "body_format", enum({
+    add_column(T("post_edits"), "body_format", enum({
+      default = 1
+    }))
+    return add_column(T("pending_posts"), "body_format", enum({
       default = 1
     }))
   end

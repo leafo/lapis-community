@@ -116,7 +116,7 @@ do
       opts = { }
     end
     opts.status = self.statuses:for_db(opts.status or "pending")
-    return Model.create(self, opts)
+    return _class_0.__parent.create(self, self, opts)
   end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
