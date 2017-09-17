@@ -116,6 +116,9 @@ do
       opts = { }
     end
     opts.status = self.statuses:for_db(opts.status or "pending")
+    local Posts
+    Posts = require("community.models").Posts
+    opts.body_format = Posts.body_formats:for_db(opts.body_format or 1)
     return _class_0.__parent.create(self, self, opts)
   end
   if _parent_0.__inherited then

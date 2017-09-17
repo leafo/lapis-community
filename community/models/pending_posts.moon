@@ -41,6 +41,8 @@ class PendingPosts extends Model
 
   @create: (opts={}) =>
     opts.status = @statuses\for_db opts.status or "pending"
+    import Posts from require "community.models"
+    opts.body_format = Posts.body_formats\for_db opts.body_format or 1
     super @, opts
 
   allowed_to_moderate: (user) =>

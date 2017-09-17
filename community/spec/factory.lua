@@ -84,6 +84,7 @@ Posts = function(opts)
     opts.topic_id = topic.id
   end
   opts.body = opts.body or "Post " .. tostring(next_counter("post")) .. " body"
+  opts.body_format = "markdown"
   do
     local post = assert(models.Posts:create(opts))
     if topic then
@@ -230,6 +231,7 @@ PendingPosts = function(opts)
   end
   opts.user_id = opts.user_id or Users().id
   opts.body = opts.body or "Pending post " .. tostring(next_counter("post")) .. " body"
+  opts.body_format = "markdown"
   return assert(models.PendingPosts:create(opts))
 end
 CategoryTags = function(opts)

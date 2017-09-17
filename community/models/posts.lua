@@ -557,7 +557,10 @@ do
     local post_number = db.interpolate_query("\n     (select coalesce(max(post_number), 0) from " .. tostring(db.escape_identifier(self:table_name())) .. "\n       where " .. tostring(db.encode_clause(number_cond)) .. ") + 1\n    ")
     opts.status = opts.status and self.statuses:for_db(opts.status)
     opts.post_number = db.raw(post_number)
-    return Model.create(self, opts, {
+    if opts.body_format then
+      opts.body_format = self.body_formats:for_db(opts.body_format)
+    end
+    return _class_0.__parent.create(self, opts, {
       returning = {
         "status"
       }

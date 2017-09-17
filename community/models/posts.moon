@@ -93,9 +93,10 @@ class Posts extends Model
     "
 
     opts.status = opts.status and @statuses\for_db opts.status
-
     opts.post_number = db.raw post_number
-    Model.create @, opts, returning: {"status"}
+    opts.body_format = if opts.body_format
+      @body_formats\for_db opts.body_format
+    super opts, returning: {"status"}
 
   @preload_mentioned_users: (posts) =>
     import CommunityUsers from require "community.models"

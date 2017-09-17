@@ -59,6 +59,7 @@ Posts = (opts={}) ->
     opts.topic_id = topic.id
 
   opts.body or= "Post #{next_counter "post"} body"
+  opts.body_format = "markdown"
 
   with post = assert models.Posts\create opts
     if topic
@@ -158,6 +159,8 @@ PendingPosts = (opts={}) ->
 
   opts.user_id or= Users!.id
   opts.body or= "Pending post #{next_counter "post"} body"
+  opts.body_format = "markdown"
+
   assert models.PendingPosts\create opts
 
 CategoryTags = (opts={}) ->
