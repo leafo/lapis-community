@@ -96,6 +96,7 @@ class Posts extends Model
     opts.post_number = db.raw post_number
     opts.body_format = if opts.body_format
       @body_formats\for_db opts.body_format
+
     super opts, returning: {"status"}
 
   @preload_mentioned_users: (posts) =>
