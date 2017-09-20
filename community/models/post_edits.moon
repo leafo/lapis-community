@@ -30,5 +30,5 @@ class PostEdits extends Model
     assert opts.body_before, "missing body_before"
     import Posts from require "community.models"
     opts.body_format or= Posts.body_formats.html
-    super @, opts
+    super opts
 

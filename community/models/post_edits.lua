@@ -55,7 +55,7 @@ do
     local Posts
     Posts = require("community.models").Posts
     opts.body_format = opts.body_format or Posts.body_formats.html
-    return _class_0.__parent.create(self, self, opts)
+    return _class_0.__parent.create(self, opts)
   end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
