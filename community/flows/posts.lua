@@ -89,8 +89,8 @@ do
           category_id = self.topic.category_id,
           body = new_post.body,
           body_format = (function()
-            if post_update.body_format then
-              return Posts.body_formats:to_db(post_update.body_format)
+            if new_post.body_format then
+              return Posts.body_formats:to_db(new_post.body_format)
             end
           end)(),
           parent_post = parent_post
@@ -101,8 +101,8 @@ do
           topic_id = self.topic.id,
           body = new_post.body,
           body_format = (function()
-            if post_update.body_format then
-              return Posts.body_formats:to_db(post_update.body_format)
+            if new_post.body_format then
+              return Posts.body_formats:to_db(new_post.body_format)
             end
           end)(),
           parent_post = parent_post

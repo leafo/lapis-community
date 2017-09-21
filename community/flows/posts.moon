@@ -60,8 +60,8 @@ class PostsFlow extends Flow
         topic_id: @topic.id
         category_id: @topic.category_id
         body: new_post.body
-        body_format: if post_update.body_format
-          Posts.body_formats\to_db post_update.body_format
+        body_format: if new_post.body_format
+          Posts.body_formats\to_db new_post.body_format
         :parent_post
       }
     else
@@ -69,8 +69,8 @@ class PostsFlow extends Flow
         user_id: @current_user.id
         topic_id: @topic.id
         body: new_post.body
-        body_format: if post_update.body_format
-          Posts.body_formats\to_db post_update.body_format
+        body_format: if new_post.body_format
+          Posts.body_formats\to_db new_post.body_format
         :parent_post
       }
 
@@ -115,6 +115,7 @@ class PostsFlow extends Flow
         reason: post_update.reason
         post_id: @post.id
       }
+
 
       @post\update {
         body: post_update.body
