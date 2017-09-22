@@ -61,7 +61,7 @@ class PostsFlow extends Flow
         category_id: @topic.category_id
         body: new_post.body
         body_format: if new_post.body_format
-          Posts.body_formats\to_db new_post.body_format
+          Posts.body_formats\for_db new_post.body_format
         :parent_post
       }
     else
@@ -70,7 +70,7 @@ class PostsFlow extends Flow
         topic_id: @topic.id
         body: new_post.body
         body_format: if new_post.body_format
-          Posts.body_formats\to_db new_post.body_format
+          Posts.body_formats\for_db new_post.body_format
         :parent_post
       }
 
@@ -122,7 +122,7 @@ class PostsFlow extends Flow
         edits_count: db.raw "edits_count + 1"
         last_edited_at: db.format_date!
         body_format: if post_update.body_format
-          Posts.body_formats\to_db post_update.body_format
+          Posts.body_formats\for_db post_update.body_format
       }
 
       true

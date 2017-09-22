@@ -290,6 +290,20 @@ describe "posting flow", ->
       assert.same 1, #tps
       assert.same 2, tps[1].posts_count
 
+    it "creates new post with body format", ->
+      res = PostingApp\get current_user, "/new-post", {
+        topic_id: topic.id
+        "post[body]": "This is post body"
+        "post[body_format]": "markdown"
+      }
+
+      topic\refresh!
+      post = unpack Posts\select!
+
+      assert (types.shape {
+        body_format: Posts.body_formats.markdown
+      })
+
     it "should post a threaded post", ->
       post = factory.Posts topic_id: topic.id
 
