@@ -16,6 +16,8 @@ PostsFlow = require "community.flows.posts"
 
 import Users from require "models"
 
+import types from require "tableshape"
+
 class PostingApp extends TestApp
   @before_filter =>
     @current_user = Users\find assert @params.current_user_id, "missing user id"
@@ -121,39 +123,71 @@ describe "posting flow", ->
       topic = unpack Topics\select!
       post = unpack Posts\select!
 
-      assert.same category.id, topic.category_id
-      assert.same current_user.id, topic.user_id
-      assert.same "Hello world", topic.title
-      assert.same 1, topic.category_order
+      assert (types.shape {
+        category_id: category.id
+        user_id: current_user.id
+        title: "Hello world"
+        category_order: 1
 
-      assert.same current_user.id, post.user_id
-      assert.same topic.id, post.topic_id
-      assert.same "This is the body", post.body
+        protected: false
+        locked: false
+        permanent: false
+        deleted: false
+        sticky: false
+        posts_count: 1
+        root_posts_count: 1
+        status: Topics.statuses.default
+        last_post_id: post.id
+      }, open: true) topic
+
+
+      assert (types.shape {
+        body_format: Posts.body_formats.html
+        user_id: current_user.id
+        topic_id: topic.id
+        body: "This is the body"
+        depth: 1
+        status: Posts.statuses.default
+        deleted: false
+        post_number: 1
+      }, open: true) post
 
       category\refresh!
-      assert.same 1, category.topics_count
+
+      assert (types.shape {
+        last_topic_id: topic.id
+        topics_count: 1
+      }, open: true) category
 
       cu = CommunityUsers\for_user(current_user)
-      assert.same 1, cu.topics_count
-      assert.same 0, cu.posts_count
+
+      assert (types.shape {
+        topics_count: 1
+        posts_count: 0
+      }, open: true) cu
 
       tps = TopicParticipants\select "where topic_id = ?", topic.id
-      assert.same 1, #tps
+      assert (types.shape {
+        types.shape {
+          user_id: current_user.id
+          posts_count: 1
+        }, open: true
+      }) tps
 
-      category\refresh!
-      assert.same topic.id, category.last_topic_id
-
-      assert.same post.id, topic.last_post_id
-
-      assert.same 1, topic.root_posts_count
-      assert.same 1, topic.posts_count
 
       assert.same 1, ActivityLogs\count!
-      log = unpack ActivityLogs\select!
-      assert.same current_user.id, log.user_id
-      assert.same topic.id, log.object_id
-      assert.same ActivityLogs.object_types.topic, log.object_type
-      assert.same "create", log\action_name!
+      logs = ActivityLogs\select!
+
+      assert (types.shape {
+        types.shape {
+          user_id: current_user.id
+          object_id: topic.id
+          object_type: ActivityLogs.object_types.topic
+          action: ActivityLogs.actions.topic.create
+          publishable: false
+        }, open: true
+      }) logs
+
 
     it "should post a new topic with tags", ->
       category = factory.Categories!
