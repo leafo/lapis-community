@@ -252,32 +252,60 @@ describe "posting flow", ->
       topic\refresh!
       post = unpack Posts\select!
 
-      assert.same current_user.id, post.user_id
-      assert.same topic.id, post.topic_id
-      assert.same "This is post body", post.body
+      assert (types.shape {
+        user_id: current_user.id
+        topic_id: topic.id
+        body: "This is post body"
+        body_format: Posts.body_formats.html
 
-      assert.same topic.posts_count, 1
-      assert.same topic.root_posts_count, 1
+        depth: 1
+        status: Posts.statuses.default
+        deleted: false
+        post_number: 1
+      }, open: true) post
+
+      assert (types.shape {
+        posts_count: 1
+        root_posts_count: 1
+        status: Topics.statuses.default
+        category_order: 2
+
+        -- although this is the first post, there is no circumstance where the
+        -- first post would normally get posted thoruhg /new-post, so we assume
+        -- last_post_id is set
+        last_post_id: post.id
+
+      }, open: true) topic
 
       cu = CommunityUsers\for_user(current_user)
-      assert.same 0, cu.topics_count
-      assert.same 1, cu.posts_count
+
+      assert (types.shape {
+        topics_count: 0
+        posts_count: 1
+      }, open: true) cu
 
       -- 1 less because factory didn't seed topic participants
       tps = TopicParticipants\select "where topic_id = ?", topic.id
-      assert.same 1, #tps
+      assert (types.shape {
+        types.shape {
+          user_id: current_user.id
+          posts_count: 1
+        }, open: true
+      }) tps
 
-      -- although this is the first post, there is no circumstance where the
-      -- first post would normally get posted thoruhg /new-post, so we assume
-      -- last_post_id is set
-      assert.same post.id, topic.last_post_id
 
       assert.same 1, ActivityLogs\count!
-      log = unpack ActivityLogs\select!
-      assert.same current_user.id, log.user_id
-      assert.same post.id, log.object_id
-      assert.same ActivityLogs.object_types.post, log.object_type
-      assert.same "create", log\action_name!
+      logs = ActivityLogs\select!
+
+      assert (types.shape {
+        types.shape {
+          user_id: current_user.id
+          object_id: post.id
+          object_type: ActivityLogs.object_types.posts
+          action: ActivityLogs.actions.post.create
+          publishable: false
+        }, open: true
+      }) logs
 
     it "should post two posts", ->
       for i=1,2
