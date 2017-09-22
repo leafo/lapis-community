@@ -188,8 +188,25 @@ describe "posting flow", ->
         }, open: true
       }) logs
 
+    it "creates new topic with body format", ->
+      category = factory.Categories!
 
-    it "should post a new topic with tags", ->
+      res = PostingApp\get current_user, "/new-topic", {
+        current_user_id: current_user.id
+        category_id: category.id
+        "topic[title]": "Hello world"
+        "topic[body]": "This is the body"
+        "topic[body_format]": "markdown"
+      }
+
+      assert.truthy res.success
+      post = unpack Posts\select!
+
+      assert (types.shape {
+        body_format: Posts.body_formats.markdown
+      })
+
+    it "creates new topic with tags", ->
       category = factory.Categories!
       factory.CategoryTags slug: "hello", category_id: category.id
 
