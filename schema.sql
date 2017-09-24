@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.4
--- Dumped by pg_dump version 9.6.4
+-- Dumped from database version 9.6.5
+-- Dumped by pg_dump version 9.6.5
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -382,7 +382,8 @@ CREATE TABLE community_pending_posts (
     body text NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    title character varying(255)
+    title character varying(255),
+    body_format smallint DEFAULT 1 NOT NULL
 );
 
 
@@ -420,7 +421,8 @@ CREATE TABLE community_post_edits (
     body_before text NOT NULL,
     reason text,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    body_format smallint DEFAULT 1 NOT NULL
 );
 
 
@@ -510,7 +512,8 @@ CREATE TABLE community_posts (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     status smallint DEFAULT 1 NOT NULL,
-    moderation_log_id integer
+    moderation_log_id integer,
+    body_format smallint DEFAULT 1 NOT NULL
 );
 
 
@@ -1234,8 +1237,8 @@ CREATE UNIQUE INDEX users_lower_username_idx ON users USING btree (lower((userna
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.4
--- Dumped by pg_dump version 9.6.4
+-- Dumped from database version 9.6.5
+-- Dumped by pg_dump version 9.6.5
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1274,6 +1277,7 @@ community_18
 community_19
 community_20
 community_21
+community_22
 \.
 
 
