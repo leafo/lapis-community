@@ -369,11 +369,18 @@ describe "posting flow", ->
       assert.same -1, CommunityUsers\for_user(current_user).topics_count
 
       assert.same 1, ActivityLogs\count!
-      log = unpack ActivityLogs\select!
-      assert.same current_user.id, log.user_id
-      assert.same topic.id, log.object_id
-      assert.same ActivityLogs.object_types.topic, log.object_type
-      assert.same "delete", log\action_name!
+      logs = ActivityLogs\select!
+
+      assert (types.shape {
+        types.shape {
+          user_id: current_user.id
+          object_id: topic.id
+          object_type: ActivityLogs.object_types.topic
+          action: ActivityLogs.actions.topic.delete
+          publishable: false
+        }, open: true
+      }) logs
+
 
     it "should not allow unrelated user to delete topic", ->
       other_user = factory.Users!
@@ -395,14 +402,25 @@ describe "posting flow", ->
 
       assert.truthy res.success
       post\refresh!
-      assert.same "the new body", post.body
+
+      assert (types.shape {
+        body: "the new body"
+      }, open: true) post
 
       assert.same 1, ActivityLogs\count!
-      log = unpack ActivityLogs\select!
-      assert.same current_user.id, log.user_id
-      assert.same post.id, log.object_id
-      assert.same ActivityLogs.object_types.post, log.object_type
-      assert.same "edit", log\action_name!
+      logs = ActivityLogs\select!
+
+      assert (types.shape {
+        types.shape {
+          user_id: current_user.id
+          object_id: post.id
+          object_type: ActivityLogs.object_types.post
+          action: ActivityLogs.actions.post.edit
+          publishable: false
+        }, open: true
+      }) logs
+
+
 
     it "should edit post and title", ->
       post = factory.Posts user_id: current_user.id
