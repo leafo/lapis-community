@@ -562,6 +562,10 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
     add_column T"posts", "body_format", enum default: 1
     add_column T"post_edits", "body_format", enum default: 1
     add_column T"pending_posts", "body_format", enum default: 1
+
+  [23]: =>
+    add_column T"post_reports", "moderated_at", time null: true
+
 }
 
 

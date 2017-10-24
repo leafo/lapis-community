@@ -131,6 +131,7 @@ class ReportsFlow extends Flow
     @report\update {
       status: PostReports.statuses\for_db report.status
       moderating_user_id: @current_user.id
+      moderated_at: db.format_date!
     }
 
     import ModerationLogs from require "community.models"

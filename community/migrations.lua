@@ -1106,5 +1106,10 @@ return {
     return add_column(T("pending_posts"), "body_format", enum({
       default = 1
     }))
+  end,
+  [23] = function(self)
+    return add_column(T("post_reports"), "moderated_at", time({
+      null = true
+    }))
   end
 }

@@ -149,7 +149,8 @@ do
       })
       self.report:update({
         status = PostReports.statuses:for_db(report.status),
-        moderating_user_id = self.current_user.id
+        moderating_user_id = self.current_user.id,
+        moderated_at = db.format_date()
       })
       local ModerationLogs
       ModerationLogs = require("community.models").ModerationLogs

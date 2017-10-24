@@ -464,7 +464,8 @@ CREATE TABLE community_post_reports (
     reason integer DEFAULT 0 NOT NULL,
     body text,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    moderated_at timestamp without time zone
 );
 
 
@@ -1278,6 +1279,7 @@ community_19
 community_20
 community_21
 community_22
+community_23
 \.
 
 
