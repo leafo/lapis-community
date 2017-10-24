@@ -289,7 +289,8 @@ do
       local _list_0 = self:get_mentioned_users()
       for _index_0 = 1, #_list_0 do
         local user = _list_0[_index_0]
-        targets[user.id] = targets[user.id] or {
+        local _update_0 = user.id
+        targets[_update_0] = targets[_update_0] or {
           "mention",
           user.id
         }
@@ -308,7 +309,8 @@ do
       local _list_1 = topic:notification_target_users()
       for _index_0 = 1, #_list_1 do
         local target_user = _list_1[_index_0]
-        targets[target_user.id] = targets[target_user.id] or {
+        local _update_0 = target_user.id
+        targets[_update_0] = targets[_update_0] or {
           "post",
           target_user,
           topic
@@ -320,7 +322,8 @@ do
           local _list_2 = category:notification_target_users()
           for _index_0 = 1, #_list_2 do
             local target_user = _list_2[_index_0]
-            targets[target_user.id] = targets[target_user.id] or {
+            local _update_0 = target_user.id
+            targets[_update_0] = targets[_update_0] or {
               "topic",
               target_user,
               category,
@@ -332,7 +335,8 @@ do
             local _list_3 = category_group:notification_target_users()
             for _index_0 = 1, #_list_3 do
               local target_user = _list_3[_index_0]
-              targets[target_user.id] = targets[target_user.id] or {
+              local _update_0 = target_user.id
+              targets[_update_0] = targets[_update_0] or {
                 "topic",
                 target_user,
                 category_group,
@@ -346,7 +350,8 @@ do
         for _index_0 = 1, #extra_targets do
           local t = extra_targets[_index_0]
           local user = t[2]
-          targets[user.id] = targets[user.id] or t
+          local _update_0 = user.id
+          targets[_update_0] = targets[_update_0] or t
         end
       end
       targets[self.user_id] = nil

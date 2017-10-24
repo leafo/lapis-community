@@ -75,7 +75,8 @@ do
           local key = _list_0[_index_0]
           local t, id = key:match("(%w+):(%d+)")
           if t then
-            bulk_updates[t] = bulk_updates[t] or { }
+            local _update_0 = t
+            bulk_updates[_update_0] = bulk_updates[_update_0] or { }
             local incr = self.dict:get(key)
             table.insert(bulk_updates[t], {
               tonumber(id),

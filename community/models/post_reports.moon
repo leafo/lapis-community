@@ -65,5 +65,10 @@ class PostReports extends Model
     assert opts.post_id, "missing post_id"
     assert opts.user_id, "missing user_id"
 
-    Model.create @, opts
+    super opts
+
+  is_resolved: => @status == @@statuses.resolved
+  is_pending: => @status == @@statuses.pending
+  is_ignored: => @status == @@statuses.ignored
+
 

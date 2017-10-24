@@ -17,10 +17,12 @@ do
   local _obj_0 = require("community.helpers.app")
   assert_page, require_login = _obj_0.assert_page, _obj_0.require_login
 end
-local PostReports, Posts
+local preload
+preload = require("lapis.db.model").preload
+local PostReports, Posts, Topics
 do
   local _obj_0 = require("community.models")
-  PostReports, Posts = _obj_0.PostReports, _obj_0.Posts
+  PostReports, Posts, Topics = _obj_0.PostReports, _obj_0.Posts, _obj_0.Topics
 end
 local limits = require("community.limits")
 local ReportsFlow
@@ -97,7 +99,7 @@ do
         }
       })
       local filter = {
-        status = self.params.status and PostReports.statuses:for_db(self.params.status)
+        [db.raw(tostring(db.escape_identifier(PostReports:table_name())) .. ".status")] = self.params.status and PostReports.statuses:for_db(self.params.status)
       }
       local children = self.category:get_flat_children()
       local category_ids
@@ -112,19 +114,12 @@ do
         category_ids = _accum_0
       end
       table.insert(category_ids, self.category.id)
-      self.pager = PostReports:paginated("\n      where category_id in ?\n      " .. tostring(next(filter) and "and " .. db.encode_clause(filter) or "") .. "\n    ", db.list(category_ids), {
+      self.pager = PostReports:paginated("\n      inner join " .. tostring(db.escape_identifier(Posts:table_name())) .. " as posts\n        on posts.id = post_id\n\n      inner join " .. tostring(db.escape_identifier(Topics:table_name())) .. " as topics\n        on posts.topic_id = topics.id\n\n      where " .. tostring(db.escape_identifier(PostReports:table_name())) .. ".category_id in ? and not posts.deleted and not topics.deleted\n\n      " .. tostring(next(filter) and "and " .. db.encode_clause(filter) or "") .. "\n    ", db.list(category_ids), {
+        fields = tostring(db.escape_identifier(PostReports:table_name())) .. ".*",
         prepare_results = function(reports)
-          PostReports:preload_relations(reports, "category", "user", "moderating_user", "post")
-          Posts:preload_relations((function()
-            local _accum_0 = { }
-            local _len_0 = 1
-            for _index_0 = 1, #reports do
-              local r = reports[_index_0]
-              _accum_0[_len_0] = r.post
-              _len_0 = _len_0 + 1
-            end
-            return _accum_0
-          end)(), "topic")
+          preload(reports, "category", "user", "moderating_user", {
+            post = "topic"
+          })
           return reports
         end
       })

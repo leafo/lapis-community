@@ -124,7 +124,8 @@ do
       for _index_0 = 1, #categories do
         local c = categories[_index_0]
         if ids[c.id] then
-          ids[c.id] = ids[c.id] - 1
+          local _update_0 = c.id
+          ids[_update_0] = ids[_update_0] - 1
         else
           table.insert(to_add, c)
         end

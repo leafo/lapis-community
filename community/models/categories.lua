@@ -896,7 +896,8 @@ do
       for _index_0 = 1, #res do
         local category = res[_index_0]
         category = self.__class:load(category)
-        categories_by_id[category.id] = categories_by_id[category.id] or category
+        local _update_0 = category.id
+        categories_by_id[_update_0] = categories_by_id[_update_0] or category
       end
     end
     for _, category in pairs(categories_by_id) do
@@ -946,7 +947,8 @@ do
       local _list_0 = c:get_ancestors()
       for _index_1 = 1, #_list_0 do
         local ancestor = _list_0[_index_1]
-        categories_by_id[ancestor.id] = categories_by_id[ancestor.id] or ancestor
+        local _update_0 = ancestor.id
+        categories_by_id[_update_0] = categories_by_id[_update_0] or ancestor
       end
     end
     local category_ids

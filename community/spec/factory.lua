@@ -14,7 +14,8 @@ do
   next_counter = function(name)
     do
       local _with_0 = counters[name]
-      counters[name] = counters[name] + 1
+      local _update_0 = name
+      counters[_update_0] = counters[_update_0] + 1
       return _with_0
     end
   end

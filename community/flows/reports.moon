@@ -10,7 +10,9 @@ import trim_filter from require "lapis.util"
 
 import assert_page, require_login from require "community.helpers.app"
 
-import PostReports, Posts from require "community.models"
+import preload from require "lapis.db.model"
+
+import PostReports, Posts, Topics from require "community.models"
 
 limits = require "community.limits"
 
@@ -83,7 +85,7 @@ class ReportsFlow extends Flow
     }
 
     filter = {
-      status: @params.status and PostReports.statuses\for_db @params.status
+      [db.raw "#{db.escape_identifier PostReports\table_name!}.status"]: @params.status and PostReports.statuses\for_db @params.status
     }
 
     children = @category\get_flat_children!
@@ -91,14 +93,21 @@ class ReportsFlow extends Flow
     table.insert category_ids, @category.id
 
     @pager = PostReports\paginated "
-      where category_id in ?
-      #{next(filter) and "and " .. db.encode_clause(filter) or ""}
-    ", db.list(category_ids), prepare_results: (reports) ->
-      PostReports\preload_relations reports, "category", "user",
-        "moderating_user", "post"
+      inner join #{db.escape_identifier Posts\table_name!} as posts
+        on posts.id = post_id
 
-      Posts\preload_relations [r.post for r in *reports], "topic"
-      reports
+      inner join #{db.escape_identifier Topics\table_name!} as topics
+        on posts.topic_id = topics.id
+
+      where #{db.escape_identifier PostReports\table_name!}.category_id in ? and not posts.deleted and not topics.deleted
+
+      #{next(filter) and "and " .. db.encode_clause(filter) or ""}
+    ", db.list(category_ids), {
+      fields: "#{db.escape_identifier PostReports\table_name!}.*"
+      prepare_results: (reports) ->
+        preload reports, "category", "user", "moderating_user", post: "topic"
+        reports
+      }
 
     @reports = @pager\get_page!
     true

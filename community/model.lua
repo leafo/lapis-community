@@ -93,7 +93,8 @@ do
             do
               local pid = item[parent_field]
               if pid then
-                by_parent[pid] = by_parent[pid] or { }
+                local _update_0 = pid
+                by_parent[_update_0] = by_parent[_update_0] or { }
                 table.insert(by_parent[pid], item)
               end
             end

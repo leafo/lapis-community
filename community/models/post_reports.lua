@@ -7,7 +7,17 @@ local PostReports
 do
   local _class_0
   local _parent_0 = Model
-  local _base_0 = { }
+  local _base_0 = {
+    is_resolved = function(self)
+      return self.status == self.__class.statuses.resolved
+    end,
+    is_pending = function(self)
+      return self.status == self.__class.statuses.pending
+    end,
+    is_ignored = function(self)
+      return self.status == self.__class.statuses.ignored
+    end
+  }
   _base_0.__index = _base_0
   setmetatable(_base_0, _parent_0.__base)
   _class_0 = setmetatable({
@@ -80,7 +90,7 @@ do
     end
     assert(opts.post_id, "missing post_id")
     assert(opts.user_id, "missing user_id")
-    return Model.create(self, opts)
+    return _class_0.__parent.create(self, opts)
   end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
