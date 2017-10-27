@@ -11,6 +11,8 @@ import trim_filter, slugify from require "lapis.util"
 import assert_page, require_login from require "community.helpers.app"
 import filter_update from require "community.helpers.models"
 
+import preload from require "lapis.db.model"
+
 limits = require "community.limits"
 
 db = require "lapis.db"
@@ -67,7 +69,7 @@ class CategoriesFlow extends Flow
       per_page: opts and opts.per_page or limits.TOPICS_PER_PAGE
       order: "desc"
       prepare_results: (logs) ->
-        CategoryPostLogs\preload_relation logs, "post"
+        preload logs, "post"
         posts = [log\get_post! for log in *logs]
         @preload_post_log posts
         posts
@@ -80,12 +82,12 @@ class CategoriesFlow extends Flow
     import Posts, Topics, Categories from require "community.models"
     BrowsingFlow = require "community.flows.browsing"
 
-    Posts\preload_relations posts, "topic", "user"
-    topics = [post\get_topic! for post in *posts]
+    preload posts, "user", topic: "category"
 
-    Topics\preload_relations topics, "category"
+    topics = [post\get_topic! for post in *posts]
     Topics\preload_bans topics, @current_user
     Categories\preload_bans [t\get_category! for t in *topics], @current_user
+
     BrowsingFlow(@)\preload_topics topics
     true
 
@@ -109,7 +111,7 @@ class CategoriesFlow extends Flow
     ", db.list(category_ids), {
       per_page: 50
       prepare_results: (logs) ->
-        ModerationLogs\preload_relations logs, "object", "user"
+        preload logs, "object", "user"
         logs
     }
 
@@ -133,7 +135,7 @@ class CategoriesFlow extends Flow
       order by id asc
     ", @category.id, status, {
       prepare_results: (pending) ->
-        PendingPosts\preload_relations pending, "category", "user", "topic", "parent_post"
+        preload pending, "category", "user", "topic", "parent_post"
         pending
     }
 

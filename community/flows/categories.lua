@@ -26,6 +26,8 @@ do
 end
 local filter_update
 filter_update = require("community.helpers.models").filter_update
+local preload
+preload = require("lapis.db.model").preload
 local limits = require("community.limits")
 local db = require("lapis.db")
 local VALIDATIONS = {
@@ -99,7 +101,7 @@ do
         per_page = opts and opts.per_page or limits.TOPICS_PER_PAGE,
         order = "desc",
         prepare_results = function(logs)
-          CategoryPostLogs:preload_relation(logs, "post")
+          preload(logs, "post")
           local posts
           do
             local _accum_0 = { }
@@ -125,7 +127,9 @@ do
         Posts, Topics, Categories = _obj_0.Posts, _obj_0.Topics, _obj_0.Categories
       end
       local BrowsingFlow = require("community.flows.browsing")
-      Posts:preload_relations(posts, "topic", "user")
+      preload(posts, "user", {
+        topic = "category"
+      })
       local topics
       do
         local _accum_0 = { }
@@ -137,7 +141,6 @@ do
         end
         topics = _accum_0
       end
-      Topics:preload_relations(topics, "category")
       Topics:preload_bans(topics, self.current_user)
       Categories:preload_bans((function()
         local _accum_0 = { }
@@ -179,7 +182,7 @@ do
       self.pager = ModerationLogs:paginated("\n      where category_id in ? order by id desc\n    ", db.list(category_ids), {
         per_page = 50,
         prepare_results = function(logs)
-          ModerationLogs:preload_relations(logs, "object", "user")
+          preload(logs, "object", "user")
           return logs
         end
       })
@@ -204,7 +207,7 @@ do
       local status = PendingPosts.statuses:for_db(self.params.status or "pending")
       self.pager = PendingPosts:paginated("\n      where category_id = ? and status = ?\n      order by id asc\n    ", self.category.id, status, {
         prepare_results = function(pending)
-          PendingPosts:preload_relations(pending, "category", "user", "topic", "parent_post")
+          preload(pending, "category", "user", "topic", "parent_post")
           return pending
         end
       })
