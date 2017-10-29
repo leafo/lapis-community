@@ -18,6 +18,8 @@ do
   local _obj_0 = require("community.models")
   Bans, Categories, Topics = _obj_0.Bans, _obj_0.Categories, _obj_0.Topics
 end
+local preload
+preload = require("lapis.db.model").preload
 local BansFlow
 do
   local _class_0
@@ -131,7 +133,7 @@ do
     ]], Bans:object_type_for_object(self.object), self.object.id, {
         per_page = 20,
         prepare_results = function(bans)
-          Bans:preload_relations(bans, "banned_user", "banning_user")
+          preload(bans, "banned_user", "banning_user")
           return bans
         end
       })

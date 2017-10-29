@@ -16,6 +16,8 @@ do
   local _obj_0 = require("community.helpers.app")
   require_login, assert_page = _obj_0.require_login, _obj_0.assert_page
 end
+local preload
+preload = require("lapis.db.model").preload
 local BookmarksFlow
 do
   local _class_0
@@ -51,7 +53,7 @@ do
       self.pager = Topics:paginated("\n      where id in (\n        select object_id from " .. tostring(db.escape_identifier(Bookmarks:table_name())) .. "\n        where user_id = ? and object_type = ?\n      )\n      and not deleted\n      order by last_post_id desc\n    ", self.current_user.id, Bookmarks.object_types.topic, {
         per_page = 50,
         prepare_results = function(topics)
-          Topics:preload_relations(topics, "category")
+          preload(topics, "category")
           Topics:preload_bans(topics, self.current_user)
           local categories
           do
@@ -65,7 +67,7 @@ do
             categories = _accum_0
           end
           Categories:preload_bans(categories, self.current_user)
-          Categories:preload_relations(categories, "tags")
+          preload(categories, "tags")
           BrowsingFlow(self):preload_topics(topics)
           return topics
         end

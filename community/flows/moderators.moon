@@ -11,6 +11,8 @@ import Users from require "models"
 
 import Moderators from require "community.models"
 
+import preload from require "lapis.db.model"
+
 class ModeratorsFlow extends Flow
   expose_assigns: true
 
@@ -89,7 +91,7 @@ class ModeratorsFlow extends Flow
     ", Moderators\object_type_for_object(@object), @object.id, {
       per_page: 20
       prepare_results: (moderators) ->
-        Moderators\preload_relations moderators, "user"
+        preload moderators, "user"
         moderators
     }
 

@@ -7,6 +7,8 @@ local assert_valid
 assert_valid = require("lapis.validate").assert_valid
 local Subscriptions
 Subscriptions = require("community.models").Subscriptions
+local preload
+preload = require("lapis.db.model").preload
 local SubscriptionsFlow
 do
   local _class_0
@@ -42,7 +44,7 @@ do
             local sub = subs[_index_0]
             sub.user = self.current_user
           end
-          Subscriptions:preload_relations(subs, "object")
+          preload(subs, "object")
           return subs
         end
       })

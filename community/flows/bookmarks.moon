@@ -12,6 +12,8 @@ import Bookmarks from require "community.models"
 
 import require_login, assert_page from require "community.helpers.app"
 
+import preload from require "lapis.db.model"
+
 class BookmarksFlow extends Flow
   expose_assigns: true
 
@@ -51,12 +53,12 @@ class BookmarksFlow extends Flow
     ", @current_user.id, Bookmarks.object_types.topic, {
       per_page: 50
       prepare_results: (topics) ->
-        Topics\preload_relations topics, "category"
+        preload topics, "category"
         Topics\preload_bans topics, @current_user
 
         categories = [t\get_category! for t in *topics]
         Categories\preload_bans categories, @current_user
-        Categories\preload_relations categories, "tags"
+        preload categories, "tags"
         BrowsingFlow(@)\preload_topics topics
         topics
     }

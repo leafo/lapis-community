@@ -7,6 +7,8 @@ local memoize1
 memoize1 = require("community.helpers.models").memoize1
 local slugify
 slugify = require("lapis.util").slugify
+local preload
+preload = require("lapis.db.model").preload
 local VOTE_TYPES_UP = {
   up = true
 }
@@ -373,9 +375,9 @@ do
         self,
         unpack(self:get_ancestors())
       }
-      local Subscriptions
-      Subscriptions = require("community.models").Subscriptions
-      self.__class:preload_relations(hierarchy, "subscriptions", "user")
+      preload(hierarchy, "user", {
+        subscriptions = "user"
+      })
       local seen_targets = { }
       local subs = { }
       for _index_0 = 1, #hierarchy do
@@ -386,7 +388,6 @@ do
           table.insert(subs, sub)
         end
       end
-      Subscriptions:preload_relations(subs, "user")
       local targets
       do
         local _accum_0 = { }

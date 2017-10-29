@@ -5,6 +5,8 @@ import memoize1 from require "community.helpers.models"
 
 import slugify from require "lapis.util"
 
+import preload from require "lapis.db.model"
+
 VOTE_TYPES_UP = { up: true }
 VOTE_TYPES_BOTH = { up: true, down: true }
 VOTE_TYPES_NONE = { }
@@ -528,9 +530,7 @@ class Categories extends Model
     -- this puts prececence on the nearest categories, an unsub in an inner
     -- category will negate a sub in an outer one
     hierarchy = { @, unpack @get_ancestors! }
-    import Subscriptions from require "community.models"
-
-    @@preload_relations hierarchy, "subscriptions", "user"
+    preload hierarchy, "user", subscriptions: "user"
 
     seen_targets = {}
     subs = {}
@@ -538,8 +538,6 @@ class Categories extends Model
     for c in *hierarchy
       for sub in *c\get_subscriptions!
         table.insert subs, sub
-
-    Subscriptions\preload_relations subs, "user"
 
     targets = for sub in *subs
       continue if seen_targets[sub.user_id]

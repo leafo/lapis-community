@@ -4,6 +4,7 @@ import Model from require "community.model"
 import slugify from require "lapis.util"
 import memoize1 from require "community.helpers.models"
 import enum from require "lapis.db.model"
+import preload from require "lapis.db.model"
 
 VOTE_TYPES_DEFAULT = { down: true, up: true }
 
@@ -356,7 +357,7 @@ class Topics extends Model
   notification_target_users: =>
     import Subscriptions from require "community.models"
     subs = @get_subscriptions!
-    Subscriptions\preload_relations subs, "user"
+    preload subs, "user"
 
     include_owner = true
     targets = for sub in *subs

@@ -8,6 +8,8 @@ import assert_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 import assert_page, require_login from require "community.helpers.app"
 
+import preload from require "lapis.db.model"
+
 class BlocksFlow extends Flow
   expose_assigns: true
 
@@ -24,7 +26,7 @@ class BlocksFlow extends Flow
     ", @current_user.id, {
       per_page: 40
       prepare_results: (blocks) ->
-        Blocks\preload_relations blocks, "blocked_user"
+        preload blocks, "blocked_user"
         blocks
     }
 

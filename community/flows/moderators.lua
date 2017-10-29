@@ -14,6 +14,8 @@ local Users
 Users = require("models").Users
 local Moderators
 Moderators = require("community.models").Moderators
+local preload
+preload = require("lapis.db.model").preload
 local ModeratorsFlow
 do
   local _class_0
@@ -90,7 +92,7 @@ do
       self.pager = Moderators:paginated("\n      where object_type = ? and object_id = ?\n      order by created_at desc\n    ", Moderators:object_type_for_object(self.object), self.object.id, {
         per_page = 20,
         prepare_results = function(moderators)
-          Moderators:preload_relations(moderators, "user")
+          preload(moderators, "user")
           return moderators
         end
       })

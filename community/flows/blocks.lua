@@ -13,6 +13,8 @@ do
   local _obj_0 = require("community.helpers.app")
   assert_page, require_login = _obj_0.assert_page, _obj_0.require_login
 end
+local preload
+preload = require("lapis.db.model").preload
 local BlocksFlow
 do
   local _class_0
@@ -24,7 +26,7 @@ do
       self.pager = Blocks:paginated("\n      where blocking_user_id = ?\n      order by created_at desc\n    ", self.current_user.id, {
         per_page = 40,
         prepare_results = function(blocks)
-          Blocks:preload_relations(blocks, "blocked_user")
+          preload(blocks, "blocked_user")
           return blocks
         end
       })

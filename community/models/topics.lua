@@ -7,6 +7,8 @@ local memoize1
 memoize1 = require("community.helpers.models").memoize1
 local enum
 enum = require("lapis.db.model").enum
+local preload
+preload = require("lapis.db.model").preload
 local VOTE_TYPES_DEFAULT = {
   down = true,
   up = true
@@ -315,7 +317,7 @@ do
       local Subscriptions
       Subscriptions = require("community.models").Subscriptions
       local subs = self:get_subscriptions()
-      Subscriptions:preload_relations(subs, "user")
+      preload(subs, "user")
       local include_owner = true
       local targets
       do

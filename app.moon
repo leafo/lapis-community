@@ -3,6 +3,8 @@ lapis = require "lapis"
 import respond_to, capture_errors, capture_errors_json,
   assert_error from require "lapis.application"
 
+import preload from require "lapis.db.model"
+
 import assert_valid from require "lapis.validate"
 
 class extends lapis.Application
@@ -382,7 +384,7 @@ class extends lapis.Application
     import Categories from require "community.models"
 
     @categories = Categories\select!
-    Categories\preload_relations @categories, "user", "last_topic"
+    preload @categories, "user", "last_topic"
 
     render: true
 

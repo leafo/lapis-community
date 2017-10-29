@@ -6,6 +6,8 @@ import assert_valid from require "lapis.validate"
 
 import Subscriptions from require "community.models"
 
+import preload from require "lapis.db.model"
+
 class SubscriptionsFlow extends Flow
   expose_assigns: true
 
@@ -41,7 +43,7 @@ class SubscriptionsFlow extends Flow
         for sub in *subs
           sub.user = @current_user
 
-        Subscriptions\preload_relations subs, "object"
+        preload subs, "object"
         subs
     }
 

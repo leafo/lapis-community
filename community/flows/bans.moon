@@ -10,6 +10,8 @@ import assert_page, require_login from require "community.helpers.app"
 import Users from require "models"
 import Bans, Categories, Topics from require "community.models"
 
+import preload from require "lapis.db.model"
+
 class BansFlow extends Flow
   expose_assigns: true
 
@@ -120,7 +122,7 @@ class BansFlow extends Flow
     ]], Bans\object_type_for_object(@object), @object.id, {
       per_page: 20
       prepare_results: (bans) ->
-        Bans\preload_relations bans, "banned_user", "banning_user"
+        preload bans, "banned_user", "banning_user"
         bans
     }
 
