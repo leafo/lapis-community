@@ -10,6 +10,8 @@ import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 import uniqify from require "lapis.util"
 
+import preload from require "lapis.db.model"
+
 db = require "lapis.db"
 
 date = require "date"
@@ -172,7 +174,7 @@ class BrowsingFlow extends Flow
         @topic\set_seen @current_user
 
   preload_categories: (categories, last_seens=true) =>
-    Categories\preload_relations categories, "last_topic"
+    preload categories, "last_topic"
     topics = [c.last_topic for c in *categories when c.last_topic]
     @preload_topics topics
 
@@ -208,7 +210,7 @@ class BrowsingFlow extends Flow
     topics
 
   preload_posts: (posts) =>
-    Posts\preload_relations posts, "user", "moderation_log"
+    preload posts, "user", "moderation_log"
 
     for p in *posts
       p.topic = @topic

@@ -14,6 +14,8 @@ local Users
 Users = require("models").Users
 local CategoryMembers
 CategoryMembers = require("community.models").CategoryMembers
+local preload
+preload = require("lapis.db.model").preload
 local MembersFlow
 do
   local _class_0
@@ -50,7 +52,7 @@ do
     ]], self.category.id, {
         per_page = 20,
         prepare_results = function(members)
-          CategoryMembers:preload_relations(members, "user")
+          preload(members, "user")
           return members
         end
       })

@@ -9,6 +9,8 @@ import assert_page, require_login from require "community.helpers.app"
 import Users from require "models"
 import CategoryMembers from require "community.models"
 
+import preload from require "lapis.db.model"
+
 class MembersFlow extends Flow
   expose_assigns: true
 
@@ -38,7 +40,7 @@ class MembersFlow extends Flow
       where category_id = ?
       order by created_at desc
     ]], @category.id, per_page: 20, prepare_results: (members) ->
-      CategoryMembers\preload_relations members, "user"
+      preload members, "user"
       members
 
     @members = @pager\get_page @page

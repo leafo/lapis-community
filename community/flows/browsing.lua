@@ -20,6 +20,8 @@ local assert_valid
 assert_valid = require("lapis.validate").assert_valid
 local uniqify
 uniqify = require("lapis.util").uniqify
+local preload
+preload = require("lapis.db.model").preload
 local db = require("lapis.db")
 local date = require("date")
 local limits = require("community.limits")
@@ -254,7 +256,7 @@ do
       if last_seens == nil then
         last_seens = true
       end
-      Categories:preload_relations(categories, "last_topic")
+      preload(categories, "last_topic")
       local topics
       do
         local _accum_0 = { }
@@ -321,7 +323,7 @@ do
       return topics
     end,
     preload_posts = function(self, posts)
-      Posts:preload_relations(posts, "user", "moderation_log")
+      preload(posts, "user", "moderation_log")
       for _index_0 = 1, #posts do
         local p = posts[_index_0]
         p.topic = self.topic
