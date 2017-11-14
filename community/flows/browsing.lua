@@ -31,6 +31,9 @@ do
   local _parent_0 = Flow
   local _base_0 = {
     expose_assigns = true,
+    allowed_to_view = function(self, obj)
+      return obj:allowed_to_view(self.current_user)
+    end,
     throttle_view_count = function(self, key)
       return false
     end,
@@ -96,7 +99,7 @@ do
       local per_page = opts.per_page or limits.POSTS_PER_PAGE
       local TopicsFlow = require("community.flows.topics")
       TopicsFlow(self):load_topic()
-      assert_error(self.topic:allowed_to_view(self.current_user), "not allowed to view")
+      assert_error(self:allowed_to_view(self.topic), "not allowed to view")
       if opts.increment_views ~= false then
         do
           local view_counter = self:view_counter()
@@ -536,7 +539,7 @@ do
       local PostsFlow = require("community.flows.posts")
       PostsFlow(self):load_post()
       self.topic = self.post:get_topic()
-      assert_error(self.post:allowed_to_view(self.current_user), "not allowed to view")
+      assert_error(self:allowed_to_view(self.post), "not allowed to view")
       local status
       if self.post:is_archived() then
         status = db.list({

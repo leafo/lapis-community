@@ -20,6 +20,10 @@ limits = require "community.limits"
 class BrowsingFlow extends Flow
   expose_assigns: true
 
+  -- extension point for testing object visibiliy
+  allowed_to_view: (obj) =>
+    obj\allowed_to_view @current_user
+
   throttle_view_count: (key) =>
     false
 
@@ -69,7 +73,8 @@ class BrowsingFlow extends Flow
 
     TopicsFlow = require "community.flows.topics"
     TopicsFlow(@)\load_topic!
-    assert_error @topic\allowed_to_view(@current_user), "not allowed to view"
+
+    assert_error @allowed_to_view(@topic), "not allowed to view"
 
     if opts.increment_views != false
       if view_counter = @view_counter!
@@ -347,7 +352,7 @@ class BrowsingFlow extends Flow
 
     @topic = @post\get_topic!
 
-    assert_error @post\allowed_to_view(@current_user), "not allowed to view"
+    assert_error @allowed_to_view(@post), "not allowed to view"
 
     -- if the post is archived then we should include both archived and non-archived
     status = if @post\is_archived!
