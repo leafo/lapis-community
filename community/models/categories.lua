@@ -54,7 +54,7 @@ do
         end
       end
     end,
-    allowed_to_post_topic = function(self, user)
+    allowed_to_post_topic = function(self, user, req)
       if not (user) then
         return false
       end
@@ -69,7 +69,7 @@ do
       end
       local _exp_0 = self:get_topic_posting_type()
       if self.__class.topic_posting_types.everyone == _exp_0 then
-        return self:allowed_to_view(user)
+        return self:allowed_to_view(user, req)
       elseif self.__class.topic_posting_types.members_only == _exp_0 then
         if self:allowed_to_moderate(user) then
           return true
@@ -105,7 +105,7 @@ do
       do
         local category_group = self:get_category_group()
         if category_group then
-          if not (category_group:allowed_to_view(user)) then
+          if not (category_group:allowed_to_view(user, req)) then
             return false
           end
         end

@@ -249,7 +249,7 @@ class Categories extends Model
     if cgc = @get_category_group_category!
       cgc\get_category_group!
 
-  allowed_to_post_topic: (user) =>
+  allowed_to_post_topic: (user, req) =>
     return false unless user
     return false if @archived
     return false if @hidden
@@ -257,7 +257,7 @@ class Categories extends Model
 
     switch @get_topic_posting_type!
       when @@topic_posting_types.everyone
-        @allowed_to_view user
+        @allowed_to_view user, req
       when @@topic_posting_types.members_only
         return true if @allowed_to_moderate user
         @is_member user
@@ -280,7 +280,7 @@ class Categories extends Model
     return false if @get_ban user
 
     if category_group = @get_category_group!
-      return false unless category_group\allowed_to_view user
+      return false unless category_group\allowed_to_view user, req
 
     true
 

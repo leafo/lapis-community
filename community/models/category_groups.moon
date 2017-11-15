@@ -44,7 +44,6 @@ class CategoryGroups extends Model
     return false if @find_ban user
     true
 
-
   allowed_to_edit: (user) =>
     return nil unless user
     return true if user\is_admin!

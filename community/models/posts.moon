@@ -291,13 +291,13 @@ class Posts extends Model
 
     true
 
-  allowed_to_report: (user) =>
+  allowed_to_report: (user, req) =>
     return false if @deleted
     return false if @is_moderation_event!
     return false unless user
     return false if user.id == @user_id
     return false unless @is_default!
-    return false unless @allowed_to_view user
+    return false unless @allowed_to_view user, req
     true
 
   allowed_to_view: (user, req) =>

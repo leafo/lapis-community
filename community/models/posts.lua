@@ -257,7 +257,7 @@ do
       end
       return true
     end,
-    allowed_to_report = function(self, user)
+    allowed_to_report = function(self, user, req)
       if self.deleted then
         return false
       end
@@ -273,7 +273,7 @@ do
       if not (self:is_default()) then
         return false
       end
-      if not (self:allowed_to_view(user)) then
+      if not (self:allowed_to_view(user, req)) then
         return false
       end
       return true

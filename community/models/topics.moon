@@ -132,13 +132,13 @@ class Topics extends Model
 
     true
 
-  allowed_to_post: (user) =>
+  allowed_to_post: (user, req) =>
     return false unless user
     return false if @deleted
     return false if @locked
     return false unless @is_default!
 
-    @allowed_to_view user
+    @allowed_to_view user, req
 
   allowed_to_view: (user, req) =>
     return false if @deleted
@@ -472,8 +472,8 @@ class Topics extends Model
     return unless user
     Subscriptions\is_subscribed @, user, user.id == @user_id
 
-  subscribe: (user) =>
-    return unless @allowed_to_view user
+  subscribe: (user, req) =>
+    return unless @allowed_to_view user, req -- todo: this check shouldnt' be here
     return unless user
     import Subscriptions from require "community.models"
     Subscriptions\subscribe @, user, user.id == @user_id

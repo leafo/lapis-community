@@ -18,7 +18,7 @@ do
   local _class_0
   local _parent_0 = Model
   local _base_0 = {
-    allowed_to_post = function(self, user)
+    allowed_to_post = function(self, user, req)
       if not (user) then
         return false
       end
@@ -31,7 +31,7 @@ do
       if not (self:is_default()) then
         return false
       end
-      return self:allowed_to_view(user)
+      return self:allowed_to_view(user, req)
     end,
     allowed_to_view = function(self, user, req)
       if self.deleted then
@@ -483,8 +483,8 @@ do
       end
       return Subscriptions:is_subscribed(self, user, user.id == self.user_id)
     end),
-    subscribe = function(self, user)
-      if not (self:allowed_to_view(user)) then
+    subscribe = function(self, user, req)
+      if not (self:allowed_to_view(user, req)) then
         return 
       end
       if not (user) then

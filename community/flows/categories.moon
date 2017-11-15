@@ -57,7 +57,7 @@ class CategoriesFlow extends Flow
 
   recent_posts: (opts) =>
     @load_category!
-    assert_error @category\allowed_to_view(@current_user), "invalid category"
+    assert_error @category\allowed_to_view(@current_user, @_req), "invalid category"
     assert_error @category\should_log_posts!, "category has no log"
 
     import CategoryPostLogs from require "community.models"

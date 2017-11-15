@@ -68,7 +68,7 @@ class BookmarksFlow extends Flow
 
   save_bookmark: =>
     @load_object!
-    assert_error @object\allowed_to_view(@current_user), "invalid object"
+    assert_error @object\allowed_to_view(@current_user, @_req), "invalid object"
     Bookmarks\save @object, @current_user
 
   remove_bookmark: =>

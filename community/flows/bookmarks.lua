@@ -77,7 +77,7 @@ do
     end),
     save_bookmark = function(self)
       self:load_object()
-      assert_error(self.object:allowed_to_view(self.current_user), "invalid object")
+      assert_error(self.object:allowed_to_view(self.current_user, self._req), "invalid object")
       return Bookmarks:save(self.object, self.current_user)
     end,
     remove_bookmark = function(self)
