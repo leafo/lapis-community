@@ -5,61 +5,113 @@ factory = require "spec.factory"
 
 SubscriptionsFlow = require "community.flows.subscriptions"
 
+import types from require "tableshape"
+
 describe "flows.bookmarks", ->
   use_test_env!
 
   import Users from require "spec.models"
   import Subscriptions, Categories, Topics from require "spec.community_models"
 
-  it "gets empty subscriptions", ->
-    user = factory.Users!
+  describe "subscribe_to_topic", ->
+    local topic
 
-    subs = assert in_request {}, =>
-      @current_user = user
-      SubscriptionsFlow(@)\show_subscriptions!
-      @subscriptions
+    before_each ->
+      topic = factory.Topics!
 
-    assert.same {}, subs
+    it "subscribes", ->
+      user = factory.Users!
 
-  it "gets some subscriptions", ->
-    user = factory.Users!
+      assert in_request {}, =>
+        @current_user = user
+        SubscriptionsFlow(@)\subscribe_to_topic topic
+        true
 
-    cat_sub = Subscriptions\create {
-      user_id: user.id
-      object_type: Subscriptions.object_types.category
-      object_id: factory.Categories!.id
-    }
+      assert types.shape({
+        types.shape {
+          object_id: topic.id
+          object_type: Subscriptions.object_types.topic
+          user_id: user.id
+          subscribed: true
+        }, open: true
 
-    -- hidden
-    Subscriptions\create {
-      user_id: user.id
-      object_type: Subscriptions.object_types.category
-      object_id: factory.Categories!.id
-      subscribed: false
-    }
+      }), Subscriptions\select!
 
-    topic_sub = Subscriptions\create {
-      user_id: user.id
-      object_type: Subscriptions.object_types.topic
-      object_id: factory.Topics!.id
-    }
+  describe "subscribe_to_category", ->
+    local category
 
-    -- unrelated subscription
-    Subscriptions\create {
-      user_id: factory.Users!.id
-      object_type: Subscriptions.object_types.topic
-      object_id: factory.Topics!.id
-    }
+    before_each ->
+      category = factory.Topics!
 
-    subs = assert in_request {}, =>
-      @current_user = user
-      SubscriptionsFlow(@)\show_subscriptions!
-      @subscriptions
+    it "subscribes", ->
+      user = factory.Users!
 
-    subs = {Subscriptions.object_types\to_name(sub.object_type), sub.object_id for sub in *subs}
+      assert in_request {}, =>
+        @current_user = user
+        SubscriptionsFlow(@)\subscribe_to_category category
+        true
 
-    assert.same {
-      category: cat_sub.object_id
-      topic: topic_sub.object_id
-    }, subs
+      assert types.shape({
+        types.shape {
+          object_id: category.id
+          object_type: Subscriptions.object_types.category
+          user_id: user.id
+          subscribed: true
+        }, open: true
+
+      }), Subscriptions\select!
+
+  describe "show_subscriptions", ->
+    it "gets empty subscriptions", ->
+
+      user = factory.Users!
+
+      subs = assert in_request {}, =>
+        @current_user = user
+        SubscriptionsFlow(@)\show_subscriptions!
+        @subscriptions
+
+      assert.same {}, subs
+
+    it "gets some subscriptions", ->
+      user = factory.Users!
+
+      cat_sub = Subscriptions\create {
+        user_id: user.id
+        object_type: Subscriptions.object_types.category
+        object_id: factory.Categories!.id
+      }
+
+      -- hidden
+      Subscriptions\create {
+        user_id: user.id
+        object_type: Subscriptions.object_types.category
+        object_id: factory.Categories!.id
+        subscribed: false
+      }
+
+      topic_sub = Subscriptions\create {
+        user_id: user.id
+        object_type: Subscriptions.object_types.topic
+        object_id: factory.Topics!.id
+      }
+
+      -- unrelated subscription
+      Subscriptions\create {
+        user_id: factory.Users!.id
+        object_type: Subscriptions.object_types.topic
+        object_id: factory.Topics!.id
+      }
+
+      subs = assert in_request {}, =>
+        @current_user = user
+        SubscriptionsFlow(@)\show_subscriptions!
+        @subscriptions
+
+      subs = {Subscriptions.object_types\to_name(sub.object_type), sub.object_id for sub in *subs}
+
+      assert.same {
+        category: cat_sub.object_id
+        topic: topic_sub.object_id
+      }, subs
 

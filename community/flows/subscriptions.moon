@@ -3,6 +3,7 @@ db = require "lapis.db"
 
 import assert_page from require "community.helpers.app"
 import assert_valid from require "lapis.validate"
+import assert_error from require "lapis.application"
 
 import Subscriptions from require "community.models"
 
@@ -13,7 +14,15 @@ class SubscriptionsFlow extends Flow
 
   new: (req) =>
     super req
-    assert @current_user, "missing current user for bookmarks flow"
+    assert @current_user, "missing current user for subscription flow"
+
+  subscribe_to_topic: (topic) =>
+    assert_error topic\allowed_to_view @current_user, @_req
+    topic\subscribe @current_user
+
+  subscribe_to_category: (category) =>
+    assert_error category\allowed_to_view @current_user, @_req
+    category\subscribe @current_user
 
   find_subscription: =>
     return @subscription if @subscription

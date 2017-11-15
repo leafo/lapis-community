@@ -5,6 +5,8 @@ local assert_page
 assert_page = require("community.helpers.app").assert_page
 local assert_valid
 assert_valid = require("lapis.validate").assert_valid
+local assert_error
+assert_error = require("lapis.application").assert_error
 local Subscriptions
 Subscriptions = require("community.models").Subscriptions
 local preload
@@ -15,6 +17,14 @@ do
   local _parent_0 = Flow
   local _base_0 = {
     expose_assigns = true,
+    subscribe_to_topic = function(self, topic)
+      assert_error(topic:allowed_to_view(self.current_user, self._req))
+      return topic:subscribe(self.current_user)
+    end,
+    subscribe_to_category = function(self, category)
+      assert_error(category:allowed_to_view(self.current_user, self._req))
+      return category:subscribe(self.current_user)
+    end,
     find_subscription = function(self)
       if self.subscription then
         return self.subscription
@@ -57,7 +67,7 @@ do
   _class_0 = setmetatable({
     __init = function(self, req)
       _class_0.__parent.__init(self, req)
-      return assert(self.current_user, "missing current user for bookmarks flow")
+      return assert(self.current_user, "missing current user for subscription flow")
     end,
     __base = _base_0,
     __name = "SubscriptionsFlow",

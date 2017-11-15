@@ -484,20 +484,11 @@ do
       return Subscriptions:is_subscribed(self, user, user.id == self.user_id)
     end),
     subscribe = function(self, user, req)
-      if not (self:allowed_to_view(user, req)) then
-        return 
-      end
-      if not (user) then
-        return 
-      end
       local Subscriptions
       Subscriptions = require("community.models").Subscriptions
       return Subscriptions:subscribe(self, user, user.id == self.user_id)
     end,
     unsubscribe = function(self, user)
-      if not (user) then
-        return 
-      end
       local Subscriptions
       Subscriptions = require("community.models").Subscriptions
       return Subscriptions:unsubscribe(self, user, user.id == self.user_id)
