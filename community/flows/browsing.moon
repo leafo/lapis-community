@@ -241,6 +241,7 @@ class BrowsingFlow extends Flow
   sticky_category_topics: (opts={}) =>
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
+    assert_error @allowed_to_view(@category), "not allowed to view"
 
     pager = OrderedPaginator Topics, "category_order", [[
       where category_id = ? and status = ? and not deleted and sticky
@@ -291,6 +292,7 @@ class BrowsingFlow extends Flow
 
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
+    assert_error @allowed_to_view(@category), "not allowed to view"
 
     assert_valid @params, {
       {"status", optional: true, one_of: {"archived"}}
@@ -399,6 +401,7 @@ class BrowsingFlow extends Flow
   category_single: =>
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
+    assert_error @allowed_to_view(@category), "not allowed to view"
 
     @category\get_children prepare_results: @\preload_categories
     true

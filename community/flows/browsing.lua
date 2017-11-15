@@ -367,6 +367,7 @@ do
       end
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()
+      assert_error(self:allowed_to_view(self.category), "not allowed to view")
       local pager = OrderedPaginator(Topics, "category_order", [[      where category_id = ? and status = ? and not deleted and sticky
     ]], self.category.id, Topics.statuses.default, {
         per_page = opts.per_page or limits.TOPICS_PER_PAGE,
@@ -446,6 +447,7 @@ do
       end
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()
+      assert_error(self:allowed_to_view(self.category), "not allowed to view")
       assert_valid(self.params, {
         {
           "status",
@@ -596,6 +598,7 @@ do
     category_single = function(self)
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()
+      assert_error(self:allowed_to_view(self.category), "not allowed to view")
       self.category:get_children({
         prepare_results = (function()
           local _base_1 = self

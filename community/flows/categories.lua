@@ -87,11 +87,11 @@ do
         }
       })
       self.category = Categories:find(self.params.category_id)
-      assert_error(self.category, "invalid category")
-      return assert_error(self.category:allowed_to_view(self.current_user), "invalid category")
+      return assert_error(self.category, "invalid category")
     end,
     recent_posts = function(self, opts)
       self:load_category()
+      assert_error(self.category:allowed_to_view(self.current_user), "invalid category")
       assert_error(self.category:should_log_posts(), "category has no log")
       local CategoryPostLogs
       CategoryPostLogs = require("community.models").CategoryPostLogs
