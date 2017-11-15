@@ -42,7 +42,7 @@ do
     new_post = require_login(function(self)
       local TopicsFlow = require("community.flows.topics")
       TopicsFlow(self):load_topic()
-      assert_error(self.topic:allowed_to_post(self.current_user))
+      assert_error(self.topic:allowed_to_post(self.current_user, self._req))
       trim_filter(self.params)
       assert_valid(self.params, {
         {
@@ -80,7 +80,7 @@ do
       end
       if parent_post then
         assert_error(parent_post.topic_id == self.topic.id, "topic id mismatch (" .. tostring(parent_post.topic_id) .. " != " .. tostring(self.topic.id) .. ")")
-        assert_error(parent_post:allowed_to_reply(self.current_user), "can't reply to post")
+        assert_error(parent_post:allowed_to_reply(self.current_user, self._req), "can't reply to post")
       end
       if self.topic:post_needs_approval() then
         self.pending_post = PendingPosts:create({

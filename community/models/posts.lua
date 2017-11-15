@@ -102,7 +102,7 @@ do
       end
       return false
     end,
-    allowed_to_reply = function(self, user)
+    allowed_to_reply = function(self, user, req)
       if self.deleted then
         return false
       end
@@ -116,7 +116,7 @@ do
         return false
       end
       local topic = self:get_topic()
-      return topic:allowed_to_post(user)
+      return topic:allowed_to_post(user, req)
     end,
     should_soft_delete = function(self)
       if self:is_moderation_event() then

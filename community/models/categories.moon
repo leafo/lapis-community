@@ -675,8 +675,9 @@ class Categories extends Model
     return unless user
     Subscriptions\is_subscribed @, user, user.id == @user_id
 
-  subscribe: (user) =>
-    return unless @allowed_to_view user
+  subscribe: (user, req) =>
+    -- TODO: view check should be handled in flow
+    return unless @allowed_to_view user, req
     return unless user
     import Subscriptions from require "community.models"
     Subscriptions\subscribe @, user, user.id == @user_id

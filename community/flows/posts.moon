@@ -28,7 +28,7 @@ class PostsFlow extends Flow
   new_post: require_login =>
     TopicsFlow = require "community.flows.topics"
     TopicsFlow(@)\load_topic!
-    assert_error @topic\allowed_to_post @current_user
+    assert_error @topic\allowed_to_post @current_user, @_req
 
     trim_filter @params
     assert_valid @params, {
@@ -51,7 +51,7 @@ class PostsFlow extends Flow
       assert_error parent_post.topic_id == @topic.id,
         "topic id mismatch (#{parent_post.topic_id} != #{@topic.id})"
 
-      assert_error parent_post\allowed_to_reply(@current_user),
+      assert_error parent_post\allowed_to_reply(@current_user, @_req),
         "can't reply to post"
 
     if @topic\post_needs_approval!

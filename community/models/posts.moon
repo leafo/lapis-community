@@ -178,13 +178,13 @@ class Posts extends Model
 
     false
 
-  allowed_to_reply: (user) =>
+  allowed_to_reply: (user, req) =>
     return false if @deleted
     return false if @is_moderation_event!
     return false unless user
     return false unless @is_default!
     topic = @get_topic!
-    topic\allowed_to_post user
+    topic\allowed_to_post user, req
 
   should_soft_delete: =>
     return false if @is_moderation_event!

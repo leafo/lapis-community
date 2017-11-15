@@ -66,7 +66,7 @@ do
     new_topic = require_login(function(self)
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()
-      assert_error(self.category:allowed_to_post_topic(self.current_user))
+      assert_error(self.category:allowed_to_post_topic(self.current_user, self._req))
       local moderator = self.category:allowed_to_moderate(self.current_user)
       assert_valid(self.params, {
         {
