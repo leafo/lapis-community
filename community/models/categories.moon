@@ -266,7 +266,7 @@ class Categories extends Model
       else
         error "unknown topic posting type"
 
-  allowed_to_view: (user) =>
+  allowed_to_view: (user, req) =>
     return false if @hidden
 
     switch @@membership_types[@get_membership_type!]

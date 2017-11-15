@@ -32,7 +32,7 @@ do
   local _base_0 = {
     expose_assigns = true,
     allowed_to_view = function(self, obj)
-      return obj:allowed_to_view(self.current_user)
+      return obj:allowed_to_view(self.current_user, self._req)
     end,
     throttle_view_count = function(self, key)
       return false

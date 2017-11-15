@@ -140,11 +140,11 @@ class Topics extends Model
 
     @allowed_to_view user
 
-  allowed_to_view: memoize1 (user) =>
+  allowed_to_view: (user, req) =>
     return false if @deleted
 
     can_view = if @category_id
-      @get_category!\allowed_to_view user
+      @get_category!\allowed_to_view user, req
     else
       true
 

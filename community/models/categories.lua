@@ -81,7 +81,7 @@ do
         return error("unknown topic posting type")
       end
     end,
-    allowed_to_view = function(self, user)
+    allowed_to_view = function(self, user, req)
       if self.hidden then
         return false
       end

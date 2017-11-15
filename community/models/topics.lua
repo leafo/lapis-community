@@ -33,13 +33,13 @@ do
       end
       return self:allowed_to_view(user)
     end,
-    allowed_to_view = memoize1(function(self, user)
+    allowed_to_view = function(self, user, req)
       if self.deleted then
         return false
       end
       local can_view
       if self.category_id then
-        can_view = self:get_category():allowed_to_view(user)
+        can_view = self:get_category():allowed_to_view(user, req)
       else
         can_view = true
       end
@@ -49,7 +49,7 @@ do
         end
       end
       return can_view
-    end),
+    end,
     allowed_to_edit = memoize1(function(self, user)
       if self.deleted then
         return false

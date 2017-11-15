@@ -300,8 +300,8 @@ class Posts extends Model
     return false unless @allowed_to_view user
     true
 
-  allowed_to_view: (user) =>
-    @get_topic!\allowed_to_view user
+  allowed_to_view: (user, req) =>
+    @get_topic!\allowed_to_view user, req
 
   notification_targets: (extra_targets) =>
     return {} if @is_moderation_event!

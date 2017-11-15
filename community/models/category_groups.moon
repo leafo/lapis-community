@@ -39,7 +39,7 @@ class CategoryGroups extends Model
 
     false
 
-  allowed_to_view: (user) =>
+  allowed_to_view: (user, req) =>
     return true if @allowed_to_edit user
     return false if @find_ban user
     true

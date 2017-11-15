@@ -22,7 +22,7 @@ class BrowsingFlow extends Flow
 
   -- extension point for testing object visibiliy
   allowed_to_view: (obj) =>
-    obj\allowed_to_view @current_user
+    obj\allowed_to_view @current_user,  @_req
 
   throttle_view_count: (key) =>
     false

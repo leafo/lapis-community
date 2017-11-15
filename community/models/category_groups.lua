@@ -31,7 +31,7 @@ do
       end
       return false
     end,
-    allowed_to_view = function(self, user)
+    allowed_to_view = function(self, user, req)
       if self:allowed_to_edit(user) then
         return true
       end

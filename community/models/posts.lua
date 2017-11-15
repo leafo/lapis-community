@@ -278,8 +278,8 @@ do
       end
       return true
     end,
-    allowed_to_view = function(self, user)
-      return self:get_topic():allowed_to_view(user)
+    allowed_to_view = function(self, user, req)
+      return self:get_topic():allowed_to_view(user, req)
     end,
     notification_targets = function(self, extra_targets)
       if self:is_moderation_event() then
