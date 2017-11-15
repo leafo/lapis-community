@@ -17,11 +17,11 @@ class SubscriptionsFlow extends Flow
     assert @current_user, "missing current user for subscription flow"
 
   subscribe_to_topic: (topic) =>
-    assert_error topic\allowed_to_view @current_user, @_req
+    assert_error topic\allowed_to_view(@current_user, @_req), "invalid topic"
     topic\subscribe @current_user
 
   subscribe_to_category: (category) =>
-    assert_error category\allowed_to_view @current_user, @_req
+    assert_error category\allowed_to_view(@current_user, @_req), "invalid category"
     category\subscribe @current_user
 
   find_subscription: =>

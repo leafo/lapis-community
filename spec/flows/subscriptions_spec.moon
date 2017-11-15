@@ -22,10 +22,9 @@ describe "flows.bookmarks", ->
     it "subscribes", ->
       user = factory.Users!
 
-      assert in_request {}, =>
+      in_request {}, =>
         @current_user = user
         SubscriptionsFlow(@)\subscribe_to_topic topic
-        true
 
       assert types.shape({
         types.shape {
@@ -37,11 +36,27 @@ describe "flows.bookmarks", ->
 
       }), Subscriptions\select!
 
+    it "doesn't subscribe to topic that isn't visible", ->
+      topic\update deleted: true
+
+      user = factory.Users!
+
+      assert.has_error(
+        ->
+          in_request {}, =>
+            @current_user = user
+            SubscriptionsFlow(@)\subscribe_to_topic topic
+
+        {message: { "invalid topic" } }
+      )
+
+      assert.same {}, Subscriptions\select!
+
   describe "subscribe_to_category", ->
     local category
 
     before_each ->
-      category = factory.Topics!
+      category = factory.Categories!
 
     it "subscribes", ->
       user = factory.Users!
@@ -60,6 +75,25 @@ describe "flows.bookmarks", ->
         }, open: true
 
       }), Subscriptions\select!
+
+
+    it "doesn't subscribe to category that isn't visible", ->
+      category\update hidden: true
+
+      user = factory.Users!
+
+      assert.has_error(
+        ->
+          in_request {}, =>
+            @current_user = user
+            SubscriptionsFlow(@)\subscribe_to_category category
+
+        {message: { "invalid category" } }
+      )
+
+      assert.same {}, Subscriptions\select!
+
+
 
   describe "show_subscriptions", ->
     it "gets empty subscriptions", ->

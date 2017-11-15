@@ -18,11 +18,11 @@ do
   local _base_0 = {
     expose_assigns = true,
     subscribe_to_topic = function(self, topic)
-      assert_error(topic:allowed_to_view(self.current_user, self._req))
+      assert_error(topic:allowed_to_view(self.current_user, self._req), "invalid topic")
       return topic:subscribe(self.current_user)
     end,
     subscribe_to_category = function(self, category)
-      assert_error(category:allowed_to_view(self.current_user, self._req))
+      assert_error(category:allowed_to_view(self.current_user, self._req), "invalid category")
       return category:subscribe(self.current_user)
     end,
     find_subscription = function(self)
