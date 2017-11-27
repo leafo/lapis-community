@@ -506,6 +506,11 @@ do
       order = "id asc"
     },
     {
+      "reports",
+      has_many = "PostReports",
+      oreder = "id desc"
+    },
+    {
       "votes",
       has_many = "Votes",
       key = "object_id",

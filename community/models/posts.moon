@@ -45,6 +45,8 @@ class Posts extends Model
     {"parent_post", belongs_to: "Posts"}
     {"edits", has_many: "PostEdits", order: "id asc"}
 
+    {"reports", has_many: "PostReports", oreder: "id desc"}
+
     {"votes", has_many: "Votes", key: "object_id", where: {
       object_type: 1
     }}
