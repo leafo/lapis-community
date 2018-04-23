@@ -566,6 +566,8 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
   [23]: =>
     add_column T"post_reports", "moderated_at", time null: true
 
+  [24]: =>
+    create_index T"activity_logs", "object_type", "object_id"
 }
 
 

@@ -1111,5 +1111,8 @@ return {
     return add_column(T("post_reports"), "moderated_at", time({
       null = true
     }))
+  end,
+  [24] = function(self)
+    return create_index(T("activity_logs"), "object_type", "object_id")
   end
 }
