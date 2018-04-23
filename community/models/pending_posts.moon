@@ -16,7 +16,8 @@ import enum from require "lapis.db.model"
 --   body text NOT NULL,
 --   created_at timestamp without time zone NOT NULL,
 --   updated_at timestamp without time zone NOT NULL,
---   title character varying(255)
+--   title character varying(255),
+--   body_format smallint DEFAULT 1 NOT NULL
 -- );
 -- ALTER TABLE ONLY community_pending_posts
 --   ADD CONSTRAINT community_pending_posts_pkey PRIMARY KEY (id);

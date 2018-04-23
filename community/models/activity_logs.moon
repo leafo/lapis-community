@@ -17,6 +17,7 @@ import to_json from require "lapis.util"
 -- );
 -- ALTER TABLE ONLY community_activity_logs
 --   ADD CONSTRAINT community_activity_logs_pkey PRIMARY KEY (id);
+-- CREATE INDEX community_activity_logs_object_type_object_id_idx ON community_activity_logs USING btree (object_type, object_id);
 -- CREATE INDEX community_activity_logs_user_id_id_idx ON community_activity_logs USING btree (user_id, id);
 --
 class ActivityLogs extends Model

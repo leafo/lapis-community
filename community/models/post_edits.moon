@@ -10,7 +10,8 @@ import Model from require "community.model"
 --   body_before text NOT NULL,
 --   reason text,
 --   created_at timestamp without time zone NOT NULL,
---   updated_at timestamp without time zone NOT NULL
+--   updated_at timestamp without time zone NOT NULL,
+--   body_format smallint DEFAULT 1 NOT NULL
 -- );
 -- ALTER TABLE ONLY community_post_edits
 --   ADD CONSTRAINT community_post_edits_pkey PRIMARY KEY (id);

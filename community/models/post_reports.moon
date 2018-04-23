@@ -16,7 +16,8 @@ import Model from require "community.model"
 --   reason integer DEFAULT 0 NOT NULL,
 --   body text,
 --   created_at timestamp without time zone NOT NULL,
---   updated_at timestamp without time zone NOT NULL
+--   updated_at timestamp without time zone NOT NULL,
+--   moderated_at timestamp without time zone
 -- );
 -- ALTER TABLE ONLY community_post_reports
 --   ADD CONSTRAINT community_post_reports_pkey PRIMARY KEY (id);
