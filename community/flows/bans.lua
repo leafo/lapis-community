@@ -104,11 +104,15 @@ do
       end
       self:load_banned_user()
       self:load_object()
-      self.ban = Bans:find({
-        object_type = Bans:object_type_for_object(self.object),
-        object_id = self.object.id,
-        banned_user_id = self.banned.id
-      })
+      if self.object.find_ban then
+        self.ban = self.object:find_ban(self.banned)
+      else
+        self.ban = Bans:find({
+          object_type = Bans:object_type_for_object(self.object),
+          object_id = self.object.id,
+          banned_user_id = self.banned.id
+        })
+      end
       self.ban = self.ban or false
     end,
     write_moderation_log = function(self, action, reason, log_objects)
@@ -143,10 +147,34 @@ do
         {
           "reason",
           exists = true
+        },
+        {
+          "target_category_id",
+          is_integer = true,
+          optional = true
         }
       })
+      local category
+      do
+        local target_id = self.params.target_category_id
+        if target_id then
+          local cs = assert_error(self:get_moderatable_categories(), "invalid target category")
+          for _index_0 = 1, #cs do
+            local c = cs[_index_0]
+            if tostring(target_id) == tostring(c.id) then
+              category = c
+              break
+            end
+          end
+        end
+      end
+      if self.params.object_type == "category" then
+        if category and self.object.id == category.id then
+          category = nil
+        end
+      end
       local ban = Bans:create({
-        object = self.object,
+        object = category or self.object,
         reason = self.params.reason,
         banned_user_id = self.banned.id,
         banning_user_id = self.current_user.id

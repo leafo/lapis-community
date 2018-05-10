@@ -81,11 +81,14 @@ class BansFlow extends Flow
     @load_banned_user!
     @load_object!
 
-    @ban = Bans\find {
-      object_type: Bans\object_type_for_object @object
-      object_id: @object.id
-      banned_user_id: @banned.id
-    }
+    if @object.find_ban
+      @ban = @object\find_ban @banned
+    else
+      @ban = Bans\find {
+        object_type: Bans\object_type_for_object @object
+        object_id: @object.id
+        banned_user_id: @banned.id
+      }
 
     @ban or= false
 
