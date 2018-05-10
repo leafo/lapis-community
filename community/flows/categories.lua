@@ -182,7 +182,9 @@ do
       self.pager = ModerationLogs:paginated("\n      where category_id in ? order by id desc\n    ", db.list(category_ids), {
         per_page = 50,
         prepare_results = function(logs)
-          preload(logs, "object", "user")
+          preload(logs, "object", "user", {
+            log_objects = "object"
+          })
           return logs
         end
       })

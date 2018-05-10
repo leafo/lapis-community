@@ -111,7 +111,7 @@ class CategoriesFlow extends Flow
     ", db.list(category_ids), {
       per_page: 50
       prepare_results: (logs) ->
-        preload logs, "object", "user"
+        preload logs, "object", "user", log_objects: "object"
         logs
     }
 
