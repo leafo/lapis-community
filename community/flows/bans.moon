@@ -101,15 +101,18 @@ class BansFlow extends Flow
 
     import ModerationLogs from require "community.models"
 
-    category_id = switch Bans\object_type_for_object @object
-      when Bans.object_types.category_group
-        nil -- TODO: need a way to write moderation logs for category groups
-      when Bans.object_types.category
-        @object.id
-      when Bans.object_types.topic
-        @object.category_id
-      else
-        error "no category id for ban moderation log"
+    category_id = if @target_category
+      @target_category.id
+    else
+      switch Bans\object_type_for_object @object
+        when Bans.object_types.category_group
+          nil -- TODO: need a way to write moderation logs for category groups
+        when Bans.object_types.category
+          @object.id
+        when Bans.object_types.topic
+          @object.category_id
+        else
+          error "no category id for ban moderation log"
 
     ModerationLogs\create {
       user_id: @current_user.id
@@ -143,6 +146,8 @@ class BansFlow extends Flow
       if category and @object.id == category.id
         category = nil
 
+    @target_category = category
+  
     ban = Bans\create {
       object: category or @object
       reason: @params.reason

@@ -123,15 +123,19 @@ do
       local ModerationLogs
       ModerationLogs = require("community.models").ModerationLogs
       local category_id
-      local _exp_0 = Bans:object_type_for_object(self.object)
-      if Bans.object_types.category_group == _exp_0 then
-        category_id = nil
-      elseif Bans.object_types.category == _exp_0 then
-        category_id = self.object.id
-      elseif Bans.object_types.topic == _exp_0 then
-        category_id = self.object.category_id
+      if self.target_category then
+        category_id = self.target_category.id
       else
-        category_id = error("no category id for ban moderation log")
+        local _exp_0 = Bans:object_type_for_object(self.object)
+        if Bans.object_types.category_group == _exp_0 then
+          category_id = nil
+        elseif Bans.object_types.category == _exp_0 then
+          category_id = self.object.id
+        elseif Bans.object_types.topic == _exp_0 then
+          category_id = self.object.category_id
+        else
+          category_id = error("no category id for ban moderation log")
+        end
       end
       return ModerationLogs:create({
         user_id = self.current_user.id,
@@ -176,6 +180,7 @@ do
           category = nil
         end
       end
+      self.target_category = category
       local ban = Bans:create({
         object = category or self.object,
         reason = self.params.reason,
