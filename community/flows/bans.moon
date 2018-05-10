@@ -28,6 +28,10 @@ class BansFlow extends Flow
 
     @banned = assert_error Users\find(@params.banned_user_id), "invalid user"
     assert_error @banned.id != @current_user.id, "you can not ban yourself"
+    assert_error not @banned\is_admin!, "you can't ban an admin"
+
+    @load_object!
+    assert_error not @object\allowed_to_moderate(@banned), "you can't ban a moderator"
 
   load_object: =>
     return if @object

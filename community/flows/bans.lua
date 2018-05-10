@@ -35,7 +35,10 @@ do
         }
       })
       self.banned = assert_error(Users:find(self.params.banned_user_id), "invalid user")
-      return assert_error(self.banned.id ~= self.current_user.id, "you can not ban yourself")
+      assert_error(self.banned.id ~= self.current_user.id, "you can not ban yourself")
+      assert_error(not self.banned:is_admin(), "you can't ban an admin")
+      self:load_object()
+      return assert_error(not self.object:allowed_to_moderate(self.banned), "you can't ban a moderator")
     end,
     load_object = function(self)
       if self.object then
