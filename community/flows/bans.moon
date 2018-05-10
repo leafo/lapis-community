@@ -155,7 +155,7 @@ class BansFlow extends Flow
         @params.reason,
         { @banned }
 
-    true
+    ban
 
   delete_ban: =>
     @load_ban!

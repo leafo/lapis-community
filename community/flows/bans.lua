@@ -187,7 +187,7 @@ do
           self.banned
         })
       end
-      return true
+      return ban
     end,
     delete_ban = function(self)
       self:load_ban()
