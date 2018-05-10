@@ -116,7 +116,7 @@ class BansFlow extends Flow
 
     ModerationLogs\create {
       user_id: @current_user.id
-      object: @object
+      object: @target_category or @object
       :category_id
       :action
       :reason

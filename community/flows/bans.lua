@@ -139,7 +139,7 @@ do
       end
       return ModerationLogs:create({
         user_id = self.current_user.id,
-        object = self.object,
+        object = self.target_category or self.object,
         category_id = category_id,
         action = action,
         reason = reason,

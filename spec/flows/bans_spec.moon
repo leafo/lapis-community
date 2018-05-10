@@ -133,7 +133,7 @@ describe "bans", ->
       it "lets moderator ban", ->
         other_user = factory.Users!
 
-        assert.true create_ban {
+        assert.truthy create_ban {
           banned_user_id: other_user.id
           reason: [[ this user ]]
         }, moderator
@@ -154,7 +154,7 @@ describe "bans", ->
           parent_category_id: child_category.id
         }
 
-        assert.true create_ban {
+        assert.truthy create_ban {
           object_id: child_category2.id
           banned_user_id: other_user.id
           reason: [[ this user ]]
@@ -167,7 +167,7 @@ describe "bans", ->
         ban\delete!
 
         -- it bans 
-        assert.true create_ban {
+        assert.truthy create_ban {
           object_id: child_category2.id
           target_category_id: category.id
           banned_user_id: other_user.id

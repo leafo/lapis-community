@@ -1,4 +1,5 @@
 import use_test_env from require "lapis.spec"
+import in_request from require "spec.flow_helpers"
 import truncate_tables from require "lapis.spec.db"
 
 factory = require "spec.factory"
@@ -307,4 +308,5 @@ describe "moderators flow", ->
 
       assert.falsy res.errors
       assert.same 2, #res.moderators
+
 
