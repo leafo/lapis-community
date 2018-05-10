@@ -7,6 +7,17 @@ import Application from require "lapis"
 
 assert = require "luassert"
 
+merge = (t, t1, ...) ->
+  if t1
+    out = {k,v for k,v in pairs t}
+    for k,v in pairs t1
+      out[k] = v
+
+    merge out, ...
+  else
+    t
+
+
 -- to prevent sparse array error
 filter_bans = (thing, ...) ->
   return unless thing
@@ -39,4 +50,4 @@ class TestApp extends Application
     res
 
 
-{ :TestApp, :filter_bans }
+{ :TestApp, :filter_bans, :merge }

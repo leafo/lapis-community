@@ -120,10 +120,24 @@ class BansFlow extends Flow
     trim_filter @params
     assert_valid @params, {
       {"reason", exists: true}
+      {"target_category_id", is_integer: true, optional: true}
     }
 
+    local category
+
+    if target_id = @params.target_category_id
+      cs = assert_error @get_moderatable_categories!, "invalid target category"
+      for c in *cs
+        if tostring(target_id) == tostring(c.id)
+          category = c
+          break
+
+    if @params.object_type == "category"
+      if category and @object.id == category.id
+        category = nil
+
     ban = Bans\create {
-      object: @object
+      object: category or @object
       reason: @params.reason
       banned_user_id: @banned.id
       banning_user_id: @current_user.id

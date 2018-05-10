@@ -1,7 +1,7 @@
 import use_test_env from require "lapis.spec"
 import in_request from require "spec.flow_helpers"
 
-import TestApp from require "spec.helpers"
+import TestApp, merge from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
 
 factory = require "spec.factory"
@@ -65,17 +65,34 @@ describe "bans", ->
     before_each ->
       category = factory.Categories user_id: current_user.id
 
-    it "should ban user from category", ->
+    create_ban = (post, user=current_user) ->
+      in_request {
+        post: merge {
+          object_type: "category"
+          object_id: category.id
+        }, post
+      }, =>
+        @current_user = user
+        @flow("bans")\create_ban!
+
+    delete_ban = (post, user=current_user) ->
+      in_request {
+        post: merge {
+          object_type: "category"
+          object_id: category.id
+        }, post
+      }, =>
+        @current_user = user
+        @flow("bans")\delete_ban!
+
+    it "bans user", ->
       other_user = factory.Users!
 
-      res = BansApp\get current_user, "/ban", {
-        object_type: "category"
-        object_id: category.id
+      create_ban {
         banned_user_id: other_user.id
         reason: [[ this user ]]
       }
 
-      assert.truthy res.success
       bans = Bans\select!
       assert.same 1, #bans
       ban = unpack bans
@@ -99,28 +116,92 @@ describe "bans", ->
 
       assert_log_contains_user log, other_user
 
-    it "should not let unrelated user ban", ->
+    describe "moderators", ->
+      import Moderators from require "spec.community_models"
+
+      local moderator
+
+      before_each ->
+        moderator = factory.Users!
+
+        Moderators\create {
+          object: category
+          user_id: moderator.id
+          accepted: true
+        }
+
+      it "lets moderator ban", ->
+        other_user = factory.Users!
+
+        assert.true create_ban {
+          banned_user_id: other_user.id
+          reason: [[ this user ]]
+        }, moderator
+
+        ban = unpack Bans\select!
+        assert ban, "missing ban"
+        assert.same moderator.id, ban.banning_user_id
+        assert.same category.id, ban.object_id
+
+      it "bans user from category higher up in moderation chain", ->
+        other_user = factory.Users!
+
+        child_category = factory.Categories {
+          parent_category_id: category.id
+        }
+
+        child_category2 = factory.Categories {
+          parent_category_id: child_category.id
+        }
+
+        assert.true create_ban {
+          object_id: child_category2.id
+          banned_user_id: other_user.id
+          reason: [[ this user ]]
+        }, moderator
+
+        ban = assert unpack(Bans\select!), "missing ban"
+        assert.same moderator.id, ban.banning_user_id
+        assert.same child_category2.id, ban.object_id
+
+        ban\delete!
+
+        -- it bans 
+        assert.true create_ban {
+          object_id: child_category2.id
+          target_category_id: category.id
+          banned_user_id: other_user.id
+          reason: [[ this user ]]
+        }, moderator
+
+        ban = assert unpack(Bans\select!), "missing ban"
+        assert.same moderator.id, ban.banning_user_id
+        assert.same category.id, ban.object_id
+
+
+    it "doesn't let unrelated user ban", ->
       other_user = factory.Users!
-      res = BansApp\get other_user, "/ban", {
-        object_type: "category"
-        object_id: category.id
-        banned_user_id: current_user.id
-        reason: [[ this user ]]
-      }
 
-      assert.same {errors: {"invalid permissions"}}, res
+      assert.has_error(
+        ->
+          create_ban {
+            banned_user_id: current_user.id
+            reason: [[ this user ]]
+          }, other_user
 
-    it "should unban user", ->
+        {
+          message: { "invalid permissions" }
+        }
+      )
+
+    it "unbans user", ->
       other_user = factory.Users!
       factory.Bans object: category, banned_user_id: other_user.id
 
-      res = BansApp\get current_user, "/unban", {
-        object_type: "category"
-        object_id: category.id
+      assert.true delete_ban {
         banned_user_id: other_user.id
       }
 
-      assert.falsy res.errors
       assert.same 0, #Bans\select!
 
       logs = ModerationLogs\select!
@@ -164,7 +245,7 @@ describe "bans", ->
       category = factory.Categories user_id: current_user.id
       topic = factory.Topics category_id: category.id
 
-    it "should ban user from topic", ->
+    it "bans user", ->
       other_user = factory.Users!
       res = BansApp\get current_user, "/ban", {
         object_type: "topic"
@@ -198,7 +279,7 @@ describe "bans", ->
 
       assert_log_contains_user log, other_user
 
-    it "should unban user", ->
+    it "unban user", ->
       other_user = factory.Users!
       factory.Bans object: topic, banned_user_id: other_user.id
 
