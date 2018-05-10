@@ -1,4 +1,5 @@
 import use_test_env from require "lapis.spec"
+import in_request from require "spec.flow_helpers"
 
 import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
@@ -305,3 +306,81 @@ describe "bans", ->
         assert.same category.id, log.category_id
 
 
+  describe "get_moderatable_categories", ->
+    import Moderators from require "spec.community_models"
+
+    get_moderatable_categories = (category) ->
+      in_request {
+        get: {
+          object_type: "category"
+          object_id: category.id
+        }
+      }, =>
+        @current_user = current_user
+        @flow("bans")\get_moderatable_categories!
+
+    it "gets categories for non nested category", ->
+      category = factory.Categories!
+
+      Moderators\create {
+        object: category
+        user_id: current_user.id
+        accepted: true
+      }
+
+      categories = get_moderatable_categories category
+
+      assert.same {
+        [category.id]: true
+      }, { c.id, true for c in *categories }
+
+    it "gets highest level category the user can moderate", ->
+      a = factory.Categories!
+      b = factory.Categories parent_category_id: a.id
+      c = factory.Categories parent_category_id: b.id
+
+      Moderators\create {
+        object: b
+        user_id: current_user.id
+        accepted: true
+      }
+
+      -- moderating in c
+      categories = get_moderatable_categories c
+
+      assert.same {
+        [b.id]: true
+        [c.id]: true
+      }, { c.id, true for c in *categories }
+
+      -- moderating in b
+      categories = get_moderatable_categories b
+
+      assert.same {
+        [b.id]: true
+      }, { c.id, true for c in *categories }
+
+    it "gets all categories for admin", ->
+      stub(current_user, "is_admin")\returns "true"
+
+      a = factory.Categories!
+      b = factory.Categories parent_category_id: a.id
+      c = factory.Categories parent_category_id: b.id
+
+      categories = get_moderatable_categories c
+      assert.same {
+        [a.id]: true
+        [b.id]: true
+        [c.id]: true
+      }, { c.id, true for c in *categories }
+
+      categories = get_moderatable_categories b
+      assert.same {
+        [a.id]: true
+        [b.id]: true
+      }, { c.id, true for c in *categories }
+
+      categories = get_moderatable_categories a
+      assert.same {
+        [a.id]: true
+      }, { c.id, true for c in *categories }

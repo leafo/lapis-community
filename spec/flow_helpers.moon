@@ -9,7 +9,9 @@ return_errors = (fn) ->
 assert = require "luassert"
 
 class S extends Application
-  -- just run the / action directly with no routing or error capturing
+  flows_prefix: "community.flows"
+
+  -- run the / action directly with no routing or error capturing
   dispatch: (req, res) =>
     r = @.Request @, req, res
     @wrap_handler(@["/"]) {}, req.parsed_url.path, "index", r

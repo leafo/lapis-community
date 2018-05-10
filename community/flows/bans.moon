@@ -1,4 +1,5 @@
 
+db = require "lapis.db"
 import Flow from require "lapis.flow"
 
 import assert_error from require "lapis.application"
@@ -41,6 +42,38 @@ class BansFlow extends Flow
 
     assert_error @object, "invalid ban object"
     assert_error @object\allowed_to_moderate(@current_user), "invalid permissions"
+
+  -- get all the categories up the ancestor tree that the moderator has access to
+  get_moderatable_categories: =>
+    @load_object!
+    return unless @object.__class.__name == "Categories"
+
+    categories = {
+      @object
+      unpack @object\get_ancestors!
+    }
+
+    if @current_user\is_admin!
+      return categories
+
+    ids = @object\get_category_ids!
+    import Moderators from require "community.models"
+    mods = Moderators\select "
+      where object_type = ?
+      and object_id in ?
+      and user_id = ?
+      and accepted
+    ", Moderators.object_types.category, db.list(ids), @current_user.id
+
+    mods_by_category_id = { mod.object_id, mod for mod in *mods }
+
+    for k=#categories,1,-1
+      cat = categories[k]
+      mod = mods_by_category_id[cat.id]
+      if mod
+        return [cat for cat in *categories[1,k]]
+
+    {}
 
   load_ban: =>
     return if @ban != nil

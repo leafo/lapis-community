@@ -329,6 +329,7 @@ class Categories extends Model
 
     false
 
+  -- TODO: this has undefined behavior when user is moderator on multiple levels
   find_moderator: (user, clause) =>
     return nil unless user
 

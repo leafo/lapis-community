@@ -1,3 +1,4 @@
+local db = require("lapis.db")
 local Flow
 Flow = require("lapis.flow").Flow
 local assert_error
@@ -54,6 +55,48 @@ do
       self.object = model:find(self.params.object_id)
       assert_error(self.object, "invalid ban object")
       return assert_error(self.object:allowed_to_moderate(self.current_user), "invalid permissions")
+    end,
+    get_moderatable_categories = function(self)
+      self:load_object()
+      if not (self.object.__class.__name == "Categories") then
+        return 
+      end
+      local categories = {
+        self.object,
+        unpack(self.object:get_ancestors())
+      }
+      if self.current_user:is_admin() then
+        return categories
+      end
+      local ids = self.object:get_category_ids()
+      local Moderators
+      Moderators = require("community.models").Moderators
+      local mods = Moderators:select("\n      where object_type = ?\n      and object_id in ?\n      and user_id = ?\n      and accepted\n    ", Moderators.object_types.category, db.list(ids), self.current_user.id)
+      local mods_by_category_id
+      do
+        local _tbl_0 = { }
+        for _index_0 = 1, #mods do
+          local mod = mods[_index_0]
+          _tbl_0[mod.object_id] = mod
+        end
+        mods_by_category_id = _tbl_0
+      end
+      for k = #categories, 1, -1 do
+        local cat = categories[k]
+        local mod = mods_by_category_id[cat.id]
+        if mod then
+          local _accum_0 = { }
+          local _len_0 = 1
+          local _max_0 = k
+          for _index_0 = 1, _max_0 < 0 and #categories + _max_0 or _max_0 do
+            local cat = categories[_index_0]
+            _accum_0[_len_0] = cat
+            _len_0 = _len_0 + 1
+          end
+          return _accum_0
+        end
+      end
+      return { }
     end,
     load_ban = function(self)
       if self.ban ~= nil then
