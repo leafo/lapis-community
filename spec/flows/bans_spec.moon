@@ -21,10 +21,6 @@ class BansApp extends TestApp
     @flow\delete_ban!
     json: { success: true }
 
-  "/show-bans": capture_errors_json =>
-    @flow\show_bans!
-    json: { success: true, bans: @bans }
-
 class CategoryBansApp extends TestApp
   @require_user!
 
@@ -84,6 +80,13 @@ describe "bans", ->
       }, =>
         @current_user = user
         @flow("bans")\delete_ban!
+
+    show_bans = (opts, user=current_user) ->
+      in_request {
+        get: opts
+      }, =>
+        @current_user = user
+        @flow("bans")\show_bans!
 
     it "bans user", ->
       other_user = factory.Users!
@@ -217,26 +220,25 @@ describe "bans", ->
       assert_log_contains_user log, other_user
 
     it "shows bans when there are no bans", ->
-      res = BansApp\get current_user, "/show-bans", {
+      bans = show_bans {
         object_type: "category"
         object_id: category.id
       }
 
-      assert.falsy res.errors
-      assert.same {}, res.bans
+      assert.same {}, bans
 
     it "shows bans", ->
       for i=1,2
         factory.Bans object: category
 
-      res = BansApp\get current_user, "/show-bans", {
+      bans = show_bans {
         object_type: "category"
         object_id: category.id
       }
 
-      assert.falsy res.errors
-      assert.same 2, #res.bans
-
+      assert.same 2, #bans
+      for ban in *bans
+        assert.same category.id, ban.object_id
 
   describe "with topic", ->
     local topic
