@@ -6,17 +6,6 @@ import capture_errors_json from require "lapis.application"
 
 factory = require "spec.factory"
 
-class BansApp extends TestApp
-  @require_user!
-
-  @before_filter =>
-    BansFlow = require "community.flows.bans"
-    @flow = BansFlow @
-
-  "/unban": capture_errors_json =>
-    @flow\delete_ban!
-    json: { success: true }
-
 class CategoryBansApp extends TestApp
   @require_user!
 
@@ -53,26 +42,23 @@ describe "bans", ->
 
   create_ban = (post, user=current_user) ->
     in_request {
-      post: post
+      :post
     }, =>
       @current_user = user
       @flow("bans")\create_ban!
+
+  delete_ban = (post, user=current_user) ->
+    in_request {
+      :post
+    }, =>
+      @current_user = user
+      @flow("bans")\delete_ban!
 
   describe "with category", ->
     local category
 
     before_each ->
       category = factory.Categories user_id: current_user.id
-
-    delete_ban = (post, user=current_user) ->
-      in_request {
-        post: merge {
-          object_type: "category"
-          object_id: category.id
-        }, post
-      }, =>
-        @current_user = user
-        @flow("bans")\delete_ban!
 
     show_bans = (opts, user=current_user) ->
       in_request {
@@ -205,6 +191,8 @@ describe "bans", ->
       factory.Bans object: category, banned_user_id: other_user.id
 
       assert.true delete_ban {
+        object_type: "category"
+        object_id: category.id
         banned_user_id: other_user.id
       }
 
@@ -289,13 +277,11 @@ describe "bans", ->
       other_user = factory.Users!
       factory.Bans object: topic, banned_user_id: other_user.id
 
-      res = BansApp\get current_user, "/unban", {
+      assert delete_ban {
         object_type: "topic"
         object_id: topic.id
         banned_user_id: other_user.id
       }
-
-      assert.falsy res.errors
 
       assert.same 0, #Bans\select!
 
@@ -343,15 +329,13 @@ describe "bans", ->
       user = factory.Users!
       factory.Bans object: category_group, banned_user_id: user.id
 
-      res = BansApp\get current_user, "/unban", {
+      assert delete_ban {
         object_type: "category_group"
         object_id: category_group.id
         banned_user_id: user.id
       }
 
-      assert.true res.success
       assert.same 0, Bans\count!
-
 
   -- flow is created as a sub flow of category flow
   describe "cateogry bans flow", ->
