@@ -13,10 +13,6 @@ class BansApp extends TestApp
     BansFlow = require "community.flows.bans"
     @flow = BansFlow @
 
-  "/ban": capture_errors_json =>
-    @flow\create_ban!
-    json: { success: true }
-
   "/unban": capture_errors_json =>
     @flow\delete_ban!
     json: { success: true }
@@ -55,21 +51,18 @@ describe "bans", ->
     assert.same ModerationLogObjects.object_types.user, objs[1].object_type
     assert.same user.id, objs[1].object_id
 
+  create_ban = (post, user=current_user) ->
+    in_request {
+      post: post
+    }, =>
+      @current_user = user
+      @flow("bans")\create_ban!
+
   describe "with category", ->
     local category
 
     before_each ->
       category = factory.Categories user_id: current_user.id
-
-    create_ban = (post, user=current_user) ->
-      in_request {
-        post: merge {
-          object_type: "category"
-          object_id: category.id
-        }, post
-      }, =>
-        @current_user = user
-        @flow("bans")\create_ban!
 
     delete_ban = (post, user=current_user) ->
       in_request {
@@ -92,6 +85,9 @@ describe "bans", ->
       other_user = factory.Users!
 
       create_ban {
+        object_type: "category"
+        object_id: category.id
+
         banned_user_id: other_user.id
         reason: [[ this user ]]
       }
@@ -137,6 +133,9 @@ describe "bans", ->
         other_user = factory.Users!
 
         assert.truthy create_ban {
+          object_type: "category"
+          object_id: category.id
+
           banned_user_id: other_user.id
           reason: [[ this user ]]
         }, moderator
@@ -158,6 +157,7 @@ describe "bans", ->
         }
 
         assert.truthy create_ban {
+          object_type: "category"
           object_id: child_category2.id
           banned_user_id: other_user.id
           reason: [[ this user ]]
@@ -171,6 +171,7 @@ describe "bans", ->
 
         -- it bans 
         assert.truthy create_ban {
+          object_type: "category"
           object_id: child_category2.id
           target_category_id: category.id
           banned_user_id: other_user.id
@@ -188,6 +189,8 @@ describe "bans", ->
       assert.has_error(
         ->
           create_ban {
+            object_type: "category"
+            object_id: category.id
             banned_user_id: current_user.id
             reason: [[ this user ]]
           }, other_user
@@ -249,14 +252,15 @@ describe "bans", ->
 
     it "bans user", ->
       other_user = factory.Users!
-      res = BansApp\get current_user, "/ban", {
+      ban = create_ban {
         object_type: "topic"
         object_id: topic.id
         banned_user_id: other_user.id
         reason: [[ this user ]]
       }
 
-      assert.truthy res.success
+      assert ban, "expecting ban"
+
       bans = Bans\select!
       assert.same 1, #bans
       ban = unpack bans
@@ -317,14 +321,14 @@ describe "bans", ->
     it "bans user from category group", ->
       user = factory.Users!
 
-      res = BansApp\get current_user, "/ban", {
+      ban = create_ban {
         object_type: "category_group"
         object_id: category_group.id
         banned_user_id: user.id
         reason: "get rid of this thing"
       }
 
-      assert.true res.success
+      assert ban, "expecting ban"
 
       bans = Bans\select!
       assert.same 1, #bans
