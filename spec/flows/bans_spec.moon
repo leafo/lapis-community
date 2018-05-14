@@ -1,9 +1,6 @@
 import use_test_env from require "lapis.spec"
 import in_request from require "spec.flow_helpers"
 
-import TestApp, merge from require "spec.helpers"
-import capture_errors_json from require "lapis.application"
-
 factory = require "spec.factory"
 
 describe "bans", ->

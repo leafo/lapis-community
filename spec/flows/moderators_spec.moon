@@ -8,6 +8,7 @@ import mock_request from require "lapis.spec.request"
 
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
+import in_request from require "spec.flow_helpers"
 
 import TestApp from require "spec.helpers"
 
@@ -17,10 +18,6 @@ class ModeratorsApp extends TestApp
   @before_filter =>
     ModeratorsFlow = require "community.flows.moderators"
     @flow = ModeratorsFlow @
-
-  "/add-moderator": capture_errors_json =>
-    @flow\add_moderator!
-    json: { success: true }
 
   "/remove-moderator": capture_errors_json =>
     @flow\remove_moderator!
@@ -48,23 +45,35 @@ describe "moderators flow", ->
 
   before_each ->
     current_user = factory.Users!
-  
+
+  add_moderator = (post) ->
+    in_request {
+      :post
+    }, =>
+      @current_user = current_user
+      @flow("moderators")\add_moderator!
+
   describe "add_moderator", ->
     it "should fail to do anything with missing params", ->
-      res = ModeratorsApp\get current_user, "/add-moderator", {}
-      assert.truthy res.errors
+      assert.has_error(
+        -> res = add_moderator!
+        {
+          message: {
+            "object_id must be an integer"
+            "object_type must be one of category, category_group"
+          }
+        }
+      )
 
     it "should let category owner add moderator", ->
       category = factory.Categories user_id: current_user.id
       other_user = factory.Users!
 
-      res = ModeratorsApp\get current_user, "/add-moderator", {
+      mod = assert add_moderator {
         object_type: "category"
         object_id: category.id
         user_id: other_user.id
       }
-
-      assert.falsy res.errors
 
       mod = assert unpack Moderators\select!
       assert.same false, mod.accepted
@@ -77,13 +86,20 @@ describe "moderators flow", ->
     it "should not let category owner add self", ->
       category = factory.Categories user_id: current_user.id
 
-      res = ModeratorsApp\get current_user, "/add-moderator", {
-        object_type: "category"
-        object_id: category.id
-        user_id: current_user.id
-      }
+      assert.has_error(
+        ->
+          add_moderator {
+            object_type: "category"
+            object_id: category.id
+            user_id: current_user.id
+          }
 
-      assert.truthy res.errors
+        {
+          message: {
+            "you can't chose yourself"
+          }
+        }
+      )
 
     it "should not add owner", ->
       owner = factory.Users!
@@ -96,25 +112,35 @@ describe "moderators flow", ->
       }
 
       other_user = factory.Users!
-      res = ModeratorsApp\get current_user, "/add-moderator", {
-        object_type: "category"
-        object_id: category.id
-        user_id: owner.id
-      }
 
-      assert.same {"already moderator"}, res.errors
+      assert.has_error(
+        ->
+        add_moderator {
+          object_type: "category"
+          object_id: category.id
+          user_id: owner.id
+        }
 
-    it "should not existing moderator", ->
+        {
+          message: { "already moderator" }
+        }
+      )
+
+    it "doesn't add existing moderator", ->
       category = factory.Categories user_id: current_user.id
       mod = factory.Moderators { object: category }
 
-      res = ModeratorsApp\get current_user, "/add-moderator", {
-        object_type: "category"
-        object_id: category.id
-        user_id: mod.user_id
-      }
-
-      assert.same {"already moderator"}, res.errors
+      assert.has_error(
+        ->
+          add_moderator {
+            object_type: "category"
+            object_id: category.id
+            user_id: mod.user_id
+          }
+        {
+          message: { "already moderator" }
+        }
+      )
 
     it "should let category admin add moderator", ->
       category = factory.Categories!
@@ -125,13 +151,12 @@ describe "moderators flow", ->
       }
 
       other_user = factory.Users!
-      res = ModeratorsApp\get current_user, "/add-moderator", {
+      mod = assert add_moderator {
         object_type: "category"
         object_id: category.id
         user_id: other_user.id
       }
 
-      assert.falsy res.errors
       mod = assert unpack Moderators\select [[
         where user_id != ?
       ]], current_user.id
@@ -147,13 +172,21 @@ describe "moderators flow", ->
       category = factory.Categories!
       other_user = factory.Users!
 
-      res = ModeratorsApp\get current_user, "/add-moderator", {
-        object_type: "category"
-        object_id: category.id
-        user_id: other_user.id
-      }
+      assert.has_error(
+        ->
+          add_moderator {
+            object_type: "category"
+            object_id: category.id
+            user_id: other_user.id
+          }
 
-      assert.truthy res.errors
+        {
+          message: {
+            "invalid moderatable object"
+          }
+        }
+      )
+
       assert.same {}, Moderators\select!
 
     it "should not let non-admin moderator add moderator", ->
@@ -164,13 +197,20 @@ describe "moderators flow", ->
       }
 
       other_user = factory.Users!
-      res = ModeratorsApp\get current_user, "/add-moderator", {
-        object_type: "category"
-        object_id: category.id
-        user_id: other_user.id
-      }
 
-      assert.truthy res.errors
+      assert.has_error(
+        ->
+          add_moderator {
+            object_type: "category"
+            object_id: category.id
+            user_id: other_user.id
+          }
+
+        {
+          message: { "invalid moderatable object" }
+        }
+      )
+
 
   describe "remove_moderator", ->
     it "should fail to do anything with missing params", ->
