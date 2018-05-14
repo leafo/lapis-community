@@ -6,22 +6,6 @@ import capture_errors_json from require "lapis.application"
 
 factory = require "spec.factory"
 
-class CategoryBansApp extends TestApp
-  @require_user!
-
-  @before_filter =>
-    CategoriesFlow = require "community.flows.categories"
-    @flow = CategoriesFlow @
-    @bans_flow = @flow\bans_flow!
-
-  "/:category_id/ban": capture_errors_json =>
-    @bans_flow\create_ban!
-    json: { success: true }
-
-  "/:category_id/unban": capture_errors_json =>
-    @bans_flow\delete_ban!
-    json: { success: true }
-
 describe "bans", ->
   use_test_env!
 
@@ -347,12 +331,19 @@ describe "bans", ->
     it "bans user", ->
       banned_user = factory.Users!
 
-      res = CategoryBansApp\get current_user, "/#{category.id}/ban", {
-        banned_user_id: banned_user.id
-        reason: [[ this user ]]
-      }
+      ban = in_request {
+        post: {
+          category_id: category.id
+          banned_user_id: banned_user.id
+          reason: [[ this user ]]
+        }
+      }, =>
+        @current_user = current_user
+        flow = @flow("categories")\bans_flow!
+        flow\create_ban!
 
-      assert.same {success: true}, res
+      assert ban, "expecting ban"
+
       ban = unpack Bans\select!
 
       assert.same banned_user.id, ban.banned_user_id
@@ -364,18 +355,21 @@ describe "bans", ->
       banned_user = factory.Users!
       factory.Bans object: category, banned_user_id: banned_user.id
 
-      res = CategoryBansApp\get current_user, "/#{category.id}/unban", {
-        banned_user_id: banned_user.id
-      }
-
-      assert.same {success: true}, res
+      assert in_request {
+        post: {
+          category_id: category.id
+          banned_user_id: banned_user.id
+          reason: [[ this user ]]
+        }
+      }, =>
+        @current_user = current_user
+        flow = @flow("categories")\bans_flow!
+        flow\delete_ban!
 
       assert.same 0, Bans\count!
 
-
       for log in *ModerationLogs\select!
         assert.same category.id, log.category_id
-
 
   describe "get_moderatable_categories", ->
     import Moderators from require "spec.community_models"
