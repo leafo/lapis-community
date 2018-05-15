@@ -19,10 +19,6 @@ class ModeratorsApp extends TestApp
     ModeratorsFlow = require "community.flows.moderators"
     @flow = ModeratorsFlow @
 
-  "/remove-moderator": capture_errors_json =>
-    @flow\remove_moderator!
-    json: { success: true }
-
   "/accept-mod": capture_errors_json =>
     @flow\accept_moderator_position!
     json: { success: true }
@@ -52,6 +48,13 @@ describe "moderators flow", ->
     }, =>
       @current_user = current_user
       @flow("moderators")\add_moderator!
+
+  remove_moderator = (post) ->
+    in_request {
+      :post
+    }, =>
+      @current_user = current_user
+      @flow("moderators")\remove_moderator!
 
   describe "add_moderator", ->
     it "should fail to do anything with missing params", ->
@@ -213,33 +216,44 @@ describe "moderators flow", ->
 
 
   describe "remove_moderator", ->
-    it "should fail to do anything with missing params", ->
-      res = ModeratorsApp\get current_user, "/remove-moderator", {}
-      assert.truthy res.errors
+    it "fails with missing object", ->
+      assert.has_error(
+        -> remove_moderator {}
+        {
+          message: {
+            "object_id must be an integer",
+            "object_type must be one of category, category_group"
+          }
+        }
+      )
 
-    it "should not let stranger remove moderator", ->
+    it "doesn't let stranger remove moderator", ->
       category = factory.Categories!
       mod = factory.Moderators object: category
 
-      res = ModeratorsApp\get current_user, "/remove-moderator", {
-        object_type: "category"
-        object_id: mod.object_id
-        user_id: mod.user_id
-      }
+      assert.has_error(
+        ->
+          remove_moderator {
+            object_type: "category"
+            object_id: mod.object_id
+            user_id: mod.user_id
+          }
 
-      assert.truthy res.errors
+        {
+          message: { "invalid moderatable object" }
+        }
+      )
 
     it "should let category owner remove moderator", ->
       category = factory.Categories user_id: current_user.id
       mod = factory.Moderators object: category
 
-      res = ModeratorsApp\get current_user, "/remove-moderator", {
+      assert remove_moderator {
         object_type: "category"
         object_id: mod.object_id
         user_id: mod.user_id
       }
 
-      assert.falsy res.errors
       assert.same {}, Moderators\select!
 
     it "should let category admin remove moderator", ->
@@ -251,37 +265,38 @@ describe "moderators flow", ->
       }
 
       mod = factory.Moderators object: category
-      res = ModeratorsApp\get current_user, "/remove-moderator", {
+      assert remove_moderator {
         object_type: "category"
         object_id: mod.object_id
         user_id: mod.user_id
       }
-
-      assert.falsy res.errors
 
     it "should let (non admin/owner) moderator remove self", ->
       mod = factory.Moderators user_id: current_user.id
 
-      res = ModeratorsApp\get current_user, "/remove-moderator", {
+      remove_moderator {
         object_type: "category"
         object_id: mod.object_id
         user_id: mod.user_id
       }
 
-      assert.falsy res.errors
       assert.same {}, Moderators\select!
 
     it "should not let non-admin moderator remove moderator", ->
       factory.Moderators user_id: current_user.id
       mod = factory.Moderators!
 
-      res = ModeratorsApp\get current_user, "/remove-moderator", {
-        object_type: "category"
-        object_id: mod.object_id
-        user_id: mod.user_id
-      }
-
-      assert.truthy res.errors
+      assert.has_error(
+        ->
+          remove_moderator {
+            object_type: "category"
+            object_id: mod.object_id
+            user_id: mod.user_id
+          }
+        {
+          message: {"invalid moderatable object"}
+        }
+      )
 
   describe "accept_moderator_position", ->
     it "should do nothing for stranger", ->
@@ -312,7 +327,7 @@ describe "moderators flow", ->
     it "should reject moderator position", ->
       mod = factory.Moderators accepted: false, user_id: current_user.id
 
-      res = ModeratorsApp\get current_user, "/remove-moderator", {
+      assert remove_moderator {
         object_type: "category"
         object_id: mod.object_id
 
@@ -320,7 +335,6 @@ describe "moderators flow", ->
         current_user_id: current_user.id
       }
 
-      assert.falsy res.errors
       assert.same {}, Moderators\select!
 
 
