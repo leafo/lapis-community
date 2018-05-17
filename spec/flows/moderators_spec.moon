@@ -8,24 +8,6 @@ import mock_request from require "lapis.spec.request"
 
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
-import in_request from require "spec.flow_helpers"
-
-import TestApp from require "spec.helpers"
-
-class ModeratorsApp extends TestApp
-  @require_user!
-
-  @before_filter =>
-    ModeratorsFlow = require "community.flows.moderators"
-    @flow = ModeratorsFlow @
-
-  "/accept-mod": capture_errors_json =>
-    @flow\accept_moderator_position!
-    json: { success: true }
-
-  "/show-mods": capture_errors_json =>
-    moderators = @flow\show_moderators!
-    json: { success: true, :moderators }
 
 describe "moderators flow", ->
   use_test_env!
@@ -299,15 +281,26 @@ describe "moderators flow", ->
       )
 
   describe "accept_moderator_position", ->
+    accept_moderator_position = (post) ->
+      in_request {
+        :post
+      }, =>
+        @current_user = current_user
+        @flow("moderators")\accept_moderator_position!
+
     it "should do nothing for stranger", ->
       mod = factory.Moderators accepted: false
 
-      res = ModeratorsApp\get current_user, "/accept-mod", {
-        object_type: "category"
-        object_id: mod.object_id
-      }
-
-      assert.truthy res.errors
+      assert.has_error(
+        ->
+          accept_moderator_position {
+            object_type: "category"
+            object_id: mod.object_id
+          }
+        {
+          message: { "invalid moderator" }
+        }
+      )
 
       mod\refresh!
       assert.same false, mod.accepted
@@ -315,12 +308,12 @@ describe "moderators flow", ->
     it "should accept moderator position", ->
       mod = factory.Moderators accepted: false, user_id: current_user.id
 
-      res = ModeratorsApp\get current_user, "/accept-mod", {
+
+      assert accept_moderator_position {
         object_type: "category"
         object_id: mod.object_id
       }
 
-      assert.falsy res.errors
       mod\refresh!
       assert.same true, mod.accepted
 
@@ -339,28 +332,43 @@ describe "moderators flow", ->
 
 
   describe "show moderators", ->
+    show_moderators = (post) ->
+      in_request {
+        :post
+      }, =>
+        @current_user = current_user
+        @flow("moderators")\show_moderators!
+
     it "should get moderators when there are none", ->
       category = factory.Categories!
-      res = ModeratorsApp\get current_user, "/show-mods", {
+
+      moderators = show_moderators {
         object_type: "category"
         object_id: category.id
       }
 
-      assert.same {success: true, moderators: {}}, res
+      assert.same {}, moderators
 
     it "should get moderators when there are some", ->
       category = factory.Categories!
       factory.Moderators! -- unrelated mod
 
-      for i=1,2
+      ms = for i=1,2
         factory.Moderators object: category
 
-      res = ModeratorsApp\get current_user, "/show-mods", {
+      moderators = show_moderators {
         object_type: "category"
         object_id: category.id
       }
 
-      assert.falsy res.errors
-      assert.same 2, #res.moderators
-
+      assert.same {
+        {
+          category.id
+          ms[1].user_id
+        }
+        {
+          category.id
+          ms[2].user_id
+        }
+      }, [{m.object_id, m.user_id} for m in *moderators]
 
