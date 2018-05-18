@@ -1,28 +1,7 @@
 import use_test_env from require "lapis.spec"
-
-import TestApp from require "spec.helpers"
-import capture_errors_json from require "lapis.application"
+import in_request from require "spec.flow_helpers"
 
 factory = require "spec.factory"
-
-class BlocksApp extends TestApp
-  @require_user!
-
-  @before_filter =>
-    BlocksFlow = require "community.flows.blocks"
-    @flow = BlocksFlow @
-
-  "/block-user": capture_errors_json =>
-    @flow\block_user!
-    json: {success: true}
-
-  "/unblock-user": capture_errors_json =>
-    @flow\unblock_user!
-    json: {success: true}
-
-  "/show-blocks": capture_errors_json =>
-    blocks = @flow\show_blocks!
-    json: { success: true, :blocks }
 
 describe "blocks", ->
   use_test_env!
@@ -35,13 +14,37 @@ describe "blocks", ->
   before_each =>
     current_user = factory.Users!
 
+  block_user = (post) ->
+    in_request {
+      :post
+    }, =>
+      @current_user = current_user
+      @flow("blocks")\block_user!
+
+  unblock_user = (post) ->
+    in_request {
+      :post
+    }, =>
+      @current_user = current_user
+      @flow("blocks")\unblock_user! or "noop"
+
+  it "does nothing with incorrect params", ->
+    assert.has_error(
+      -> block_user { }
+      {
+        message: {
+          "blocked_user_id must be an integer"
+        }
+      }
+    )
+
   it "should block user", ->
     other_user = factory.Users!
-    res = BlocksApp\get current_user, "/block-user", {
+
+    assert block_user {
       blocked_user_id: other_user.id
     }
 
-    assert.truthy res.success
     blocks = Blocks\select!
     assert.same 1, #blocks
     block = unpack blocks
@@ -52,38 +55,55 @@ describe "blocks", ->
     other_user = factory.Users!
     factory.Blocks blocking_user_id: current_user.id, blocked_user_id: other_user.id
 
-    BlocksApp\get current_user, "/block-user", {
+    assert block_user {
       blocked_user_id: other_user.id
     }
 
   it "should unblock user", ->
     other_user = factory.Users!
-    factory.Blocks blocking_user_id: current_user.id, blocked_user_id: other_user.id
-
-    res = BlocksApp\get current_user, "/unblock-user", {
+    factory.Blocks {
+      blocking_user_id: current_user.id
       blocked_user_id: other_user.id
     }
 
-    assert.truthy res.success
-    blocks = Blocks\select!
-    assert.same 0, #blocks
+    factory.Blocks!
 
-  it "should not error on invalid unblock", ->
+    assert unblock_user {
+      blocked_user_id: other_user.id
+    }
+
+    assert.same 1, Blocks\count!
+    assert.same {}, Blocks\select "where blocking_user_id = ?", current_user.id
+
+  it "doesn't error when trying to unblock someone who isn't blocked", ->
     other_user = factory.Users!
 
-    res = BlocksApp\get current_user, "/unblock-user", {
+    -- block on user from different account
+    factory.Blocks blocked_user_id: other_user.id
+
+    unblock_user {
       blocked_user_id: other_user.id
     }
 
-  describe "show blocks", ->
-    it "should get blocks when there are none", ->
-      res = BlocksApp\get current_user, "/show-blocks"
-      assert.same {success: true, blocks: {}}, res
+    assert.same 1, Blocks\count!
 
-    it "should get blocks when there are some", ->
+  describe "show blocks", ->
+    show_blocks = (get) ->
+      in_request {
+        :get
+      }, =>
+        @current_user = current_user
+        @flow("blocks")\show_blocks!
+
+    it "show sempty blocks", ->
+      factory.Blocks! -- unrelated block
+      assert.same {}, show_blocks!
+
+    it "shows blocks when there are some", ->
+      factory.Blocks! -- unrelated block
       for i=1,2
         factory.Blocks blocking_user_id: current_user.id
 
-      res = BlocksApp\get current_user, "/show-blocks"
-      assert.same 2, #res.blocks
+      blocks = show_blocks!
+      assert.same 2, #blocks
 
