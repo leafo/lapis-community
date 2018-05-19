@@ -1,24 +1,7 @@
 import use_test_env from require "lapis.spec"
+import in_request from require "spec.flow_helpers"
 
 factory = require "spec.factory"
-
-import Application from require "lapis"
-import capture_errors_json from require "lapis.application"
-
-import TestApp from require "spec.helpers"
-
-VotesFlow = require "community.flows.votes"
-
-import Users from require "models"
-
-class VotingApp extends TestApp
-  @before_filter =>
-    @current_user = Users\find assert @params.current_user_id, "missing user id"
-
-  "/vote": capture_errors_json =>
-    VotesFlow(@)\vote!
-    json: { success: true }
-
 
 describe "votes flow", ->
   use_test_env!
@@ -38,47 +21,18 @@ describe "votes flow", ->
   before_each ->
     current_user = factory.Users!
 
-  it "should vote on a post", ->
+  do_vote = (post) ->
+    in_request { :post }, =>
+      @current_user = current_user
+      @flow("votes")\vote!
+
+  it "votes on post", ->
     post = factory.Posts!
-    res = VotingApp\get current_user, "/vote", {
+    assert do_vote {
       object_type: "post"
       object_id: post.id
       direction: "up"
     }
-
-    assert.same { success: true }, res
-    vote = assert unpack Votes\select!
-    assert.same post.id, vote.object_id
-    assert.same Votes.object_types.post, vote.object_type
-
-    assert.same current_user.id, vote.user_id
-    assert.same true, vote.positive
-
-    post\refresh!
-
-    assert.same 1, post.up_votes_count
-    assert.same 0, post.down_votes_count
-
-    cu = CommunityUsers\for_user(current_user)
-    assert.same 1, cu.votes_count
-
-  it "should update a vote with no changes", ->
-    post = factory.Posts!
-    res = VotingApp\get current_user, "/vote", {
-      object_type: "post"
-      object_id: post.id
-      direction: "up"
-    }
-
-    assert.same { success: true }, res
-
-    res = VotingApp\get current_user, "/vote", {
-      object_type: "post"
-      object_id: post.id
-      direction: "up"
-    }
-
-    assert.same { success: true }, res
 
     vote = assert unpack Votes\select!
     assert.same post.id, vote.object_id
@@ -95,10 +49,41 @@ describe "votes flow", ->
     cu = CommunityUsers\for_user(current_user)
     assert.same 1, cu.votes_count
 
-  it "should update a vote", ->
+  it "updates a vote with no changes", ->
+    post = factory.Posts!
+
+    assert do_vote {
+      object_type: "post"
+      object_id: post.id
+      direction: "up"
+    }
+
+
+    assert do_vote {
+      object_type: "post"
+      object_id: post.id
+      direction: "up"
+    }
+
+    vote = assert unpack Votes\select!
+    assert.same post.id, vote.object_id
+    assert.same Votes.object_types.post, vote.object_type
+
+    assert.same current_user.id, vote.user_id
+    assert.same true, vote.positive
+
+    post\refresh!
+
+    assert.same 1, post.up_votes_count
+    assert.same 0, post.down_votes_count
+
+    cu = CommunityUsers\for_user(current_user)
+    assert.same 1, cu.votes_count
+
+  it "updates a vote", ->
     vote = factory.Votes user_id: current_user.id
 
-    res = VotingApp\get current_user, "/vote", {
+    do_vote {
       object_type: "post"
       object_id: vote.object_id
       direction: "down"
@@ -118,11 +103,11 @@ describe "votes flow", ->
     cu = CommunityUsers\for_user(current_user)
     assert.same 0, cu.votes_count
 
-  it "should remove vote on post", ->
+  it "removes vote on post", ->
     post = factory.Posts!
     _, vote = Votes\vote post, current_user
 
-    res = VotingApp\get current_user, "/vote", {
+    do_vote {
       object_type: "post"
       object_id: post.id
       action: "remove"
