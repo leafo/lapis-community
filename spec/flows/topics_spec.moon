@@ -1,45 +1,7 @@
-
 import use_test_env from require "lapis.spec"
-
-import TestApp from require "spec.helpers"
-import capture_errors_json from require "lapis.application"
+import in_request from require "spec.flow_helpers"
 
 factory = require "spec.factory"
-
-class TopicsApp extends TestApp
-  @require_user!
-
-  @before_filter =>
-    TopicsFlow = require "community.flows.topics"
-    @flow = TopicsFlow @
-
-  "/lock-topic": capture_errors_json =>
-    @flow\lock_topic!
-    json: { success: true }
-
-  "/unlock-topic": capture_errors_json =>
-    @flow\unlock_topic!
-    json: { success: true }
-
-  "/stick-topic": capture_errors_json =>
-    @flow\stick_topic!
-    json: { success: true }
-
-  "/unstick-topic": capture_errors_json =>
-    @flow\unstick_topic!
-    json: { success: true }
-
-  "/archive-topic": capture_errors_json =>
-    @flow\archive_topic!
-    json: { success: true }
-
-  "/unarchive-topic": capture_errors_json =>
-    @flow\unarchive_topic!
-    json: { success: true }
-
-  "/move-topic": capture_errors_json =>
-    @flow\move_topic!
-    json: { success: true }
 
 describe "topics", ->
   use_test_env!
@@ -55,14 +17,18 @@ describe "topics", ->
     category = factory.Categories user_id: current_user.id
     topic = factory.Topics category_id: category.id
 
+  method = (m, post, user=current_user) ->
+    in_request {:post}, =>
+      @current_user = user
+      f = @flow("topics")
+      f[m](f) or "noop"
+
   describe "lock", ->
     it "should lock topic", ->
-      res = TopicsApp\get current_user, "/lock-topic", {
+      assert method "lock_topic", {
         topic_id: topic.id
         reason: "this topic is stupid"
       }
-
-      assert.truthy res.success
 
       logs = ModerationLogs\select!
       assert.same 1, #logs
@@ -80,11 +46,9 @@ describe "topics", ->
     it "should unlock topic", ->
       topic\update locked: true
 
-      res = TopicsApp\get current_user, "/unlock-topic", {
+      assert method "unlock_topic", {
         topic_id: topic.id
       }
-
-      assert.truthy res.success
 
       logs = ModerationLogs\select!
       assert.same 1, #logs
@@ -98,29 +62,32 @@ describe "topics", ->
 
       assert.same 0, #ModerationLogObjects\select!
 
-    it "should not let random user lock topic", ->
-      res = TopicsApp\get factory.Users!, "/lock-topic", {
-        topic_id: topic.id
-      }
-
-      assert.truthy res.errors
+    it "doesn't let random user lock topic", ->
+      assert.has_error(
+        ->
+          method "lock_topic", {
+            topic_id: topic.id
+          }, factory.Users!
+        { message: { "invalid user" } }
+      )
 
     it "should not let random user unlock topic", ->
       topic\update locked: true
-      res = TopicsApp\get factory.Users!, "/unlock-topic", {
-        topic_id: topic.id
-      }
 
-      assert.truthy res.errors
+      assert.has_error(
+        ->
+          method "unlock_topic", {
+            topic_id: topic.id
+          }, factory.Users!
+        { message: { "invalid user" } }
+      )
 
   describe "stick", ->
     it "should stick topic", ->
-      res = TopicsApp\get current_user, "/stick-topic", {
+      assert method "stick_topic", {
         topic_id: topic.id
         reason: " this topic is great and important "
       }
-
-      assert.nil res.errors
 
       logs = ModerationLogs\select!
       assert.same 1, #logs
@@ -137,11 +104,9 @@ describe "topics", ->
 
     it "should unstick topic", ->
       topic\update sticky: true
-      res = TopicsApp\get current_user, "/unstick-topic", {
+      method "unstick_topic", {
         topic_id: topic.id
       }
-
-      assert.nil res.errors
 
       logs = ModerationLogs\select!
       assert.same 1, #logs
@@ -157,12 +122,10 @@ describe "topics", ->
 
   describe "archive", ->
     it "archives topic", ->
-      res = TopicsApp\get current_user, "/archive-topic", {
+      assert method "archive_topic", {
         topic_id: topic.id
         reason: "NOW ARCHIVED "
       }
-
-      assert.nil res.errors
 
       topic\refresh!
       assert.true topic\is_archived!
@@ -184,11 +147,9 @@ describe "topics", ->
     it "unarchives topic", ->
       topic\archive!
 
-      res = TopicsApp\get current_user, "/unarchive-topic", {
+      assert method "unarchive_topic", {
         topic_id: topic.id
       }
-
-      assert.nil res.errors
 
       topic\refresh!
       assert.false topic\is_archived!
@@ -201,7 +162,7 @@ describe "topics", ->
         user_id: current_user.id
       }
 
-      res = TopicsApp\get current_user, "/move-topic", {
+      method "move_topic", {
         topic_id: topic.id
         target_category_id: other_category.id
       }
