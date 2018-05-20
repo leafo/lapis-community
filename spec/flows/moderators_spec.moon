@@ -1,13 +1,7 @@
 import use_test_env from require "lapis.spec"
 import in_request from require "spec.flow_helpers"
-import truncate_tables from require "lapis.spec.db"
 
 factory = require "spec.factory"
-
-import mock_request from require "lapis.spec.request"
-
-import Application from require "lapis"
-import capture_errors_json from require "lapis.application"
 
 describe "moderators flow", ->
   use_test_env!
