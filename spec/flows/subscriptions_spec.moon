@@ -3,8 +3,6 @@ import in_request from require "spec.flow_helpers"
 
 factory = require "spec.factory"
 
-SubscriptionsFlow = require "community.flows.subscriptions"
-
 import types from require "tableshape"
 
 describe "flows.bookmarks", ->
@@ -24,7 +22,7 @@ describe "flows.bookmarks", ->
 
       in_request {}, =>
         @current_user = user
-        SubscriptionsFlow(@)\subscribe_to_topic topic
+        @flow("subscriptions")\subscribe_to_topic topic
 
       assert types.shape({
         types.shape {
@@ -45,7 +43,7 @@ describe "flows.bookmarks", ->
         ->
           in_request {}, =>
             @current_user = user
-            SubscriptionsFlow(@)\subscribe_to_topic topic
+            @flow("subscriptions")\subscribe_to_topic topic
 
         {message: { "invalid topic" } }
       )
@@ -63,7 +61,7 @@ describe "flows.bookmarks", ->
 
       assert in_request {}, =>
         @current_user = user
-        SubscriptionsFlow(@)\subscribe_to_category category
+        @flow("subscriptions")\subscribe_to_category category
         true
 
       assert types.shape({
@@ -86,9 +84,9 @@ describe "flows.bookmarks", ->
         ->
           in_request {}, =>
             @current_user = user
-            SubscriptionsFlow(@)\subscribe_to_category category
+            @flow("subscriptions")\subscribe_to_category category
 
-        {message: { "invalid category" } }
+        { message: { "invalid category" } }
       )
 
       assert.same {}, Subscriptions\select!
@@ -102,7 +100,7 @@ describe "flows.bookmarks", ->
 
       subs = assert in_request {}, =>
         @current_user = user
-        SubscriptionsFlow(@)\show_subscriptions!
+        @flow("subscriptions")\show_subscriptions!
         @subscriptions
 
       assert.same {}, subs
@@ -139,7 +137,7 @@ describe "flows.bookmarks", ->
 
       subs = assert in_request {}, =>
         @current_user = user
-        SubscriptionsFlow(@)\show_subscriptions!
+        @flow("subscriptions")\show_subscriptions!
         @subscriptions
 
       subs = {Subscriptions.object_types\to_name(sub.object_type), sub.object_id for sub in *subs}
