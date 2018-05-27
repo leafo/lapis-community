@@ -1,6 +1,7 @@
 -- TODO: move this to respetive category/topic specs
 import use_test_env from require "lapis.spec"
 import truncate_tables from require "lapis.spec.db"
+import in_request from require "spec.flow_helpers"
 
 factory = require "spec.factory"
 
@@ -74,19 +75,29 @@ describe "posting flow", ->
   before_each ->
     current_user = factory.Users!
 
-  describe "new topic", ->
-    it "should not post anything when missing all data", ->
-      res = PostingApp\get current_user, "/new-topic", {}
-      assert.truthy res.errors
+  new_topic = (post) ->
+    in_request { :post }, =>
+      @current_user = current_user
+      @flow("topics")\new_topic!
 
-    it "should fail with bad category", ->
-      res = PostingApp\get current_user, "/new-topic", {
-        current_user_id: current_user.id
-        category_id: 0
-        "topic[title]": "hello"
-        "topic[body]": "world"
-      }
-      assert.same { "invalid category" }, res.errors
+  describe "new topic", ->
+    it "errors with blank post request", ->
+      assert.has_error ->
+        new_topic { }
+
+    it "errors with bad category", ->
+      assert.has_error(
+        ->
+          new_topic {
+            category_id: 0
+            "topic[title]": "hello"
+            "topic[body]": "world"
+          }
+
+        {
+          message: {"invalid category"}
+        }
+      )
 
     it "should fail with empty body", ->
       res = PostingApp\get current_user, "/new-topic", {
