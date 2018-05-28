@@ -99,37 +99,40 @@ describe "posting flow", ->
         }
       )
 
-    it "should fail with empty body", ->
-      res = PostingApp\get current_user, "/new-topic", {
-        current_user_id: current_user.id
-        category_id: factory.Categories!.id
-        "topic[title]": "hello"
-        "topic[body]": ""
-      }
+    it "errors with empty body", ->
+      assert.has_error(
+        ->
+          new_topic {
+            category_id: factory.Categories!.id
+            "topic[title]": "hello"
+            "topic[body]": ""
+          }
+        {
+          message: {"body must be provided"}
+        }
+      )
 
-      assert.same { "body must be provided" }, res.errors
-
-    it "should fail with empty html body", ->
-      res = PostingApp\get current_user, "/new-topic", {
-        current_user_id: current_user.id
-        category_id: factory.Categories!.id
-        "topic[title]": "hello"
-        "topic[body]": " <ol><li>   </ol>"
-      }
-
-      assert.same { "body must be provided" }, res.errors
+    it "errors with empty html body", ->
+      assert.has_error(
+        ->
+          new_topic {
+            category_id: factory.Categories!.id
+          "topic[title]": "hello"
+          "topic[body]": " <ol><li>   </ol>"
+          }
+        {
+          message: {"body must be provided"}
+        }
+      )
 
     it "should post a new topic", ->
       category = factory.Categories!
 
-      res = PostingApp\get current_user, "/new-topic", {
-        current_user_id: current_user.id
+      new_topic {
         category_id: category.id
         "topic[title]": "Hello world"
         "topic[body]": "This is the body"
       }
-
-      assert.truthy res.success
 
       topic = unpack Topics\select!
       post = unpack Posts\select!
@@ -202,15 +205,13 @@ describe "posting flow", ->
     it "creates new topic with body format", ->
       category = factory.Categories!
 
-      res = PostingApp\get current_user, "/new-topic", {
-        current_user_id: current_user.id
+      new_topic {
         category_id: category.id
         "topic[title]": "Hello world"
         "topic[body]": "This is the body"
         "topic[body_format]": "markdown"
       }
 
-      assert.truthy res.success
       post = unpack Posts\select!
 
       assert (types.shape {
