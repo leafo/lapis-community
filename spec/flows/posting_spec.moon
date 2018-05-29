@@ -12,7 +12,6 @@ import capture_errors_json from require "lapis.application"
 
 import TestApp from require "spec.helpers"
 
-TopicsFlow = require "community.flows.topics"
 PostsFlow = require "community.flows.posts"
 
 import Users from require "models"
@@ -22,19 +21,6 @@ import types from require "tableshape"
 class PostingApp extends TestApp
   @before_filter =>
     @current_user = Users\find assert @params.current_user_id, "missing user id"
-
-  "/new-topic": capture_errors_json =>
-    TopicsFlow(@)\new_topic!
-
-    json: {
-      topic: @topic
-      post: @post
-      success: true
-    }
-
-  "/delete-topic": capture_errors_json =>
-    res = TopicsFlow(@)\delete_topic!
-    json: { success: res }
 
   "/new-post": capture_errors_json =>
     PostsFlow(@)\new_post!
@@ -79,6 +65,11 @@ describe "posting flow", ->
     in_request { :post }, =>
       @current_user = current_user
       @flow("topics")\new_topic!
+
+  delete_topic = (post, user=current_user) ->
+    in_request { :post }, =>
+      @current_user = user
+      @flow("topics")\delete_topic!
 
   describe "new topic", ->
     it "errors with blank post request", ->
@@ -222,8 +213,7 @@ describe "posting flow", ->
       category = factory.Categories!
       factory.CategoryTags slug: "hello", category_id: category.id
 
-      res = PostingApp\get current_user, "/new-topic", {
-        current_user_id: current_user.id
+      new_topic {
         category_id: category.id
         "topic[title]": "Hello world"
         "topic[body]": "This is the body"
@@ -236,14 +226,11 @@ describe "posting flow", ->
     it "posts new topic with score based category order", ->
       category = factory.Categories  category_order_type: "topic_score"
 
-      res = PostingApp\get current_user, "/new-topic", {
-        current_user_id: current_user.id
+      new_topic {
         category_id: category.id
         "topic[title]": "Hello world"
         "topic[body]": "This is the body"
       }
-
-      assert.truthy res.success
 
       topic = unpack Topics\select!
       assert.not.same 1, topic.category_order
@@ -369,11 +356,8 @@ describe "posting flow", ->
       topic = factory.Topics user_id: current_user.id
 
     it "should delete topic", ->
-      res = PostingApp\get current_user, "/delete-topic", {
-        topic_id: topic.id
-      }
+      delete_topic { topic_id: topic.id }
 
-      assert.truthy res.success
       topic\refresh!
       assert.truthy topic.deleted
       assert.truthy topic.deleted_at
@@ -397,11 +381,10 @@ describe "posting flow", ->
     it "should not allow unrelated user to delete topic", ->
       other_user = factory.Users!
 
-      res = PostingApp\get other_user, "/delete-topic", {
-        topic_id: topic.id
-      }
-
-      assert.same {errors: {"not allowed to edit"}}, res
+      assert.has_error(
+        -> delete_topic { topic_id: topic.id }, other_user
+        { message: {"not allowed to edit"} }
+      )
 
   describe "edit post", ->
     it "should edit post", ->
