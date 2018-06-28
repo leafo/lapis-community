@@ -53,6 +53,8 @@ class Posts extends Model
     }}
 
     {"moderation_log", belongs_to: "ModerationLogs"}
+
+    {"posts_search", has_one: "PostsSearch"}
   }
 
   @statuses: enum {
@@ -429,4 +431,27 @@ class Posts extends Model
 
   is_moderation_event: =>
     not not @moderation_log_id
+
+  refresh_search_index: =>
+    search = @get_posts_search!
+    if @should_index_for_search!
+      import PostsSearch from require "community.models"
+      PostsSearch\index_post @
+    else
+      if search
+        search\delete!
+
+  -- returns nil by default so you can override and do what you want
+  -- with it
+  should_index_for_search: =>
+    if @deleted
+      return false
+
+    topic = @get_topic!
+
+    if not topic or topic.deleted
+      return false
+
+    nil
+
 

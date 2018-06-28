@@ -1114,5 +1114,35 @@ return {
   end,
   [24] = function(self)
     return create_index(T("activity_logs"), "object_type", "object_id")
+  end,
+  [25] = function(self)
+    create_table(T("posts_search"), {
+      {
+        "post_id",
+        foreign_key
+      },
+      {
+        "topic_id",
+        foreign_key
+      },
+      {
+        "category_id",
+        foreign_key({
+          null = true
+        })
+      },
+      {
+        "posted_at",
+        time
+      },
+      {
+        "words",
+        "tsvector"
+      },
+      "PRIMARY KEY (post_id)"
+    })
+    create_index(T("posts_search"), "post_id")
+    local idx = db.escape_identifier(schema.gen_index_name(T("posts_search"), "words"))
+    return db.query("create index " .. tostring(idx) .. " on " .. tostring(T("posts_search")) .. " using gin(words)")
   end
 }

@@ -568,6 +568,22 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
 
   [24]: =>
     create_index T"activity_logs", "object_type", "object_id"
+
+  [25]: =>
+    create_table T"posts_search", {
+      {"post_id", foreign_key}
+      {"topic_id", foreign_key}
+      {"category_id", foreign_key null: true}
+
+      {"posted_at", time}
+      {"words", "tsvector"}
+
+      "PRIMARY KEY (post_id)"
+    }
+
+    create_index T"posts_search", "post_id"
+    idx = db.escape_identifier schema.gen_index_name T"posts_search", "words"
+    db.query "create index #{idx} on #{T"posts_search"} using gin(words)"
 }
 
 

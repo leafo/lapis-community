@@ -455,6 +455,28 @@ do
     end,
     is_moderation_event = function(self)
       return not not self.moderation_log_id
+    end,
+    refresh_search_index = function(self)
+      local search = self:get_posts_search()
+      if self:index_for_search() then
+        local PostsSearch
+        PostsSearch = require("community.models").PostsSearch
+        return PostsSearch:index_post(self)
+      else
+        if search then
+          return search:delete()
+        end
+      end
+    end,
+    index_for_search = function(self)
+      if self.deleted then
+        return false
+      end
+      local topic = self:get_topic()
+      if topic.deleted then
+        return false
+      end
+      return nil
     end
   }
   _base_0.__index = _base_0
@@ -521,6 +543,10 @@ do
     {
       "moderation_log",
       belongs_to = "ModerationLogs"
+    },
+    {
+      "posts_search",
+      belongs_to = "PostsSearch"
     }
   }
   self.statuses = enum({
