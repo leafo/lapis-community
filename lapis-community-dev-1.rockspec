@@ -58,6 +58,7 @@ build = {
     ["community.models.post_edits"] = "community/models/post_edits.lua",
     ["community.models.post_reports"] = "community/models/post_reports.lua",
     ["community.models.posts"] = "community/models/posts.lua",
+    ["community.models.posts_search"] = "community/models/posts_search.lua",
     ["community.models.subscriptions"] = "community/models/subscriptions.lua",
     ["community.models.topic_participants"] = "community/models/topic_participants.lua",
     ["community.models.topic_subscriptions"] = "community/models/topic_subscriptions.lua",
