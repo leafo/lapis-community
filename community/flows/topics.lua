@@ -129,6 +129,7 @@ do
       self.category:increment_from_topic(self.topic)
       CommunityUsers:for_user(self.current_user):increment("topics_count")
       self.topic:increment_participant(self.current_user)
+      self.post:refresh_search_index()
       ActivityLogs:create({
         user_id = self.current_user.id,
         object = self.topic,

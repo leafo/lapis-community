@@ -43,10 +43,11 @@ do
     local Extractor
     Extractor = require("web_sanitize.html").Extractor
     local extract_text = Extractor()
+    local topic = post:get_topic()
     local body = extract_text(post.body)
     local title
     if post:is_topic_post() then
-      title = post:get_topic().title
+      title = topic.title
     end
     local words
     if title then
@@ -55,8 +56,12 @@ do
       words = db.interpolate_query("to_tsvector(?, ?)", self.index_lang, body)
     end
     return insert_on_conflict_update(self, {
-      post_id = post.id,
-      words = db.raw(words)
+      post_id = post.id
+    }, {
+      topic_id = topic.id,
+      category_id = topic.category_id,
+      words = db.raw(words),
+      posted_at = post.created_at
     })
   end
   if _parent_0.__inherited then

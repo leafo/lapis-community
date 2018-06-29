@@ -84,6 +84,8 @@ class PostsFlow extends Flow
         action: "create"
       }
 
+      @post\refresh_search_index!
+
     true
 
   edit_post: require_login =>
@@ -125,9 +127,11 @@ class PostsFlow extends Flow
           Posts.body_formats\for_db post_update.body_format
       }
 
+      @post\refresh_search_index!
+
       true
 
-    if @post\is_topic_post! and not @topic.permanent
+    edited_title = if @post\is_topic_post! and not @topic.permanent
       assert_valid post_update, {
         {"title", optional: true, max_length: limits.MAX_TITLE_LEN}
         {"tags", optional: true, type: "string"}
@@ -148,7 +152,12 @@ class PostsFlow extends Flow
           db.NULL
 
       import filter_update from require "community.helpers.models"
-      @topic\update filter_update @topic, opts
+      topic_update = filter_update @topic, opts
+      @topic\update topic_update
+      topic_update.title and true
+
+    if edited or edited_title
+      @post\refresh_search_index!
 
     if edited
       ActivityLogs\create {

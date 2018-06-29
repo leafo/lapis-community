@@ -53,6 +53,7 @@ do
       else
         CommunityUsers:for_user(self:get_user()):increment("posts_count")
       end
+      post:refresh_search_index()
       topic:increment_participant(self:get_user())
       self:delete()
       return post

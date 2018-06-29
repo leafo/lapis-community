@@ -201,6 +201,9 @@ class Posts extends Model
   delete: (force) =>
     @topic = @get_topic!
 
+    if search = @get_posts_search!
+      search\delete!
+
     if @is_topic_post! and not @topic.permanent
       return @topic\delete!
 
@@ -445,6 +448,12 @@ class Posts extends Model
   -- with it
   should_index_for_search: =>
     if @deleted
+      return false
+
+    if @moderation_log_id
+      return false
+
+    if @status == @@statuses.spam
       return false
 
     topic = @get_topic!

@@ -127,6 +127,12 @@ do
     end,
     delete = function(self, force)
       self.topic = self:get_topic()
+      do
+        local search = self:get_posts_search()
+        if search then
+          search:delete()
+        end
+      end
       if self:is_topic_post() and not self.topic.permanent then
         return self.topic:delete()
       end
@@ -458,7 +464,7 @@ do
     end,
     refresh_search_index = function(self)
       local search = self:get_posts_search()
-      if self:index_for_search() then
+      if self:should_index_for_search() then
         local PostsSearch
         PostsSearch = require("community.models").PostsSearch
         return PostsSearch:index_post(self)
@@ -468,12 +474,18 @@ do
         end
       end
     end,
-    index_for_search = function(self)
+    should_index_for_search = function(self)
       if self.deleted then
         return false
       end
+      if self.moderation_log_id then
+        return false
+      end
+      if self.status == self.__class.statuses.spam then
+        return false
+      end
       local topic = self:get_topic()
-      if topic.deleted then
+      if not topic or topic.deleted then
         return false
       end
       return nil
@@ -546,7 +558,7 @@ do
     },
     {
       "posts_search",
-      belongs_to = "PostsSearch"
+      has_one = "PostsSearch"
     }
   }
   self.statuses = enum({

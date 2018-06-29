@@ -115,6 +115,7 @@ do
           object = self.post,
           action = "create"
         })
+        self.post:refresh_search_index()
       end
       return true
     end),
@@ -168,8 +169,10 @@ do
             end
           end)()
         })
+        self.post:refresh_search_index()
         edited = true
       end
+      local edited_title
       if self.post:is_topic_post() and not self.topic.permanent then
         assert_valid(post_update, {
           {
@@ -208,7 +211,12 @@ do
         end
         local filter_update
         filter_update = require("community.helpers.models").filter_update
-        self.topic:update(filter_update(self.topic, opts))
+        local topic_update = filter_update(self.topic, opts)
+        self.topic:update(topic_update)
+        edited_title = topic_update.title and true
+      end
+      if edited or edited_title then
+        self.post:refresh_search_index()
       end
       if edited then
         ActivityLogs:create({

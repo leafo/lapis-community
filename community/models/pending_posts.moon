@@ -86,6 +86,8 @@ class PendingPosts extends Model
     else
       CommunityUsers\for_user(@get_user!)\increment "posts_count"
 
+    post\refresh_search_index!
+
     topic\increment_participant @get_user!
 
     @delete!
