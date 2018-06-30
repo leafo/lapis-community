@@ -3,6 +3,42 @@ local Model
 Model = require("community.model").Model
 local insert_on_conflict_update
 insert_on_conflict_update = require("community.helpers.models").insert_on_conflict_update
+local decode_html_entities
+do
+  local entities = {
+    amp = '&',
+    nbsp = " ",
+    gt = '>',
+    lt = '<',
+    quot = '"',
+    apos = "'",
+    mdash = "—",
+    rsquo = '’',
+    trade = '™',
+    ["#x27"] = "'"
+  }
+  decode_html_entities = function(str)
+    return (str:gsub('&(.-);', function(tag)
+      if entities[tag] then
+        return entities[tag]
+      else
+        do
+          local chr = tag:match("#(%d+)")
+          if chr then
+            chr = tonumber(chr)
+            if chr >= 32 and chr <= 127 then
+              return string.char(chr)
+            else
+              return ""
+            end
+          else
+            return '&' .. tag .. ';'
+          end
+        end
+      end
+    end))
+  end
+end
 local PostsSearch
 do
   local _class_0
@@ -39,12 +75,18 @@ do
   local self = _class_0
   self.primary_key = "post_id"
   self.index_lang = "english"
+  self.relations = {
+    {
+      "post",
+      belongs_to = "Posts"
+    }
+  }
   self.index_post = function(self, post)
     local Extractor
     Extractor = require("web_sanitize.html").Extractor
     local extract_text = Extractor()
     local topic = post:get_topic()
-    local body = extract_text(post.body)
+    local body = decode_html_entities(extract_text(post.body))
     local title
     if post:is_topic_post() then
       title = topic.title
