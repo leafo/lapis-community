@@ -102,6 +102,7 @@ class ReportsFlow extends Flow
       where #{db.escape_identifier PostReports\table_name!}.category_id in ? and not posts.deleted and not topics.deleted
 
       #{next(filter) and "and " .. db.encode_clause(filter) or ""}
+      order by id desc
     ", db.list(category_ids), {
       fields: "#{db.escape_identifier PostReports\table_name!}.*"
       prepare_results: (reports) ->

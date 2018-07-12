@@ -114,7 +114,7 @@ do
         category_ids = _accum_0
       end
       table.insert(category_ids, self.category.id)
-      self.pager = PostReports:paginated("\n      inner join " .. tostring(db.escape_identifier(Posts:table_name())) .. " as posts\n        on posts.id = post_id\n\n      inner join " .. tostring(db.escape_identifier(Topics:table_name())) .. " as topics\n        on posts.topic_id = topics.id\n\n      where " .. tostring(db.escape_identifier(PostReports:table_name())) .. ".category_id in ? and not posts.deleted and not topics.deleted\n\n      " .. tostring(next(filter) and "and " .. db.encode_clause(filter) or "") .. "\n    ", db.list(category_ids), {
+      self.pager = PostReports:paginated("\n      inner join " .. tostring(db.escape_identifier(Posts:table_name())) .. " as posts\n        on posts.id = post_id\n\n      inner join " .. tostring(db.escape_identifier(Topics:table_name())) .. " as topics\n        on posts.topic_id = topics.id\n\n      where " .. tostring(db.escape_identifier(PostReports:table_name())) .. ".category_id in ? and not posts.deleted and not topics.deleted\n\n      " .. tostring(next(filter) and "and " .. db.encode_clause(filter) or "") .. "\n      order by id desc\n    ", db.list(category_ids), {
         fields = tostring(db.escape_identifier(PostReports:table_name())) .. ".*",
         prepare_results = function(reports)
           preload(reports, "category", "user", "moderating_user", {
