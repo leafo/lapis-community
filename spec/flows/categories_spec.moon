@@ -1,4 +1,5 @@
 import use_test_env from require "lapis.spec"
+import in_request from require "spec.flow_helpers"
 
 db = require "lapis.db"
 factory = require "spec.factory"
@@ -7,6 +8,8 @@ import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
 
 import filter_bans from require "spec.helpers"
+
+import types from require "tableshape"
 
 class CategoryApp extends TestApp
   @require_user!
@@ -69,11 +72,6 @@ class CategoryApp extends TestApp
   "/set-tags": capture_errors_json =>
     @flow\set_tags!
     json: { success: true }
-
-  "/recent-posts": capture_errors_json =>
-    @flow\recent_posts!
-    filter_bans unpack @posts
-    json: { success: true, posts: @posts }
 
 describe "categories", ->
   use_test_env!
@@ -340,26 +338,40 @@ describe "categories", ->
         assert.same 1, #category\get_tags!
 
     describe "recent posts", ->
+      get_recent_posts = ->
+        in_request {
+          get: {
+            category_id: category.id
+          }
+        }, =>
+          @current_user = current_user
+          @flow("categories")\recent_posts!
+          @posts, @pager
+
       it "gets empty recent posts", ->
         category\update directory: true
-        res = CategoryApp\get current_user, "/recent-posts", {
-          category_id: category.id
-        }
-
-        assert.same {}, res.posts
+        recent_posts = get_recent_posts!
+        assert.same {}, recent_posts
 
       it "gets category with posts from many topics", ->
         category\update directory: true
 
-        for i=1,2
+        posts = for i=1,2
           post = factory.Posts!
           CategoryPostLogs\create category_id: category.id, post_id: post.id
+          post
 
-        res = CategoryApp\get current_user, "/recent-posts", {
-          category_id: category.id
-        }
+        recent_posts = get_recent_posts!
+        assert types.shape({
+          types.shape {
+            id: posts[2].id
+          }, open: true
 
-        assert.same 2, #res.posts
+          types.shape {
+            id: posts[1].id
+          }, open: true
+        }) recent_posts
+
 
   describe "show members", ->
     local category
