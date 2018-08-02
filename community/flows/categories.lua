@@ -2,10 +2,10 @@ local Flow
 Flow = require("lapis.flow").Flow
 local Users
 Users = require("models").Users
-local Categories, CategoryMembers, ActivityLogs
+local Categories, Posts, CategoryMembers, ActivityLogs
 do
   local _obj_0 = require("community.models")
-  Categories, CategoryMembers, ActivityLogs = _obj_0.Categories, _obj_0.CategoryMembers, _obj_0.ActivityLogs
+  Categories, Posts, CategoryMembers, ActivityLogs = _obj_0.Categories, _obj_0.Posts, _obj_0.CategoryMembers, _obj_0.ActivityLogs
 end
 local assert_error, yield_error
 do
@@ -97,7 +97,24 @@ do
       CategoryPostLogs = require("community.models").CategoryPostLogs
       local OrderedPaginator
       OrderedPaginator = require("lapis.db.pagination").OrderedPaginator
-      self.pager = OrderedPaginator(CategoryPostLogs, "post_id", "\n      where category_id = ?\n    ", self.category.id, {
+      local clauses = {
+        db.interpolate_query("category_id = ?", self.category.id)
+      }
+      do
+        local f = opts and opts.filter
+        if f then
+          local _exp_0 = opts and opts.filter
+          if "topics" == _exp_0 then
+            table.insert(clauses, db.interpolate_query("exists(select 1 from " .. tostring(db.escape_identifier(Posts:table_name())) .. " as posts where posts.id = post_id and posts.post_number = 1 and posts.depth = 1)", self.category.id))
+          elseif "replies" == _exp_0 then
+            table.insert(clauses, db.interpolate_query("not exists(select 1 from " .. tostring(db.escape_identifier(Posts:table_name())) .. " as posts where posts.id = post_id and posts.post_number = 1 and posts.depth = 1)", self.category.id))
+          else
+            error("unknown filter: " .. tostring(f))
+          end
+        end
+      end
+      local query = "where " .. tostring(table.concat(clauses, " and "))
+      self.pager = OrderedPaginator(CategoryPostLogs, "post_id", query, {
         per_page = opts and opts.per_page or limits.TOPICS_PER_PAGE,
         order = "desc",
         prepare_results = function(logs)
@@ -121,7 +138,7 @@ do
       return true
     end,
     preload_post_log = function(self, posts)
-      local Posts, Topics
+      local Topics
       do
         local _obj_0 = require("community.models")
         Posts, Topics, Categories = _obj_0.Posts, _obj_0.Topics, _obj_0.Categories
@@ -193,7 +210,7 @@ do
     pending_posts = function(self)
       self:load_category()
       assert_error(self.category:allowed_to_moderate(self.current_user), "invalid category")
-      local PendingPosts, Topics, Posts
+      local PendingPosts, Topics
       do
         local _obj_0 = require("community.models")
         PendingPosts, Topics, Posts = _obj_0.PendingPosts, _obj_0.Topics, _obj_0.Posts

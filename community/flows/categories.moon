@@ -1,8 +1,7 @@
 import Flow from require "lapis.flow"
 
-
 import Users from require "models"
-import Categories, CategoryMembers, ActivityLogs from require "community.models"
+import Categories, Posts, CategoryMembers, ActivityLogs from require "community.models"
 
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
@@ -63,9 +62,24 @@ class CategoriesFlow extends Flow
     import CategoryPostLogs from require "community.models"
     import OrderedPaginator from require "lapis.db.pagination"
 
-    @pager = OrderedPaginator CategoryPostLogs, "post_id", "
-      where category_id = ?
-    ", @category.id, {
+    clauses = {
+      db.interpolate_query "category_id = ?", @category.id
+    }
+
+    if f = opts and opts.filter
+      switch opts and opts.filter
+        when "topics"
+          table.insert clauses,
+            db.interpolate_query "exists(select 1 from #{db.escape_identifier Posts\table_name!} as posts where posts.id = post_id and posts.post_number = 1 and posts.depth = 1)", @category.id
+        when "replies"
+          table.insert clauses,
+            db.interpolate_query "not exists(select 1 from #{db.escape_identifier Posts\table_name!} as posts where posts.id = post_id and posts.post_number = 1 and posts.depth = 1)", @category.id
+        else
+          error "unknown filter: #{f}"
+
+    query = "where #{table.concat clauses, " and "}"
+
+    @pager = OrderedPaginator CategoryPostLogs, "post_id", query, {
       per_page: opts and opts.per_page or limits.TOPICS_PER_PAGE
       order: "desc"
       prepare_results: (logs) ->

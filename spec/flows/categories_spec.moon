@@ -7,8 +7,6 @@ factory = require "spec.factory"
 import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
 
-import filter_bans from require "spec.helpers"
-
 import types from require "tableshape"
 
 class CategoryApp extends TestApp
@@ -338,14 +336,14 @@ describe "categories", ->
         assert.same 1, #category\get_tags!
 
     describe "recent posts", ->
-      get_recent_posts = ->
+      get_recent_posts = (opts) ->
         in_request {
           get: {
             category_id: category.id
           }
         }, =>
           @current_user = current_user
-          @flow("categories")\recent_posts!
+          @flow("categories")\recent_posts opts
           @posts, @pager
 
       it "gets empty recent posts", ->
@@ -361,6 +359,10 @@ describe "categories", ->
           CategoryPostLogs\create category_id: category.id, post_id: post.id
           post
 
+        other_post = factory.Posts!
+        CategoryPostLogs\create category_id: category.id + 10, post_id: other_post.id
+
+
         recent_posts = get_recent_posts!
         assert types.shape({
           types.shape {
@@ -372,6 +374,36 @@ describe "categories", ->
           }, open: true
         }) recent_posts
 
+      it "gets posts filtered", ->
+        category\update directory: true
+
+        -- topic post
+        topic_post = factory.Posts!
+        CategoryPostLogs\create category_id: category.id, post_id: topic_post.id
+
+        -- reply post
+        reply_post = factory.Posts topic_id: topic_post.topic_id
+        CategoryPostLogs\create category_id: category.id, post_id: reply_post.id
+
+        recent_topic_posts = get_recent_posts {
+          filter: "topics"
+        }
+
+        assert types.shape({
+          types.shape {
+            id: topic_post.id
+          }, open: true
+        }) recent_topic_posts
+
+        recent_replies = get_recent_posts {
+          filter: "replies"
+        }
+
+        assert types.shape({
+          types.shape {
+            id: reply_post.id
+          }, open: true
+        }) recent_replies
 
   describe "show members", ->
     local category
