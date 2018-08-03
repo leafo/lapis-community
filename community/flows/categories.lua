@@ -105,9 +105,9 @@ do
         if f then
           local _exp_0 = opts and opts.filter
           if "topics" == _exp_0 then
-            table.insert(clauses, db.interpolate_query("exists(select 1 from " .. tostring(db.escape_identifier(Posts:table_name())) .. " as posts where posts.id = post_id and posts.post_number = 1 and posts.depth = 1)", self.category.id))
+            table.insert(clauses, "posts.post_number = 1 and posts.depth = 1")
           elseif "replies" == _exp_0 then
-            table.insert(clauses, db.interpolate_query("not exists(select 1 from " .. tostring(db.escape_identifier(Posts:table_name())) .. " as posts where posts.id = post_id and posts.post_number = 1 and posts.depth = 1)", self.category.id))
+            table.insert(clauses, "(posts.post_number > 1 or posts.depth > 1)")
           else
             error("unknown filter: " .. tostring(f))
           end
@@ -116,8 +116,9 @@ do
       if opts and opts.after_date then
         table.insert(clauses, db.interpolate_query("(select created_at from " .. tostring(db.escape_identifier(Posts:table_name())) .. " as posts where posts.id = post_id) > ?", opts.after_date))
       end
-      local query = "where " .. tostring(table.concat(clauses, " and "))
+      local query = "inner join " .. tostring(db.escape_identifier(Posts:table_name())) .. " as posts on posts.id = post_id\n      where " .. tostring(table.concat(clauses, " and "))
       self.pager = OrderedPaginator(CategoryPostLogs, "post_id", query, {
+        fields = "post_id",
         per_page = opts and opts.per_page or limits.TOPICS_PER_PAGE,
         order = "desc",
         prepare_results = function(logs)
@@ -128,8 +129,10 @@ do
             local _len_0 = 1
             for _index_0 = 1, #logs do
               local log = logs[_index_0]
-              _accum_0[_len_0] = log:get_post()
-              _len_0 = _len_0 + 1
+              if log:get_post() then
+                _accum_0[_len_0] = log:get_post()
+                _len_0 = _len_0 + 1
+              end
             end
             posts = _accum_0
           end

@@ -69,11 +69,9 @@ class CategoriesFlow extends Flow
     if f = opts and opts.filter
       switch opts and opts.filter
         when "topics"
-          table.insert clauses,
-            db.interpolate_query "exists(select 1 from #{db.escape_identifier Posts\table_name!} as posts where posts.id = post_id and posts.post_number = 1 and posts.depth = 1)", @category.id
+          table.insert clauses, "posts.post_number = 1 and posts.depth = 1"
         when "replies"
-          table.insert clauses,
-            db.interpolate_query "not exists(select 1 from #{db.escape_identifier Posts\table_name!} as posts where posts.id = post_id and posts.post_number = 1 and posts.depth = 1)", @category.id
+          table.insert clauses, "(posts.post_number > 1 or posts.depth > 1)"
         else
           error "unknown filter: #{f}"
 
@@ -81,14 +79,17 @@ class CategoriesFlow extends Flow
       table.insert clauses,
         db.interpolate_query "(select created_at from #{db.escape_identifier Posts\table_name!} as posts where posts.id = post_id) > ?", opts.after_date
 
-    query = "where #{table.concat clauses, " and "}"
+    query = "inner join #{db.escape_identifier Posts\table_name!} as posts on posts.id = post_id
+      where #{table.concat clauses, " and "}"
 
     @pager = OrderedPaginator CategoryPostLogs, "post_id", query, {
+      -- fields: "row_to_json(posts) as post"
+      fields: "post_id"
       per_page: opts and opts.per_page or limits.TOPICS_PER_PAGE
       order: "desc"
       prepare_results: (logs) ->
         preload logs, "post"
-        posts = [log\get_post! for log in *logs]
+        posts = [log\get_post! for log in *logs when log\get_post!]
         @preload_post_log posts
         posts
     }
