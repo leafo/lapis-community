@@ -140,7 +140,7 @@ do
           return posts
         end
       })
-      self.posts = self.pager:get_page(opts and opts.page)
+      self.posts, self.next_page_id = self.pager:get_page(opts and opts.page)
       return true
     end,
     preload_post_log = function(self, posts)

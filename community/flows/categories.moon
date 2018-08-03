@@ -94,7 +94,7 @@ class CategoriesFlow extends Flow
         posts
     }
 
-    @posts = @pager\get_page opts and opts.page
+    @posts, @next_page_id = @pager\get_page opts and opts.page
     true
 
   preload_post_log: (posts) =>
