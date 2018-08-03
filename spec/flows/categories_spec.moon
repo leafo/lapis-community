@@ -405,6 +405,26 @@ describe "categories", ->
           }, open: true
         }) recent_replies
 
+      it "gets posts after date", ->
+        category\update directory: true
+
+        before_post = factory.Posts created_at: db.raw "now() at time zone 'utc' - '10 days'::interval"
+        CategoryPostLogs\create category_id: category.id, post_id: before_post.id
+
+        after_post = factory.Posts created_at: db.raw "now() at time zone 'utc' - '3 days'::interval"
+        CategoryPostLogs\create category_id: category.id, post_id: after_post.id
+
+        recent_posts = get_recent_posts {
+          after_date: db.raw "now() at time zone 'utc' - '5 days'::interval"
+        }
+
+        assert types.shape({
+          types.shape {
+            id: after_post.id
+          }, open: true
+        }) recent_posts
+
+
   describe "show members", ->
     local category
 

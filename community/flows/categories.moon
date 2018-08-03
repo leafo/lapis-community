@@ -77,6 +77,10 @@ class CategoriesFlow extends Flow
         else
           error "unknown filter: #{f}"
 
+    if opts and opts.after_date
+      table.insert clauses,
+        db.interpolate_query "(select created_at from #{db.escape_identifier Posts\table_name!} as posts where posts.id = post_id) > ?", opts.after_date
+
     query = "where #{table.concat clauses, " and "}"
 
     @pager = OrderedPaginator CategoryPostLogs, "post_id", query, {

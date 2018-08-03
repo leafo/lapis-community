@@ -113,6 +113,9 @@ do
           end
         end
       end
+      if opts and opts.after_date then
+        table.insert(clauses, db.interpolate_query("(select created_at from " .. tostring(db.escape_identifier(Posts:table_name())) .. " as posts where posts.id = post_id) > ?", opts.after_date))
+      end
       local query = "where " .. tostring(table.concat(clauses, " and "))
       self.pager = OrderedPaginator(CategoryPostLogs, "post_id", query, {
         per_page = opts and opts.per_page or limits.TOPICS_PER_PAGE,
