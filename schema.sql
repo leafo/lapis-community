@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 10.3
--- Dumped by pg_dump version 10.3
+-- Dumped from database version 10.4
+-- Dumped by pg_dump version 10.4
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -550,6 +550,21 @@ ALTER SEQUENCE public.community_posts_id_seq OWNED BY public.community_posts.id;
 
 
 --
+-- Name: community_posts_search; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.community_posts_search (
+    post_id integer NOT NULL,
+    topic_id integer NOT NULL,
+    category_id integer,
+    posted_at timestamp without time zone NOT NULL,
+    words tsvector
+);
+
+
+ALTER TABLE public.community_posts_search OWNER TO postgres;
+
+--
 -- Name: community_subscriptions; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -966,6 +981,14 @@ ALTER TABLE ONLY public.community_posts
 
 
 --
+-- Name: community_posts_search community_posts_search_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.community_posts_search
+    ADD CONSTRAINT community_posts_search_pkey PRIMARY KEY (post_id);
+
+
+--
 -- Name: community_subscriptions community_subscriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1192,6 +1215,20 @@ CREATE INDEX community_posts_parent_post_id_status_post_number_idx ON public.com
 
 
 --
+-- Name: community_posts_search_post_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX community_posts_search_post_id_idx ON public.community_posts_search USING btree (post_id);
+
+
+--
+-- Name: community_posts_search_words_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX community_posts_search_words_idx ON public.community_posts_search USING gin (words);
+
+
+--
 -- Name: community_posts_topic_id_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -1255,8 +1292,8 @@ CREATE UNIQUE INDEX users_lower_username_idx ON public.users USING btree (lower(
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 10.3
--- Dumped by pg_dump version 10.3
+-- Dumped from database version 10.4
+-- Dumped by pg_dump version 10.4
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1297,6 +1334,7 @@ community_21
 community_22
 community_23
 community_24
+community_25
 \.
 
 
