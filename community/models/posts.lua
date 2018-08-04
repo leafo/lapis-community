@@ -564,7 +564,7 @@ do
   self.statuses = enum({
     default = 1,
     archived = 2,
-    spam = 2
+    spam = 3
   })
   self.body_formats = enum({
     html = 1,

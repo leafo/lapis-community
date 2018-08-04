@@ -60,7 +60,7 @@ class Posts extends Model
   @statuses: enum {
     default: 1
     archived: 2
-    spam: 2
+    spam: 3
   }
 
   @body_formats: enum {

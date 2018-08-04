@@ -57,7 +57,7 @@ class Topics extends Model
   @statuses: enum {
     default: 1
     archived: 2
-    spam: 2
+    spam: 3
   }
 
   @create: (opts={}) =>

@@ -685,7 +685,7 @@ do
   self.statuses = enum({
     default = 1,
     archived = 2,
-    spam = 2
+    spam = 3
   })
   self.create = function(self, opts)
     if opts == nil then
