@@ -58,6 +58,7 @@ class Topics extends Model
     default: 1
     archived: 2
     spam: 3
+    hidden: 4
   }
 
   @create: (opts={}) =>
@@ -136,7 +137,7 @@ class Topics extends Model
     return false unless user
     return false if @deleted
     return false if @locked
-    return false unless @is_default!
+    return false unless @is_default! or @is_hidden!
 
     @allowed_to_view user, req
 
@@ -426,6 +427,9 @@ class Topics extends Model
   is_archived: =>
     @status == @@statuses.archived or (@get_category! and @get_category!.archived)
 
+  is_hidden: =>
+    @status == @@statuses.hidden
+
   is_protected: =>
     @protected
 
@@ -447,9 +451,12 @@ class Topics extends Model
 
   archive: =>
     @refresh "status" unless @status
-    return nil unless @status == @@statuses.default
-    @set_status "archived"
-    true
+    switch @status
+      when @@statuses.default, @@statuses.hidden
+        @set_status "archived"
+        true
+      else
+        nil, "can't archive from status: #{@@statuses\to_name @status}"
 
   get_tags: =>
     return unless @tags
@@ -457,7 +464,6 @@ class Topics extends Model
     return @tags unless category
     tags_by_slug = {t.slug, t for t in *category\get_tags!}
     [tags_by_slug[t] for t in *@tags]
-
 
   get_bookmark: memoize1 (user) =>
     import Bookmarks from require "community.models"

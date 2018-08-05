@@ -28,7 +28,7 @@ do
       if self.locked then
         return false
       end
-      if not (self:is_default()) then
+      if not (self:is_default() or self:is_hidden()) then
         return false
       end
       return self:allowed_to_view(user, req)
@@ -405,6 +405,9 @@ do
     is_archived = function(self)
       return self.status == self.__class.statuses.archived or (self:get_category() and self:get_category().archived)
     end,
+    is_hidden = function(self)
+      return self.status == self.__class.statuses.hidden
+    end,
     is_protected = function(self)
       return self.protected
     end,
@@ -431,11 +434,13 @@ do
       if not (self.status) then
         self:refresh("status")
       end
-      if not (self.status == self.__class.statuses.default) then
-        return nil
+      local _exp_0 = self.status
+      if self.__class.statuses.default == _exp_0 or self.__class.statuses.hidden == _exp_0 then
+        self:set_status("archived")
+        return true
+      else
+        return nil, "can't archive from status: " .. tostring(self.__class.statuses:to_name(self.status))
       end
-      self:set_status("archived")
-      return true
     end,
     get_tags = function(self)
       if not (self.tags) then
@@ -685,7 +690,8 @@ do
   self.statuses = enum({
     default = 1,
     archived = 2,
-    spam = 3
+    spam = 3,
+    hidden = 4
   })
   self.create = function(self, opts)
     if opts == nil then
