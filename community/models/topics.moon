@@ -449,6 +449,16 @@ class Topics extends Model
     if category and category.last_topic_id == @id
       category\refresh_last_topic!
 
+  hide: =>
+    @refresh "status" unless @status
+
+    switch @status
+      when @@statuses.default
+        @set_status "hidden"
+        true
+      else
+        nil, "can't hide from status: #{@@statuses\to_name @status}"
+
   archive: =>
     @refresh "status" unless @status
     switch @status

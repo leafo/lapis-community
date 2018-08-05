@@ -178,6 +178,28 @@ class TopicsFlow extends Flow
     @write_moderation_log "topic.unstick"
     true
 
+  hide_topic: =>
+    @load_topic_for_moderation!
+    assert_error not @topic\is_hidden!, "topic is already hidden"
+    assert_error not @topic\is_archived!, "can't hide archived topic"
+
+    trim_filter @params
+    assert_valid @params, {
+      {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
+    }
+
+    assert_error @topic\hide!
+    @write_moderation_log "topic.hide", @params.reason
+    true
+
+  unhide_topic: =>
+    @load_topic_for_moderation!
+    assert_error @topic\is_hidden!, "topic is not hidden"
+
+    @topic\set_status "default"
+    @write_moderation_log "topic.unhide"
+    true
+
   archive_topic: =>
     @load_topic_for_moderation!
     assert_error not @topic\is_archived!, "topic is already archived"

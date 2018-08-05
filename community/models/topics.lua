@@ -430,6 +430,18 @@ do
         return category:refresh_last_topic()
       end
     end,
+    hide = function(self)
+      if not (self.status) then
+        self:refresh("status")
+      end
+      local _exp_0 = self.status
+      if self.__class.statuses.default == _exp_0 then
+        self:set_status("hidden")
+        return true
+      else
+        return nil, "can't hide from status: " .. tostring(self.__class.statuses:to_name(self.status))
+      end
+    end,
     archive = function(self)
       if not (self.status) then
         self:refresh("status")

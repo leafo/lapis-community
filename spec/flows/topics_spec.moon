@@ -1,6 +1,8 @@
 import use_test_env from require "lapis.spec"
 import in_request from require "spec.flow_helpers"
 
+import types from require "tableshape"
+
 factory = require "spec.factory"
 
 describe "topics", ->
@@ -119,6 +121,50 @@ describe "topics", ->
       assert.same topic.category_id, log.category_id
 
       assert.same 0, #ModerationLogObjects\select!
+
+  describe "hide", ->
+    it "hides topic", ->
+      assert method "hide_topic", {
+        topic_id: topic.id
+        reason: " HIDDEN Topic "
+      }
+
+      topic\refresh!
+      assert.true topic\is_hidden!
+      assert.false topic\is_archived!
+      assert.false topic\is_default!
+
+      assert types.shape({
+        types.shape {
+          user_id: current_user.id
+          object_type: ModerationLogs.object_types.topic
+          object_id: topic.id
+          action: "topic.hide"
+          reason: "HIDDEN Topic"
+          category_id: topic.category_id
+        }, open: true
+      }) ModerationLogs\select!
+
+    it "unhides topic", ->
+      topic\hide!
+
+      assert method "unhide_topic", {
+        topic_id: topic.id
+      }
+
+      topic\refresh!
+      assert.false topic\is_hidden!
+
+      assert types.shape({
+        types.shape {
+          user_id: current_user.id
+          object_type: ModerationLogs.object_types.topic
+          object_id: topic.id
+          action: "topic.unhide"
+          category_id: topic.category_id
+        }, open: true
+      }) ModerationLogs\select!
+
 
   describe "archive", ->
     it "archives topic", ->

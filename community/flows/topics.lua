@@ -205,6 +205,29 @@ do
       self:write_moderation_log("topic.unstick")
       return true
     end,
+    hide_topic = function(self)
+      self:load_topic_for_moderation()
+      assert_error(not self.topic:is_hidden(), "topic is already hidden")
+      assert_error(not self.topic:is_archived(), "can't hide archived topic")
+      trim_filter(self.params)
+      assert_valid(self.params, {
+        {
+          "reason",
+          optional = true,
+          max_length = limits.MAX_BODY_LEN
+        }
+      })
+      assert_error(self.topic:hide())
+      self:write_moderation_log("topic.hide", self.params.reason)
+      return true
+    end,
+    unhide_topic = function(self)
+      self:load_topic_for_moderation()
+      assert_error(self.topic:is_hidden(), "topic is not hidden")
+      self.topic:set_status("default")
+      self:write_moderation_log("topic.unhide")
+      return true
+    end,
     archive_topic = function(self)
       self:load_topic_for_moderation()
       assert_error(not self.topic:is_archived(), "topic is already archived")
