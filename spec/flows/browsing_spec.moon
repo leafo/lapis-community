@@ -1,8 +1,7 @@
 import use_test_env from require "lapis.spec"
+import in_request from require "spec.flow_helpers"
 
 factory = require "spec.factory"
-
-import mock_request from require "lapis.spec.request"
 
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
@@ -12,6 +11,8 @@ import TestApp from require "spec.helpers"
 import filter_bans from require "spec.helpers"
 
 import Users from require "models"
+
+import types from require "tableshape"
 
 class BrowsingApp extends TestApp
   @before_filter =>
@@ -58,23 +59,6 @@ class BrowsingApp extends TestApp
       posts: @posts
       next_page: @next_page
       prev_page: @prev_page
-    }
-
-  "/category-topics": capture_errors_json =>
-    @flow\category_topics!
-    json: {
-      success: true
-      topics: @topics
-      next_page: @next_page
-      prev_page: @prev_page
-    }
-
-
-  "/sticky-category-topics": capture_errors_json =>
-    @flow\sticky_category_topics!
-    json: {
-      success: true
-      sticky_topics: @sticky_topics
     }
 
 describe "browsing flow", ->
@@ -249,7 +233,7 @@ describe "browsing flow", ->
           assert.same 0, #res.topics
           assert.same 0, UserCategoryLastSeens\count!
 
-        it "gets some topics #ddd", ->
+        it "gets some topics", ->
           local category, topics
           for i=1,2
             category = factory.Categories!
@@ -272,18 +256,39 @@ describe "browsing flow", ->
 
 
       describe "category topics", ->
+        category_topics = (user, params) ->
+          params or= {}
+          unless params.category_id
+            params.category_id = factory.Categories!.id
+
+          res = in_request { get: params }, =>
+            @current_user = user
+            @flow("browsing")\category_topics!
+            { @topics, @next_page, @prev_page }
+
+          unpack res
+
+        sticky_category_topics = (user, params) ->
+          params or= {}
+          unless params.category_id
+            params.category_id = factory.Categories!.id
+
+          in_request { get: params }, =>
+            @current_user = user
+            @flow("browsing")\sticky_category_topics!
+            @sticky_topics
+
         it "gets empty category", ->
-          category = factory.Categories!
-          res = BrowsingApp\get current_user, "/category-topics", category_id: category.id
-          assert.truthy res.success
-          assert.same 0, #res.topics
+          topics, next_page, prev_page = category_topics!
+
+          assert.same {}, topics
+          assert.same nil, next_page
+          assert.same nil, prev_page
           assert.same 0, UserCategoryLastSeens\count!
 
         it "gets empty sticky topics", ->
-          category = factory.Categories!
-          res = BrowsingApp\get current_user, "/sticky-category-topics", category_id: category.id
-          assert.truthy res.success
-          assert.same 0, #res.sticky_topics
+          topics = sticky_category_topics!
+          assert.same {}, topics
 
         it "gets some topics", ->
           category = factory.Categories!
@@ -292,12 +297,13 @@ describe "browsing flow", ->
             with topic = factory.Topics category_id: category.id
               category\increment_from_topic topic
 
-          res = BrowsingApp\get current_user, "/category-topics", category_id: category.id
+          result_topics, next_page, prev_page = category_topics current_user, {
+            category_id: category.id
+          }
 
-          assert.truthy res.success
-          assert.same 4, #res.topics
-          assert.falsy res.next_page
-          assert.falsy res.prev_page
+          assert.same 4, #result_topics
+          assert.nil next_page
+          assert.nil prev_page
 
           last_seen, other = unpack UserCategoryLastSeens\select!
           assert.nil other
@@ -312,7 +318,6 @@ describe "browsing flow", ->
             category_order: last_topic.category_order
           }, last_seen
 
-
         it "gets only sticky topics", ->
           category = factory.Categories!
 
@@ -322,10 +327,15 @@ describe "browsing flow", ->
 
           topics[1]\update sticky: true
 
-          res = BrowsingApp\get current_user, "/sticky-category-topics", category_id: category.id
-          assert.truthy res.success
-          assert.same 1, #res.sticky_topics
-          assert.same topics[1].id, res.sticky_topics[1].id
+          result_topics, next_page, prev_page = sticky_category_topics nil, {
+            category_id: category.id
+          }
+
+          assert types.shape({
+            types.shape {
+              id: topics[1].id
+            }, open: true
+          }) result_topics
 
         it "archived topics are exluded by default", ->
           category = factory.Categories!
@@ -335,14 +345,21 @@ describe "browsing flow", ->
 
           topics[1]\archive!
 
-          res = BrowsingApp\get current_user, "/category-topics", category_id: category.id
-          assert.same 3, #res.topics
-          ids = {t.id, true for t in *res.topics}
-          assert.same {
-            [topics[2].id]: true
-            [topics[3].id]: true
-            [topics[4].id]: true
-          }, ids
+          result_topics = category_topics current_user, {
+            category_id: category.id
+          }
+
+          assert types.shape({
+            types.shape {
+              id: topics[4].id
+            }, open: true
+            types.shape {
+              id: topics[3].id
+            }, open: true
+            types.shape {
+              id: topics[2].id
+            }, open: true
+          }) result_topics
 
         it "only shows archived topics", ->
           category = factory.Categories!
@@ -352,13 +369,16 @@ describe "browsing flow", ->
 
           topics[2]\archive!
 
-          res = BrowsingApp\get current_user, "/category-topics", {
+          result_topics = category_topics current_user, {
             category_id: category.id
             status: "archived"
           }
 
-          assert.same 1, #res.topics
-          assert.same topics[2].id, res.topics[1].id
+          assert types.shape({
+            types.shape {
+              id: topics[2].id
+            }, open: true
+          }) result_topics
 
         it "sets pagination for category", ->
           category = factory.Categories!
@@ -368,22 +388,22 @@ describe "browsing flow", ->
             topic = factory.Topics category_id: category.id
             category\increment_from_topic topic
 
-          res = BrowsingApp\get current_user, "/category-topics", category_id: category.id
-
-          assert.truthy res.success
-          assert.same 20, #res.topics
-          assert.same {before: 2}, res.next_page
-          assert.same nil, res.prev_page
-
-          res = BrowsingApp\get current_user, "/category-topics", {
+          result_topics, next_page, prev_page = category_topics current_user, {
             category_id: category.id
-            before: res.next_page.before
           }
 
-          assert.truthy res.success
-          assert.same 1, #res.topics
-          assert.same nil, res.next_page
-          assert.same {after: 1}, res.prev_page
+          assert.same 20, #result_topics
+          assert.same { before: 2 }, next_page
+          assert.same nil, prev_page
+
+          result_page_2, next_page, prev_page = category_topics current_user, {
+            category_id: category.id
+            before: next_page.before
+          }
+
+          assert.same 1, #result_page_2
+          assert.same nil, next_page
+          assert.same {after: 1}, prev_page
 
       describe "post", ->
         it "gets post with no nested content", ->
