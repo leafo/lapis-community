@@ -49,6 +49,10 @@ do
         return "locked this topic"
       elseif "topic.unlock" == _exp_0 then
         return "unlocked this topic"
+      elseif "topic.hide" == _exp_0 then
+        return "unlisted this topic"
+      elseif "topic.unhide" == _exp_0 then
+        return "relisted this topic"
       end
     end,
     get_action_target = function(self)

@@ -111,6 +111,10 @@ class ModerationLogs extends Model
         "locked this topic"
       when "topic.unlock"
         "unlocked this topic"
+      when "topic.hide"
+        "unlisted this topic"
+      when "topic.unhide"
+        "relisted this topic"
 
   get_action_target: =>
     @get_target_category!
