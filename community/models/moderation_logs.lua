@@ -137,7 +137,9 @@ do
     ["topic.archive"] = true,
     ["topic.unarchive"] = true,
     ["topic.lock"] = true,
-    ["topic.unlock"] = true
+    ["topic.unlock"] = true,
+    ["topic.hide"] = true,
+    ["topic.unhide"] = true
   }
   self.create = function(self, opts)
     if opts == nil then

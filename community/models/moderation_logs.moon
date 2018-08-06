@@ -45,6 +45,8 @@ class ModerationLogs extends Model
     "topic.unarchive": true
     "topic.lock": true
     "topic.unlock": true
+    "topic.hide": true
+    "topic.unhide": true
   }
 
   @create: (opts={}) =>
