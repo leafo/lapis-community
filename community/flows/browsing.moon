@@ -295,7 +295,7 @@ class BrowsingFlow extends Flow
     assert_error @allowed_to_view(@category), "not allowed to view"
 
     assert_valid @params, {
-      {"status", optional: true, one_of: {"archived"}}
+      {"status", optional: true, one_of: {"archived", "hidden"}}
     }
 
     @topics_status = opts.status or @params.status or "default"
