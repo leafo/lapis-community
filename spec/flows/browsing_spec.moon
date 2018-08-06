@@ -337,13 +337,14 @@ describe "browsing flow", ->
             }, open: true
           }) result_topics
 
-        it "archived topics are exluded by default", ->
+        it "archived & hidden topics are exluded by default", ->
           category = factory.Categories!
           topics = for i=1,4
             with topic = factory.Topics category_id: category.id
               category\increment_from_topic topic
 
           topics[1]\archive!
+          topics[3]\hide!
 
           result_topics = category_topics current_user, {
             category_id: category.id
@@ -354,12 +355,30 @@ describe "browsing flow", ->
               id: topics[4].id
             }, open: true
             types.shape {
-              id: topics[3].id
-            }, open: true
-            types.shape {
               id: topics[2].id
             }, open: true
           }) result_topics
+
+        it "shows only hidden topics", ->
+          category = factory.Categories!
+          topics = for i=1,4
+            with topic = factory.Topics category_id: category.id
+              category\increment_from_topic topic
+
+          topics[2]\archive!
+          topics[3]\hide!
+
+          result_topics = category_topics current_user, {
+            category_id: category.id
+            status: "hidden"
+          }
+
+          assert types.shape({
+            types.shape {
+              id: topics[3].id
+            }, open: true
+          }) result_topics
+
 
         it "only shows archived topics", ->
           category = factory.Categories!
@@ -368,6 +387,7 @@ describe "browsing flow", ->
               category\increment_from_topic topic
 
           topics[2]\archive!
+          topics[3]\hide!
 
           result_topics = category_topics current_user, {
             category_id: category.id

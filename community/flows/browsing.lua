@@ -453,7 +453,8 @@ do
           "status",
           optional = true,
           one_of = {
-            "archived"
+            "archived",
+            "hidden"
           }
         }
       })
