@@ -119,18 +119,28 @@ do
           category_order = Topics:update_category_order_sql(self.category_id)
         end
       end
+      local posts_count
+      if not is_moderation_log then
+        posts_count = db.raw("posts_count + 1")
+      end
+      local root_posts_count
+      if post.depth == 1 then
+        root_posts_count = db.raw("root_posts_count + 1")
+      end
       self:update({
-        posts_count = not is_moderation_log and db.raw("posts_count + 1") or nil,
-        root_posts_count = (function()
-          if post.depth == 1 then
-            return db.raw("root_posts_count + 1")
-          end
-        end)(),
+        posts_count = posts_count,
+        root_posts_count = root_posts_count,
         last_post_id = not is_moderation_log and post.id or nil,
         category_order = category_order
       }, {
         timestamp = false
       })
+      if posts_count then
+        self:on_increment_callback("posts_count", 1)
+      end
+      if root_posts_count then
+        self:on_increment_callback("root_posts_count", 1)
+      end
       do
         local category = self:get_category()
         if category then
@@ -631,6 +641,18 @@ do
         rank_adjustment = amount,
         category_order = self:calculate_score_category_order()
       })
+    end,
+    increment_counter = function(self, field, amount)
+      local res = self:update({
+        [field] = db.raw(tostring(db.escape_identifier(field)) .. " + 1")
+      }, {
+        timestamp = false
+      })
+      self:on_increment_callback(field, amount)
+      return res
+    end,
+    on_increment_callback = function(self, field, amount)
+      return print(field, amount)
     end
   }
   _base_0.__index = _base_0

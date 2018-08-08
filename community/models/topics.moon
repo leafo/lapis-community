@@ -195,13 +195,27 @@ class Topics extends Model
       if category and category\order_by_date!
         Topics\update_category_order_sql @category_id
 
+    posts_count = if not is_moderation_log
+      db.raw "posts_count + 1"
+
+    root_posts_count = if post.depth == 1
+      -- root_posts_count is used for pagination, so it should include
+      -- moderation events
+      db.raw "root_posts_count + 1"
+
     @update {
-      posts_count: not is_moderation_log and db.raw("posts_count + 1") or nil
-      root_posts_count: if post.depth == 1
-        db.raw "root_posts_count + 1"
+      :posts_count
+      :root_posts_count
       last_post_id: not is_moderation_log and post.id or nil
       :category_order
     }, timestamp: false
+
+
+    if posts_count
+      @on_increment_callback "posts_count", 1
+
+    if root_posts_count
+      @on_increment_callback "root_posts_count", 1
 
     if category = @get_category!
       category\increment_from_post post
@@ -610,4 +624,17 @@ class Topics extends Model
       rank_adjustment: amount
       category_order: @calculate_score_category_order!
     }
+
+  increment_counter: (field, amount) =>
+    res = @update {
+      [field]: db.raw "#{db.escape_identifier field} + 1"
+    }, timestamp: false
+
+    @on_increment_callback field, amount
+
+    res
+
+  on_increment_callback: (field, amount) =>
+    print field, amount
+    -- for subclasses
 

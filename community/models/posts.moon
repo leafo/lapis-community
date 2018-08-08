@@ -231,9 +231,7 @@ class Posts extends Model
             if category.last_topic_id = topic.id
               category\refresh_last_topic!
 
-          topic\update {
-            deleted_posts_count: db.raw "deleted_posts_count + 1"
-          }, timestamp: false
+          topic\increment_counter "deleted_posts_count", 1
 
       return true
 
@@ -269,11 +267,19 @@ class Posts extends Model
 
       -- it was already soft deleted, no need to update the counts
       unless @deleted
-        topic\update {
-          posts_count: not @is_moderation_event! and db.raw("posts_count - 1") or nil
-          root_posts_count: if @depth == 1
-            db.raw "root_posts_count - 1"
-        }, timestamp: false
+        posts_count = unless @is_moderation_event!
+          db.raw "posts_count - 1"
+
+        root_posts_count = if @depth == 1
+          db.raw "root_posts_count - 1"
+
+        topic\update { :posts_count, :root_posts_count }, timestamp: false
+
+        if root_posts_count
+          topic\on_increment_callback "root_posts_count", -1
+
+        if posts_count
+          topic\on_increment_callback "posts_count", -1
 
     db.delete ModerationLogs\table_name!, {
       object_type: ModerationLogs.object_types.post_report
