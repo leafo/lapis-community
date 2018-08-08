@@ -635,6 +635,5 @@ class Topics extends Model
     res
 
   on_increment_callback: (field, amount) =>
-    print field, amount
     -- for subclasses
 

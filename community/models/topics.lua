@@ -651,9 +651,7 @@ do
       self:on_increment_callback(field, amount)
       return res
     end,
-    on_increment_callback = function(self, field, amount)
-      return print(field, amount)
-    end
+    on_increment_callback = function(self, field, amount) end
   }
   _base_0.__index = _base_0
   setmetatable(_base_0, _parent_0.__base)
