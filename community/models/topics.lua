@@ -373,7 +373,7 @@ do
       Posts = require("community.models").Posts
       local cond
       if parent_post then
-        assert(parent_post.topic_id == self.id, "expecting")
+        assert(parent_post.topic_id == self.id, "parent post is not in the correct topic")
         cond = {
           parent_post_id = parent_post.id
         }

@@ -394,7 +394,7 @@ class Topics extends Model
   renumber_posts: (parent_post, field="post_number") =>
     import Posts from require "community.models"
     cond = if parent_post
-      assert parent_post.topic_id == @id, "expecting"
+      assert parent_post.topic_id == @id, "parent post is not in the correct topic"
       {
         parent_post_id: parent_post.id
       }
@@ -460,6 +460,7 @@ class Topics extends Model
       CategoryPostLogs\clear_posts_for_topic @
 
     category = @get_category!
+
     if category and category.last_topic_id == @id
       category\refresh_last_topic!
 

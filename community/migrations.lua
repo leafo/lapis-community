@@ -1144,5 +1144,10 @@ return {
     create_index(T("posts_search"), "post_id")
     local idx = db.escape_identifier(schema.gen_index_name(T("posts_search"), "words"))
     return db.query("create index " .. tostring(idx) .. " on " .. tostring(T("posts_search")) .. " using gin(words)")
+  end,
+  [26] = function(self)
+    return add_column(T("posts"), "pin_position", integer({
+      null = true
+    }))
   end
 }

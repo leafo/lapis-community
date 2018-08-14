@@ -584,6 +584,10 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
     create_index T"posts_search", "post_id"
     idx = db.escape_identifier schema.gen_index_name T"posts_search", "words"
     db.query "create index #{idx} on #{T"posts_search"} using gin(words)"
+
+  [26]: =>
+    add_column T"posts", "pin_position", integer null: true
+
 }
 
 

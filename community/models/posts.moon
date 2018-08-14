@@ -450,6 +450,26 @@ class Posts extends Model
       if search
         search\delete!
 
+  pin_to: (position) =>
+    assert position, "missing position to pin to"
+    -- make space for the post
+    db.update @@table_name!, {
+      post_number: db.raw "post_number + 1"
+    }, "topic_id = ? and depth = ? and post_number >= ?",
+      @topic_id, @depth, position
+
+    @update {
+      post_number: position
+      pin_position: position
+    }
+
+    topic = @get_topic!
+    -- fill the gaps if any
+    topic\renumber_posts @get_parent_post!
+
+  is_pinned: =>
+    not not @pin_position
+
   -- returns nil by default so you can override and do what you want
   -- with it
   should_index_for_search: =>
