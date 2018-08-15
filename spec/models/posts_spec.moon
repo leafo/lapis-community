@@ -572,3 +572,47 @@ describe "models.posts", ->
 
     assert.same 2, post\vote_score!
 
+  describe "pinning #ddd", ->
+    it "pins post", ->
+      topic = factory.Topics!
+      posts = for i=1,4
+        factory.Posts topic_id: topic.id
+
+      -- move to second slot
+      posts[4]\pin_to 2
+
+      assert.same {
+        {posts[1].id, 1}
+        {posts[4].id, 2}
+        {posts[2].id, 3}
+        {posts[3].id, 4}
+      }, [{p.id, p.post_number} for p in *Posts\select "order by post_number"]
+
+      posts[4]\refresh!
+      assert.same 2, posts[4].pin_position
+
+      -- move to top
+      posts[2]\pin_to 1
+
+      assert.same {
+        {posts[2].id, 1}
+        {posts[1].id, 2}
+        {posts[4].id, 3}
+        {posts[3].id, 4}
+      }, [{p.id, p.post_number} for p in *Posts\select "order by post_number"]
+
+      posts[2]\refresh!
+      assert.same 1, posts[2].pin_position
+
+      -- repins further down
+      posts[2]\pin_to 2
+
+      assert.same {
+        {posts[1].id, 1}
+        {posts[2].id, 2}
+        {posts[4].id, 3}
+        {posts[3].id, 4}
+      }, [{p.id, p.post_number} for p in *Posts\select "order by post_number"]
+
+
+
