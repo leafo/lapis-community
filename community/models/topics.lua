@@ -365,6 +365,25 @@ do
       Posts = require("community.models").Posts
       return unpack(Posts:select("\n      where topic_id = ? and depth = 1 order by post_number desc limit 1\n    ", self.id))
     end,
+    reposition_post = function(self, post, position)
+      assert(post.topic_id == self.id, "post is not in topic")
+      assert(position, "missing position")
+      local Posts
+      Posts = require("community.models").Posts
+      local tbl = db.escape_identifier(Posts:table_name())
+      local cond = {
+        parent_post_id = post.parent_post_id or db.NULL,
+        topic_id = self.id,
+        depth = post.depth
+      }
+      local order_number
+      if position < post.post_number then
+        order_number = position - 0.5
+      else
+        order_number = position + 0.5
+      end
+      return db.query("\n      update " .. tostring(tbl) .. " as posts set post_number = new_number\n      from (\n        select id, row_number() over (\n          order by (case " .. tostring(tbl) .. ".id\n            when ? then ?\n            else " .. tostring(tbl) .. ".post_number\n          end) asc\n        ) as new_number\n        from " .. tostring(tbl) .. "\n        where " .. tostring(db.encode_clause(cond)) .. "\n      ) foo\n      where posts.id = foo.id and posts.post_number != new_number\n    ", post.id, order_number)
+    end,
     renumber_posts = function(self, parent_post, field)
       if field == nil then
         field = "post_number"

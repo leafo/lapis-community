@@ -391,6 +391,40 @@ class Topics extends Model
       where topic_id = ? and depth = 1 order by post_number desc limit 1
     ", @id
 
+  reposition_post: (post, position) =>
+    assert post.topic_id == @id, "post is not in topic"
+    assert position, "missing position"
+
+    import Posts from require "community.models"
+
+    tbl = db.escape_identifier Posts\table_name!
+
+    cond = {
+      parent_post_id: post.parent_post_id or db.NULL
+      topic_id: @id
+      depth: post.depth
+    }
+
+    order_number = if position < post.post_number
+      position - 0.5
+    else
+      position + 0.5
+
+    db.query "
+      update #{tbl} as posts set post_number = new_number
+      from (
+        select id, row_number() over (
+          order by (case #{tbl}.id
+            when ? then ?
+            else #{tbl}.post_number
+          end) asc
+        ) as new_number
+        from #{tbl}
+        where #{db.encode_clause cond}
+      ) foo
+      where posts.id = foo.id and posts.post_number != new_number
+    ", post.id, order_number
+
   renumber_posts: (parent_post, field="post_number") =>
     import Posts from require "community.models"
     cond = if parent_post

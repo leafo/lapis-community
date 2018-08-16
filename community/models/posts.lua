@@ -482,15 +482,11 @@ do
     end,
     pin_to = function(self, position)
       assert(position, "missing position to pin to")
-      db.update(self.__class:table_name(), {
-        post_number = db.raw("post_number + 1")
-      }, "topic_id = ? and depth = ? and post_number >= ?", self.topic_id, self.depth, position)
-      self:update({
-        post_number = position,
+      local topic = self:get_topic()
+      topic:reposition_post(self, position)
+      return self:update({
         pin_position = position
       })
-      local topic = self:get_topic()
-      return topic:renumber_posts(self:get_parent_post())
     end,
     is_pinned = function(self)
       return not not self.pin_position
