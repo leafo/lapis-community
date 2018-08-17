@@ -521,7 +521,8 @@ CREATE TABLE public.community_posts (
     updated_at timestamp without time zone NOT NULL,
     status smallint DEFAULT 1 NOT NULL,
     moderation_log_id integer,
-    body_format smallint DEFAULT 1 NOT NULL
+    body_format smallint DEFAULT 1 NOT NULL,
+    pin_position integer DEFAULT 0
 );
 
 
@@ -1335,6 +1336,7 @@ community_22
 community_23
 community_24
 community_25
+community_26
 \.
 
 

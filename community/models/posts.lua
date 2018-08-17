@@ -488,6 +488,31 @@ do
         pin_position = position
       })
     end,
+    unpin = function(self)
+      assert(self:is_pinned())
+      local after = unpack(self.__class:select("\n      where created_at > ? and topic_id = ? and depth = ? and parent_post_id = ? and pin_position is null limit 1\n    ", self.created_at, self.topic_id, self.depth, self.parent_post_id or db.NULL, {
+        fields = "post_number"
+      }))
+      if after then
+        local topic = self:get_topic()
+        topic:reposition_post(self, after.post_number)
+        return self:update({
+          pin_position = db.NULL
+        })
+      else
+        local number_cond = {
+          topic_id = self.topic_id,
+          depth = self.depth,
+          parent_post_id = self.parent_post_id or db.NULL
+        }
+        local post_number = db.interpolate_query("\n       (select coalesce(max(post_number), 0) from " .. tostring(db.escape_identifier(self:table_name())) .. "\n         where " .. tostring(db.encode_clause(number_cond)) .. ") + 1\n      ")
+        self:update({
+          pin_position = db.NULL,
+          post_number = db.raw(post_number)
+        })
+        return self:get_topic():renumber_posts()
+      end
+    end,
     is_pinned = function(self)
       return not not self.pin_position
     end,

@@ -456,6 +456,39 @@ class Posts extends Model
     topic\reposition_post @, position
     @update pin_position: position
 
+  unpin: =>
+    assert @is_pinned!
+    -- find the post that comes after this one
+    after = unpack @@select "
+      where created_at > ? and topic_id = ? and depth = ? and parent_post_id = ? and pin_position is null limit 1
+    ", @created_at, @topic_id, @depth, @parent_post_id or db.NULL, {
+      fields: "post_number"
+    }
+
+    if after
+      topic = @get_topic!
+      topic\reposition_post @, after.post_number
+      @update pin_position: db.NULL
+    else
+      -- move to end
+      number_cond = {
+        topic_id: @topic_id
+        depth: @depth
+        parent_post_id: @parent_post_id or db.NULL
+      }
+
+      post_number = db.interpolate_query "
+       (select coalesce(max(post_number), 0) from #{db.escape_identifier @table_name!}
+         where #{db.encode_clause number_cond}) + 1
+      "
+
+      @update {
+        pin_position: db.NULL
+        post_number: db.raw post_number
+      }
+
+      @get_topic!\renumber_posts!
+
   is_pinned: =>
     not not @pin_position
 
