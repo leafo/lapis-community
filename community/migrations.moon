@@ -586,8 +586,7 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
     db.query "create index #{idx} on #{T"posts_search"} using gin(words)"
 
   [26]: =>
-    add_column T"posts", "pin_position", integer null: true
-
+    add_column T"posts", "pin_position", integer null: true, default: db.NULL
 }
 
 

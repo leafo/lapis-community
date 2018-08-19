@@ -572,7 +572,7 @@ describe "models.posts", ->
 
     assert.same 2, post\vote_score!
 
-  describe "pinning #ddd", ->
+  describe "pinning", ->
     it "pins post", ->
       topic = factory.Topics!
       posts = for i=1,4
@@ -614,5 +614,65 @@ describe "models.posts", ->
         {posts[3].id, 4}
       }, [{p.id, p.post_number} for p in *Posts\select "order by post_number"]
 
+
+  describe "unpin", ->
+    local topic, posts
+
+    before_each ->
+      topic = factory.Topics!
+      posts = for i=1,4
+        factory.Posts {
+          topic_id: topic.id
+          created_at: db.raw db.interpolate_query "
+            date_trunc('second', now() at time zone 'utc') + (? || ' days')::interval
+          ", i
+        }
+
+    it "unpins latest post", ->
+      -- move to second slot
+      posts[4]\pin_to 2
+      posts[4]\refresh!
+      posts[4]\unpin!
+
+      assert.same {
+        {posts[1].id, 1}
+        {posts[2].id, 2}
+        {posts[3].id, 3}
+        {posts[4].id, 4}
+      }, [{p.id, p.post_number} for p in *Posts\select "order by post_number"]
+
+      assert.nil posts[4].pin_position
+
+    it "unpins latest post when real latest is pinned", ->
+      -- move to second slot
+      posts[4]\pin_to 2
+      posts[3]\pin_to 2
+
+      posts[3]\refresh!
+      posts[3]\unpin!
+
+      assert.same {
+        {posts[1].id, 1}
+        {posts[4].id, 2}
+        {posts[2].id, 3}
+        {posts[3].id, 4}
+      }, [{p.id, p.post_number} for p in *Posts\select "order by post_number"]
+
+      assert.nil posts[3].pin_position
+
+    it "unpins post in middle", ->
+      -- move to second slot
+      posts[3]\pin_to 2
+      posts[3]\refresh!
+      posts[3]\unpin!
+
+      assert.same {
+        {posts[1].id, 1}
+        {posts[2].id, 2}
+        {posts[3].id, 3}
+        {posts[4].id, 4}
+      }, [{p.id, p.post_number} for p in *Posts\select "order by post_number"]
+
+      assert.nil posts[3].pin_position
 
 

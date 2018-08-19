@@ -490,12 +490,17 @@ do
     end,
     unpin = function(self)
       assert(self:is_pinned())
-      local after = unpack(self.__class:select("\n      where created_at > ? and topic_id = ? and depth = ? and parent_post_id = ? and pin_position is null limit 1\n    ", self.created_at, self.topic_id, self.depth, self.parent_post_id or db.NULL, {
+      local after = unpack(self.__class:select("\n      where created_at > ? and " .. tostring(db.encode_clause({
+        topic_id = self.topic_id,
+        parent_post_id = self.parent_post_id or db.NULL,
+        pin_position = db.NULL,
+        depth = self.depth
+      })) .. " limit 1\n    ", self.created_at, {
         fields = "post_number"
       }))
       if after then
         local topic = self:get_topic()
-        topic:reposition_post(self, after.post_number)
+        topic:reposition_post(self, after.post_number - 1)
         return self:update({
           pin_position = db.NULL
         })
@@ -505,7 +510,7 @@ do
           depth = self.depth,
           parent_post_id = self.parent_post_id or db.NULL
         }
-        local post_number = db.interpolate_query("\n       (select coalesce(max(post_number), 0) from " .. tostring(db.escape_identifier(self:table_name())) .. "\n         where " .. tostring(db.encode_clause(number_cond)) .. ") + 1\n      ")
+        local post_number = db.interpolate_query("\n       (select coalesce(max(post_number), 0) from " .. tostring(db.escape_identifier(self.__class:table_name())) .. "\n         where " .. tostring(db.encode_clause(number_cond)) .. ") + 1\n      ")
         self:update({
           pin_position = db.NULL,
           post_number = db.raw(post_number)

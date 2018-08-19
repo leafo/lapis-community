@@ -1147,7 +1147,8 @@ return {
   end,
   [26] = function(self)
     return add_column(T("posts"), "pin_position", integer({
-      null = true
+      null = true,
+      default = db.NULL
     }))
   end
 }
