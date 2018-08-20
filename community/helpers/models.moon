@@ -135,6 +135,38 @@ memoize1 = (fn) ->
 
     unpack res
 
+insert_on_conflict_ignore = (model, opts) ->
+  import encode_values, encode_assigns from require "lapis.db"
+
+  full_insert = {}
+
+  if opts
+    for k,v in pairs opts
+      full_insert[k] = v
+
+  if model.timestamp
+    d = db.format_date!
+    full_insert.created_at = d
+    full_insert.updated_at = d
+
+  buffer = {
+    "insert into "
+    db.escape_identifier model\table_name!
+    " "
+  }
+
+  encode_values full_insert, buffer
+
+  insert buffer, " on conflict do nothing returning *"
+
+  q = concat buffer
+  res = db.query q
+
+  if res.affected_rows and res.affected_rows > 0
+    model\load res[1]
+  else
+    nil, res
+
 insert_on_conflict_update = (model, primary, create, update) ->
   import encode_values, encode_assigns from require "lapis.db"
 
@@ -202,4 +234,4 @@ encode_value_list = (tuples) ->
   table.concat buffer
 
 { :upsert, :safe_insert, :filter_update, :soft_delete, :memoize1,
-  :insert_on_conflict_update, :encode_value_list }
+  :insert_on_conflict_update, :insert_on_conflict_ignore, :encode_value_list }

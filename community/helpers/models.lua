@@ -206,6 +206,39 @@ memoize1 = function(fn)
     return unpack(res)
   end
 end
+local insert_on_conflict_ignore
+insert_on_conflict_ignore = function(model, opts)
+  local encode_values, encode_assigns
+  do
+    local _obj_0 = require("lapis.db")
+    encode_values, encode_assigns = _obj_0.encode_values, _obj_0.encode_assigns
+  end
+  local full_insert = { }
+  if opts then
+    for k, v in pairs(opts) do
+      full_insert[k] = v
+    end
+  end
+  if model.timestamp then
+    local d = db.format_date()
+    full_insert.created_at = d
+    full_insert.updated_at = d
+  end
+  local buffer = {
+    "insert into ",
+    db.escape_identifier(model:table_name()),
+    " "
+  }
+  encode_values(full_insert, buffer)
+  insert(buffer, " on conflict do nothing returning *")
+  local q = concat(buffer)
+  local res = db.query(q)
+  if res.affected_rows and res.affected_rows > 0 then
+    return model:load(res[1])
+  else
+    return nil, res
+  end
+end
 local insert_on_conflict_update
 insert_on_conflict_update = function(model, primary, create, update)
   local encode_values, encode_assigns
@@ -294,5 +327,6 @@ return {
   soft_delete = soft_delete,
   memoize1 = memoize1,
   insert_on_conflict_update = insert_on_conflict_update,
+  insert_on_conflict_ignore = insert_on_conflict_ignore,
   encode_value_list = encode_value_list
 }
