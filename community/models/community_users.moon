@@ -32,6 +32,7 @@ class CommunityUsers extends Model
 
   @create: (opts={}) =>
     assert opts.user_id, "missing user id"
+    super opts
     Model.create @, opts
 
   @preload_users: (users) =>
@@ -43,8 +44,8 @@ class CommunityUsers extends Model
     community_user = @find(:user_id)
 
     unless community_user
-      import safe_insert from require "community.helpers.models"
-      community_user = safe_insert @, :user_id
+      import insert_on_conflict_ignore from require "community.helpers.models"
+      community_user = insert_on_conflict_ignore @, :user_id
       community_user or= @find(:user_id)
 
     community_user

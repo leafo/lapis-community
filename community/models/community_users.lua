@@ -93,6 +93,7 @@ do
       opts = { }
     end
     assert(opts.user_id, "missing user id")
+    _class_0.__parent.create(self, opts)
     return Model.create(self, opts)
   end
   self.preload_users = function(self, users)
@@ -109,9 +110,9 @@ do
       user_id = user_id
     })
     if not (community_user) then
-      local safe_insert
-      safe_insert = require("community.helpers.models").safe_insert
-      community_user = safe_insert(self, {
+      local insert_on_conflict_ignore
+      insert_on_conflict_ignore = require("community.helpers.models").insert_on_conflict_ignore
+      community_user = insert_on_conflict_ignore(self, {
         user_id = user_id
       })
       community_user = community_user or self:find({
