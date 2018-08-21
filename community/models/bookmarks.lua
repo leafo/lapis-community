@@ -1,8 +1,8 @@
 local db = require("lapis.db")
 local Model
 Model = require("community.model").Model
-local safe_insert
-safe_insert = require("community.helpers.models").safe_insert
+local insert_on_conflict_ignore
+insert_on_conflict_ignore = require("community.helpers.models").insert_on_conflict_ignore
 local Bookmarks
 do
   local _class_0
@@ -71,7 +71,7 @@ do
       opts = { }
     end
     opts.object_type = self.object_types:for_db(opts.object_type)
-    return safe_insert(self, opts)
+    return insert_on_conflict_ignore(self, opts)
   end
   self.get = function(self, object, user)
     if not (user) then

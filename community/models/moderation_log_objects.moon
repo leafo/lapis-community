@@ -1,7 +1,7 @@
 import enum from require "lapis.db.model"
 import Model from require "community.model"
 
-import safe_insert from require "community.helpers.models"
+import insert_on_conflict_ignore from require "community.helpers.models"
 
 -- Generated schema dump: (do not edit)
 --
@@ -27,4 +27,4 @@ class ModerationLogObjects extends Model
     }}
   }
 
-  @create: safe_insert
+  @create: insert_on_conflict_ignore

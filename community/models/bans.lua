@@ -2,8 +2,8 @@ local enum
 enum = require("lapis.db.model").enum
 local Model
 Model = require("community.model").Model
-local safe_insert
-safe_insert = require("community.helpers.models").safe_insert
+local insert_on_conflict_ignore
+insert_on_conflict_ignore = require("community.helpers.models").insert_on_conflict_ignore
 local Bans
 do
   local _class_0
@@ -86,7 +86,7 @@ do
     opts.object_id = opts.object.id
     opts.object_type = self:object_type_for_object(opts.object)
     opts.object = nil
-    return safe_insert(self, opts)
+    return insert_on_conflict_ignore(self, opts)
   end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)

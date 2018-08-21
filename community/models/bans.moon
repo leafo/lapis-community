@@ -2,7 +2,7 @@
 import enum from require "lapis.db.model"
 import Model from require "community.model"
 
-import safe_insert from require "community.helpers.models"
+import insert_on_conflict_ignore from require "community.helpers.models"
 
 -- Generated schema dump: (do not edit)
 --
@@ -51,5 +51,5 @@ class Bans extends Model
     opts.object_type = @object_type_for_object opts.object
     opts.object = nil
 
-    safe_insert @, opts
+    insert_on_conflict_ignore @, opts
 

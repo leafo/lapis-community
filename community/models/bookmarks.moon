@@ -1,7 +1,7 @@
 db = require "lapis.db"
 import Model from require "community.model"
 
-import safe_insert from require "community.helpers.models"
+import insert_on_conflict_ignore from require "community.helpers.models"
 
 -- Generated schema dump: (do not edit)
 --
@@ -31,7 +31,7 @@ class Bookmarks extends Model
 
   @create: (opts={}) =>
     opts.object_type = @object_types\for_db opts.object_type
-    safe_insert @, opts
+    insert_on_conflict_ignore @, opts
 
   @get: (object, user) =>
     return nil unless user

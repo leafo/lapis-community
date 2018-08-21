@@ -56,9 +56,9 @@ do
     end
     assert(opts.user_id, "missing user id")
     assert(opts.category_id, "missing category id")
-    local safe_insert
-    safe_insert = require("community.helpers.models").safe_insert
-    return safe_insert(self, opts)
+    local insert_on_conflict_ignore
+    insert_on_conflict_ignore = require("community.helpers.models").insert_on_conflict_ignore
+    return insert_on_conflict_ignore(self, opts)
   end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)

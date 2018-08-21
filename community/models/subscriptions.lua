@@ -1,8 +1,8 @@
 local db = require("lapis.db")
 local Model
 Model = require("community.model").Model
-local safe_insert
-safe_insert = require("community.helpers.models").safe_insert
+local insert_on_conflict_ignore
+insert_on_conflict_ignore = require("community.helpers.models").insert_on_conflict_ignore
 local Subscriptions
 do
   local _class_0
@@ -62,7 +62,7 @@ do
       }
     }
   }
-  self.create = safe_insert
+  self.create = insert_on_conflict_ignore
   self.find_subscription = function(self, object, user)
     if not (user) then
       return nil

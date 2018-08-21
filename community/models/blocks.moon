@@ -1,6 +1,6 @@
 
 import Model from require "community.model"
-import safe_insert from require "community.helpers.models"
+import insert_on_conflict_ignore from require "community.helpers.models"
 
 -- Generated schema dump: (do not edit)
 --
@@ -22,4 +22,4 @@ class Blocks extends Model
     {"blocked_user", belongs_to: "Users"}
   }
 
-  @create: safe_insert
+  @create: insert_on_conflict_ignore

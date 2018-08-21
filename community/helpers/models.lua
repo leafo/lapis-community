@@ -21,69 +21,6 @@ filter_update = function(model, update)
   end
   return update
 end
-local safe_insert
-safe_insert = function(self, data, check_cond)
-  if check_cond == nil then
-    check_cond = data
-  end
-  local table_name = db.escape_identifier(self:table_name())
-  if self.timestamp then
-    do
-      local _tbl_0 = { }
-      for k, v in pairs(data) do
-        _tbl_0[k] = v
-      end
-      data = _tbl_0
-    end
-    local time = db.format_date()
-    data.created_at = time
-    data.updated_at = time
-  end
-  local columns
-  do
-    local _accum_0 = { }
-    local _len_0 = 1
-    for key in pairs(data) do
-      _accum_0[_len_0] = key
-      _len_0 = _len_0 + 1
-    end
-    columns = _accum_0
-  end
-  local values
-  do
-    local _accum_0 = { }
-    local _len_0 = 1
-    for _index_0 = 1, #columns do
-      local col = columns[_index_0]
-      _accum_0[_len_0] = db.escape_literal(data[col])
-      _len_0 = _len_0 + 1
-    end
-    values = _accum_0
-  end
-  for i, col in ipairs(columns) do
-    columns[i] = db.escape_identifier(col)
-  end
-  local q = concat({
-    "insert into",
-    table_name,
-    "(",
-    concat(columns, ", "),
-    ")",
-    "select",
-    concat(values, ", "),
-    "where not exists ( select 1 from",
-    table_name,
-    "where",
-    db.encode_clause(check_cond),
-    ") returning *"
-  }, "  ")
-  local res = db.query(q)
-  if next(res) then
-    return self:load((unpack(res)))
-  else
-    return nil, "already exists"
-  end
-end
 local upsert
 upsert = function(model, insert, update, cond)
   local table_name = db.escape_identifier(model:table_name())
@@ -322,7 +259,6 @@ encode_value_list = function(tuples)
 end
 return {
   upsert = upsert,
-  safe_insert = safe_insert,
   filter_update = filter_update,
   soft_delete = soft_delete,
   memoize1 = memoize1,

@@ -28,6 +28,6 @@ class CategoryMembers extends Model
     assert opts.user_id, "missing user id"
     assert opts.category_id, "missing category id"
 
-    import safe_insert from require "community.helpers.models"
-    safe_insert @, opts
+    import insert_on_conflict_ignore from require "community.helpers.models"
+    insert_on_conflict_ignore @, opts
 
