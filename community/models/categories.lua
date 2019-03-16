@@ -142,6 +142,15 @@ do
       if user.id == self.user_id then
         return true
       end
+      do
+        local mod = self:find_moderator(user, {
+          accepted = true,
+          admin = true
+        })
+        if mod then
+          return true
+        end
+      end
       return false
     end,
     allowed_to_edit_moderators = function(self, user)

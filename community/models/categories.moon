@@ -303,6 +303,10 @@ class Categories extends Model
     return nil unless user
     return true if user\is_admin!
     return true if user.id == @user_id
+
+    if mod = @find_moderator user, accepted: true, admin: true
+      return true
+
     false
 
   allowed_to_edit_moderators: (user) =>
