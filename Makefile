@@ -32,7 +32,7 @@ build:
 	tup upd
 
 local: build
-	luarocks make --local lapis-community-dev-1.rockspec
+	luarocks --lua-version=5.1 make --local lapis-community-dev-1.rockspec
 
 annotate_models: clean_dev
 	lapis annotate $$(find community/models -type f | grep moon$$)
