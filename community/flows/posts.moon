@@ -187,7 +187,7 @@ class PostsFlow extends Flow
     if @post\is_topic_post! and not @topic.permanent
       TopicsFlow = require "community.flows.topics"
       TopicsFlow(@)\delete_topic!
-      return true
+      return true, "topic"
 
     mode = if @topic\allowed_to_moderate @current_user
       if @params.hard

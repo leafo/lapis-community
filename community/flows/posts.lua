@@ -246,7 +246,7 @@ do
       if self.post:is_topic_post() and not self.topic.permanent then
         local TopicsFlow = require("community.flows.topics")
         TopicsFlow(self):delete_topic()
-        return true
+        return true, "topic"
       end
       local mode
       if self.topic:allowed_to_moderate(self.current_user) then

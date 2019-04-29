@@ -134,7 +134,7 @@ do
         end
       end
       if self:is_topic_post() and not self.topic.permanent then
-        return self.topic:delete()
+        return self.topic:delete(), "topic"
       end
       if force ~= "soft" and (force == "hard" or not self:should_soft_delete()) then
         return self:hard_delete(), "hard"
