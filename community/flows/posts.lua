@@ -264,7 +264,7 @@ do
             action = "delete"
           })
         end
-        return true
+        return true, kind
       end
     end)
   }

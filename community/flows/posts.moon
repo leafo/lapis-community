@@ -204,5 +204,5 @@ class PostsFlow extends Flow
           action: "delete"
         }
 
-      true
+      true, kind
 
