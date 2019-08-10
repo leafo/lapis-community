@@ -122,8 +122,14 @@ do
       if self:is_moderation_event() then
         return false
       end
+      if self:has_replies() then
+        return true
+      end
+      if self.depth > 1 and self:has_next_post() then
+        return true
+      end
       local delta = date.diff(date(true), date(self.created_at))
-      return delta:spanminutes() > 10 or self:has_replies() or self:has_next_post()
+      return delta:spanminutes() > 10
     end,
     delete = function(self, force)
       self.topic = self:get_topic()

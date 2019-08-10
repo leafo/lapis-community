@@ -195,8 +195,12 @@ class Posts extends Model
     return false if @is_moderation_event!
 
     -- older than 10 mins or has replies
+
+    return true if @has_replies!
+    return true if @depth > 1 and @has_next_post!
+
     delta = date.diff date(true), date(@created_at)
-    delta\spanminutes! > 10 or @has_replies! or @has_next_post!
+    delta\spanminutes! > 10
 
   delete: (force) =>
     @topic = @get_topic!
