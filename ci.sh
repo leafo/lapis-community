@@ -9,6 +9,8 @@ luarocks --lua-version=5.1 install busted
 luarocks --lua-version=5.1 install https://raw.githubusercontent.com/leafo/lapis/master/lapis-dev-1.rockspec
 luarocks --lua-version=5.1 install moonscript
 luarocks --lua-version=5.1 install date
+luarocks --lua-version=5.1 install web_sanitize
+luarocks --lua-version=5.1 install tableshape
 
 luarocks --lua-version=5.1 make
 
