@@ -5,9 +5,6 @@ set -o pipefail
 set -o xtrace
 
 
-# remove outdated bundled version
-luarocks --lua-version=5.1 remove --force lapis
-
 luarocks --lua-version=5.1 install busted
 luarocks --lua-version=5.1 install https://raw.githubusercontent.com/leafo/lapis/master/lapis-dev-1.rockspec
 luarocks --lua-version=5.1 install moonscript
