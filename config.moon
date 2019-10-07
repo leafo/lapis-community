@@ -1,6 +1,8 @@
 config = require "lapis.config"
 
 config "development", ->
+  measure_performance true
+
   postgres {
     backend: "pgmoon"
     database: "community"
@@ -11,6 +13,13 @@ config "development", ->
   }
 
 config "test", ->
+  measure_performance true
+  logging {
+    requests: true
+    queries: false
+    server: true
+  }
+
   postgres {
     backend: "pgmoon"
     database: "community_test"
