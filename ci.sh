@@ -6,14 +6,14 @@ set -o xtrace
 
 
 # remove outdated bundled version
-luarocks-5.1 remove --force lapis
+luarocks --lua-version=5.1 remove --force lapis
 
-luarocks-5.1 install busted
-luarocks-5.1 install https://raw.githubusercontent.com/leafo/lapis/master/lapis-dev-1.rockspec
-luarocks-5.1 install moonscript
-luarocks-5.1 install date
+luarocks --lua-version=5.1 install busted
+luarocks --lua-version=5.1 install https://raw.githubusercontent.com/leafo/lapis/master/lapis-dev-1.rockspec
+luarocks --lua-version=5.1 install moonscript
+luarocks --lua-version=5.1 install date
 
-luarocks-5.1 make
+luarocks --lua-version=5.1 make
 
 # start postgres
 echo "fsync = off" >> /var/lib/postgres/data/postgresql.conf
