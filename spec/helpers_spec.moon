@@ -35,3 +35,106 @@ describe "community.helpers", ->
       assert.same 2, b.calls
 
 
+  describe "shapes", ->
+    describe "test_valid", ->
+      local test_valid, types
+
+      before_each ->
+        import test_valid from require "community.helpers.shapes"
+        import types from require "tableshape"
+
+      it "fails when receiving non-object", ->
+        assert.same {
+          nil, {[[expected type "table", got "string"]]}
+        }, {
+          test_valid "hello", {
+            {"color", types.literal "blue" }
+          }
+        }
+
+      it "tests passing object", ->
+        assert.same {
+          { color: "blue" }
+        }, {
+          test_valid {
+            color: "blue"
+            something: "else"
+          }, {
+            {"color", types.literal "blue" }
+          }
+        }
+
+      it "tests passing object with transform", ->
+        obj = {
+          color: "blue"
+          something: "else"
+        }
+
+        assert.same {
+          { color: true }
+        }, {
+          test_valid obj, {
+            {"color", types.literal("blue") / true }
+          }
+        }
+
+        -- obj is unchanged
+        assert.same {
+          color: "blue"
+          something: "else"
+        }, obj
+
+      it "fails with single error", ->
+        assert.same {
+          nil, {
+            [[color: expected "blue"]]
+          }
+        }, {
+          test_valid {
+            height: "green"
+          }, {
+            {"color", types.literal "blue" }
+          }
+        }
+
+        assert.same {
+          nil, {
+            [[color: expected "blue"]]
+          }
+        }, {
+          test_valid { }, {
+            {"color", types.literal "blue" }
+          }
+        }
+
+        assert.same {
+          nil, {
+            [[color: expected "blue"]]
+          }
+        }, {
+          test_valid {
+            color: {}
+          }, {
+            {"color", types.literal "blue" }
+          }
+        }
+
+
+      it "fails with multiple errors", ->
+        assert.same {
+          nil, {
+            [[color: expected "blue"]]
+            [[height: expected type "number", got "nil"]]
+          }
+        }, {
+          test_valid {
+            color: 200
+            age: 4
+          }, {
+            {"color", types.literal "blue" }
+            {"height", types.number }
+            {"age", types.number }
+          }
+        }
+
+
