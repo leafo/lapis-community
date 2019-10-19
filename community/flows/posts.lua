@@ -33,13 +33,13 @@ do
       if self.post then
         return 
       end
-      assert_valid(self.params, {
+      local params = shapes.assert_valid(self.params, {
         {
           "post_id",
-          is_integer = true
+          shapes.db_id
         }
       })
-      self.post = Posts:find(self.params.post_id)
+      self.post = Posts:find(params.post_id)
       return assert_error(self.post, "invalid post")
     end,
     new_post = require_login(function(self)
@@ -214,13 +214,13 @@ do
       return true
     end),
     delete_pending_post = require_login(function(self)
-      assert_valid(self.params, {
+      local params = shapes.assert_valid(self.params, {
         {
           "post_id",
-          is_integer = true
+          shapes.db_id
         }
       })
-      self.pending_post = assert_error(PendingPosts:find(self.params.post_id))
+      self.pending_post = assert_error(PendingPosts:find(params.post_id))
       assert_error(self.pending_post:allowed_to_edit(self.current_user, "delete"), "not allowed to edit")
       self.pending_post:delete()
       return true

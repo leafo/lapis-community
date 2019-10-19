@@ -21,11 +21,11 @@ class PostsFlow extends Flow
   load_post: =>
     return if @post
 
-    assert_valid @params, {
-      {"post_id", is_integer: true }
+    params = shapes.assert_valid @params, {
+      {"post_id", shapes.db_id}
     }
 
-    @post = Posts\find @params.post_id
+    @post = Posts\find params.post_id
     assert_error @post, "invalid post"
 
   new_post: require_login =>
@@ -167,11 +167,12 @@ class PostsFlow extends Flow
     true
 
   delete_pending_post: require_login =>
-    assert_valid @params, {
-      {"post_id", is_integer: true }
+    -- TODO: needs specs
+    params = shapes.assert_valid @params, {
+      {"post_id", shapes.db_id}
     }
 
-    @pending_post = assert_error PendingPosts\find @params.post_id
+    @pending_post = assert_error PendingPosts\find params.post_id
     assert_error @pending_post\allowed_to_edit(@current_user, "delete"), "not allowed to edit"
     @pending_post\delete!
     true
