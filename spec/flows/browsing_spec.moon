@@ -79,7 +79,7 @@ describe "browsing flow", ->
         it "should error with no topic id", ->
           res = BrowsingApp\get current_user, "/topic-posts"
           assert.truthy res.errors
-          assert.same {"topic_id must be an integer"}, res.errors
+          assert.same {"topic_id: expected integer"}, res.errors
 
         it "get flat posts in topic", ->
           topic = factory.Topics!
