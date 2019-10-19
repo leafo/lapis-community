@@ -13,6 +13,9 @@ import is_empty_html from require "community.helpers.html"
 
 limits = require "community.limits"
 
+shapes = require "community.helpers.shapes"
+import types from require "tableshape"
+
 class TopicsFlow extends Flow
   expose_assigns: true
 
@@ -24,11 +27,11 @@ class TopicsFlow extends Flow
   load_topic: =>
     return if @topic
 
-    assert_valid @params, {
-      {"topic_id", is_integer: true}
+    params = shapes.assert_valid @params, {
+      {"topic_id", shapes.db_id}
     }
 
-    @topic = Topics\find @params.topic_id
+    @topic = Topics\find params.topic_id
     assert_error @topic, "invalid topic"
 
   load_topic_for_moderation: =>
@@ -64,8 +67,6 @@ class TopicsFlow extends Flow
       {"topic", type: "table"}
     }
 
-    shapes = require "community.helpers.shapes"
-    import types from require "tableshape"
 
     new_topic = shapes.assert_valid @params.topic, {
       {"title", shapes.limited_text limits.MAX_TITLE_LEN }

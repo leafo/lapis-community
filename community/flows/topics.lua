@@ -17,6 +17,9 @@ require_login = require("community.helpers.app").require_login
 local is_empty_html
 is_empty_html = require("community.helpers.html").is_empty_html
 local limits = require("community.limits")
+local shapes = require("community.helpers.shapes")
+local types
+types = require("tableshape").types
 local TopicsFlow
 do
   local _class_0
@@ -32,13 +35,13 @@ do
       if self.topic then
         return 
       end
-      assert_valid(self.params, {
+      local params = shapes.assert_valid(self.params, {
         {
           "topic_id",
-          is_integer = true
+          shapes.db_id
         }
       })
-      self.topic = Topics:find(self.params.topic_id)
+      self.topic = Topics:find(params.topic_id)
       return assert_error(self.topic, "invalid topic")
     end,
     load_topic_for_moderation = function(self)
@@ -74,9 +77,6 @@ do
           type = "table"
         }
       })
-      local shapes = require("community.helpers.shapes")
-      local types
-      types = require("tableshape").types
       local new_topic = shapes.assert_valid(self.params.topic, {
         {
           "title",
