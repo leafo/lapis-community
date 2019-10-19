@@ -20,6 +20,9 @@ require_login = require("community.helpers.app").require_login
 local is_empty_html
 is_empty_html = require("community.helpers.html").is_empty_html
 local limits = require("community.limits")
+local shapes = require("community.helpers.shapes")
+local types
+types = require("tableshape").types
 local PostsFlow
 do
   local _class_0
@@ -43,39 +46,26 @@ do
       local TopicsFlow = require("community.flows.topics")
       TopicsFlow(self):load_topic()
       assert_error(self.topic:allowed_to_post(self.current_user, self._req))
-      trim_filter(self.params)
-      assert_valid(self.params, {
+      local params = shapes.assert_valid(self.params, {
         {
           "parent_post_id",
-          optional = true,
-          is_integer = true
-        },
-        {
-          "post",
-          type = "table"
+          shapes.db_id + shapes.empty
         }
       })
-      local new_post = trim_filter(self.params.post)
-      assert_valid(new_post, {
+      local new_post = shapes.assert_valid(self.params.post, {
         {
           "body",
-          type = "string",
-          exists = true,
-          max_length = limits.MAX_BODY_LEN
+          shapes.limited_text(limits.MAX_BODY_LEN)
         },
         {
           "body_format",
-          optional = true,
-          one_of = {
-            "html",
-            "markdown"
-          }
+          shapes.db_enum(Posts.body_formats) + shapes.empty / Posts.body_formats.html
         }
       })
-      local body = assert_error(Posts:filter_body(new_post.body, new_post.body_format or "html"))
+      local body = assert_error(Posts:filter_body(new_post.body, new_post.body_format))
       local parent_post
       do
-        local pid = self.params.parent_post_id
+        local pid = params.parent_post_id
         if pid then
           parent_post = Posts:find(pid)
         end
@@ -90,7 +80,7 @@ do
           topic_id = self.topic.id,
           category_id = self.topic.category_id,
           body = body,
-          body_format = new_post.body_format or "html",
+          body_format = new_post.body_format,
           parent_post = parent_post
         })
       else
@@ -98,7 +88,7 @@ do
           user_id = self.current_user.id,
           topic_id = self.topic.id,
           body = body,
-          body_format = new_post.body_format or "html",
+          body_format = new_post.body_format,
           parent_post = parent_post
         })
         self.topic:increment_from_post(self.post)

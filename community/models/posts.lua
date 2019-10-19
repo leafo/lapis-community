@@ -641,6 +641,9 @@ do
       format = self.body_formats.html
     end
     format = self.body_formats:for_db(format)
+    if not (type(body) == "string") then
+      return nil, "body must be provided"
+    end
     local is_empty_html
     is_empty_html = require("community.helpers.html").is_empty_html
     local html

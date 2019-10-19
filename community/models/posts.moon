@@ -81,6 +81,9 @@ class Posts extends Model
   @filter_body: (body, format=@body_formats.html) =>
     format = @body_formats\for_db format
 
+    unless type(body) == "string"
+      return nil, "body must be provided"
+
     import is_empty_html from require "community.helpers.html"
 
     html = switch format

@@ -302,7 +302,7 @@ describe "posting flow", ->
             "post[body]": ""
           }
         {
-          message: {"body must be a string"}
+          message: {"body: expected text between 1 and 20480 characters"}
         }
       )
 

@@ -12,6 +12,9 @@ import is_empty_html from require "community.helpers.html"
 
 limits = require "community.limits"
 
+shapes = require "community.helpers.shapes"
+import types from require "tableshape"
+
 class PostsFlow extends Flow
   expose_assigns: true
 
@@ -30,21 +33,18 @@ class PostsFlow extends Flow
     TopicsFlow(@)\load_topic!
     assert_error @topic\allowed_to_post @current_user, @_req
 
-    trim_filter @params
-    assert_valid @params, {
-      {"parent_post_id", optional: true, is_integer: true }
-      {"post", type: "table"}
+    params = shapes.assert_valid @params, {
+      {"parent_post_id", shapes.db_id + shapes.empty }
     }
 
-    new_post = trim_filter @params.post
-    assert_valid new_post, {
-      {"body", type: "string", exists: true, max_length: limits.MAX_BODY_LEN}
-      {"body_format", optional: true, one_of: { "html", "markdown"} }
+    new_post = shapes.assert_valid @params.post, {
+      {"body", shapes.limited_text limits.MAX_BODY_LEN }
+      {"body_format", shapes.db_enum(Posts.body_formats) + shapes.empty / Posts.body_formats.html}
     }
 
-    body = assert_error Posts\filter_body new_post.body, new_post.body_format or "html"
+    body = assert_error Posts\filter_body new_post.body, new_post.body_format
 
-    parent_post = if pid = @params.parent_post_id
+    parent_post = if pid = params.parent_post_id
       Posts\find pid
 
     if parent_post
@@ -60,7 +60,7 @@ class PostsFlow extends Flow
         topic_id: @topic.id
         category_id: @topic.category_id
         :body
-        body_format: new_post.body_format or "html"
+        body_format: new_post.body_format
         :parent_post
       }
     else
@@ -68,7 +68,7 @@ class PostsFlow extends Flow
         user_id: @current_user.id
         topic_id: @topic.id
         :body
-        body_format: new_post.body_format or "html"
+        body_format: new_post.body_format
         :parent_post
       }
 
