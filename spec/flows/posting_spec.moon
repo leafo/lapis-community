@@ -320,7 +320,7 @@ describe "posting flow", ->
     it "creates new post", ->
       new_post {
         topic_id: topic.id
-        "post[body]": "This is post body"
+        "post[body]": "This is post body    "
       }
 
       topic\refresh!
@@ -406,20 +406,78 @@ describe "posting flow", ->
         body_format: Posts.body_formats.markdown
       })
 
-    it "should post a threaded post", ->
-      post = factory.Posts topic_id: topic.id
+    describe "parent_post_id", ->
+      it "fails with invalid parent_post_id value", ->
+        post = factory.Posts topic_id: topic.id
 
-      child_post = new_post {
-        topic_id: topic.id
-        parent_post_id: post.id
-        "post[body]": "This is a sub message"
-      }
+        assert.has_error(
+          ->
+            new_post {
+              topic_id: topic.id
+              parent_post_id: "cool"
+              "post[body]": "This is a sub message"
+            }
 
-      posts = Posts\select!
-      assert.same 2, #posts
+          { message: {"parent_post_id: expected integer then database id, or empty"} }
+        )
 
-      child_post = Posts\find child_post.id
-      assert.same post.id, child_post.parent_post_id
+      it "fails with non-existent parent post", ->
+        post = factory.Posts topic_id: topic.id
+
+        assert.has_error(
+          ->
+            new_post {
+              topic_id: topic.id
+              parent_post_id: post.id + 1
+              "post[body]": "This is a sub message"
+            }
+
+          { message: {"invalid parent post"} }
+        )
+
+      it "fails if parent post belongs to another topic", ->
+        post = factory.Posts!
+
+        assert.has_error(
+          ->
+            new_post {
+              topic_id: topic.id
+              parent_post_id: post.id
+              "post[body]": "This is a sub message"
+            }
+
+          { message: {"parent post doesn't belong to same topic"} }
+        )
+
+      it "fails if parent post doesn't allow replies", ->
+        post = factory.Posts topic_id: topic.id
+        post\update deleted: true
+
+        assert.has_error(
+          ->
+            new_post {
+              topic_id: topic.id
+              parent_post_id: post.id
+              "post[body]": "This is a sub message"
+            }
+
+          { message: {"can't reply to post"} }
+        )
+
+      it "posts a threaded post", ->
+        post = factory.Posts topic_id: topic.id
+
+        child_post = new_post {
+          topic_id: topic.id
+          parent_post_id: post.id
+          "post[body]": "This is a sub message"
+        }
+
+        posts = Posts\select!
+        assert.same 2, #posts
+
+        child_post = Posts\find child_post.id
+        assert.same post.id, child_post.parent_post_id
 
   describe "edit topic", ->
     local topic

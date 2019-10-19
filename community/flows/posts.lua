@@ -67,11 +67,11 @@ do
       do
         local pid = params.parent_post_id
         if pid then
-          parent_post = Posts:find(pid)
+          parent_post = assert_error(Posts:find(pid), "invalid parent post")
         end
       end
       if parent_post then
-        assert_error(parent_post.topic_id == self.topic.id, "topic id mismatch (" .. tostring(parent_post.topic_id) .. " != " .. tostring(self.topic.id) .. ")")
+        assert_error(parent_post.topic_id == self.topic.id, "parent post doesn't belong to same topic")
         assert_error(parent_post:allowed_to_reply(self.current_user, self._req), "can't reply to post")
       end
       if self.topic:post_needs_approval() then

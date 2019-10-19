@@ -45,11 +45,11 @@ class PostsFlow extends Flow
     body = assert_error Posts\filter_body new_post.body, new_post.body_format
 
     parent_post = if pid = params.parent_post_id
-      Posts\find pid
+      assert_error Posts\find(pid), "invalid parent post"
 
     if parent_post
       assert_error parent_post.topic_id == @topic.id,
-        "topic id mismatch (#{parent_post.topic_id} != #{@topic.id})"
+        "parent post doesn't belong to same topic"
 
       assert_error parent_post\allowed_to_reply(@current_user, @_req),
         "can't reply to post"
