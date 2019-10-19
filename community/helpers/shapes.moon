@@ -17,6 +17,14 @@ limited_text = (max_len, min_len=1) ->
   out = trimmed_text * types.string\length min_len, max_len
   out\describe "text between #{min_len} and #{max_len} characters"
 
+empty = types.one_of {
+  types.nil
+  types.pattern("^%s*$") / nil
+  types.literal(require("cjson").null) / nil
+  if ngx
+    types.literal(ngx.null) / nil
+}, describe: -> "empty"
+
 db_id = types.one_of({
   types.number * types.custom (v) -> v == math.floor(v)
   types.string / trim * types.pattern("^%d+$") / tonumber
@@ -58,6 +66,7 @@ assert_valid = (...) ->
   result
 
 {
+  :empty
   :valid_text, :trimmed_text, :limited_text
   :db_id
 

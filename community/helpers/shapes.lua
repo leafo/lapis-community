@@ -21,6 +21,20 @@ limited_text = function(max_len, min_len)
   local out = trimmed_text * types.string:length(min_len, max_len)
   return out:describe("text between " .. tostring(min_len) .. " and " .. tostring(max_len) .. " characters")
 end
+local empty = types.one_of({
+  types["nil"],
+  types.pattern("^%s*$") / nil,
+  types.literal(require("cjson").null) / nil,
+  (function()
+    if ngx then
+      return types.literal(ngx.null) / nil
+    end
+  end)()
+}, {
+  describe = function()
+    return "empty"
+  end
+})
 local db_id = types.one_of({
   types.number * types.custom(function(v)
     return v == math.floor(v)
@@ -75,6 +89,7 @@ assert_valid = function(...)
   return result
 end
 return {
+  empty = empty,
   valid_text = valid_text,
   trimmed_text = trimmed_text,
   limited_text = limited_text,
