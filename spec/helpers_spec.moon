@@ -137,4 +137,29 @@ describe "community.helpers", ->
           }
         }
 
+      it "fails with custom label", ->
+        assert.same {
+          nil, {
+            [[Hello: expected "blue"]]
+          }
+        }, {
+          test_valid {
+            color: 200
+          }, {
+            {"color", label: "Hello", types.literal "blue" }
+          }
+        }
+
+      it "fails with custom error", ->
+        assert.same {
+          nil, {
+            [[You gave wrong color]]
+          }
+        }, {
+          test_valid {
+            color: 200
+          }, {
+            {"color", error: "You gave wrong color", types.literal "blue" }
+          }
+        }
 
