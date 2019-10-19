@@ -55,6 +55,16 @@ class Posts extends Model
     {"moderation_log", belongs_to: "ModerationLogs"}
 
     {"posts_search", has_one: "PostsSearch"}
+
+
+    {"body_html", fetch: =>
+      switch @body_format
+        when @@body_formats.html
+          @body
+        when @@body_formats.markdown
+          import markdown_to_html from require "community.helpers.markdown"
+          markdown_to_html @body
+    }
   }
 
   @statuses: enum {

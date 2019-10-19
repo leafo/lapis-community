@@ -59,7 +59,7 @@ Posts = (opts={}) ->
     opts.topic_id = topic.id
 
   opts.body or= "Post #{next_counter "post"} body"
-  opts.body_format = "markdown"
+  opts.body_format or= "html"
 
   with post = assert models.Posts\create opts
     if topic

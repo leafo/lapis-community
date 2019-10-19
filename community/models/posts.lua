@@ -612,6 +612,19 @@ do
     {
       "posts_search",
       has_one = "PostsSearch"
+    },
+    {
+      "body_html",
+      fetch = function(self)
+        local _exp_0 = self.body_format
+        if self.__class.body_formats.html == _exp_0 then
+          return self.body
+        elseif self.__class.body_formats.markdown == _exp_0 then
+          local markdown_to_html
+          markdown_to_html = require("community.helpers.markdown").markdown_to_html
+          return markdown_to_html(self.body)
+        end
+      end
     }
   }
   self.statuses = enum({

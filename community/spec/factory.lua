@@ -85,7 +85,7 @@ Posts = function(opts)
     opts.topic_id = topic.id
   end
   opts.body = opts.body or "Post " .. tostring(next_counter("post")) .. " body"
-  opts.body_format = "markdown"
+  opts.body_format = opts.body_format or "html"
   do
     local post = assert(models.Posts:create(opts))
     if topic then

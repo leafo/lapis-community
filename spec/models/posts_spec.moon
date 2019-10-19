@@ -676,3 +676,19 @@ describe "models.posts", ->
       assert.nil posts[3].pin_position
 
 
+  describe "body_html", ->
+    it "gets raw body html", ->
+      post = factory.Posts {
+        body: "<p>Hello world</p>"
+        body_format: "html"
+      }
+
+      assert.same "<p>Hello world</p>", post\get_body_html!
+
+    it "gets markdown body as html", ->
+      post = factory.Posts {
+        body: "**hello world**"
+        body_format: "markdown"
+      }
+
+      assert.same "<p><strong>hello world</strong></p>\n", post\get_body_html!
