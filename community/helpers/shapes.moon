@@ -35,7 +35,7 @@ db_enum = (e) ->
 
   types.one_of {
     types.one_of(names) / e\for_db
-    (int / (v) -> e[v] and e\for_db v) * int
+    (db_id / (v) -> e[v] and e\for_db v) * db_id
   }, describe: ->
     "enum(#{table.concat names, ", "})"
 

@@ -666,7 +666,8 @@ class Categories extends Model
       seen[t.slug] = true
       t
 
-    parsed
+    if next parsed
+      parsed
 
   should_log_posts: =>
     @directory

@@ -99,7 +99,7 @@ describe "posting flow", ->
             "topic[body]": ""
           }
         {
-          message: {"body must be provided"}
+          message: {"body: expected text between 1 and 20480 characters"}
         }
       )
 
@@ -116,7 +116,7 @@ describe "posting flow", ->
         }
       )
 
-    it "should post a new topic", ->
+    it "creates new topic", ->
       category = factory.Categories!
 
       new_topic {
@@ -216,13 +216,66 @@ describe "posting flow", ->
 
       new_topic {
         category_id: category.id
-        "topic[title]": "Hello world"
-        "topic[body]": "This is the body"
+        "topic[title]": "Hello world  "
+        "topic[body]": "This is the body\t"
         "topic[tags]": "hello"
       }
 
       topic = unpack Topics\select!
       assert.same {"hello"}, [t.slug for t in *topic\get_tags!]
+
+    it "lets moderator create sticky topic", ->
+      category = factory.Categories!
+
+      factory.Moderators {
+        user_id: current_user.id
+        object: category
+      }
+
+      new_topic {
+        category_id: category.id
+        "topic[title]": "Hello"
+        "topic[body]": "World"
+        "topic[sticky]": "on"
+      }
+
+      topic = unpack Topics\select!
+      assert.true topic.sticky
+      assert.false topic.locked
+
+    it "lets moderator create locked topic", ->
+      category = factory.Categories!
+
+      factory.Moderators {
+        user_id: current_user.id
+        object: category
+      }
+
+      new_topic {
+        category_id: category.id
+        "topic[title]": "Hello"
+        "topic[body]": "World"
+        "topic[locked]": "on"
+      }
+
+      topic = unpack Topics\select!
+      assert.false topic.sticky
+      assert.true topic.locked
+
+    it "doesn't let regular user create sticky or locked topic", ->
+      category = factory.Categories!
+
+      new_topic {
+        category_id: category.id
+        "topic[title]": "Hello"
+        "topic[body]": "World"
+        "topic[sticky]": "on"
+        "topic[locked]": "on"
+      }
+
+      topic = unpack Topics\select!
+      assert.false topic.sticky
+      assert.false topic.locked
 
     it "posts new topic with score based category order", ->
       category = factory.Categories  category_order_type: "topic_score"
@@ -242,6 +295,34 @@ describe "posting flow", ->
     before_each ->
       -- note this isn't a full topic, it has no first post
       topic = factory.Topics!
+
+    new_post = (post={}) ->
+      in_request { :post }, =>
+        @topic = topic
+        @current_user = current_user
+        @flow("posts")\new_post!
+
+    it "errors with empty body", ->
+      assert.has_error(
+        ->
+          new_post {
+            "post[body]": ""
+          }
+        {
+          message: {"body must be provided"}
+        }
+      )
+
+    it "errors with empty html body", ->
+      assert.has_error(
+        ->
+          new_post {
+            "post[body]": "<div></div>"
+          }
+        {
+          message: {"body must be provided"}
+        }
+      )
 
     it "should post a new post", ->
       res = PostingApp\get current_user, "/new-post", {

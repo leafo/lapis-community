@@ -74,54 +74,63 @@ do
           type = "table"
         }
       })
-      local new_topic = trim_filter(self.params.topic)
-      assert_valid(new_topic, {
+      local shapes = require("community.helpers.shapes")
+      local types
+      types = require("tableshape").types
+      local new_topic = shapes.assert_valid(self.params.topic, {
+        {
+          "title",
+          shapes.limited_text(limits.MAX_TITLE_LEN)
+        },
         {
           "body",
-          exists = true,
-          max_length = limits.MAX_BODY_LEN
+          shapes.limited_text(limits.MAX_BODY_LEN)
         },
         {
           "body_format",
-          optional = true,
-          one_of = {
-            "html",
-            "markdown"
-          }
-        },
-        {
-          "title",
-          exists = true,
-          max_length = limits.MAX_TITLE_LEN
+          shapes.db_enum(Posts.body_formats) + shapes.empty / Posts.body_formats.html
         },
         {
           "tags",
-          optional = true,
-          type = "string"
+          shapes.empty + shapes.limited_text(240) / (function()
+            local _base_1 = self.category
+            local _fn_0 = _base_1.parse_tags
+            return function(...)
+              return _fn_0(_base_1, ...)
+            end
+          end)()
+        },
+        {
+          "sticky",
+          shapes.empty / false + types.any / true
+        },
+        {
+          "locked",
+          shapes.empty / false + types.any / true
         }
       })
-      local body = assert_error(Posts:filter_body(new_topic.body, new_topic.body_format or "html"))
+      local body = assert_error(Posts:filter_body(new_topic.body, new_topic.body_format))
       local sticky = false
       local locked = false
       if moderator then
-        sticky = not not new_topic.sticky
-        locked = not not new_topic.locked
+        sticky = new_topic.sticky
+        locked = new_topic.locked
       end
-      local tags = self.category:parse_tags(new_topic.tags)
       self.topic = Topics:create({
         user_id = self.current_user.id,
         category_id = self.category.id,
         title = new_topic.title,
-        tags = next(tags) and db.array((function()
+        tags = new_topic.tags and db.array((function()
           local _accum_0 = { }
           local _len_0 = 1
-          for _index_0 = 1, #tags do
-            local t = tags[_index_0]
+          local _list_0 = new_topic.tags
+          for _index_0 = 1, #_list_0 do
+            local t = _list_0[_index_0]
             _accum_0[_len_0] = t.slug
             _len_0 = _len_0 + 1
           end
           return _accum_0
-        end)()) or nil,
+        end)()),
         category_order = self.category:next_topic_category_order(),
         sticky = sticky,
         locked = locked
@@ -129,7 +138,7 @@ do
       self.post = Posts:create({
         user_id = self.current_user.id,
         topic_id = self.topic.id,
-        body_format = new_topic.body_format or "html",
+        body_format = new_topic.body_format,
         body = body
       })
       self.topic:increment_from_post(self.post, {

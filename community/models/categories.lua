@@ -631,7 +631,9 @@ do
         end
         parsed = _accum_0
       end
-      return parsed
+      if next(parsed) then
+        return parsed
+      end
     end,
     should_log_posts = function(self)
       return self.directory

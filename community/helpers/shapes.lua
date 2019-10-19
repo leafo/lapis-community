@@ -58,9 +58,9 @@ db_enum = function(e)
         return _fn_0(_base_0, ...)
       end
     end)(),
-    (int / function(v)
+    (db_id / function(v)
       return e[v] and e:for_db(v)
-    end) * int
+    end) * db_id
   }, {
     describe = function()
       return "enum(" .. tostring(table.concat(names, ", ")) .. ")"
