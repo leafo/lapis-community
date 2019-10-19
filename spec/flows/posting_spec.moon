@@ -22,14 +22,6 @@ class PostingApp extends TestApp
   @before_filter =>
     @current_user = Users\find assert @params.current_user_id, "missing user id"
 
-  "/new-post": capture_errors_json =>
-    PostsFlow(@)\new_post!
-
-    json: {
-      post: @post
-      success: true
-    }
-
   "/edit-post": capture_errors_json =>
     PostsFlow(@)\edit_post!
     json: { success: true }
@@ -301,6 +293,7 @@ describe "posting flow", ->
         @topic = topic
         @current_user = current_user
         @flow("posts")\new_post!
+        @post
 
     it "errors with empty body", ->
       assert.has_error(
@@ -309,7 +302,7 @@ describe "posting flow", ->
             "post[body]": ""
           }
         {
-          message: {"body must be provided"}
+          message: {"body must be a string"}
         }
       )
 
@@ -324,8 +317,8 @@ describe "posting flow", ->
         }
       )
 
-    it "should post a new post", ->
-      res = PostingApp\get current_user, "/new-post", {
+    it "creates new post", ->
+      new_post {
         topic_id: topic.id
         "post[body]": "This is post body"
       }
@@ -333,7 +326,7 @@ describe "posting flow", ->
       topic\refresh!
       post = unpack Posts\select!
 
-      assert (types.shape {
+      assert (types.partial {
         user_id: current_user.id
         topic_id: topic.id
         body: "This is post body"
@@ -343,35 +336,35 @@ describe "posting flow", ->
         status: Posts.statuses.default
         deleted: false
         post_number: 1
-      }, open: true) post
+      }) post
 
-      assert (types.shape {
+      assert (types.partial {
         posts_count: 1
         root_posts_count: 1
         status: Topics.statuses.default
         category_order: 2
 
         -- although this is the first post, there is no circumstance where the
-        -- first post would normally get posted thoruhg /new-post, so we assume
+        -- first post would normally get posted through /new-post, so we assume
         -- last_post_id is set
         last_post_id: post.id
 
-      }, open: true) topic
+      }) topic
 
       cu = CommunityUsers\for_user(current_user)
 
-      assert (types.shape {
+      assert (types.partial {
         topics_count: 0
         posts_count: 1
-      }, open: true) cu
+      }) cu
 
       -- 1 less because factory didn't seed topic participants
       tps = TopicParticipants\select "where topic_id = ?", topic.id
       assert (types.shape {
-        types.shape {
+        types.partial {
           user_id: current_user.id
           posts_count: 1
-        }, open: true
+        }
       }) tps
 
 
@@ -379,18 +372,18 @@ describe "posting flow", ->
       logs = ActivityLogs\select!
 
       assert (types.shape {
-        types.shape {
+        types.partial {
           user_id: current_user.id
           object_id: post.id
           object_type: ActivityLogs.object_types.posts
           action: ActivityLogs.actions.post.create
           publishable: false
-        }, open: true
+        }
       }) logs
 
-    it "should post two posts", ->
+    it "creates two posts", ->
       for i=1,2
-        PostingApp\get current_user, "/new-post", {
+        new_post {
           topic_id: topic.id
           "post[body]": "This is post body"
         }
@@ -400,7 +393,7 @@ describe "posting flow", ->
       assert.same 2, tps[1].posts_count
 
     it "creates new post with body format", ->
-      res = PostingApp\get current_user, "/new-post", {
+      new_post {
         topic_id: topic.id
         "post[body]": "This is post body"
         "post[body_format]": "markdown"
@@ -416,14 +409,11 @@ describe "posting flow", ->
     it "should post a threaded post", ->
       post = factory.Posts topic_id: topic.id
 
-      res = PostingApp\get current_user, "/new-post", {
+      child_post = new_post {
         topic_id: topic.id
         parent_post_id: post.id
         "post[body]": "This is a sub message"
       }
-
-      assert.truthy res.success
-      child_post = res.post
 
       posts = Posts\select!
       assert.same 2, #posts
