@@ -26,10 +26,6 @@ class PostingApp extends TestApp
     PostsFlow(@)\edit_post!
     json: { success: true }
 
-  "/delete-post": capture_errors_json =>
-    res = PostsFlow(@)\delete_post!
-    json: { success: res }
-
 describe "posting flow", ->
   use_test_env!
 
@@ -586,6 +582,11 @@ describe "posting flow", ->
       )
 
   describe "edit post", ->
+    delete_post = (opts) ->
+      in_request { post: opts }, =>
+        @current_user = current_user
+        PostsFlow(@)\delete_post!
+
     it "should edit post", ->
       post = factory.Posts user_id: current_user.id
 
@@ -794,11 +795,10 @@ describe "posting flow", ->
 
       topic\increment_participant current_user
 
-      res = PostingApp\get current_user, "/delete-post", {
+      delete_post {
         post_id: post.id
       }
 
-      assert.truthy res.success
       post\refresh!
       assert.truthy post.deleted
       assert.truthy post.deleted_at
@@ -834,11 +834,10 @@ describe "posting flow", ->
 
       topic\increment_participant current_user
 
-      res = PostingApp\get current_user, "/delete-post", {
+      delete_post {
         post_id: post.id
       }
 
-      assert.truthy res.success
       assert.same nil, (Posts\find post.id)
 
       assert.same -1, CommunityUsers\for_user(current_user).posts_count
@@ -858,7 +857,7 @@ describe "posting flow", ->
 
       topic = post\get_topic!
 
-      res = PostingApp\get current_user, "/delete-post", {
+      delete_post {
         post_id: post.id
       }
 
@@ -887,7 +886,7 @@ describe "posting flow", ->
 
       Topics\recount id: topic.id
 
-      res = PostingApp\get current_user, "/delete-post", {
+      delete_post {
         post_id: post.id
       }
 
@@ -897,13 +896,16 @@ describe "posting flow", ->
     
     it "should not delete unrelated post", ->
       other_user = factory.Users!
-      post = factory.Posts user_id: current_user.id
+      post = factory.Posts user_id: other_user.id
 
-      res = PostingApp\get other_user, "/delete-post", {
-        post_id: post.id
-      }
+      assert.has_error(
+        ->
+          delete_post {
+            post_id: post.id
+          }
 
-      assert.same {errors: {"not allowed to edit"}}, res
+        { message: {"not allowed to edit"} }
+      )
 
     it "should delete last post, refreshing topic on category and topic", ->
       category = factory.Categories!
@@ -923,7 +925,7 @@ describe "posting flow", ->
       assert.same topic.id, category.last_topic_id
       assert.same post.id, topic.last_post_id
 
-      res = PostingApp\get current_user, "/delete-post", {
+      delete_post {
         post_id: post.id
       }
 
@@ -934,13 +936,11 @@ describe "posting flow", ->
       assert.same topic.id, category.last_topic_id
 
     it "hard deletes post that has been soft deleted", ->
-      moderator = factory.Users!
-
-      category = factory.Categories user_id: moderator.id
+      category = factory.Categories user_id: current_user.id
       topic = factory.Topics(:category, permanent: true)
       post = factory.Posts :topic, deleted: true
 
-      res = PostingApp\get moderator, "/delete-post", {
+      delete_post {
         post_id: post.id
       }
 
