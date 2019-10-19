@@ -636,6 +636,31 @@ do
     html = 1,
     markdown = 2
   })
+  self.filter_body = function(self, body, format)
+    if format == nil then
+      format = self.body_formats.html
+    end
+    format = self.body_formats:for_db(format)
+    local is_empty_html
+    is_empty_html = require("community.helpers.html").is_empty_html
+    local html
+    local _exp_0 = format
+    if self.body_formats.html == _exp_0 then
+      html = body
+    elseif self.body_formats.markdown == _exp_0 then
+      local markdown_to_html
+      markdown_to_html = require("community.helpers.markdown").markdown_to_html
+      local out = markdown_to_html(body)
+      if not (out) then
+        return nil, "invalid markdown"
+      end
+      html = out
+    end
+    if is_empty_html(html) then
+      return nil, "body must be provided"
+    end
+    return body
+  end
   self.create = function(self, opts)
     if opts == nil then
       opts = { }

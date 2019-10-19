@@ -193,6 +193,7 @@ describe "posting flow", ->
         }, open: true
       }) logs
 
+
     it "creates new topic with body format", ->
       category = factory.Categories!
 
@@ -205,9 +206,9 @@ describe "posting flow", ->
 
       post = unpack Posts\select!
 
-      assert (types.shape {
+      assert types.partial({
         body_format: Posts.body_formats.markdown
-      })
+      }) post
 
     it "creates new topic with tags", ->
       category = factory.Categories!

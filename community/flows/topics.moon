@@ -67,11 +67,12 @@ class TopicsFlow extends Flow
     new_topic = trim_filter @params.topic
     assert_valid new_topic, {
       {"body", exists: true, max_length: limits.MAX_BODY_LEN}
+      {"body_format", optional: true, one_of: { "html", "markdown"} }
       {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
       {"tags", optional: true, type: "string"}
     }
 
-    assert_error not is_empty_html(new_topic.body), "body must be provided"
+    body = assert_error Posts\filter_body new_topic.body, new_topic.body_format or "html"
 
     sticky = false
     locked = false
@@ -95,7 +96,8 @@ class TopicsFlow extends Flow
     @post = Posts\create {
       user_id: @current_user.id
       topic_id: @topic.id
-      body: new_topic.body
+      body_format: new_topic.body_format or "html"
+      :body
     }
 
     @topic\increment_from_post @post, update_category_order: false

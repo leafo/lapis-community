@@ -82,6 +82,14 @@ do
           max_length = limits.MAX_BODY_LEN
         },
         {
+          "body_format",
+          optional = true,
+          one_of = {
+            "html",
+            "markdown"
+          }
+        },
+        {
           "title",
           exists = true,
           max_length = limits.MAX_TITLE_LEN
@@ -92,7 +100,7 @@ do
           type = "string"
         }
       })
-      assert_error(not is_empty_html(new_topic.body), "body must be provided")
+      local body = assert_error(Posts:filter_body(new_topic.body, new_topic.body_format or "html"))
       local sticky = false
       local locked = false
       if moderator then
@@ -121,7 +129,8 @@ do
       self.post = Posts:create({
         user_id = self.current_user.id,
         topic_id = self.topic.id,
-        body = new_topic.body
+        body_format = new_topic.body_format or "html",
+        body = body
       })
       self.topic:increment_from_post(self.post, {
         update_category_order = false

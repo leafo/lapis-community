@@ -78,6 +78,28 @@ class Posts extends Model
     markdown: 2
   }
 
+  @filter_body: (body, format=@body_formats.html) =>
+    format = @body_formats\for_db format
+
+    import is_empty_html from require "community.helpers.html"
+
+    html = switch format
+      when @body_formats.html
+        body
+      when @body_formats.markdown
+        import markdown_to_html from require "community.helpers.markdown"
+        out = markdown_to_html body
+
+        unless out
+          return nil, "invalid markdown"
+
+        out
+
+    if is_empty_html html
+      return nil, "body must be provided"
+
+    body
+
   @create: (opts={}) =>
     assert opts.topic_id, "missing topic id"
     assert opts.user_id, "missing user id"
