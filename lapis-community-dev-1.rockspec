@@ -37,6 +37,7 @@ build = {
     ["community.helpers.html"] = "community/helpers/html.lua",
     ["community.helpers.markdown"] = "community/helpers/markdown.lua",
     ["community.helpers.models"] = "community/helpers/models.lua",
+    ["community.helpers.shapes"] = "community/helpers/shapes.lua",
     ["community.helpers.unicode"] = "community/helpers/unicode.lua",
     ["community.limits"] = "community/limits.lua",
     ["community.migrations"] = "community/migrations.lua",
