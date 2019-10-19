@@ -30,6 +30,15 @@ db_id = types.one_of({
   types.string / trim * types.pattern("^%d+$") / tonumber
 }, describe: -> "integer") * types.range(0, 2147483647)\describe "database id"
 
+db_enum = (e) ->
+  names = {unpack e}
+
+  types.one_of {
+    types.one_of(names) / e\for_db
+    (int / (v) -> e[v] and e\for_db v) * int
+  }, describe: ->
+    "enum(#{table.concat names, ", "})"
+
 test_valid = (object, validations) ->
   local errors
   out = {}
@@ -68,7 +77,7 @@ assert_valid = (...) ->
 {
   :empty
   :valid_text, :trimmed_text, :limited_text
-  :db_id
+  :db_id, :db_enum
 
   :test_valid, :assert_valid
 }

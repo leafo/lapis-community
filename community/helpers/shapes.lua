@@ -45,6 +45,28 @@ local db_id = types.one_of({
     return "integer"
   end
 }) * types.range(0, 2147483647):describe("database id")
+local db_enum
+db_enum = function(e)
+  local names = {
+    unpack(e)
+  }
+  return types.one_of({
+    types.one_of(names) / (function()
+      local _base_0 = e
+      local _fn_0 = _base_0.for_db
+      return function(...)
+        return _fn_0(_base_0, ...)
+      end
+    end)(),
+    (int / function(v)
+      return e[v] and e:for_db(v)
+    end) * int
+  }, {
+    describe = function()
+      return "enum(" .. tostring(table.concat(names, ", ")) .. ")"
+    end
+  })
+end
 local test_valid
 test_valid = function(object, validations)
   local errors
@@ -94,6 +116,7 @@ return {
   trimmed_text = trimmed_text,
   limited_text = limited_text,
   db_id = db_id,
+  db_enum = db_enum,
   test_valid = test_valid,
   assert_valid = assert_valid
 }
