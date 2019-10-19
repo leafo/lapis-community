@@ -293,7 +293,7 @@ describe "posting flow", ->
         @topic = topic
         @current_user = current_user
         @flow("posts")\new_post!
-        @post
+        @post or @pending_post
 
     it "errors with empty body", ->
       assert.has_error(
@@ -478,6 +478,75 @@ describe "posting flow", ->
 
         child_post = Posts\find child_post.id
         assert.same post.id, child_post.parent_post_id
+
+    describe "pending post", ->
+      import PendingPosts from require "spec.community_models"
+
+      before_each ->
+        category = topic\get_category!
+        category\update {
+          approval_type: Categories.approval_types.pending
+        }
+
+      new_pending_post = (opts) ->
+        pending_post = new_post opts
+        assert pending_post.__class == PendingPosts
+        pending_post
+
+      it "creates pending post instead of new post", ->
+        pending_post = new_pending_post {
+          topic_id: topic.id
+          "post[body]": "  Hello from my pending post  "
+        }
+
+        assert.same 0, Posts\count!
+        assert.same 1, PendingPosts\count!
+
+        assert types.shape({
+          id: types.number
+          parent_post_id: nil
+          user_id: current_user.id
+          category_id: topic.category_id
+          topic_id: topic.id
+          body: "Hello from my pending post"
+          body_format: Posts.body_formats.html
+          status: PendingPosts.statuses.pending
+
+          created_at: types.string
+          updated_at: types.string
+        }) pending_post
+
+        topic\refresh!
+
+        assert types.partial({
+          posts_count: 0
+          root_posts_count: 0
+          last_post_id: types.nil
+        }) topic
+
+      it "creates pending post body_format", ->
+        pending_post = new_pending_post {
+          topic_id: topic.id
+          "post[body]": "  Hello from my pending post  "
+          "post[body_format]": "markdown"
+        }
+
+        assert types.partial({
+          body_format: Posts.body_formats.markdown
+        }) pending_post
+
+      it "creates pending post with parent_post", ->
+        post = factory.Posts topic_id: topic.id
+
+        pending_post = new_pending_post {
+          topic_id: topic.id
+          "post[body]": "  Hello from my pending post  "
+          parent_post_id: post.id
+        }
+
+        assert types.partial({
+          parent_post_id: post.id
+        }) pending_post
 
   describe "edit topic", ->
     local topic

@@ -61,7 +61,7 @@ class PostsFlow extends Flow
         category_id: @topic.category_id
         :body
         body_format: new_post.body_format
-        :parent_post
+        parent_post_id: parent_post and parent_post.id
       }
     else
       @post = Posts\create {
