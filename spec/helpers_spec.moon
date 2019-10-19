@@ -36,6 +36,60 @@ describe "community.helpers", ->
 
 
   describe "shapes", ->
+    describe "valid_text", ->
+      local valid_text
+
+      before_each ->
+        import valid_text from require "community.helpers.shapes"
+
+      it "passes valid string", ->
+        assert.same "Hello world", valid_text\transform "Hello world"
+        assert.same " Hello world ", valid_text\transform " Hello world "
+
+      it "strips invalid chars", ->
+        assert.same "ummandf", valid_text\transform "\008\000umm\127and\200f"
+
+    describe "trimmed_text", ->
+      local trimmed_text
+
+      before_each ->
+        import trimmed_text from require "community.helpers.shapes"
+
+      it "trims text", ->
+        assert.same "Hello world", trimmed_text\transform "Hello world"
+        assert.same "Hello world", trimmed_text\transform " Hello world "
+
+    describe "limited_text", ->
+      local limited_text
+
+      before_each ->
+        import limited_text from require "community.helpers.shapes"
+
+      it "passes valid text", ->
+        assert.same "hello", limited_text(10)\transform "hello"
+        assert.same "hello", limited_text(10)\transform "   hello           "
+        assert.same "hello", limited_text(10)\transform " \200  hello   \000\008        "
+
+      it "fails with text outside range", ->
+        assert.same {nil, "expected text between 1 and 10 characters"}, { limited_text(10)\transform "helloworldthisfails" }
+        assert.same {nil, "expected text between 1 and 10 characters"}, { limited_text(10)\transform "" }
+
+    describe "db_id", ->
+      local db_id
+
+      before_each ->
+        import db_id from require "community.helpers.shapes"
+
+      it "transforms valid db id", ->
+        assert.same 100, db_id\transform "100"
+        assert.same 238023, db_id\transform 238023
+
+      it "fails with invalid id", ->
+        assert.same {nil, "expected database id"}, { db_id\transform -2 }
+        assert.same {nil, "expected integer"}, { db_id\transform "-2" }
+        assert.same {nil, "expected database id"}, { db_id\transform "293823802308283203920838902392" }
+        assert.same {nil, "expected integer"}, { db_id\transform "43iwhoa" }
+
     describe "test_valid", ->
       local test_valid, types
 
@@ -162,4 +216,5 @@ describe "community.helpers", ->
             {"color", error: "You gave wrong color", types.literal "blue" }
           }
         }
+
 
