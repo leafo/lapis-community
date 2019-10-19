@@ -18,14 +18,6 @@ import Users from require "models"
 
 import types from require "tableshape"
 
-class PostingApp extends TestApp
-  @before_filter =>
-    @current_user = Users\find assert @params.current_user_id, "missing user id"
-
-  "/edit-post": capture_errors_json =>
-    PostsFlow(@)\edit_post!
-    json: { success: true }
-
 describe "posting flow", ->
   use_test_env!
 
@@ -587,15 +579,20 @@ describe "posting flow", ->
         @current_user = current_user
         PostsFlow(@)\delete_post!
 
+    edit_post = (opts) ->
+      in_request { post: opts }, =>
+        @current_user = current_user
+        PostsFlow(@)\edit_post!
+
     it "should edit post", ->
       post = factory.Posts user_id: current_user.id
 
-      res = PostingApp\get current_user, "/edit-post", {
+      edit_post {
         post_id: post.id
+        -- TODO: test trimming  "post[body]": "the new body   \0"
         "post[body]": "the new body"
       }
 
-      assert.truthy res.success
       post\refresh!
 
       assert (types.shape {
@@ -620,7 +617,7 @@ describe "posting flow", ->
     it "should edit post and title", ->
       post = factory.Posts user_id: current_user.id
 
-      res = PostingApp\get current_user, "/edit-post", {
+      edit_post {
         post_id: post.id
         "post[body]": "the new body"
         "post[title]": "the new title"
@@ -628,7 +625,6 @@ describe "posting flow", ->
 
       old_body = post.body
 
-      assert.truthy res.success
       post\refresh!
       assert.same "the new body", post.body
       assert.same "the new title", post\get_topic!.title
@@ -651,7 +647,7 @@ describe "posting flow", ->
       factory.CategoryTags category_id: category.id, slug: "hello"
       factory.CategoryTags category_id: category.id, slug: "zone"
 
-      res = PostingApp\get current_user, "/edit-post", {
+      edit_post {
         post_id: post.id
         "post[body]": "good stuff"
         "post[tags]": "hello,zone,woop"
@@ -661,7 +657,7 @@ describe "posting flow", ->
       assert.same {"hello", "zone"}, topic.tags
       assert.same 2, #topic\get_tags!
 
-    it "should clear post tags", ->
+    it "clear post tags when editing with empty tags", ->
       post = factory.Posts user_id: current_user.id
       topic = post\get_topic!
       category = topic\get_category!
@@ -669,7 +665,7 @@ describe "posting flow", ->
 
       topic\update tags: db.array { tag.slug }
 
-      res = PostingApp\get current_user, "/edit-post", {
+      edit_post {
         post_id: post.id
         "post[body]": "good stuff"
         "post[tags]": ""
@@ -678,17 +674,16 @@ describe "posting flow", ->
       topic\refresh!
       assert.nil topic.tags
 
-    it "should edit post with reason", ->
+    it "edits post with reason", ->
       post = factory.Posts user_id: current_user.id
 
-      res = PostingApp\get current_user, "/edit-post", {
+      edit_post {
         post_id: post.id
         "post[body]": "the newer body"
         "post[reason]": "changed something"
       }
 
       old_body = post.body
-      assert.truthy res.success
       post\refresh!
       assert.same "the newer body", post.body
 
@@ -702,9 +697,10 @@ describe "posting flow", ->
       assert.same 1, post.edits_count
       assert.truthy post.last_edited_at
 
-    it "should not create post edit when editing with unchanged body", ->
+    it "doesn't create post edit when editing with unchanged body", ->
       post = factory.Posts user_id: current_user.id
-      res = PostingApp\get current_user, "/edit-post", {
+
+      edit_post {
         post_id: post.id
         "post[body]": post.body
         "post[reason]": "this will be ingored"
@@ -717,27 +713,33 @@ describe "posting flow", ->
       assert.same 0, post.edits_count
       assert.falsy post.last_edited_at
 
-    it "should not edit invalid post", ->
-      res = PostingApp\get current_user, "/edit-post", {
-        post_id: 0
-        "post[body]": "the new body"
-        "post[title]": "the new title"
-      }
+    it "handles failure for invalid post id", ->
+      assert.has_error(
+        ->
+          edit_post {
+            post_id: 0
+            "post[body]": "the new body"
+            "post[title]": "the new title"
+          }
 
-      assert.truthy res.errors
+        { message: {"invalid post"} }
+      )
 
-    it "should not let stranger edit post", ->
+    it "doesn't let stranger edit post", ->
       post = factory.Posts!
 
-      res = PostingApp\get current_user, "/edit-post", {
-        post_id: post.id
-        "post[body]": "the new body"
-        "post[title]": "the new title"
-      }
+      assert.has_error(
+        ->
+          edit_post {
+            post_id: post.id
+            "post[body]": "the new body"
+            "post[title]": "the new title"
+          }
+        { message: {"not allowed to edit"} }
+      )
 
-      assert.truthy res.errors
 
-    it "should let moderator edit post", ->
+    it "lets moderator edit post", ->
       post = factory.Posts!
       topic = post\get_topic!
 
@@ -746,30 +748,26 @@ describe "posting flow", ->
         object: topic\get_category!
       }
 
-      res = PostingApp\get current_user, "/edit-post", {
+      edit_post {
         post_id: post.id
         "post[body]": "the new body"
         "post[title]": "the new title"
       }
 
-      assert.truthy res.success
-
       post\refresh!
       assert.same "the new body", post.body
       assert.same "the new title", post\get_topic!.title
 
-    it "should edit nth post in topic", ->
+    it "edits nth post in topic", ->
       topic = factory.Topics!
       post1 = factory.Posts topic_id: topic.id
       post2 = factory.Posts topic_id: topic.id, user_id: current_user.id
 
-      res = PostingApp\get current_user, "/edit-post", {
+      edit_post {
         post_id: post2.id
         "post[body]": "the new body"
         "post[title]": "the new title"
       }
-
-      assert.truthy res.success
 
       post1\refresh!
       post2\refresh!
