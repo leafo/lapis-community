@@ -39,10 +39,10 @@ class PostsFlow extends Flow
     new_post = trim_filter @params.post
     assert_valid new_post, {
       {"body", type: "string", exists: true, max_length: limits.MAX_BODY_LEN}
-      {"body_format", exists: true, one_of: Posts.body_formats, optional: true}
+      {"body_format", optional: true, one_of: { "html", "markdown"} }
     }
 
-    assert_error not is_empty_html(new_post.body), "body must be provided"
+    body = assert_error Posts\filter_body new_post.body, new_post.body_format or "html"
 
     parent_post = if pid = @params.parent_post_id
       Posts\find pid
@@ -59,18 +59,16 @@ class PostsFlow extends Flow
         user_id: @current_user.id
         topic_id: @topic.id
         category_id: @topic.category_id
-        body: new_post.body
-        body_format: if new_post.body_format
-          Posts.body_formats\for_db new_post.body_format
+        :body
+        body_format: new_post.body_format or "html"
         :parent_post
       }
     else
       @post = Posts\create {
         user_id: @current_user.id
         topic_id: @topic.id
-        body: new_post.body
-        body_format: if new_post.body_format
-          Posts.body_formats\for_db new_post.body_format
+        :body
+        body_format: new_post.body_format or "html"
         :parent_post
       }
 
@@ -102,14 +100,14 @@ class PostsFlow extends Flow
     post_update = trim_filter @params.post
     assert_valid post_update, {
       {"body", exists: true, max_length: limits.MAX_BODY_LEN}
-      {"body_format", exists: true, one_of: Posts.body_formats, optional: true}
+      {"body_format", optional: true, one_of: { "html", "markdown"} }
       {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
     }
 
-    assert_error not is_empty_html(post_update.body), "body must be provided"
+    body = assert_error Posts\filter_body post_update.body, post_update.body_format or "html"
 
     -- only if the body is different
-    edited = if @post.body != post_update.body
+    edited = if @post.body != body
       PostEdits\create {
         user_id: @current_user.id
         body_before: @post.body
@@ -120,7 +118,7 @@ class PostsFlow extends Flow
 
 
       @post\update {
-        body: post_update.body
+        :body
         edits_count: db.raw "edits_count + 1"
         last_edited_at: db.format_date!
         body_format: if post_update.body_format

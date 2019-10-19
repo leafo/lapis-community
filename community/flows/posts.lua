@@ -65,12 +65,14 @@ do
         },
         {
           "body_format",
-          exists = true,
-          one_of = Posts.body_formats,
-          optional = true
+          optional = true,
+          one_of = {
+            "html",
+            "markdown"
+          }
         }
       })
-      assert_error(not is_empty_html(new_post.body), "body must be provided")
+      local body = assert_error(Posts:filter_body(new_post.body, new_post.body_format or "html"))
       local parent_post
       do
         local pid = self.params.parent_post_id
@@ -87,24 +89,16 @@ do
           user_id = self.current_user.id,
           topic_id = self.topic.id,
           category_id = self.topic.category_id,
-          body = new_post.body,
-          body_format = (function()
-            if new_post.body_format then
-              return Posts.body_formats:for_db(new_post.body_format)
-            end
-          end)(),
+          body = body,
+          body_format = new_post.body_format or "html",
           parent_post = parent_post
         })
       else
         self.post = Posts:create({
           user_id = self.current_user.id,
           topic_id = self.topic.id,
-          body = new_post.body,
-          body_format = (function()
-            if new_post.body_format then
-              return Posts.body_formats:for_db(new_post.body_format)
-            end
-          end)(),
+          body = body,
+          body_format = new_post.body_format or "html",
           parent_post = parent_post
         })
         self.topic:increment_from_post(self.post)
@@ -139,9 +133,11 @@ do
         },
         {
           "body_format",
-          exists = true,
-          one_of = Posts.body_formats,
-          optional = true
+          optional = true,
+          one_of = {
+            "html",
+            "markdown"
+          }
         },
         {
           "reason",
@@ -149,9 +145,9 @@ do
           max_length = limits.MAX_BODY_LEN
         }
       })
-      assert_error(not is_empty_html(post_update.body), "body must be provided")
+      local body = assert_error(Posts:filter_body(post_update.body, post_update.body_format or "html"))
       local edited
-      if self.post.body ~= post_update.body then
+      if self.post.body ~= body then
         PostEdits:create({
           user_id = self.current_user.id,
           body_before = self.post.body,
@@ -160,7 +156,7 @@ do
           post_id = self.post.id
         })
         self.post:update({
-          body = post_update.body,
+          body = body,
           edits_count = db.raw("edits_count + 1"),
           last_edited_at = db.format_date(),
           body_format = (function()
