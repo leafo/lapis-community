@@ -294,12 +294,16 @@ describe "models.posts", ->
         deleted_posts_count: 0
       }
 
+    it "soft deletes for posts with next post and parent post", ->
+      replies = for i=1,2
+        factory.Posts {
+          topic_id: post.topic_id
+          parent_post: post
+        }
 
-    it "soft deletes for posts with next post", ->
-      factory.Posts topic_id: post.topic_id
-      post\delete!
-      post\refresh!
-      assert.same true, post.deleted
+      replies[1]\delete!
+      replies[1]\refresh!
+      assert.same true, replies[1].deleted
 
     it "soft deletes post with replies", ->
       factory.Posts topic_id: post.topic_id, parent_post_id: post.id
