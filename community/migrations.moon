@@ -587,6 +587,10 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
 
   [26]: =>
     add_column T"posts", "pin_position", integer null: true, default: db.NULL
+
+  [27]: =>
+    add_column T"users", "recent_posts_count", integer default: 0
+    add_column T"users", "last_post_at", time null: true
 }
 
 

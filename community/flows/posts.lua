@@ -89,7 +89,7 @@ do
           parent_post = parent_post
         })
         self.topic:increment_from_post(self.post)
-        CommunityUsers:for_user(self.current_user):increment("posts_count")
+        CommunityUsers:for_user(self.current_user):increment_from_post(self.post)
         self.topic:increment_participant(self.current_user)
         ActivityLogs:create({
           user_id = self.current_user.id,

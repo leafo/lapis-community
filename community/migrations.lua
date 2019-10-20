@@ -1150,5 +1150,13 @@ return {
       null = true,
       default = db.NULL
     }))
+  end,
+  [27] = function(self)
+    add_column(T("users"), "recent_posts_count", integer({
+      default = 0
+    }))
+    return add_column(T("users"), "last_post_at", time({
+      null = true
+    }))
   end
 }

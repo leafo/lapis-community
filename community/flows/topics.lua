@@ -143,7 +143,7 @@ do
         update_category_order = false
       })
       self.category:increment_from_topic(self.topic)
-      CommunityUsers:for_user(self.current_user):increment("topics_count")
+      CommunityUsers:for_user(self.current_user):increment_from_post(self.post, true)
       self.topic:increment_participant(self.current_user)
       self.post:on_body_updated_callback(self)
       ActivityLogs:create({

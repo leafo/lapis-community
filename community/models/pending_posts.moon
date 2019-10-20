@@ -80,11 +80,11 @@ class PendingPosts extends Model
 
     topic\increment_from_post post, category_order: false
 
+    cu = CommunityUsers\for_user @get_user!
+    cu\increment_from_post post, created_topic
+
     if created_topic
       @get_category!\increment_from_topic topic
-      CommunityUsers\for_user(@get_user!)\increment "topics_count"
-    else
-      CommunityUsers\for_user(@get_user!)\increment "posts_count"
 
     post\on_body_updated_callback req_or_flow
 

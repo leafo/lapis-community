@@ -73,7 +73,7 @@ class PostsFlow extends Flow
       }
 
       @topic\increment_from_post @post
-      CommunityUsers\for_user(@current_user)\increment "posts_count"
+      CommunityUsers\for_user(@current_user)\increment_from_post @post
       @topic\increment_participant @current_user
 
       ActivityLogs\create {

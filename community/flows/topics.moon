@@ -105,7 +105,7 @@ class TopicsFlow extends Flow
     @topic\increment_from_post @post, update_category_order: false
     @category\increment_from_topic @topic
 
-    CommunityUsers\for_user(@current_user)\increment "topics_count"
+    CommunityUsers\for_user(@current_user)\increment_from_post @post, true
     @topic\increment_participant @current_user
 
     @post\on_body_updated_callback @

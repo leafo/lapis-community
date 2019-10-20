@@ -3,6 +3,8 @@ import use_test_env from require "lapis.spec"
 db = require "lapis.db"
 factory = require "spec.factory"
 
+import types from require "tableshape"
+
 describe "models.pending_posts", ->
   use_test_env!
 
@@ -41,6 +43,13 @@ describe "models.pending_posts", ->
     category\refresh!
     assert.same topic.id, category.last_topic_id
 
+    cu = CommunityUsers\for_user pending\get_user!
+
+    assert types.partial({
+      topics_count: 0
+      posts_count: 1
+    }) cu
+
   it "promotes pending post with parent", ->
     post = factory.Posts!
     topic = post\get_topic!
@@ -78,9 +87,9 @@ describe "models.pending_posts", ->
 
     cu = CommunityUsers\for_user pending\get_user!
 
-    assert.same 1, cu.topics_count
-    assert.same 0, cu.posts_count
-
-
+    assert types.partial({
+      topics_count: 1
+      posts_count: 0
+    }) cu
 
 

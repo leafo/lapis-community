@@ -21,6 +21,27 @@ do
         timestamp = false
       })
     end,
+    increment_from_post = function(self, post, created_topic)
+      if created_topic == nil then
+        created_topic = false
+      end
+      return self:update({
+        posts_count = (function()
+          if not created_topic then
+            return db.raw("posts_count + 1")
+          end
+        end)(),
+        topics_count = (function()
+          if created_topic then
+            return db.raw("topics_count + 1")
+          end
+        end)(),
+        recent_posts_count = db.raw(db.interpolate_query("(case when last_post_at + ?::interval >= now() at time zone 'utc' then recent_posts_count else 0 end) + 1", self.__class.recent_threshold)),
+        last_post_at = db.raw("date_trunc('second', now() at time zone 'utc')")
+      }, {
+        timestamp = false
+      })
+    end,
     get_vote_score = function(self, object, positive)
       return 1
     end,
@@ -73,6 +94,7 @@ do
   local self = _class_0
   self.timestamp = true
   self.primary_key = "user_id"
+  self.recent_threshold = "10 minutes"
   self.table_name = function(self)
     local prefix_table
     prefix_table = require("community.model").prefix_table

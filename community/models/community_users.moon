@@ -19,6 +19,8 @@ class CommunityUsers extends Model
   @timestamp: true
   @primary_key: "user_id"
 
+  @recent_threshold: "10 minutes"
+
   -- just so it can be community_users and not community_community_users
   @table_name: =>
     import prefix_table from require "community.model"
@@ -86,6 +88,18 @@ class CommunityUsers extends Model
       [field]: db.raw db.interpolate_query "#{db.escape_identifier field} + ?", amount
     }, timestamp: false
 
+  increment_from_post: (post, created_topic=false) =>
+    @update {
+      posts_count: if not created_topic then db.raw "posts_count + 1"
+      topics_count: if created_topic then db.raw "topics_count + 1"
+      -- start over if it's been longer than interval since the last recent post
+      recent_posts_count: db.raw db.interpolate_query(
+        "(case when last_post_at + ?::interval >= now() at time zone 'utc' then recent_posts_count else 0 end) + 1"
+        @@recent_threshold
+      )
+      last_post_at: db.raw "date_trunc('second', now() at time zone 'utc')"
+    }, timestamp: false
+
   -- how much do their votes count for, an override point
   get_vote_score: (object, positive) => 1
 
@@ -106,5 +120,6 @@ class CommunityUsers extends Model
     }
 
     true
+
 
 

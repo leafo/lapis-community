@@ -1,5 +1,7 @@
 import use_test_env from require "lapis.spec"
 
+db = require "lapis.db"
+
 factory = require "spec.factory"
 
 describe "models.users", ->
@@ -15,6 +17,55 @@ describe "models.users", ->
     user = factory.Users!
     cu = CommunityUsers\for_user user.id
     assert.same user.id, cu.user_id
+
+  describe "increment_from_post", ->
+    import Topics, Posts from require "spec.community_models"
+
+    it "increments empty user object", ->
+      user = factory.Users!
+      cu = CommunityUsers\for_user user.id
+      cu\increment_from_post factory.Posts!
+
+      assert.same 1, cu.recent_posts_count
+      assert.same 1, cu.posts_count
+      assert.same 0, cu.topics_count
+      assert.truthy cu.last_post_at
+
+    it "increments recent post count", ->
+      user = factory.Users!
+      cu = CommunityUsers\for_user user.id
+
+      for i=1,2
+        cu\increment_from_post factory.Posts!
+
+      assert.same 2, cu.recent_posts_count
+      assert.same 2, cu.posts_count
+      assert.same 0, cu.topics_count
+
+    it "increments recent post count if it happened recently", ->
+      user = factory.Users!
+      cu = CommunityUsers\for_user user.id
+
+      cu\update {
+        recent_posts_count: 10
+        last_post_at: db.raw db.interpolate_query "date_trunc('second', now() at time zone 'utc') - ?::interval + '1 minute'::interval", CommunityUsers.recent_threshold
+      }
+
+      cu\increment_from_post factory.Posts!
+      assert.same 11, cu.recent_posts_count
+
+    it "resets recent post count if it happened a while ago", ->
+      user = factory.Users!
+      cu = CommunityUsers\for_user user.id
+
+      cu\update {
+        recent_posts_count: 10
+        last_post_at: db.raw db.interpolate_query "date_trunc('second', now() at time zone 'utc') - ?::interval - '5 minutes'::interval", CommunityUsers.recent_threshold
+      }
+
+      before = cu.last_post_at
+      cu\increment_from_post factory.Posts!
+      assert.same 1, cu.recent_posts_count
 
   describe "recount", ->
     import Topics, Posts from require "spec.community_models"
