@@ -4,13 +4,11 @@ import Flow from require "lapis.flow"
 db = require "lapis.db"
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
+import preload from require "lapis.db.model"
+
 import filter_update from require "community.helpers.models"
-
-import trim_filter from require "lapis.util"
-
 import assert_page, require_login from require "community.helpers.app"
 
-import preload from require "lapis.db.model"
 
 import PostReports, Posts, Topics from require "community.models"
 
@@ -58,7 +56,7 @@ class ReportsFlow extends Flow
       @report = PostReports\create params
       "create"
 
-  show_reports: (category) =>
+  show_reports: require_login (category) =>
     assert category, "missing report object"
     assert_error category\allowed_to_moderate(@current_user), "invalid category"
     assert_page @
@@ -96,24 +94,22 @@ class ReportsFlow extends Flow
     @reports = @pager\get_page!
     true
 
-  moderate_report: =>
-    assert_valid @params, {
-      {"report_id", is_integer: true}
-      {"report", type: "table"}
+  moderate_report: require_login =>
+    params = shapes.assert_valid @params, {
+      {"report_id", shapes.db_id}
     }
 
-    @report = assert_error PostReports\find(@params.report_id)
+    @report = assert_error PostReports\find(@params.report_id), "invalid report"
     topic = @report\get_post!\get_topic!
 
     assert_error topic\allowed_to_moderate(@current_user), "invalid report"
 
-    report = trim_filter @params.report
-    assert_valid report, {
-      {"status", one_of: PostReports.statuses}
+    report_update = shapes.assert_valid @params.report, {
+      {"status", shapes.db_enum PostReports.statuses}
     }
 
     @report\update {
-      status: PostReports.statuses\for_db report.status
+      status: report_update.status
       moderating_user_id: @current_user.id
       moderated_at: db.format_date!
     }
@@ -124,7 +120,7 @@ class ReportsFlow extends Flow
       user_id: @current_user.id
       object: @report
       category_id: @report.category_id
-      action: "report.status(#{report.status})"
+      action: "report.status(#{PostReports.statuses\to_name @report.status})"
     }
 
     true

@@ -11,9 +11,9 @@ assert_page = =>
 
 require_login = (fn) ->
   import assert_error from require "lapis.application"
-  =>
+  (...) =>
     assert_error @current_user, "you must be logged in"
-    fn @
+    fn @, ...
 
 -- convert string array indxes into numbers for post params
 -- modifies in place

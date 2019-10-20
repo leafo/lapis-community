@@ -16,9 +16,9 @@ local require_login
 require_login = function(fn)
   local assert_error
   assert_error = require("lapis.application").assert_error
-  return function(self)
+  return function(self, ...)
     assert_error(self.current_user, "you must be logged in")
-    return fn(self)
+    return fn(self, ...)
   end
 end
 local convert_arrays

@@ -8,17 +8,15 @@ do
 end
 local assert_valid
 assert_valid = require("lapis.validate").assert_valid
+local preload
+preload = require("lapis.db.model").preload
 local filter_update
 filter_update = require("community.helpers.models").filter_update
-local trim_filter
-trim_filter = require("lapis.util").trim_filter
 local assert_page, require_login
 do
   local _obj_0 = require("community.helpers.app")
   assert_page, require_login = _obj_0.assert_page, _obj_0.require_login
 end
-local preload
-preload = require("lapis.db.model").preload
 local PostReports, Posts, Topics
 do
   local _obj_0 = require("community.models")
@@ -67,7 +65,7 @@ do
         return "create"
       end
     end,
-    show_reports = function(self, category)
+    show_reports = require_login(function(self, category)
       assert(category, "missing report object")
       assert_error(category:allowed_to_moderate(self.current_user), "invalid category")
       assert_page(self)
@@ -105,30 +103,25 @@ do
       })
       self.reports = self.pager:get_page()
       return true
-    end,
-    moderate_report = function(self)
-      assert_valid(self.params, {
+    end),
+    moderate_report = require_login(function(self)
+      local params = shapes.assert_valid(self.params, {
         {
           "report_id",
-          is_integer = true
-        },
-        {
-          "report",
-          type = "table"
+          shapes.db_id
         }
       })
-      self.report = assert_error(PostReports:find(self.params.report_id))
+      self.report = assert_error(PostReports:find(self.params.report_id), "invalid report")
       local topic = self.report:get_post():get_topic()
       assert_error(topic:allowed_to_moderate(self.current_user), "invalid report")
-      local report = trim_filter(self.params.report)
-      assert_valid(report, {
+      local report_update = shapes.assert_valid(self.params.report, {
         {
           "status",
-          one_of = PostReports.statuses
+          shapes.db_enum(PostReports.statuses)
         }
       })
       self.report:update({
-        status = PostReports.statuses:for_db(report.status),
+        status = report_update.status,
         moderating_user_id = self.current_user.id,
         moderated_at = db.format_date()
       })
@@ -138,10 +131,10 @@ do
         user_id = self.current_user.id,
         object = self.report,
         category_id = self.report.category_id,
-        action = "report.status(" .. tostring(report.status) .. ")"
+        action = "report.status(" .. tostring(PostReports.statuses:to_name(self.report.status)) .. ")"
       })
       return true
-    end
+    end)
   }
   _base_0.__index = _base_0
   setmetatable(_base_0, _parent_0.__base)
