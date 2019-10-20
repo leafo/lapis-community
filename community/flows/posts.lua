@@ -10,11 +10,8 @@ local assert_error
 assert_error = require("lapis.application").assert_error
 local assert_valid
 assert_valid = require("lapis.validate").assert_valid
-local trim_filter, slugify
-do
-  local _obj_0 = require("lapis.util")
-  trim_filter, slugify = _obj_0.trim_filter, _obj_0.slugify
-end
+local slugify
+slugify = require("lapis.util").slugify
 local require_login
 require_login = require("community.helpers.app").require_login
 local is_empty_html
@@ -106,36 +103,22 @@ do
     edit_post = require_login(function(self)
       self:load_post()
       assert_error(self.post:allowed_to_edit(self.current_user, "edit"), "not allowed to edit")
-      assert_valid(self.params, {
-        {
-          "post",
-          type = "table"
-        }
-      })
       self.topic = self.post:get_topic()
-      local update_tags = self.params.post.tags
-      local post_update = trim_filter(self.params.post)
-      assert_valid(post_update, {
+      local post_update = shapes.assert_valid(self.params.post, {
         {
           "body",
-          exists = true,
-          max_length = limits.MAX_BODY_LEN
+          shapes.limited_text(limits.MAX_BODY_LEN)
         },
         {
           "body_format",
-          optional = true,
-          one_of = {
-            "html",
-            "markdown"
-          }
+          shapes.db_enum(Posts.body_formats) + shapes.empty / Posts.body_formats.html
         },
         {
           "reason",
-          optional = true,
-          max_length = limits.MAX_BODY_LEN
+          shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
         }
       })
-      local body = assert_error(Posts:filter_body(post_update.body, post_update.body_format or "html"))
+      local body = assert_error(Posts:filter_body(post_update.body, post_update.body_format))
       local edited
       if self.post.body ~= body then
         PostEdits:create({
@@ -149,55 +132,52 @@ do
           body = body,
           edits_count = db.raw("edits_count + 1"),
           last_edited_at = db.format_date(),
-          body_format = (function()
-            if post_update.body_format then
-              return Posts.body_formats:for_db(post_update.body_format)
-            end
-          end)()
+          body_format = post_update.body_format
         })
-        self.post:refresh_search_index()
         edited = true
       end
       local edited_title
       if self.post:is_topic_post() and not self.topic.permanent then
-        assert_valid(post_update, {
-          {
-            "title",
-            optional = true,
-            max_length = limits.MAX_TITLE_LEN
-          },
+        local category = self.topic:get_category()
+        local topic_update = shapes.assert_valid(self.params.post, {
           {
             "tags",
-            optional = true,
-            type = "string"
+            shapes.empty + shapes.limited_text(240) / (category and (function()
+              local _base_1 = category
+              local _fn_0 = _base_1.parse_tags
+              return function(...)
+                return _fn_0(_base_1, ...)
+              end
+            end)() or nil)
+          },
+          {
+            "title",
+            types["nil"] + shapes.limited_text(limits.MAX_TITLE_LEN)
           }
         })
-        local opts = { }
-        if post_update.title then
-          opts.title = post_update.title
-          opts.slug = slugify(post_update.title)
+        if topic_update.title then
+          topic_update.slug = slugify(topic_update.title)
         end
-        if update_tags then
-          local category = self.topic:get_category()
-          local tags = category:parse_tags(post_update.tags)
-          if tags and next(tags) then
-            opts.tags = db.array((function()
+        if self.params.post.tags then
+          if topic_update.tags and next(topic_update.tags) then
+            topic_update.tags = db.array((function()
               local _accum_0 = { }
               local _len_0 = 1
-              for _index_0 = 1, #tags do
-                local t = tags[_index_0]
+              local _list_0 = topic_update.tags
+              for _index_0 = 1, #_list_0 do
+                local t = _list_0[_index_0]
                 _accum_0[_len_0] = t.slug
                 _len_0 = _len_0 + 1
               end
               return _accum_0
             end)())
           else
-            opts.tags = db.NULL
+            topic_update.tags = db.NULL
           end
         end
         local filter_update
         filter_update = require("community.helpers.models").filter_update
-        local topic_update = filter_update(self.topic, opts)
+        topic_update = filter_update(self.topic, topic_update)
         self.topic:update(topic_update)
         edited_title = topic_update.title and true
       end

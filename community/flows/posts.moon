@@ -5,7 +5,7 @@ import Topics, Posts, PostEdits,
 db = require "lapis.db"
 import assert_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
-import trim_filter, slugify from require "lapis.util"
+import slugify from require "lapis.util"
 
 import require_login from require "community.helpers.app"
 import is_empty_html from require "community.helpers.html"
@@ -90,21 +90,15 @@ class PostsFlow extends Flow
     @load_post!
     assert_error @post\allowed_to_edit(@current_user, "edit"), "not allowed to edit"
 
-    assert_valid @params, {
-      {"post", type: "table"}
-    }
-
     @topic = @post\get_topic!
 
-    update_tags = @params.post.tags
-    post_update = trim_filter @params.post
-    assert_valid post_update, {
-      {"body", exists: true, max_length: limits.MAX_BODY_LEN}
-      {"body_format", optional: true, one_of: { "html", "markdown"} }
-      {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
+    post_update = shapes.assert_valid @params.post, {
+      {"body", shapes.limited_text limits.MAX_BODY_LEN }
+      {"body_format", shapes.db_enum(Posts.body_formats) + shapes.empty / Posts.body_formats.html}
+      {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
     }
 
-    body = assert_error Posts\filter_body post_update.body, post_update.body_format or "html"
+    body = assert_error Posts\filter_body post_update.body, post_update.body_format
 
     -- only if the body is different
     edited = if @post.body != body
@@ -121,36 +115,30 @@ class PostsFlow extends Flow
         :body
         edits_count: db.raw "edits_count + 1"
         last_edited_at: db.format_date!
-        body_format: if post_update.body_format
-          Posts.body_formats\for_db post_update.body_format
+        body_format: post_update.body_format
       }
-
-      @post\refresh_search_index!
 
       true
 
     edited_title = if @post\is_topic_post! and not @topic.permanent
-      assert_valid post_update, {
-        {"title", optional: true, max_length: limits.MAX_TITLE_LEN}
-        {"tags", optional: true, type: "string"}
+      category = @topic\get_category!
+      topic_update = shapes.assert_valid @params.post, {
+        {"tags", shapes.empty + shapes.limited_text(240) / (category and category\parse_tags or nil) }
+        {"title", types.nil + shapes.limited_text limits.MAX_TITLE_LEN }
       }
 
-      opts = {}
+      if topic_update.title
+        topic_update.slug = slugify topic_update.title
 
-      if post_update.title
-        opts.title = post_update.title
-        opts.slug = slugify post_update.title
-
-      if update_tags
-        category = @topic\get_category!
-        tags = category\parse_tags post_update.tags
-        opts.tags = if tags and next tags
-          db.array [t.slug for t in *tags]
+      if @params.post.tags -- only update tags if they were provided
+        topic_update.tags = if topic_update.tags and next topic_update.tags
+          db.array [t.slug for t in *topic_update.tags]
         else
           db.NULL
 
       import filter_update from require "community.helpers.models"
-      topic_update = filter_update @topic, opts
+      topic_update = filter_update @topic, topic_update
+
       @topic\update topic_update
       topic_update.title and true
 
