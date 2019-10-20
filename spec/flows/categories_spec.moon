@@ -578,6 +578,8 @@ describe "categories", ->
         assert.same {}, res.pending_posts
 
       it "promotes pending post", ->
+        s = spy.on(Posts.__base, "on_body_updated_callback")
+
         res = CategoryApp\get current_user, "/pending-post", {
           category_id: category.id
           pending_post_id: pending_post.id
@@ -586,6 +588,7 @@ describe "categories", ->
 
         assert.same 0, PendingPosts\count!
         assert.same 1, Posts\count!
+        assert.spy(s, "on_body_updated_callback").was.called!
 
       it "doesn't let stranger edit pending post", ->
         res = CategoryApp\get factory.Users!, "/pending-post", {

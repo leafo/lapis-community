@@ -173,7 +173,6 @@ describe "posting flow", ->
         }, open: true
       }) logs
 
-
     it "creates new topic with body format", ->
       category = factory.Categories!
 
@@ -268,6 +267,19 @@ describe "posting flow", ->
 
       topic = unpack Topics\select!
       assert.not.same 1, topic.category_order
+
+    it "calls on_body_updated_callback when creating topic", ->
+      s = spy.on(Posts.__base, "on_body_updated_callback")
+
+      category = factory.Categories!
+
+      new_topic {
+        category_id: category.id
+        "topic[title]": "call the"
+        "topic[body]": "method please"
+      }
+
+      assert.spy(s, "on_body_updated_callback").was.called!
 
   describe "new post", ->
     local topic
@@ -393,6 +405,16 @@ describe "posting flow", ->
       assert (types.shape {
         body_format: Posts.body_formats.markdown
       })
+
+    it "calls on_body_updated_callback when creating post", ->
+      s = spy.on(Posts.__base, "on_body_updated_callback")
+
+      new_post {
+        topic_id: topic.id
+        "post[body]": "will call the callback"
+      }
+
+      assert.spy(s, "on_body_updated_callback").was.called!
 
     describe "parent_post_id", ->
       it "fails with invalid parent_post_id value", ->
@@ -536,13 +558,13 @@ describe "posting flow", ->
           parent_post_id: post.id
         }) pending_post
 
-  describe "edit topic", ->
+  describe "delete topic", ->
     local topic
 
     before_each ->
       topic = factory.Topics user_id: current_user.id
 
-    it "should delete topic", ->
+    it "deletes topic", ->
       delete_topic { topic_id: topic.id }
 
       topic\refresh!
@@ -565,7 +587,7 @@ describe "posting flow", ->
       }) logs
 
 
-    it "should not allow unrelated user to delete topic", ->
+    it "doesn't allow unrelated user to delete topic", ->
       other_user = factory.Users!
 
       assert.has_error(
@@ -584,7 +606,7 @@ describe "posting flow", ->
         @current_user = current_user
         PostsFlow(@)\edit_post!
 
-    it "should edit post", ->
+    it "edits post", ->
       post = factory.Posts user_id: current_user.id
 
       edit_post {
@@ -614,7 +636,7 @@ describe "posting flow", ->
 
 
 
-    it "should edit post and title", ->
+    it "edit post and topic title", ->
       post = factory.Posts user_id: current_user.id
 
       edit_post {
@@ -639,7 +661,7 @@ describe "posting flow", ->
       assert.same 1, post.edits_count
       assert.truthy post.last_edited_at
 
-    it "should edit tags", ->
+    it "edits tags", ->
       post = factory.Posts user_id: current_user.id
       topic = post\get_topic!
       category = topic\get_category!
@@ -712,6 +734,55 @@ describe "posting flow", ->
       post\refresh!
       assert.same 0, post.edits_count
       assert.falsy post.last_edited_at
+
+    describe "on_body_updated_callback", ->
+      it "calls on_body_updated_callback when updating body", ->
+        s = spy.on(Posts.__base, "on_body_updated_callback")
+
+        post = factory.Posts user_id: current_user.id
+
+        edit_post {
+          post_id: post.id
+          "post[body]": post.body .. " was changed!"
+        }
+        assert.spy(s, "on_body_updated_callback").was.called!
+
+      it "doesn't call on_body_updated_callback when body is same", ->
+        s = spy.on(Posts.__base, "on_body_updated_callback")
+
+        post = factory.Posts user_id: current_user.id
+
+        edit_post {
+          post_id: post.id
+          "post[body]": post.body
+        }
+
+        assert.spy(s, "on_body_updated_callback").was_not.called!
+
+      it "calls on_body_updated_callback when updating title", ->
+        s = spy.on(Posts.__base, "on_body_updated_callback")
+
+        post = factory.Posts user_id: current_user.id
+
+        edit_post {
+          post_id: post.id
+          "post[body]": post.body
+          "post[title]": post\get_topic!.title .. " was changed!"
+        }
+        assert.spy(s, "on_body_updated_callback").was.called!
+
+      it "doesn't call on_body_updated_callback when body & title are same", ->
+        s = spy.on(Posts.__base, "on_body_updated_callback")
+
+        post = factory.Posts user_id: current_user.id
+
+        edit_post {
+          post_id: post.id
+          "post[body]": post.body
+          "post[title]": post\get_topic!.title
+        }
+
+        assert.spy(s, "on_body_updated_callback").was_not.called!
 
     it "handles failure for invalid post id", ->
       assert.has_error(
