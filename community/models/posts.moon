@@ -480,6 +480,11 @@ class Posts extends Model
   is_moderation_event: =>
     not not @moderation_log_id
 
+  -- called when post body is updated or created
+  -- also called if topic post and topic title updated
+  on_body_updated_callback: (req_or_flow) =>
+    @refresh_search_index!
+
   refresh_search_index: =>
     search = @get_posts_search!
     if @should_index_for_search!

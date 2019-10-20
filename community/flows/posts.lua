@@ -96,7 +96,7 @@ do
           object = self.post,
           action = "create"
         })
-        self.post:refresh_search_index()
+        self.post:on_body_updated_callback(self)
       end
       return true
     end),
@@ -182,7 +182,7 @@ do
         edited_title = topic_update.title and true
       end
       if edited or edited_title then
-        self.post:refresh_search_index()
+        self.post:on_body_updated_callback(self)
       end
       if edited then
         ActivityLogs:create({

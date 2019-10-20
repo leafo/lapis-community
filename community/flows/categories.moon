@@ -182,7 +182,7 @@ class CategoriesFlow extends Flow
 
     @post = switch @params.action
       when "promote"
-        @pending_post\promote!
+        @pending_post\promote @
       when "deleted", "spam"
         @pending_post\update {
           status: PendingPosts.statuses\for_db @params.action

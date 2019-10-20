@@ -82,7 +82,7 @@ class PostsFlow extends Flow
         action: "create"
       }
 
-      @post\refresh_search_index!
+      @post\on_body_updated_callback @
 
     true
 
@@ -143,7 +143,7 @@ class PostsFlow extends Flow
       topic_update.title and true
 
     if edited or edited_title
-      @post\refresh_search_index!
+      @post\on_body_updated_callback @
 
     if edited
       ActivityLogs\create {

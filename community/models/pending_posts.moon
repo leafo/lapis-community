@@ -54,7 +54,7 @@ class PendingPosts extends Model
     false
 
   -- convert to real post
-  promote: =>
+  promote: (req_or_flow=nil) =>
     import Posts, Topics, CommunityUsers from require "community.models"
 
     topic = @get_topic!
@@ -86,7 +86,7 @@ class PendingPosts extends Model
     else
       CommunityUsers\for_user(@get_user!)\increment "posts_count"
 
-    post\refresh_search_index!
+    post\on_body_updated_callback req_or_flow
 
     topic\increment_participant @get_user!
 

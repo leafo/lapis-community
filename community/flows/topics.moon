@@ -109,7 +109,7 @@ class TopicsFlow extends Flow
     CommunityUsers\for_user(@current_user)\increment "topics_count"
     @topic\increment_participant @current_user
 
-    @post\refresh_search_index!
+    @post\on_body_updated_callback @
 
     ActivityLogs\create {
       user_id: @current_user.id

@@ -474,6 +474,9 @@ do
     is_moderation_event = function(self)
       return not not self.moderation_log_id
     end,
+    on_body_updated_callback = function(self, req_or_flow)
+      return self:refresh_search_index()
+    end,
     refresh_search_index = function(self)
       local search = self:get_posts_search()
       if self:should_index_for_search() then

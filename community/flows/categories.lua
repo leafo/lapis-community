@@ -264,7 +264,7 @@ do
       assert_error(self.pending_post:allowed_to_moderate(self.current_user), "invalid pending post")
       local _exp_0 = self.params.action
       if "promote" == _exp_0 then
-        self.post = self.pending_post:promote()
+        self.post = self.pending_post:promote(self)
       elseif "deleted" == _exp_0 or "spam" == _exp_0 then
         self.post = self.pending_post:update({
           status = PendingPosts.statuses:for_db(self.params.action)

@@ -19,7 +19,10 @@ do
       end
       return false
     end,
-    promote = function(self)
+    promote = function(self, req_or_flow)
+      if req_or_flow == nil then
+        req_or_flow = nil
+      end
       local Posts, Topics, CommunityUsers
       do
         local _obj_0 = require("community.models")
@@ -53,7 +56,7 @@ do
       else
         CommunityUsers:for_user(self:get_user()):increment("posts_count")
       end
-      post:refresh_search_index()
+      post:on_body_updated_callback(req_or_flow)
       topic:increment_participant(self:get_user())
       self:delete()
       return post
