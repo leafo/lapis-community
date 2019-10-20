@@ -35,6 +35,15 @@ local empty = types.one_of({
     return "empty"
   end
 })
+local page_number = types.one_of({
+  empty / 1,
+  types.one_of({
+    types.number,
+    types.string / trim * types.pattern("^%d+$") / tonumber
+  }):describe("an integer")
+}) / function(n)
+  return math.floor(math.max(1, n))
+end
 local db_id = types.one_of({
   types.number * types.custom(function(v)
     return v == math.floor(v)
@@ -112,6 +121,7 @@ assert_valid = function(...)
 end
 return {
   empty = empty,
+  page_number = page_number,
   valid_text = valid_text,
   trimmed_text = trimmed_text,
   limited_text = limited_text,

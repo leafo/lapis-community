@@ -25,6 +25,14 @@ empty = types.one_of {
     types.literal(ngx.null) / nil
 }, describe: -> "empty"
 
+page_number = types.one_of({
+  empty / 1
+  types.one_of({
+    types.number
+    types.string / trim * types.pattern("^%d+$") / tonumber
+  })\describe "an integer"
+}) / (n) -> math.floor math.max 1, n
+
 db_id = types.one_of({
   types.number * types.custom (v) -> v == math.floor(v)
   types.string / trim * types.pattern("^%d+$") / tonumber
@@ -76,6 +84,7 @@ assert_valid = (...) ->
 
 {
   :empty
+  :page_number
   :valid_text, :trimmed_text, :limited_text
   :db_id, :db_enum
 

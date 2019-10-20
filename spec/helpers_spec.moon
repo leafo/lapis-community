@@ -36,6 +36,32 @@ describe "community.helpers", ->
 
 
   describe "shapes", ->
+    describe "page_number", ->
+      local page_number
+
+      before_each ->
+        import page_number from require "community.helpers.shapes"
+
+      it "passes valid value", ->
+        assert.same 1, page_number\transform "1"
+        assert.same 200, page_number\transform "200"
+        assert.same 5, page_number\transform " 5 "
+
+        assert.same 1, page_number\transform 1
+        assert.same 50, page_number\transform 50
+        assert.same 1, page_number\transform -20
+        assert.same 3, page_number\transform 3.5
+
+        assert.same 1, page_number\transform nil
+        assert.same 1, page_number\transform ""
+
+      it "fails invalid string", ->
+        assert.same {nil, "expected empty, or an integer"}, {page_number\transform "hello"}
+        assert.same {nil, "expected empty, or an integer"}, {page_number\transform "nil"}
+        assert.same {nil, "expected empty, or an integer"}, {page_number\transform " 5 f"}
+        assert.same {nil, "expected empty, or an integer"}, {page_number\transform "-5"}
+        assert.same {nil, "expected empty, or an integer"}, {page_number\transform "5.3"}
+
     describe "valid_text", ->
       local valid_text
 
