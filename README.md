@@ -25,7 +25,7 @@ The following features are included:
 
 * Topics
   * Sticky, Locked, and Archived topics
-  * Threaded Replies
+  * Threaded replies
   * Replies can be HTML or markdown
   * Moderation events (e.g. *Moderator locked this topic*)
   * Mentioning other members with `@`
@@ -35,6 +35,7 @@ The following features are included:
   * Voting options for replies: up & down, up only, no voting
   * Reply edit history
   * Topics tags (defined on the category)
+  * Pinned replies
 * Categories (for organizing topics)
   * Can be nested
     * *Directory* categories can be used to organize sub-categories without allowing direct topics

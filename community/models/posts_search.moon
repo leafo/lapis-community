@@ -33,6 +33,20 @@ decode_html_entities = do
         '&'..tag..';')
 
 
+-- Generated schema dump: (do not edit)
+--
+-- CREATE TABLE community_posts_search (
+--   post_id integer NOT NULL,
+--   topic_id integer NOT NULL,
+--   category_id integer,
+--   posted_at timestamp without time zone NOT NULL,
+--   words tsvector
+-- );
+-- ALTER TABLE ONLY community_posts_search
+--   ADD CONSTRAINT community_posts_search_pkey PRIMARY KEY (post_id);
+-- CREATE INDEX community_posts_search_post_id_idx ON community_posts_search USING btree (post_id);
+-- CREATE INDEX community_posts_search_words_idx ON community_posts_search USING gin (words);
+--
 class PostsSearch extends Model
   @primary_key: "post_id"
   @index_lang: "english"

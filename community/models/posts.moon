@@ -24,7 +24,8 @@ date = require "date"
 --   updated_at timestamp without time zone NOT NULL,
 --   status smallint DEFAULT 1 NOT NULL,
 --   moderation_log_id integer,
---   body_format smallint DEFAULT 1 NOT NULL
+--   body_format smallint DEFAULT 1 NOT NULL,
+--   pin_position integer
 -- );
 -- ALTER TABLE ONLY community_posts
 --   ADD CONSTRAINT community_posts_moderation_log_id_key UNIQUE (moderation_log_id);
