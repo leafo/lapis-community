@@ -5,8 +5,6 @@ local assert_error
 assert_error = require("lapis.application").assert_error
 local assert_valid
 assert_valid = require("lapis.validate").assert_valid
-local trim_filter
-trim_filter = require("lapis.util").trim_filter
 local Users
 Users = require("models").Users
 local Bookmarks

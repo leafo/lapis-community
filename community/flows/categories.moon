@@ -16,6 +16,9 @@ limits = require "community.limits"
 
 db = require "lapis.db"
 
+shapes = require "community.helpers.shapes"
+import types from require "tableshape"
+
 VALIDATIONS = {
   {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
 
@@ -47,11 +50,11 @@ class CategoriesFlow extends Flow
   load_category: =>
     return if @category
 
-    assert_valid @params, {
-      {"category_id", is_integer: true}
+    params = shapes.assert_valid @params, {
+      {"category_id", shapes.db_id}
     }
 
-    @category = Categories\find @params.category_id
+    @category = Categories\find params.category_id
     assert_error @category, "invalid category"
 
   recent_posts: (opts) =>

@@ -5,7 +5,6 @@ db = require "lapis.db"
 
 import assert_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
-import trim_filter from require "lapis.util"
 
 import Users from require "models"
 import Bookmarks from require "community.models"

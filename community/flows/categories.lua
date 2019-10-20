@@ -30,6 +30,9 @@ local preload
 preload = require("lapis.db.model").preload
 local limits = require("community.limits")
 local db = require("lapis.db")
+local shapes = require("community.helpers.shapes")
+local types
+types = require("tableshape").types
 local VALIDATIONS = {
   {
     "title",
@@ -80,13 +83,13 @@ do
       if self.category then
         return 
       end
-      assert_valid(self.params, {
+      local params = shapes.assert_valid(self.params, {
         {
           "category_id",
-          is_integer = true
+          shapes.db_id
         }
       })
-      self.category = Categories:find(self.params.category_id)
+      self.category = Categories:find(params.category_id)
       return assert_error(self.category, "invalid category")
     end,
     recent_posts = function(self, opts)
