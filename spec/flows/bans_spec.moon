@@ -212,6 +212,14 @@ describe "bans", ->
       for ban in *bans
         assert.same category.id, ban.object_id
 
+      bans_page_2 = show_bans {
+        object_type: "category"
+        object_id: category.id
+        page: "2"
+      }
+
+      assert.same {}, bans_page_2
+
   describe "with topic", ->
     local topic
 

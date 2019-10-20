@@ -3,20 +3,17 @@ local Flow
 Flow = require("lapis.flow").Flow
 local assert_error
 assert_error = require("lapis.application").assert_error
-local assert_page, require_login
-do
-  local _obj_0 = require("community.helpers.app")
-  assert_page, require_login = _obj_0.assert_page, _obj_0.require_login
-end
-local Users
-Users = require("models").Users
+local require_login
+require_login = require("community.helpers.app").require_login
+local preload
+preload = require("lapis.db.model").preload
 local Bans, Categories, Topics
 do
   local _obj_0 = require("community.models")
   Bans, Categories, Topics = _obj_0.Bans, _obj_0.Categories, _obj_0.Topics
 end
-local preload
-preload = require("lapis.db.model").preload
+local Users
+Users = require("models").Users
 local limits = require("community.limits")
 local shapes = require("community.helpers.shapes")
 local types
@@ -206,7 +203,12 @@ do
     end),
     show_bans = require_login(function(self)
       self:load_object()
-      assert_page(self)
+      local params = shapes.assert_valid(self.params, {
+        {
+          "page",
+          shapes.page_number
+        }
+      })
       self.pager = Bans:paginated([[      where object_type = ? and object_id = ?
       order by created_at desc
     ]], Bans:object_type_for_object(self.object), self.object.id, {
@@ -216,7 +218,7 @@ do
           return bans
         end
       })
-      self.bans = self.pager:get_page(self.page)
+      self.bans = self.pager:get_page(params.page)
       return self.bans
     end)
   }

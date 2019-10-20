@@ -3,17 +3,15 @@ db = require "lapis.db"
 import Flow from require "lapis.flow"
 
 import assert_error from require "lapis.application"
-
-import assert_page, require_login from require "community.helpers.app"
-
-import Users from require "models"
+import require_login from require "community.helpers.app"
+import preload from require "lapis.db.model"
 import Bans, Categories, Topics from require "community.models"
 
-import preload from require "lapis.db.model"
+import Users from require "models"
 
 limits = require "community.limits"
-
 shapes = require "community.helpers.shapes"
+
 import types from require "tableshape"
 
 class BansFlow extends Flow
@@ -178,7 +176,10 @@ class BansFlow extends Flow
 
   show_bans: require_login =>
     @load_object!
-    assert_page @
+
+    params = shapes.assert_valid @params, {
+      {"page", shapes.page_number}
+    }
 
     @pager = Bans\paginated [[
       where object_type = ? and object_id = ?
@@ -190,6 +191,6 @@ class BansFlow extends Flow
         bans
     }
 
-    @bans = @pager\get_page @page
+    @bans = @pager\get_page params.page
     @bans
 
