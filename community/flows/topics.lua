@@ -8,8 +8,6 @@ do
 end
 local assert_error
 assert_error = require("lapis.application").assert_error
-local trim_filter
-trim_filter = require("lapis.util").trim_filter
 local assert_valid
 assert_valid = require("lapis.validate").assert_valid
 local require_login
@@ -166,26 +164,30 @@ do
           action = "delete"
         })
         if self.topic:allowed_to_moderate(self.current_user) then
-          self:write_moderation_log("topic.delete", self.params.reason)
+          local params = shapes.assert_valid(self.params, {
+            {
+              "reason",
+              shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
+            }
+          })
+          self:write_moderation_log("topic.delete", params.reason)
         end
         return true
       end
     end),
     lock_topic = require_login(function(self)
       self:load_topic_for_moderation()
-      trim_filter(self.params)
-      assert_valid(self.params, {
+      local params = shapes.assert_valid(self.params, {
         {
           "reason",
-          optional = true,
-          max_length = limits.MAX_BODY_LEN
+          shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
         }
       })
       assert_error(not self.topic.locked, "topic is already locked")
       self.topic:update({
         locked = true
       })
-      self:write_moderation_log("topic.lock", self.params.reason)
+      self:write_moderation_log("topic.lock", params.reason)
       return true
     end),
     unlock_topic = function(self)
@@ -200,18 +202,16 @@ do
     stick_topic = function(self)
       self:load_topic_for_moderation()
       assert_error(not self.topic.sticky, "topic is already sticky")
-      trim_filter(self.params)
-      assert_valid(self.params, {
+      local params = shapes.assert_valid(self.params, {
         {
           "reason",
-          optional = true,
-          max_length = limits.MAX_BODY_LEN
+          shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
         }
       })
       self.topic:update({
         sticky = true
       })
-      self:write_moderation_log("topic.stick", self.params.reason)
+      self:write_moderation_log("topic.stick", params.reason)
       return true
     end,
     unstick_topic = function(self)
@@ -227,16 +227,14 @@ do
       self:load_topic_for_moderation()
       assert_error(not self.topic:is_hidden(), "topic is already hidden")
       assert_error(not self.topic:is_archived(), "can't hide archived topic")
-      trim_filter(self.params)
-      assert_valid(self.params, {
+      local params = shapes.assert_valid(self.params, {
         {
           "reason",
-          optional = true,
-          max_length = limits.MAX_BODY_LEN
+          shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
         }
       })
       assert_error(self.topic:hide())
-      self:write_moderation_log("topic.hide", self.params.reason)
+      self:write_moderation_log("topic.hide", params.reason)
       return true
     end,
     unhide_topic = function(self)
@@ -249,16 +247,14 @@ do
     archive_topic = function(self)
       self:load_topic_for_moderation()
       assert_error(not self.topic:is_archived(), "topic is already archived")
-      trim_filter(self.params)
-      assert_valid(self.params, {
+      local params = shapes.assert_valid(self.params, {
         {
           "reason",
-          optional = true,
-          max_length = limits.MAX_BODY_LEN
+          shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
         }
       })
       self.topic:archive()
-      self:write_moderation_log("topic.archive", self.params.reason)
+      self:write_moderation_log("topic.archive", params.reason)
       return true
     end,
     unarchive_topic = function(self)

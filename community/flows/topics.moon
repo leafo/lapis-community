@@ -5,7 +5,6 @@ import Flow from require "lapis.flow"
 import Topics, Posts, CommunityUsers, ActivityLogs from require "community.models"
 
 import assert_error from require "lapis.application"
-import trim_filter from require "lapis.util"
 import assert_valid from require "lapis.validate"
 
 import require_login from require "community.helpers.app"
@@ -135,22 +134,25 @@ class TopicsFlow extends Flow
 
       -- if we're a moderator then write to moderation log
       if @topic\allowed_to_moderate @current_user
-        @write_moderation_log "topic.delete", @params.reason
+        params = shapes.assert_valid @params, {
+          {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
+        }
+
+        @write_moderation_log "topic.delete", params.reason
 
       true
 
   lock_topic: require_login =>
     @load_topic_for_moderation!
 
-    trim_filter @params
-    assert_valid @params, {
-      {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
+    params = shapes.assert_valid @params, {
+      {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
     }
 
     assert_error not @topic.locked, "topic is already locked"
 
     @topic\update locked: true
-    @write_moderation_log "topic.lock", @params.reason
+    @write_moderation_log "topic.lock", params.reason
     true
 
   unlock_topic: =>
@@ -166,13 +168,12 @@ class TopicsFlow extends Flow
     @load_topic_for_moderation!
     assert_error not @topic.sticky, "topic is already sticky"
 
-    trim_filter @params
-    assert_valid @params, {
-      {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
+    params = shapes.assert_valid @params, {
+      {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
     }
 
     @topic\update sticky: true
-    @write_moderation_log "topic.stick", @params.reason
+    @write_moderation_log "topic.stick", params.reason
     true
 
   unstick_topic: =>
@@ -188,13 +189,12 @@ class TopicsFlow extends Flow
     assert_error not @topic\is_hidden!, "topic is already hidden"
     assert_error not @topic\is_archived!, "can't hide archived topic"
 
-    trim_filter @params
-    assert_valid @params, {
-      {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
+    params = shapes.assert_valid @params, {
+      {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
     }
 
     assert_error @topic\hide!
-    @write_moderation_log "topic.hide", @params.reason
+    @write_moderation_log "topic.hide", params.reason
     true
 
   unhide_topic: =>
@@ -209,13 +209,12 @@ class TopicsFlow extends Flow
     @load_topic_for_moderation!
     assert_error not @topic\is_archived!, "topic is already archived"
 
-    trim_filter @params
-    assert_valid @params, {
-      {"reason", optional: true, max_length: limits.MAX_BODY_LEN}
+    params = shapes.assert_valid @params, {
+      {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
     }
 
     @topic\archive!
-    @write_moderation_log "topic.archive", @params.reason
+    @write_moderation_log "topic.archive", params.reason
     true
 
   unarchive_topic: =>
