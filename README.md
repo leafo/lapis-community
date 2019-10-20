@@ -7,7 +7,7 @@ A drop in, full featured community and comment system for Lapis projects.
 Example community: https://itch.io/community
 
 On [itch.io](https://itch.io) every single community, message board, comment
-thread is powered by `lapis-community`.io. It's suitable for managing many
+thread is powered by `lapis-community`. It's suitable for managing many
 different sub communities with distinct moderators and roles.
 
 ## How it works
