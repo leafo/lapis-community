@@ -4,13 +4,15 @@ db = require "lapis.db"
 
 import assert_valid from require "lapis.validate"
 import assert_error from require "lapis.application"
-import assert_page, require_login from require "community.helpers.app"
-import trim_filter from require "lapis.util"
+import require_login from require "community.helpers.app"
 import filter_update from require "community.helpers.models"
 
 import CategoryGroups from require "community.models"
 
 limits = require "community.limits"
+shapes = require "community.helpers.shapes"
+
+import types from require "tableshape"
 
 class CategoryGroupsFlow extends Flow
   expose_assigns: true
@@ -31,27 +33,11 @@ class CategoryGroupsFlow extends Flow
     assert_error @category_group, "invalid group"
 
   validate_params: =>
-    assert_valid @params, {
-      {"category_group", type: "table"}
+    shapes.assert_valid @params.category_group, {
+      {"title", shapes.empty / db.NULL + shapes.limited_text limits.MAX_TITLE_LEN }
+      {"description", shapes.empty / db.NULL + shapes.limited_text limits.MAX_BODY_LEN }
+      {"rules", shapes.empty / db.NULL + shapes.limited_text limits.MAX_BODY_LEN }
     }
-
-    group_params = trim_filter @params.category_group, {
-      "title"
-      "description"
-      "rules"
-    }
-
-    assert_valid group_params, {
-      {"title", optional: true, max_length: limits.MAX_TITLE_LEN}
-      {"description", optional: true, max_length: limits.MAX_BODY_LEN}
-      {"rules", optional: true, max_length: limits.MAX_BODY_LEN}
-    }
-
-    group_params.title or= db.NULL
-    group_params.description or= db.NULL
-    group_params.rules or= db.NULL
-
-    group_params
 
   new_category_group: require_login =>
     create_params = @validate_params!
@@ -76,10 +62,13 @@ class CategoryGroupsFlow extends Flow
 
   show_categories: =>
     @load_category_group!
-    assert_page @
+
+    params = shapes.assert_valid @params, {
+      {"page", shapes.page_number}
+    }
 
     @pager = @category_group\get_categories_paginated!
-    @categories = @pager\get_page @page
+    @categories = @pager\get_page params.page
     @categories
 
 

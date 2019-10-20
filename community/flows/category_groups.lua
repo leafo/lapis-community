@@ -5,18 +5,16 @@ local assert_valid
 assert_valid = require("lapis.validate").assert_valid
 local assert_error
 assert_error = require("lapis.application").assert_error
-local assert_page, require_login
-do
-  local _obj_0 = require("community.helpers.app")
-  assert_page, require_login = _obj_0.assert_page, _obj_0.require_login
-end
-local trim_filter
-trim_filter = require("lapis.util").trim_filter
+local require_login
+require_login = require("community.helpers.app").require_login
 local filter_update
 filter_update = require("community.helpers.models").filter_update
 local CategoryGroups
 CategoryGroups = require("community.models").CategoryGroups
 local limits = require("community.limits")
+local shapes = require("community.helpers.shapes")
+local types
+types = require("tableshape").types
 local CategoryGroupsFlow
 do
   local _class_0
@@ -42,38 +40,20 @@ do
       return assert_error(self.category_group, "invalid group")
     end,
     validate_params = function(self)
-      assert_valid(self.params, {
-        {
-          "category_group",
-          type = "table"
-        }
-      })
-      local group_params = trim_filter(self.params.category_group, {
-        "title",
-        "description",
-        "rules"
-      })
-      assert_valid(group_params, {
+      return shapes.assert_valid(self.params.category_group, {
         {
           "title",
-          optional = true,
-          max_length = limits.MAX_TITLE_LEN
+          shapes.empty / db.NULL + shapes.limited_text(limits.MAX_TITLE_LEN)
         },
         {
           "description",
-          optional = true,
-          max_length = limits.MAX_BODY_LEN
+          shapes.empty / db.NULL + shapes.limited_text(limits.MAX_BODY_LEN)
         },
         {
           "rules",
-          optional = true,
-          max_length = limits.MAX_BODY_LEN
+          shapes.empty / db.NULL + shapes.limited_text(limits.MAX_BODY_LEN)
         }
       })
-      group_params.title = group_params.title or db.NULL
-      group_params.description = group_params.description or db.NULL
-      group_params.rules = group_params.rules or db.NULL
-      return group_params
     end,
     new_category_group = require_login(function(self)
       local create_params = self:validate_params()
@@ -96,9 +76,14 @@ do
     end,
     show_categories = function(self)
       self:load_category_group()
-      assert_page(self)
+      local params = shapes.assert_valid(self.params, {
+        {
+          "page",
+          shapes.page_number
+        }
+      })
       self.pager = self.category_group:get_categories_paginated()
-      self.categories = self.pager:get_page(self.page)
+      self.categories = self.pager:get_page(params.page)
       return self.categories
     end
   }
