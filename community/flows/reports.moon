@@ -16,6 +16,9 @@ import PostReports, Posts, Topics from require "community.models"
 
 limits = require "community.limits"
 
+shapes = require "community.helpers.shapes"
+import types from require "tableshape"
+
 class ReportsFlow extends Flow
   expose_assigns: true
 
@@ -24,10 +27,6 @@ class ReportsFlow extends Flow
     assert @current_user, "missing current user for reports flow"
 
   load_post: =>
-    assert_valid @params, {
-      {"post_id", is_integer: true}
-    }
-
     PostsFlow = require "community.flows.posts"
     PostsFlow(@)\load_post!
 
@@ -42,28 +41,12 @@ class ReportsFlow extends Flow
       post_id: @post.id
     }
 
-  validate_params: =>
-    @load_post!
-
-    assert_valid @params, {
-      {"report", type: "table"}
-    }
-
-    params = trim_filter @params.report, {
-      "reason", "body"
-    }
-
-    assert_valid params, {
-      {"reason", one_of: PostReports.reasons}
-      {"body", optional: true, max_length: limits.MAX_BODY_LEN}
-    }
-
-    params.reason = PostReports.reasons\for_db params.reason
-    params
-
   update_or_create_report: =>
     @load_post!
-    params = @validate_params!
+    params = shapes.assert_valid @params.report, {
+      {"reason", shapes.db_enum PostReports.reasons}
+      {"body", shapes.empty / db.NULL + shapes.limited_text limits.MAX_BODY_LEN}
+    }
 
     if @report
       @report\update filter_update @report, params

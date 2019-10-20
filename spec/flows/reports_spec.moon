@@ -72,7 +72,7 @@ describe "reports", ->
       res = ReportingApp\get current_user, "/report", {
         post_id: post.id
         "report[reason]": "other"
-        "report[body]": "this is the problem"
+        "report[body]": "this is the problem   \0  "
       }
 
       assert.same {success: true}, res
@@ -133,6 +133,21 @@ describe "reports", ->
       report\refresh!
 
       assert.same "I am updating my report", report.body
+      assert.same PostReports.reasons.spam, report.reason
+
+    it "updates report removing body", ->
+      report = factory.PostReports user_id: current_user.id
+
+      res = ReportingApp\get current_user, "/report", {
+        post_id: report.post_id
+        "report[reason]": "spam"
+        "report[body]": ""
+      }
+
+      assert.same 1, PostReports\count!
+      report\refresh!
+
+      assert.same nil, report.body
       assert.same PostReports.reasons.spam, report.reason
 
     it "increments report count for category", ->

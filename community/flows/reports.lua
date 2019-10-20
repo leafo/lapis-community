@@ -25,6 +25,9 @@ do
   PostReports, Posts, Topics = _obj_0.PostReports, _obj_0.Posts, _obj_0.Topics
 end
 local limits = require("community.limits")
+local shapes = require("community.helpers.shapes")
+local types
+types = require("tableshape").types
 local ReportsFlow
 do
   local _class_0
@@ -32,12 +35,6 @@ do
   local _base_0 = {
     expose_assigns = true,
     load_post = function(self)
-      assert_valid(self.params, {
-        {
-          "post_id",
-          is_integer = true
-        }
-      })
       local PostsFlow = require("community.flows.posts")
       PostsFlow(self):load_post()
       self.topic = self.post:get_topic()
@@ -47,35 +44,18 @@ do
         post_id = self.post.id
       })
     end,
-    validate_params = function(self)
+    update_or_create_report = function(self)
       self:load_post()
-      assert_valid(self.params, {
-        {
-          "report",
-          type = "table"
-        }
-      })
-      local params = trim_filter(self.params.report, {
-        "reason",
-        "body"
-      })
-      assert_valid(params, {
+      local params = shapes.assert_valid(self.params.report, {
         {
           "reason",
-          one_of = PostReports.reasons
+          shapes.db_enum(PostReports.reasons)
         },
         {
           "body",
-          optional = true,
-          max_length = limits.MAX_BODY_LEN
+          shapes.empty / db.NULL + shapes.limited_text(limits.MAX_BODY_LEN)
         }
       })
-      params.reason = PostReports.reasons:for_db(params.reason)
-      return params
-    end,
-    update_or_create_report = function(self)
-      self:load_post()
-      local params = self:validate_params()
       if self.report then
         self.report:update(filter_update(self.report, params))
         return "update"
