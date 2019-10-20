@@ -3,10 +3,6 @@ local Flow
 Flow = require("lapis.flow").Flow
 local assert_error
 assert_error = require("lapis.application").assert_error
-local assert_valid
-assert_valid = require("lapis.validate").assert_valid
-local trim_filter
-trim_filter = require("lapis.util").trim_filter
 local assert_page, require_login
 do
   local _obj_0 = require("community.helpers.app")
@@ -21,6 +17,10 @@ do
 end
 local preload
 preload = require("lapis.db.model").preload
+local limits = require("community.limits")
+local shapes = require("community.helpers.shapes")
+local types
+types = require("tableshape").types
 local BansFlow
 do
   local _class_0
@@ -28,13 +28,13 @@ do
   local _base_0 = {
     expose_assigns = true,
     load_banned_user = function(self)
-      assert_valid(self.params, {
+      local params = shapes.assert_valid(self.params, {
         {
           "banned_user_id",
-          is_integer = true
+          shapes.db_id
         }
       })
-      self.banned = assert_error(Users:find(self.params.banned_user_id), "invalid user")
+      self.banned = assert_error(Users:find(params.banned_user_id), "invalid user")
       assert_error(self.banned.id ~= self.current_user.id, "you can not ban yourself")
       assert_error(not self.banned:is_admin(), "you can't ban an admin")
       self:load_object()
@@ -44,18 +44,18 @@ do
       if self.object then
         return 
       end
-      assert_valid(self.params, {
+      local params = shapes.assert_valid(self.params, {
         {
           "object_id",
-          is_integer = true
+          shapes.db_id
         },
         {
           "object_type",
-          one_of = Bans.object_types
+          shapes.db_enum(Bans.object_types)
         }
       })
-      local model = Bans:model_for_object_type(self.params.object_type)
-      self.object = model:find(self.params.object_id)
+      local model = Bans:model_for_object_type(params.object_type)
+      self.object = model:find(params.object_id)
       assert_error(self.object, "invalid ban object")
       return assert_error(self.object:allowed_to_moderate(self.current_user), "invalid permissions")
     end,
@@ -146,24 +146,23 @@ do
         log_objects = log_objects
       })
     end,
-    create_ban = function(self)
+    create_ban = require_login(function(self)
       self:load_banned_user()
       self:load_object()
-      trim_filter(self.params)
-      assert_valid(self.params, {
+      local params = shapes.assert_valid(self.params, {
         {
           "reason",
-          exists = true
+          shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
         },
         {
           "target_category_id",
-          is_integer = true,
-          optional = true
+          shapes.empty + shapes.db_id
         }
       })
+      local object_type_name = Bans.object_types:to_name(Bans:object_type_for_object(self.object))
       local category
       do
-        local target_id = self.params.target_category_id
+        local target_id = params.target_category_id
         if target_id then
           local cs = assert_error(self:get_moderatable_categories(), "invalid target category")
           for _index_0 = 1, #cs do
@@ -175,7 +174,7 @@ do
           end
         end
       end
-      if self.params.object_type == "category" then
+      if object_type_name == "category" then
         if category and self.object.id == category.id then
           category = nil
         end
@@ -183,28 +182,29 @@ do
       self.target_category = category
       local ban = Bans:create({
         object = category or self.object,
-        reason = self.params.reason,
+        reason = params.reason,
         banned_user_id = self.banned.id,
         banning_user_id = self.current_user.id
       })
       if ban then
-        self:write_moderation_log(tostring(self.params.object_type) .. ".ban", self.params.reason, {
+        self:write_moderation_log(tostring(object_type_name) .. ".ban", params.reason, {
           self.banned
         })
       end
       return ban
-    end,
-    delete_ban = function(self)
+    end),
+    delete_ban = require_login(function(self)
       self:load_ban()
       assert_error(self.ban, "invalid ban")
+      local object_type_name = Bans.object_types:to_name(self.ban.object_type)
       if self.ban and self.ban:delete() then
-        self:write_moderation_log(tostring(self.params.object_type) .. ".unban", nil, {
+        self:write_moderation_log(tostring(object_type_name) .. ".unban", nil, {
           self.banned
         })
       end
       return true
-    end,
-    show_bans = function(self)
+    end),
+    show_bans = require_login(function(self)
       self:load_object()
       assert_page(self)
       self.pager = Bans:paginated([[      where object_type = ? and object_id = ?
@@ -218,7 +218,7 @@ do
       })
       self.bans = self.pager:get_page(self.page)
       return self.bans
-    end
+    end)
   }
   _base_0.__index = _base_0
   setmetatable(_base_0, _parent_0.__base)

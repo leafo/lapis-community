@@ -56,7 +56,7 @@ describe "bans", ->
         object_id: category.id
 
         banned_user_id: other_user.id
-        reason: [[ this user ]]
+        reason: " this user "
       }
 
       bans = Bans\select!

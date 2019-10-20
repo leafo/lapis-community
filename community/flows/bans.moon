@@ -3,8 +3,6 @@ db = require "lapis.db"
 import Flow from require "lapis.flow"
 
 import assert_error from require "lapis.application"
-import assert_valid from require "lapis.validate"
-import trim_filter from require "lapis.util"
 
 import assert_page, require_login from require "community.helpers.app"
 
@@ -12,6 +10,11 @@ import Users from require "models"
 import Bans, Categories, Topics from require "community.models"
 
 import preload from require "lapis.db.model"
+
+limits = require "community.limits"
+
+shapes = require "community.helpers.shapes"
+import types from require "tableshape"
 
 class BansFlow extends Flow
   expose_assigns: true
@@ -22,11 +25,11 @@ class BansFlow extends Flow
 
   -- or user to ban
   load_banned_user: =>
-    assert_valid @params, {
-      {"banned_user_id", is_integer: true}
+    params = shapes.assert_valid @params, {
+      {"banned_user_id", shapes.db_id}
     }
 
-    @banned = assert_error Users\find(@params.banned_user_id), "invalid user"
+    @banned = assert_error Users\find(params.banned_user_id), "invalid user"
     assert_error @banned.id != @current_user.id, "you can not ban yourself"
     assert_error not @banned\is_admin!, "you can't ban an admin"
 
@@ -35,14 +38,13 @@ class BansFlow extends Flow
 
   load_object: =>
     return if @object
-
-    assert_valid @params, {
-      {"object_id", is_integer: true }
-      {"object_type", one_of: Bans.object_types}
+    params = shapes.assert_valid @params, {
+      {"object_id", shapes.db_id}
+      {"object_type", shapes.db_enum Bans.object_types}
     }
 
-    model = Bans\model_for_object_type @params.object_type
-    @object = model\find @params.object_id
+    model = Bans\model_for_object_type params.object_type
+    @object = model\find params.object_id
 
     assert_error @object, "invalid ban object"
     assert_error @object\allowed_to_moderate(@current_user), "invalid permissions"
@@ -123,55 +125,58 @@ class BansFlow extends Flow
       :log_objects
     }
 
-  create_ban: =>
+  create_ban: require_login =>
     @load_banned_user!
     @load_object!
 
-    trim_filter @params
-    assert_valid @params, {
-      {"reason", exists: true}
-      {"target_category_id", is_integer: true, optional: true}
+    params = shapes.assert_valid @params, {
+      {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
+      {"target_category_id", shapes.empty + shapes.db_id}
     }
+
+    object_type_name = Bans.object_types\to_name Bans\object_type_for_object @object
 
     local category
 
-    if target_id = @params.target_category_id
+    if target_id = params.target_category_id
       cs = assert_error @get_moderatable_categories!, "invalid target category"
       for c in *cs
         if tostring(target_id) == tostring(c.id)
           category = c
           break
 
-    if @params.object_type == "category"
+    if object_type_name == "category"
       if category and @object.id == category.id
         category = nil
 
     @target_category = category
-  
+
     ban = Bans\create {
       object: category or @object
-      reason: @params.reason
+      reason: params.reason
       banned_user_id: @banned.id
       banning_user_id: @current_user.id
     }
 
     if ban
-      @write_moderation_log "#{@params.object_type}.ban",
-        @params.reason,
+      @write_moderation_log "#{object_type_name}.ban",
+        params.reason,
         { @banned }
 
     ban
 
-  delete_ban: =>
+  delete_ban: require_login =>
     @load_ban!
     assert_error @ban, "invalid ban"
 
+    object_type_name = Bans.object_types\to_name @ban.object_type
+
     if @ban and @ban\delete!
-      @write_moderation_log "#{@params.object_type}.unban", nil, { @banned }
+      @write_moderation_log "#{object_type_name}.unban", nil, { @banned }
 
     true
 
-  show_bans: =>
+  show_bans: require_login =>
     @load_object!
     assert_page @
 
