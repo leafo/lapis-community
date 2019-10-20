@@ -245,3 +245,10 @@ describe "reports", ->
       for r in *res.reports
         assert.same category.id, r.category_id
 
+      -- gets page 2
+      res = ReportingApp\get current_user, "/show", {
+        page: "2"
+        category_id: category.id
+      }
+      assert.same {}, res.reports
+

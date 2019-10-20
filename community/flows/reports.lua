@@ -12,11 +12,8 @@ local preload
 preload = require("lapis.db.model").preload
 local filter_update
 filter_update = require("community.helpers.models").filter_update
-local assert_page, require_login
-do
-  local _obj_0 = require("community.helpers.app")
-  assert_page, require_login = _obj_0.assert_page, _obj_0.require_login
-end
+local require_login
+require_login = require("community.helpers.app").require_login
 local PostReports, Posts, Topics
 do
   local _obj_0 = require("community.models")
@@ -42,7 +39,7 @@ do
         post_id = self.post.id
       })
     end,
-    update_or_create_report = function(self)
+    update_or_create_report = require_login(function(self)
       self:load_post()
       local params = shapes.assert_valid(self.params.report, {
         {
@@ -64,20 +61,22 @@ do
         self.report = PostReports:create(params)
         return "create"
       end
-    end,
+    end),
     show_reports = require_login(function(self, category)
       assert(category, "missing report object")
       assert_error(category:allowed_to_moderate(self.current_user), "invalid category")
-      assert_page(self)
-      assert_valid(self.params, {
+      local params = shapes.assert_valid(self.params, {
+        {
+          "page",
+          shapes.page_number
+        },
         {
           "status",
-          one_of = PostReports.statuses,
-          optional = true
+          shapes.empty + shapes.db_enum(PostReports.statuses)
         }
       })
       local filter = {
-        [db.raw(tostring(db.escape_identifier(PostReports:table_name())) .. ".status")] = self.params.status and PostReports.statuses:for_db(self.params.status)
+        [db.raw(tostring(db.escape_identifier(PostReports:table_name())) .. ".status")] = params.status
       }
       local children = self.category:get_flat_children()
       local category_ids
@@ -101,7 +100,7 @@ do
           return reports
         end
       })
-      self.reports = self.pager:get_page()
+      self.reports = self.pager:get_page(params.page)
       return true
     end),
     moderate_report = require_login(function(self)

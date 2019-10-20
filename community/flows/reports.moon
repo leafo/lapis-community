@@ -7,8 +7,7 @@ import assert_valid from require "lapis.validate"
 import preload from require "lapis.db.model"
 
 import filter_update from require "community.helpers.models"
-import assert_page, require_login from require "community.helpers.app"
-
+import require_login from require "community.helpers.app"
 
 import PostReports, Posts, Topics from require "community.models"
 
@@ -39,7 +38,7 @@ class ReportsFlow extends Flow
       post_id: @post.id
     }
 
-  update_or_create_report: =>
+  update_or_create_report: require_login =>
     @load_post!
     params = shapes.assert_valid @params.report, {
       {"reason", shapes.db_enum PostReports.reasons}
@@ -59,14 +58,14 @@ class ReportsFlow extends Flow
   show_reports: require_login (category) =>
     assert category, "missing report object"
     assert_error category\allowed_to_moderate(@current_user), "invalid category"
-    assert_page @
 
-    assert_valid @params, {
-      {"status", one_of: PostReports.statuses, optional: true}
+    params = shapes.assert_valid @params, {
+      {"page", shapes.page_number}
+      {"status", shapes.empty + shapes.db_enum PostReports.statuses}
     }
 
     filter = {
-      [db.raw "#{db.escape_identifier PostReports\table_name!}.status"]: @params.status and PostReports.statuses\for_db @params.status
+      [db.raw "#{db.escape_identifier PostReports\table_name!}.status"]: params.status
     }
 
     children = @category\get_flat_children!
@@ -91,7 +90,7 @@ class ReportsFlow extends Flow
         reports
       }
 
-    @reports = @pager\get_page!
+    @reports = @pager\get_page params.page
     true
 
   moderate_report: require_login =>
