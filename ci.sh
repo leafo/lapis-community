@@ -11,6 +11,7 @@ luarocks --lua-version=5.1 install moonscript
 luarocks --lua-version=5.1 install date
 luarocks --lua-version=5.1 install web_sanitize
 luarocks --lua-version=5.1 install tableshape
+luarocks --lua-version=5.1 install cmark
 
 luarocks --lua-version=5.1 make
 
