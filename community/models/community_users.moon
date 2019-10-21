@@ -123,5 +123,33 @@ class CommunityUsers extends Model
 
     true
 
+  posting_rate: (minutes) =>
+    assert type(minutes) == "number" and minutes > 0
+
+    import ActivityLogs from require "community.models"
+
+    logs = ActivityLogs\select(
+      "where user_id = ? and
+        created_at >= (now() at time zone 'utc' - ?::interval) and
+        (action, object_type) in ?
+      order by id desc"
+      @user_id
+      "#{minutes} minutes"
+      db.list {
+        db.list {
+          ActivityLogs.actions.post.create
+          ActivityLogs.object_types.post
+        }
+        db.list {
+          ActivityLogs.actions.topic.create
+          ActivityLogs.object_types.topic
+        }
+      }
+      fields: "id"
+    )
+
+    #logs / minutes
+
+
 
 

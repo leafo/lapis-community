@@ -18,6 +18,58 @@ describe "models.users", ->
     cu = CommunityUsers\for_user user.id
     assert.same user.id, cu.user_id
 
+  describe "posting rate", ->
+    import ActivityLogs from require "spec.community_models"
+
+    local user, cu
+    before_each ->
+      user = factory.Users!
+      cu = CommunityUsers\for_user user.id
+
+    it "gets rate from empty account", ->
+      assert.same 0, cu\posting_rate 10
+
+    it "gets rate from activity logs", ->
+      for i=0,2
+        t = db.raw "now() at time zone 'utc' - '#{i} minutes'::interval"
+        ActivityLogs\create {
+          user_id: user.id
+          action: "create"
+          object_type: "post"
+          object_id: -1
+          created_at: t
+        }
+
+        ActivityLogs\create {
+          user_id: user.id
+          action: "create"
+          object_type: "topic"
+          object_id: -1
+          created_at: t
+        }
+
+        -- unrelated things
+        -- edit action
+        ActivityLogs\create {
+          user_id: user.id
+          action: "edit"
+          object_type: "post"
+          object_id: -1
+          created_at: t
+        }
+
+        -- another user
+        ActivityLogs\create {
+          user_id: factory.Users!.id
+          action: "create"
+          object_type: "post"
+          object_id: -1
+          created_at: t
+        }
+
+      assert.same 6/10, cu\posting_rate 10
+      assert.same 2, cu\posting_rate 1
+
   describe "increment_from_post", ->
     import Topics, Posts from require "spec.community_models"
 

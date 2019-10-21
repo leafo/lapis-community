@@ -61,6 +61,24 @@ do
         topics_count = 0
       })
       return true
+    end,
+    posting_rate = function(self, minutes)
+      assert(type(minutes) == "number" and minutes > 0)
+      local ActivityLogs
+      ActivityLogs = require("community.models").ActivityLogs
+      local logs = ActivityLogs:select("where user_id = ? and\n        created_at >= (now() at time zone 'utc' - ?::interval) and\n        (action, object_type) in ?\n      order by id desc", self.user_id, tostring(minutes) .. " minutes", db.list({
+        db.list({
+          ActivityLogs.actions.post.create,
+          ActivityLogs.object_types.post
+        }),
+        db.list({
+          ActivityLogs.actions.topic.create,
+          ActivityLogs.object_types.topic
+        })
+      }, {
+        fields = "id"
+      }))
+      return #logs / minutes
     end
   }
   _base_0.__index = _base_0

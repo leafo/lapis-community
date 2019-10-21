@@ -92,10 +92,13 @@ do
     end
     assert(opts.user_id, "missing user_id")
     assert(opts.action, "missing action")
-    local object = assert(opts.object, "missing object")
-    opts.object = nil
-    opts.object_id = assert(object.id, "object does not have id")
-    opts.object_type = self:object_type_for_object(object)
+    if opts.object then
+      local object = assert(opts.object, "missing object")
+      opts.object = nil
+      opts.object_id = assert(object.id, "object does not have id")
+      opts.object_type = self:object_type_for_object(object)
+    end
+    opts.object_type = self.object_types:for_db(opts.object_type)
     local type_name = self.object_types:to_name(opts.object_type)
     local actions = self.actions[type_name]
     if not (actions) then
@@ -105,7 +108,7 @@ do
     if opts.data then
       opts.data = to_json(opts.data)
     end
-    return Model.create(self, opts)
+    return _class_0.__parent.create(self, opts)
   end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)

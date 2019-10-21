@@ -57,10 +57,13 @@ class ActivityLogs extends Model
     assert opts.user_id, "missing user_id"
     assert opts.action, "missing action"
 
-    object = assert opts.object, "missing object"
-    opts.object = nil
-    opts.object_id = assert object.id, "object does not have id"
-    opts.object_type = @object_type_for_object object
+    if opts.object
+      object = assert opts.object, "missing object"
+      opts.object = nil
+      opts.object_id = assert object.id, "object does not have id"
+      opts.object_type = @object_type_for_object object
+
+    opts.object_type = @object_types\for_db opts.object_type
 
     type_name = @object_types\to_name opts.object_type
     actions = @actions[type_name]
@@ -71,7 +74,7 @@ class ActivityLogs extends Model
     if opts.data
       opts.data = to_json opts.data
 
-    Model.create @, opts
+    super opts
 
   action_name: =>
     @@actions[@@object_types\to_name @object_type][@action]
