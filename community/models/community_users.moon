@@ -126,6 +126,13 @@ class CommunityUsers extends Model
   posting_rate: (minutes) =>
     assert type(minutes) == "number" and minutes > 0
 
+    date = require "date"
+    return 0 unless @last_post_at
+    since_last_post = date.diff(date(true), date(@last_post_at))\spanminutes!
+
+    if since_last_post > minutes
+      return 0
+
     import ActivityLogs from require "community.models"
 
     logs = ActivityLogs\select(

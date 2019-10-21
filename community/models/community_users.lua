@@ -64,6 +64,14 @@ do
     end,
     posting_rate = function(self, minutes)
       assert(type(minutes) == "number" and minutes > 0)
+      local date = require("date")
+      if not (self.last_post_at) then
+        return 0
+      end
+      local since_last_post = date.diff(date(true), date(self.last_post_at)):spanminutes()
+      if since_last_post > minutes then
+        return 0
+      end
       local ActivityLogs
       ActivityLogs = require("community.models").ActivityLogs
       local logs = ActivityLogs:select("where user_id = ? and\n        created_at >= (now() at time zone 'utc' - ?::interval) and\n        (action, object_type) in ?\n      order by id desc", self.user_id, tostring(minutes) .. " minutes", db.list({

@@ -32,6 +32,7 @@ describe "models.users", ->
     it "gets rate from activity logs", ->
       for i=0,2
         t = db.raw "now() at time zone 'utc' - '#{i} minutes'::interval"
+
         ActivityLogs\create {
           user_id: user.id
           action: "create"
@@ -66,6 +67,10 @@ describe "models.users", ->
           object_id: -1
           created_at: t
         }
+
+
+      -- make sure it doesn't get short circuited
+      cu\update last_post_at: db.raw "date_trunc('second', now() at time zone 'utc')"
 
       assert.same 6/10, cu\posting_rate 10
       assert.same 2, cu\posting_rate 1
