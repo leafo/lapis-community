@@ -37,7 +37,6 @@ class CommunityUsers extends Model
   @create: (opts={}) =>
     assert opts.user_id, "missing user id"
     super opts
-    Model.create @, opts
 
   @preload_users: (users) =>
     @include_in users, "user_id", flip: true
