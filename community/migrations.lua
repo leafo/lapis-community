@@ -1158,5 +1158,8 @@ return {
     return add_column(T("users"), "last_post_at", time({
       null = true
     }))
+  end,
+  [28] = function(self)
+    return create_index(T("user_topic_last_seens"), "topic_id")
   end
 }

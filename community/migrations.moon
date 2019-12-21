@@ -591,6 +591,10 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
   [27]: =>
     add_column T"users", "recent_posts_count", integer default: 0
     add_column T"users", "last_post_at", time null: true
+
+  [28]: =>
+    create_index T"user_topic_last_seens", "topic_id"
+
 }
 
 
