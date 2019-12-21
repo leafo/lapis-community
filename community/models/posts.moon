@@ -245,7 +245,7 @@ class Posts extends Model
       search\delete!
 
     if @is_topic_post! and not @topic.permanent
-      return @topic\delete!, "topic"
+      return @topic\delete(force), "topic"
 
     if force != "soft" and (force == "hard" or not @should_soft_delete!)
       return @hard_delete!, "hard"
