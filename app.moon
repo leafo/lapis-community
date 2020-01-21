@@ -80,7 +80,7 @@ class extends lapis.Application
     before: =>
       CategoriesFlow = require "community.flows.categories"
       CategoriesFlow(@)\load_category!
-      assert_error @category\allowed_to_post_topic(@current_user), "not allowed to post"
+      assert_error @category\allowed_to_post_topic(@current_user, @), "not allowed to post"
 
     GET: =>
       render: true
@@ -95,7 +95,7 @@ class extends lapis.Application
     before: =>
       TopicsFlow = require "community.flows.topics"
       TopicsFlow(@)\load_topic!
-      assert_error @topic\allowed_to_post_topic(@current_user), "not allowed to post"
+      assert_error @topic\allowed_to_post(@current_user, @), "not allowed to post"
 
     GET: =>
       render: true
