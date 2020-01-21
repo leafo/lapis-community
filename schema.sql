@@ -1261,6 +1261,13 @@ CREATE INDEX community_topics_category_id_sticky_status_category_order_idx ON pu
 
 
 --
+-- Name: community_user_topic_last_seens_topic_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX community_user_topic_last_seens_topic_id_idx ON public.community_user_topic_last_seens USING btree (topic_id);
+
+
+--
 -- Name: community_votes_object_type_object_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -1328,6 +1335,7 @@ community_24
 community_25
 community_26
 community_27
+community_28
 \.
 
 
