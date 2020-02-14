@@ -1,11 +1,30 @@
 local db = require("lapis.db")
-local Model
-Model = require("community.model").Model
+local Model, enum
+do
+  local _obj_0 = require("community.model")
+  Model, enum = _obj_0.Model, _obj_0.enum
+end
 local CommunityUsers
 do
   local _class_0
   local _parent_0 = Model
   local _base_0 = {
+    allowed_to_post = function(self, object)
+      local _exp_0 = self.posting_permission
+      if self.__class.posting_permissions.default == _exp_0 then
+        return true
+      elseif self.__class.posting_permissions.blocked == _exp_0 then
+        return false
+      elseif self.__class.posting_permissions.only_own == _exp_0 then
+        if object.allowed_to_edit then
+          return object:allowed_to_edit(self:get_user())
+        else
+          return false
+        end
+      else
+        return error("unknown posting permission: " .. tostring(self.posting_permission))
+      end
+    end,
     recount = function(self)
       return self.__class:recount({
         user_id = self.user_id
@@ -120,6 +139,11 @@ do
   local self = _class_0
   self.timestamp = true
   self.primary_key = "user_id"
+  self.posting_permissions = enum({
+    default = 1,
+    only_own = 2,
+    blocked = 3
+  })
   self.recent_threshold = "10 minutes"
   self.table_name = function(self)
     local prefix_table
@@ -141,6 +165,9 @@ do
       opts = { }
     end
     assert(opts.user_id, "missing user id")
+    if opts.posting_permissions then
+      opts.posting_permissions = self.posting_permissions:for_db(opts.posting_permissions)
+    end
     return _class_0.__parent.create(self, opts)
   end
   self.preload_users = function(self, users)

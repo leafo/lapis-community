@@ -595,6 +595,9 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
   [28]: =>
     create_index T"user_topic_last_seens", "topic_id"
 
+  [28]: =>
+    add_column T"users", "posting_permissions", enum default: 1
+
 }
 
 

@@ -1,5 +1,5 @@
 db = require "lapis.db"
-import Model from require "community.model"
+import Model, enum from require "community.model"
 
 -- Generated schema dump: (do not edit)
 --
@@ -21,6 +21,12 @@ class CommunityUsers extends Model
   @timestamp: true
   @primary_key: "user_id"
 
+  @posting_permissions: enum {
+    default: 1
+    only_own: 2
+    blocked: 3
+  }
+
   @recent_threshold: "10 minutes"
 
   -- just so it can be community_users and not community_community_users
@@ -36,6 +42,9 @@ class CommunityUsers extends Model
 
   @create: (opts={}) =>
     assert opts.user_id, "missing user id"
+    if opts.posting_permissions
+      opts.posting_permissions = @posting_permissions\for_db opts.posting_permissions
+
     super opts
 
   @preload_users: (users) =>
@@ -80,6 +89,20 @@ class CommunityUsers extends Model
   @find_users_by_name: (names) =>
     import Users from require "models"
     Users\find_all names, key: "username"
+
+  allowed_to_post: (object) =>
+    switch @posting_permission
+      when @@posting_permissions.default
+        true
+      when @@posting_permissions.blocked
+        false
+      when @@posting_permissions.only_own
+        if object.allowed_to_edit
+          object\allowed_to_edit @get_user!
+        else
+          false
+      else
+        error "unknown posting permission: #{@posting_permission}"
 
   recount: =>
     @@recount user_id: @user_id
