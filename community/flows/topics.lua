@@ -69,6 +69,10 @@ do
       CategoriesFlow(self):load_category()
       assert_error(self.category:allowed_to_post_topic(self.current_user, self._req))
       local moderator = self.category:allowed_to_moderate(self.current_user)
+      if not (moderator) then
+        local can_post, err = CommunityUsers:allowed_to_post(self.current_user, self.category)
+        assert_error(can_post, err or "your account is not authorized to post")
+      end
       assert_valid(self.params, {
         {
           "topic",

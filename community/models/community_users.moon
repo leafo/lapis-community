@@ -1,5 +1,6 @@
 db = require "lapis.db"
-import Model, enum from require "community.model"
+import enum from require "lapis.db.model"
+import Model from require "community.model"
 
 -- Generated schema dump: (do not edit)
 --
@@ -51,6 +52,13 @@ class CommunityUsers extends Model
     @include_in users, "user_id", flip: true
     users
 
+  @allowed_to_post: (user, object) =>
+    if community_user = @find user_id: user.id
+      community_user.user = user
+      community_user\allowed_to_post object
+    else
+      true -- default is true
+
   @for_user: (user_id) =>
     user_id = user_id.id if type(user_id) == "table"
     community_user = @find(:user_id)
@@ -91,7 +99,7 @@ class CommunityUsers extends Model
     Users\find_all names, key: "username"
 
   allowed_to_post: (object) =>
-    switch @posting_permission
+    switch @posting_permission or @@posting_permissions.default
       when @@posting_permissions.default
         true
       when @@posting_permissions.blocked

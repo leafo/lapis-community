@@ -1,16 +1,15 @@
 local db = require("lapis.db")
-local Model, enum
-do
-  local _obj_0 = require("community.model")
-  Model, enum = _obj_0.Model, _obj_0.enum
-end
+local enum
+enum = require("lapis.db.model").enum
+local Model
+Model = require("community.model").Model
 local CommunityUsers
 do
   local _class_0
   local _parent_0 = Model
   local _base_0 = {
     allowed_to_post = function(self, object)
-      local _exp_0 = self.posting_permission
+      local _exp_0 = self.posting_permission or self.__class.posting_permissions.default
       if self.__class.posting_permissions.default == _exp_0 then
         return true
       elseif self.__class.posting_permissions.blocked == _exp_0 then
@@ -175,6 +174,19 @@ do
       flip = true
     })
     return users
+  end
+  self.allowed_to_post = function(self, user, object)
+    do
+      local community_user = self:find({
+        user_id = user.id
+      })
+      if community_user then
+        community_user.user = user
+        return community_user:allowed_to_post(object)
+      else
+        return true
+      end
+    end
   end
   self.for_user = function(self, user_id)
     if type(user_id) == "table" then

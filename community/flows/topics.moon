@@ -62,10 +62,13 @@ class TopicsFlow extends Flow
 
     moderator = @category\allowed_to_moderate @current_user
 
+    unless moderator
+      can_post, err = CommunityUsers\allowed_to_post @current_user, @category
+      assert_error can_post, err or "your account is not authorized to post"
+
     assert_valid @params, {
       {"topic", type: "table"}
     }
-
 
     new_topic = shapes.assert_valid @params.topic, {
       {"title", shapes.limited_text limits.MAX_TITLE_LEN }

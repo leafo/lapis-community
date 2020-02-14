@@ -33,6 +33,9 @@ class PostsFlow extends Flow
     TopicsFlow(@)\load_topic!
     assert_error @topic\allowed_to_post @current_user, @_req
 
+    can_post, err = CommunityUsers\allowed_to_post @current_user, @topic
+    assert_error can_post, err or "your account is not authorized to post"
+
     params = shapes.assert_valid @params, {
       {"parent_post_id", shapes.db_id + shapes.empty }
     }

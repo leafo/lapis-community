@@ -43,6 +43,8 @@ do
       local TopicsFlow = require("community.flows.topics")
       TopicsFlow(self):load_topic()
       assert_error(self.topic:allowed_to_post(self.current_user, self._req))
+      local can_post, err = CommunityUsers:allowed_to_post(self.current_user, self.topic)
+      assert_error(can_post, err or "your account is not authorized to post")
       local params = shapes.assert_valid(self.params, {
         {
           "parent_post_id",
