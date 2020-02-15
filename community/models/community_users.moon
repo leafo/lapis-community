@@ -43,8 +43,8 @@ class CommunityUsers extends Model
 
   @create: (opts={}) =>
     assert opts.user_id, "missing user id"
-    if opts.posting_permissions
-      opts.posting_permissions = @posting_permissions\for_db opts.posting_permissions
+    if opts.posting_permission
+      opts.posting_permission = @posting_permissions\for_db opts.posting_permission
 
     super opts
 

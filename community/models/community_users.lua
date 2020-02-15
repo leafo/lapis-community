@@ -164,8 +164,8 @@ do
       opts = { }
     end
     assert(opts.user_id, "missing user id")
-    if opts.posting_permissions then
-      opts.posting_permissions = self.posting_permissions:for_db(opts.posting_permissions)
+    if opts.posting_permission then
+      opts.posting_permission = self.posting_permissions:for_db(opts.posting_permission)
     end
     return _class_0.__parent.create(self, opts)
   end
