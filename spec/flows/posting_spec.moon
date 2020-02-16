@@ -475,6 +475,76 @@ describe "posting flow", ->
 
       assert.spy(s, "on_body_updated_callback").was.called!
 
+    it "blocks new post when posting permission is blocked", ->
+      cu = CommunityUsers\for_user current_user
+      cu\update {
+        posting_permission: CommunityUsers.posting_permissions.blocked
+      }
+
+      assert.has_error(
+        ->
+          new_post {
+            topic_id: topic.id
+            "post[body]": "This is post body    "
+          }
+
+        {
+          message: {"your account is not authorized to post"}
+        }
+      )
+
+      assert.same 0, Posts\count!
+
+      -- doesn't let them post in own topic
+      topic\update {
+        user_id: current_user.id
+      }
+
+      assert.has_error(
+        ->
+          new_post {
+            topic_id: topic.id
+            "post[body]": "This is post body    "
+          }
+
+        {
+          message: {"your account is not authorized to post"}
+        }
+      )
+
+    it "blocks posting with only_own", ->
+      cu = CommunityUsers\for_user current_user
+      cu\update {
+        posting_permission: CommunityUsers.posting_permissions.only_own
+      }
+
+      assert.has_error(
+        ->
+          new_post {
+            topic_id: topic.id
+            "post[body]": "hello world"
+          }
+
+        {
+          message: {"your account is not authorized to post"}
+        }
+      )
+
+      assert.same 0, Posts\count!
+
+      -- doesn't let them post in own topic
+      topic\update {
+        user_id: current_user.id
+      }
+
+      -- clear the memo cache
+      topic = Topics\find topic.id
+
+      new_post {
+        topic_id: topic.id
+        "post[body]": "hello world"
+      }
+
     describe "parent_post_id", ->
       it "fails with invalid parent_post_id value", ->
         post = factory.Posts topic_id: topic.id
