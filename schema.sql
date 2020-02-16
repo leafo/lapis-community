@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 11.5
--- Dumped by pg_dump version 11.5
+-- Dumped from database version 12.1
+-- Dumped by pg_dump version 12.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -18,7 +18,7 @@ SET row_security = off;
 
 SET default_tablespace = '';
 
-SET default_with_oids = false;
+SET default_table_access_method = heap;
 
 --
 -- Name: community_activity_logs; Type: TABLE; Schema: public; Owner: postgres
@@ -677,7 +677,8 @@ CREATE TABLE public.community_users (
     updated_at timestamp without time zone NOT NULL,
     flair character varying(255),
     recent_posts_count integer DEFAULT 0 NOT NULL,
-    last_post_at timestamp without time zone
+    last_post_at timestamp without time zone,
+    posting_permission smallint DEFAULT 1 NOT NULL
 );
 
 
@@ -1261,13 +1262,6 @@ CREATE INDEX community_topics_category_id_sticky_status_category_order_idx ON pu
 
 
 --
--- Name: community_user_topic_last_seens_topic_id_idx; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX community_user_topic_last_seens_topic_id_idx ON public.community_user_topic_last_seens USING btree (topic_id);
-
-
---
 -- Name: community_votes_object_type_object_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -1289,8 +1283,8 @@ CREATE UNIQUE INDEX users_lower_username_idx ON public.users USING btree (lower(
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 11.5
--- Dumped by pg_dump version 11.5
+-- Dumped from database version 12.1
+-- Dumped by pg_dump version 12.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
