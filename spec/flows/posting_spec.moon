@@ -281,6 +281,65 @@ describe "posting flow", ->
 
       assert.spy(s, "on_body_updated_callback").was.called!
 
+    it "blocks new topic when posting permission is blocked", ->
+      category = factory.Categories!
+
+      cu = CommunityUsers\for_user current_user
+      cu\update {
+        posting_permission: CommunityUsers.posting_permissions.blocked
+      }
+
+      assert.has_error(
+        ->
+          new_topic {
+            category_id: category.id
+            "topic[title]": "Hello world"
+            "topic[body]": "This is the body"
+          }
+
+        {
+          message: {"your account is not authorized to post"}
+        }
+      )
+
+    it "checks posting permission only_own", ->
+      category = factory.Categories!
+
+      cu = CommunityUsers\for_user current_user
+      cu\update {
+        posting_permission: CommunityUsers.posting_permissions.only_own
+      }
+
+      assert.has_error(
+        ->
+          new_topic {
+            category_id: category.id
+            "topic[title]": "Hello world"
+            "topic[body]": "This is the body"
+          }
+
+        {
+          message: {"your account is not authorized to post"}
+        }
+      )
+
+      -- make them the owner of the category
+      category\update {
+        user_id: current_user.id
+      }
+
+      cu\refresh!
+
+      new_topic {
+        category_id: category.id
+        "topic[title]": "Hello world"
+        "topic[body]": "This is the body"
+      }
+
+      assert.same 1, Topics\count!
+
+
+
   describe "new post", ->
     local topic
 
