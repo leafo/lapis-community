@@ -1162,7 +1162,7 @@ return {
   [28] = function(self)
     return create_index(T("user_topic_last_seens"), "topic_id")
   end,
-  [28] = function(self)
+  [29] = function(self)
     return add_column(T("users"), "posting_permission", enum({
       default = 1
     }))
