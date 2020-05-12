@@ -57,6 +57,13 @@ class Posts extends Model
 
     {"posts_search", has_one: "PostsSearch"}
 
+    {"immediate_children"
+      has_many: "Posts"
+      order: "post_number asc"
+      key: {
+        parent_post_id: "id"
+      }
+    }
 
     {"body_html", fetch: =>
       switch @body_format

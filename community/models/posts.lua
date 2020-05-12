@@ -617,6 +617,14 @@ do
       has_one = "PostsSearch"
     },
     {
+      "immediate_children",
+      has_many = "Posts",
+      order = "post_number asc",
+      key = {
+        parent_post_id = "id"
+      }
+    },
+    {
       "body_html",
       fetch = function(self)
         local _exp_0 = self.body_format
