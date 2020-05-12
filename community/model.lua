@@ -147,7 +147,9 @@ do
           end
         end
       end
-      local res = db.query("\n      with recursive nested as (\n        (select * from " .. tostring(tname) .. " " .. tostring(q) .. ")\n        union\n        select pr.* from " .. tostring(tname) .. " pr, nested\n          where " .. tostring(db.encode_clause(child_clause)) .. "\n      )\n      select * from nested\n    ")
+      local base_fields = self.opts.base_fields or "*"
+      local recursive_fields = self.opts.recursive_fields or "pr.*"
+      local res = db.query("\n      with recursive nested as (\n        (select " .. tostring(base_fields) .. " from " .. tostring(tname) .. " " .. tostring(q) .. ")\n        union\n        select " .. tostring(recursive_fields) .. " from " .. tostring(tname) .. " pr, nested\n          where " .. tostring(db.encode_clause(child_clause)) .. "\n      )\n      select * from nested\n    ")
       for _index_0 = 1, #res do
         local r = res[_index_0]
         self.model:load(r)

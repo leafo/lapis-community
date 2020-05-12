@@ -70,11 +70,14 @@ class NestedOrderedPaginator extends OrderedPaginator
       for k,v in pairs clause
         child_clause[db.raw "pr.#{db.escape_identifier k}"] = v
 
+    base_fields = @opts.base_fields or "*"
+    recursive_fields = @opts.recursive_fields or "pr.*"
+
     res = db.query "
       with recursive nested as (
-        (select * from #{tname} #{q})
+        (select #{base_fields} from #{tname} #{q})
         union
-        select pr.* from #{tname} pr, nested
+        select #{recursive_fields} from #{tname} pr, nested
           where #{db.encode_clause child_clause}
       )
       select * from nested
