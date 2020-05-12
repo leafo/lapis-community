@@ -625,6 +625,46 @@ do
       }
     },
     {
+      "has_children",
+      fetch = function(self)
+        local res = db.query("select 1 from " .. tostring(db.escape_identifier(self.__class:table_name())) .. " where parent_post_id = ? limit 1", self.id)
+        if next(res) then
+          return true
+        else
+          return false
+        end
+      end,
+      preload = function(posts)
+        local encode_value_list
+        encode_value_list = require("community.helpers.models").encode_value_list
+        local res = db.query("select pid.id, exists(select 1 from " .. tostring(db.escape_identifier(self.__class:table_name())) .. " pc where pc.parent_post_id = pid.id limit 1) as has_children from (" .. tostring(encode_value_list((function()
+          local _accum_0 = { }
+          local _len_0 = 1
+          for _index_0 = 1, #posts do
+            local p = posts[_index_0]
+            _accum_0[_len_0] = {
+              p.id
+            }
+            _len_0 = _len_0 + 1
+          end
+          return _accum_0
+        end)())) .. ") pid (id)")
+        local by_id
+        do
+          local _tbl_0 = { }
+          for _index_0 = 1, #res do
+            local r = res[_index_0]
+            _tbl_0[r.id] = r.has_children
+          end
+          by_id = _tbl_0
+        end
+        for _index_0 = 1, #posts do
+          local post = posts[_index_0]
+          post.has_children = by_id[post.id] or false
+        end
+      end
+    },
+    {
       "body_html",
       fetch = function(self)
         local _exp_0 = self.body_format

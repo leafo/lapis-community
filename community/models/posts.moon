@@ -65,6 +65,24 @@ class Posts extends Model
       }
     }
 
+    {"has_children",
+      fetch: =>
+        res = db.query "select 1 from #{db.escape_identifier @@table_name!} where parent_post_id = ? limit 1", @id
+        if next res
+          true
+        else
+          false
+
+      preload: (posts) ->
+        import encode_value_list from require "community.helpers.models"
+
+        res = db.query "select pid.id, exists(select 1 from #{db.escape_identifier @@table_name!} pc where pc.parent_post_id = pid.id limit 1) as has_children from (#{encode_value_list [{p.id} for p in *posts]}) pid (id)"
+
+        by_id = {r.id, r.has_children for r in *res}
+        for post in *posts
+          post.has_children = by_id[post.id] or false
+    }
+
     {"body_html", fetch: =>
       switch @body_format
         when @@body_formats.html
