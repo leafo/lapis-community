@@ -73,14 +73,32 @@ class Posts extends Model
         else
           false
 
-      preload: (posts) ->
+      preload: (posts, _, _, name) ->
         import encode_value_list from require "community.helpers.models"
 
         res = db.query "select pid.id, exists(select 1 from #{db.escape_identifier @@table_name!} pc where pc.parent_post_id = pid.id limit 1) as has_children from (#{encode_value_list [{p.id} for p in *posts]}) pid (id)"
 
         by_id = {r.id, r.has_children for r in *res}
         for post in *posts
-          post.has_children = by_id[post.id] or false
+          post[name] = by_id[post.id] or false
+    }
+
+    -- is there a post that follows this one in post order in the same depth/parent
+    {"has_next_post",
+      fetch: =>
+        clause = db.encode_clause {
+          topic_id: @topic_id
+          parent_post_id: @parent_post_id or db.NULL
+          depth: @depth
+        }
+
+        not not unpack Posts\select "
+          where #{clause} and post_number > ?
+          limit 1
+        ", @post_number, fields: "1"
+
+      preload: (posts) ->
+        error "not yet"
     }
 
     {"body_html", fetch: =>
@@ -257,8 +275,8 @@ class Posts extends Model
 
     -- older than 10 mins or has replies
 
-    return true if @has_replies!
-    return true if @depth > 1 and @has_next_post!
+    return true if @get_has_children!
+    return true if @depth > 1 and @get_has_next_post!
 
     delta = date.diff date(true), date(@created_at)
     delta\spanminutes! > 10
@@ -446,21 +464,7 @@ class Posts extends Model
     ancestors = @get_ancestors!
     ancestors[#ancestors]
 
-  has_replies: =>
-    not not unpack Posts\select "where parent_post_id = ? and not deleted limit 1", @id, fields: "1"
-
-  -- post next in the same depth/parent
-  has_next_post: =>
-    clause = db.encode_clause {
-      topic_id: @topic_id
-      parent_post_id: @parent_post_id or db.NULL
-      depth: @depth
-    }
-
-    not not unpack Posts\select "
-      where #{clause} and post_number > ?
-      limit 1
-    ", @post_number, fields: "1"
+  has_replies: => error "deprecated method for: post\\has_children"
 
   set_status: (status) =>
     @update status: @@statuses\for_db status

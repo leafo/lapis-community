@@ -178,30 +178,55 @@ describe "models.posts", ->
       assert.true post\allowed_to_view mod_user
 
 
-  describe "has_replies", ->
+  describe "has_children", ->
     it "with no replies", ->
       post = factory.Posts!
-      assert.same false, post\has_replies!
+      assert.same false, post\get_has_children!
 
     it "with replies", ->
       post = factory.Posts!
       factory.Posts topic_id: post.topic_id, parent_post_id: post.id
-      assert.same true, post\has_replies!
+      assert.same true, post\get_has_children!
+
+    it "with only deleted reply", ->
+      post = factory.Posts!
+      factory.Posts topic_id: post.topic_id, parent_post_id: post.id, deleted: true
+      assert.same true, post\get_has_children!
+
+    it "preloads", ->
+      import preload from require "lapis.db.model"
+
+      posts = {
+        factory.Posts!
+        factory.Posts!
+        factory.Posts!
+      }
+
+      factory.Posts topic_id: posts[2].topic_id, parent_post_id: posts[2].id
+
+      -- deleted posts also count for having children
+      factory.Posts topic_id: posts[3].topic_id, parent_post_id: posts[3].id, deleted: true
+
+      preload posts, "has_children"
+
+      assert.same false, posts[1].has_children
+      assert.same true, posts[2].has_children
+      assert.same true, posts[3].has_children
 
   describe "has_next_post", ->
     it "singular post", ->
       post = factory.Posts!
-      assert.same false, post\has_next_post!
+      assert.same false, post\get_has_next_post!
 
     it "with reply", ->
       post = factory.Posts!
       factory.Posts topic_id: post.topic_id, parent_post_id: post.id
-      assert.same false, post\has_next_post!
+      assert.same false, post\get_has_next_post!
 
     it "with series", ->
       p1 = factory.Posts!
       p2 = factory.Posts topic_id: p1.topic_id
-      assert.same true, p1\has_next_post!
+      assert.same true, p1\get_has_next_post!
 
     it "with children", ->
       p1 = factory.Posts!
@@ -210,9 +235,9 @@ describe "models.posts", ->
       p2_1 = factory.Posts parent_post_id: p2.id, topic_id: p1.topic_id
       p2_2 = factory.Posts parent_post_id: p2.id, topic_id: p1.topic_id
 
-      assert.same true, p2_1\has_next_post!
-      assert.same false, p2_2\has_next_post!
-      assert.same false, p1_1\has_next_post!
+      assert.same true, p2_1\get_has_next_post!
+      assert.same false, p2_2\get_has_next_post!
+      assert.same false, p1_1\get_has_next_post!
 
   describe "set status", ->
     it "updates post to spam", ->

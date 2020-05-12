@@ -122,10 +122,10 @@ do
       if self:is_moderation_event() then
         return false
       end
-      if self:has_replies() then
+      if self:get_has_children() then
         return true
       end
-      if self.depth > 1 and self:has_next_post() then
+      if self.depth > 1 and self:get_has_next_post() then
         return true
       end
       local delta = date.diff(date(true), date(self.created_at))
@@ -405,19 +405,7 @@ do
       return ancestors[#ancestors]
     end,
     has_replies = function(self)
-      return not not unpack(Posts:select("where parent_post_id = ? and not deleted limit 1", self.id, {
-        fields = "1"
-      }))
-    end,
-    has_next_post = function(self)
-      local clause = db.encode_clause({
-        topic_id = self.topic_id,
-        parent_post_id = self.parent_post_id or db.NULL,
-        depth = self.depth
-      })
-      return not not unpack(Posts:select("\n      where " .. tostring(clause) .. " and post_number > ?\n      limit 1\n    ", self.post_number, {
-        fields = "1"
-      }))
+      return error("deprecated method for: post\\has_children")
     end,
     set_status = function(self, status)
       self:update({
@@ -634,7 +622,7 @@ do
           return false
         end
       end,
-      preload = function(posts)
+      preload = function(posts, _, _, name)
         local encode_value_list
         encode_value_list = require("community.helpers.models").encode_value_list
         local res = db.query("select pid.id, exists(select 1 from " .. tostring(db.escape_identifier(self.__class:table_name())) .. " pc where pc.parent_post_id = pid.id limit 1) as has_children from (" .. tostring(encode_value_list((function()
@@ -660,8 +648,24 @@ do
         end
         for _index_0 = 1, #posts do
           local post = posts[_index_0]
-          post.has_children = by_id[post.id] or false
+          post[name] = by_id[post.id] or false
         end
+      end
+    },
+    {
+      "has_next_post",
+      fetch = function(self)
+        local clause = db.encode_clause({
+          topic_id = self.topic_id,
+          parent_post_id = self.parent_post_id or db.NULL,
+          depth = self.depth
+        })
+        return not not unpack(Posts:select("\n          where " .. tostring(clause) .. " and post_number > ?\n          limit 1\n        ", self.post_number, {
+          fields = "1"
+        }))
+      end,
+      preload = function(posts)
+        return error("not yet")
       end
     },
     {

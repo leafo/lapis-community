@@ -1036,7 +1036,7 @@ describe "posting flow", ->
         post_id: post.id
       }
 
-      assert.same nil, (Posts\find post.id)
+      assert.same nil, (Posts\find post.id), "Expected post to be deleted"
 
       assert.same -1, CommunityUsers\for_user(current_user).posts_count
 
