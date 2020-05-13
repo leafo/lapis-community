@@ -76,7 +76,10 @@ class Posts extends Model
       preload: (posts, _, _, name) ->
         import encode_value_list from require "community.helpers.models"
 
-        res = db.query "select pid.id, exists(select 1 from #{db.escape_identifier @@table_name!} pc where pc.parent_post_id = pid.id limit 1) as has_children from (#{encode_value_list [{p.id} for p in *posts]}) pid (id)"
+        tbl_name = db.escape_identifier @@table_name!
+        id_list = encode_value_list [{p.id} for p in *posts]
+
+        res = db.query "select pid.id, exists(select 1 from #{tbl_name} pc where pc.parent_post_id = pid.id limit 1) as has_children from (#{id_list}) pid (id)"
 
         by_id = {r.id, r.has_children for r in *res}
         for post in *posts
@@ -97,8 +100,26 @@ class Posts extends Model
           limit 1
         ", @post_number, fields: "1"
 
-      preload: (posts) ->
-        error "not yet"
+      preload: (posts, _, _, name) ->
+        import encode_value_list from require "community.helpers.models"
+
+        tbl_name = db.escape_identifier @@table_name!
+        id_list = encode_value_list [{p.id, p.topic_id, p.parent_post_id or db.NULL, p.depth, p.post_number} for p in *posts]
+
+        res = db.query "select tuple.id, exists(
+          select 1 from #{tbl_name} pc
+            where pc.topic_id = tuple.topic_id
+              and pc.parent_post_id is not distinct from tuple.parent_post_id::integer
+              and pc.depth = tuple.depth
+              and pc.post_number > tuple.post_number
+            limit 1
+        ) as has_next_post from (#{id_list}) tuple (id, topic_id, parent_post_id, depth, post_number)"
+
+        by_id = {r.id, r.has_next_post for r in *res}
+
+        for post in *posts
+          post[name] = by_id[post.id] or false
+
     }
 
     {"body_html", fetch: =>

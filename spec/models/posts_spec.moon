@@ -198,14 +198,13 @@ describe "models.posts", ->
 
       posts = {
         factory.Posts!
-        factory.Posts!
-        factory.Posts!
+        with p = factory.Posts!
+          factory.Posts topic_id: p.topic_id, parent_post_id: p.id
+
+        with p = factory.Posts!
+          -- deleted posts also count for having children
+          factory.Posts topic_id: p.topic_id, parent_post_id: p.id, deleted: true
       }
-
-      factory.Posts topic_id: posts[2].topic_id, parent_post_id: posts[2].id
-
-      -- deleted posts also count for having children
-      factory.Posts topic_id: posts[3].topic_id, parent_post_id: posts[3].id, deleted: true
 
       preload posts, "has_children"
 
@@ -231,6 +230,7 @@ describe "models.posts", ->
     it "with children", ->
       p1 = factory.Posts!
       p1_1 = factory.Posts parent_post_id: p1.id, topic_id: p1.topic_id
+
       p2 = factory.Posts topic_id: p1.topic_id
       p2_1 = factory.Posts parent_post_id: p2.id, topic_id: p1.topic_id
       p2_2 = factory.Posts parent_post_id: p2.id, topic_id: p1.topic_id
@@ -238,6 +238,40 @@ describe "models.posts", ->
       assert.same true, p2_1\get_has_next_post!
       assert.same false, p2_2\get_has_next_post!
       assert.same false, p1_1\get_has_next_post!
+
+    it "preloads", ->
+      import preload from require "lapis.db.model"
+
+      p1 = factory.Posts!
+      p1_1 = factory.Posts parent_post_id: p1.id, topic_id: p1.topic_id
+
+      p2 = factory.Posts topic_id: p1.topic_id
+      p2_1 = factory.Posts parent_post_id: p2.id, topic_id: p1.topic_id
+      p2_2 = factory.Posts parent_post_id: p2.id, topic_id: p1.topic_id
+
+      posts = {
+        factory.Posts!
+        with p = factory.Posts!
+          factory.Posts topic_id: p.topic_id, parent_post_id: p.id
+
+        with p = factory.Posts!
+          factory.Posts topic_id: p.topic_id
+
+        p2_1
+        p2_2
+        p1_1
+      }
+
+      preload posts, "has_next_post"
+
+      assert.same false, posts[1].has_next_post
+      assert.same false, posts[2].has_next_post
+      assert.same true, posts[3].has_next_post
+
+      assert.same true, posts[4].has_next_post
+      assert.same false, posts[5].has_next_post
+      assert.same false, posts[6].has_next_post
+
 
   describe "set status", ->
     it "updates post to spam", ->

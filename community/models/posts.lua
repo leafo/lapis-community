@@ -625,7 +625,8 @@ do
       preload = function(posts, _, _, name)
         local encode_value_list
         encode_value_list = require("community.helpers.models").encode_value_list
-        local res = db.query("select pid.id, exists(select 1 from " .. tostring(db.escape_identifier(self.__class:table_name())) .. " pc where pc.parent_post_id = pid.id limit 1) as has_children from (" .. tostring(encode_value_list((function()
+        local tbl_name = db.escape_identifier(self.__class:table_name())
+        local id_list = encode_value_list((function()
           local _accum_0 = { }
           local _len_0 = 1
           for _index_0 = 1, #posts do
@@ -636,7 +637,8 @@ do
             _len_0 = _len_0 + 1
           end
           return _accum_0
-        end)())) .. ") pid (id)")
+        end)())
+        local res = db.query("select pid.id, exists(select 1 from " .. tostring(tbl_name) .. " pc where pc.parent_post_id = pid.id limit 1) as has_children from (" .. tostring(id_list) .. ") pid (id)")
         local by_id
         do
           local _tbl_0 = { }
@@ -664,8 +666,40 @@ do
           fields = "1"
         }))
       end,
-      preload = function(posts)
-        return error("not yet")
+      preload = function(posts, _, _, name)
+        local encode_value_list
+        encode_value_list = require("community.helpers.models").encode_value_list
+        local tbl_name = db.escape_identifier(self.__class:table_name())
+        local id_list = encode_value_list((function()
+          local _accum_0 = { }
+          local _len_0 = 1
+          for _index_0 = 1, #posts do
+            local p = posts[_index_0]
+            _accum_0[_len_0] = {
+              p.id,
+              p.topic_id,
+              p.parent_post_id or db.NULL,
+              p.depth,
+              p.post_number
+            }
+            _len_0 = _len_0 + 1
+          end
+          return _accum_0
+        end)())
+        local res = db.query("select tuple.id, exists(\n          select 1 from " .. tostring(tbl_name) .. " pc\n            where pc.topic_id = tuple.topic_id\n              and pc.parent_post_id is not distinct from tuple.parent_post_id::integer\n              and pc.depth = tuple.depth\n              and pc.post_number > tuple.post_number\n            limit 1\n        ) as has_next_post from (" .. tostring(id_list) .. ") tuple (id, topic_id, parent_post_id, depth, post_number)")
+        local by_id
+        do
+          local _tbl_0 = { }
+          for _index_0 = 1, #res do
+            local r = res[_index_0]
+            _tbl_0[r.id] = r.has_next_post
+          end
+          by_id = _tbl_0
+        end
+        for _index_0 = 1, #posts do
+          local post = posts[_index_0]
+          post[name] = by_id[post.id] or false
+        end
       end
     },
     {
