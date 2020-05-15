@@ -68,7 +68,12 @@ class NestedOrderedPaginator extends OrderedPaginator
 
     if clause = @opts.child_clause
       for k,v in pairs clause
-        child_clause[db.raw "pr.#{db.escape_identifier k}"] = v
+        field_name = if type(k) == "string"
+          db.raw "pr.#{db.escape_identifier k}"
+        else
+          k
+
+        child_clause[field_name] = v
 
     base_fields = @opts.base_fields or "*"
     recursive_fields = @opts.recursive_fields or "pr.*"

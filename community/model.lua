@@ -143,7 +143,13 @@ do
         local clause = self.opts.child_clause
         if clause then
           for k, v in pairs(clause) do
-            child_clause[db.raw("pr." .. tostring(db.escape_identifier(k)))] = v
+            local field_name
+            if type(k) == "string" then
+              field_name = db.raw("pr." .. tostring(db.escape_identifier(k)))
+            else
+              field_name = k
+            end
+            child_clause[field_name] = v
           end
         end
       end
