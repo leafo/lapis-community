@@ -405,7 +405,7 @@ do
       return ancestors[#ancestors]
     end,
     has_replies = function(self)
-      return error("deprecated method for: post\\has_children")
+      return error("deprecated method for: post\\has_replies")
     end,
     set_status = function(self, status)
       self:update({
