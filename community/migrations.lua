@@ -1166,5 +1166,9 @@ return {
     return add_column(T("users"), "posting_permission", enum({
       default = 1
     }))
+  end,
+  [30] = function(self)
+    drop_index(T("posts"), "user_id", "status", "id")
+    return create_index(T("posts"), "user_id", "id")
   end
 }

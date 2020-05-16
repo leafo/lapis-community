@@ -598,6 +598,23 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
   [29]: =>
     add_column T"users", "posting_permission", enum default: 1
 
+  [30]: =>
+    drop_index T"posts", "user_id", "status", "id"-- , where: "deleted"
+    create_index T"posts", "user_id", "id"
+
+  -- [31]: =>
+  --   add_column T"users", "up_votes_count", integer default: 0
+  --   add_column T"users", "down_votes_count", integer default: 0
+  --   add_column T"users", "score_adjustment", integer default: 0
+
+  --   posts_table = db.escape_identifier T"posts"
+  --   users_table = db.escape_identifier T"users"
+
+  --   db.update T"users", {
+  --     up_votes_count: db.raw "(select sum(up_votes_count) from #{posts_table} where not deleted and #{posts_table}.user_id = #{users_table}.user_id)"
+  --     down_votes_count: db.raw "(select sum(down_votes_count) from #{posts_table} where not deleted and #{posts_table}.user_id = #{users_table}.user_id)"
+  --   }
+
 }
 
 

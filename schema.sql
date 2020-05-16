@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.1
--- Dumped by pg_dump version 12.1
+-- Dumped from database version 12.2
+-- Dumped by pg_dump version 12.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1241,10 +1241,10 @@ CREATE INDEX community_posts_topic_id_parent_post_id_depth_status_post_numbe ON 
 
 
 --
--- Name: community_posts_user_id_status_id_idx; Type: INDEX; Schema: public; Owner: postgres
+-- Name: community_posts_user_id_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE INDEX community_posts_user_id_status_id_idx ON public.community_posts USING btree (user_id, status, id) WHERE (NOT deleted);
+CREATE INDEX community_posts_user_id_id_idx ON public.community_posts USING btree (user_id, id);
 
 
 --
@@ -1290,8 +1290,8 @@ CREATE UNIQUE INDEX users_lower_username_idx ON public.users USING btree (lower(
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.1
--- Dumped by pg_dump version 12.1
+-- Dumped from database version 12.2
+-- Dumped by pg_dump version 12.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1338,6 +1338,7 @@ community_26
 community_27
 community_28
 community_29
+community_30
 \.
 
 
