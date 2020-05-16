@@ -368,7 +368,7 @@ describe "models.topics", ->
   describe "delete", ->
     import PendingPosts, TopicParticipants, CommunityUsers from require "spec.community_models"
 
-    it "deletes a topic", ->
+    it "deletes a topic (soft by default)", ->
       topic = factory.Topics!
       topic\delete!
       topic\refresh!
@@ -404,7 +404,6 @@ describe "models.topics", ->
       category\refresh!
       assert.same 1, category.topics_count, "category topics before"
       assert.same 0, category.deleted_topics_count, "category deleted_topics_count before"
-
       TopicParticipants\increment topic.id, post.user_id
       topic\set_seen factory.Users!
 
