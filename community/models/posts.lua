@@ -189,16 +189,21 @@ do
       end
     end,
     hard_delete = function(self)
-      if not (Model.delete(self)) then
+      local res = db.query("delete from " .. tostring(db.escape_identifier(self.__class:table_name())) .. " where " .. tostring(db.encode_clause(self:_primary_cond())) .. " returning *")
+      if not (res and res.affected_rows and res.affected_rows > 0) then
         return false
       end
+      local deleted_post = unpack(res)
+      local was_soft_deleted = deleted_post.deleted
       local CommunityUsers, ModerationLogs, PostEdits, PostReports, Votes, ActivityLogs, CategoryPostLogs
       do
         local _obj_0 = require("community.models")
         CommunityUsers, ModerationLogs, PostEdits, PostReports, Votes, ActivityLogs, CategoryPostLogs = _obj_0.CommunityUsers, _obj_0.ModerationLogs, _obj_0.PostEdits, _obj_0.PostReports, _obj_0.Votes, _obj_0.ActivityLogs, _obj_0.CategoryPostLogs
       end
-      CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
-      CategoryPostLogs:clear_post(self)
+      if not (was_soft_deleted) then
+        CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
+        CategoryPostLogs:clear_post(self)
+      end
       local orphans = self.__class:select("where parent_post_id = ?", self.id)
       do
         local topic = self:get_topic()
@@ -218,27 +223,28 @@ do
               end
             end
           end
-          if not (self.deleted) then
-            local posts_count
-            if not (self:is_moderation_event()) then
-              posts_count = db.raw("posts_count - 1")
-            end
-            local root_posts_count
-            if self.depth == 1 then
-              root_posts_count = db.raw("root_posts_count - 1")
-            end
-            topic:update({
-              posts_count = posts_count,
-              root_posts_count = root_posts_count
-            }, {
-              timestamp = false
-            })
-            if root_posts_count then
-              topic:on_increment_callback("root_posts_count", -1)
-            end
-            if posts_count then
-              topic:on_increment_callback("posts_count", -1)
-            end
+          if was_soft_deleted then
+            topic:increment_counter("deleted_posts_count", -1)
+          end
+          local posts_count
+          if not (self:is_moderation_event()) then
+            posts_count = db.raw("posts_count - 1")
+          end
+          local root_posts_count
+          if self.depth == 1 then
+            root_posts_count = db.raw("root_posts_count - 1")
+          end
+          topic:update({
+            posts_count = posts_count,
+            root_posts_count = root_posts_count
+          }, {
+            timestamp = false
+          })
+          if root_posts_count then
+            topic:on_increment_callback("root_posts_count", -1)
+          end
+          if posts_count then
+            topic:on_increment_callback("posts_count", -1)
           end
         end
       end

@@ -662,7 +662,7 @@ class Topics extends Model
 
   increment_counter: (field, amount) =>
     res = @update {
-      [field]: db.raw "#{db.escape_identifier field} + 1"
+      [field]: db.raw db.interpolate_query "#{db.escape_identifier field} + ?", amount
     }, timestamp: false
 
     @on_increment_callback field, amount

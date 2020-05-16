@@ -663,7 +663,7 @@ do
     end,
     increment_counter = function(self, field, amount)
       local res = self:update({
-        [field] = db.raw(tostring(db.escape_identifier(field)) .. " + 1")
+        [field] = db.raw(db.interpolate_query(tostring(db.escape_identifier(field)) .. " + ?", amount))
       }, {
         timestamp = false
       })

@@ -7,7 +7,7 @@ describe "models.posts", ->
   use_test_env!
 
   import Users from require "spec.models"
-  import Categories, Topics, Posts, Moderators from require "spec.community_models"
+  import Categories, Topics, Posts, Moderators, CommunityUsers from require "spec.community_models"
 
   describe "permissions", ->
     local post, post_user, category_user, topic_user, some_user, mod_user, admin_user
@@ -323,9 +323,49 @@ describe "models.posts", ->
       assert.same {[other_post.id]: true}, {post.id, true for post in *Posts\select!}
 
     it "soft deletes a post", ->
+      assert.same 1, topic.root_posts_count
+      assert.same 1, topic.posts_count
+
+      cu = CommunityUsers\for_user post\get_user!
+      assert.same 0, cu.posts_count
+
       post\soft_delete!
       post\refresh!
+      topic\refresh!
+
       assert.same true, post.deleted
+
+      assert.same 1, topic.root_posts_count
+      assert.same 1, topic.posts_count
+
+      cu\refresh!
+      -- we expect this to go to -1 because it was never incremented
+      assert.same -1, cu.posts_count
+
+    it "soft deletes then hard deletes", ->
+      assert.same 1, topic.root_posts_count, "before root_posts_count"
+      assert.same 1, topic.posts_count, "before posts_count"
+
+      cu = CommunityUsers\for_user post\get_user!
+      assert.same 0, cu.posts_count
+
+      post\soft_delete!
+      topic\refresh!
+
+      assert.same 1, topic.root_posts_count, "root_posts_count after soft"
+      assert.same 1, topic.posts_count, "posts_count after soft"
+      assert.same 1, topic.deleted_posts_count, "deleted_posts_count after soft"
+
+      post\hard_delete!
+      topic\refresh!
+
+      assert.same 0, topic.root_posts_count, "root_posts_count after hard"
+      assert.same 0, topic.posts_count, "posts_count after hard"
+      assert.same 0, topic.deleted_posts_count, "deleted_posts_count after hard"
+
+      cu\refresh!
+      -- we expect this to go to -1 because it was never incremented
+      assert.same -1, cu.posts_count
 
     it "hard deletes a post", ->
       assert.same 1, topic.root_posts_count
