@@ -360,7 +360,7 @@ class Posts extends Model
       CategoryPostLogs
       from require "community.models"
 
-    unless was_soft_deleted
+    if not was_soft_deleted and not @is_moderation_event!
       CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
       CategoryPostLogs\clear_post @
 

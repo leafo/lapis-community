@@ -200,7 +200,7 @@ do
         local _obj_0 = require("community.models")
         CommunityUsers, ModerationLogs, PostEdits, PostReports, Votes, ActivityLogs, CategoryPostLogs = _obj_0.CommunityUsers, _obj_0.ModerationLogs, _obj_0.PostEdits, _obj_0.PostReports, _obj_0.Votes, _obj_0.ActivityLogs, _obj_0.CategoryPostLogs
       end
-      if not (was_soft_deleted) then
+      if not was_soft_deleted and not self:is_moderation_event() then
         CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
         CategoryPostLogs:clear_post(self)
       end
