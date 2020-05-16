@@ -1170,5 +1170,10 @@ return {
   [30] = function(self)
     drop_index(T("posts"), "user_id", "status", "id")
     return create_index(T("posts"), "user_id", "id")
+  end,
+  [31] = function(self)
+    return create_index(T("topics"), "user_id", {
+      where = "user_id is not null"
+    })
   end
 }

@@ -602,7 +602,10 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
     drop_index T"posts", "user_id", "status", "id"-- , where: "deleted"
     create_index T"posts", "user_id", "id"
 
-  -- [31]: =>
+  [31]: =>
+    create_index T"topics", "user_id", where: "user_id is not null"
+
+  -- [32]: =>
   --   add_column T"users", "up_votes_count", integer default: 0
   --   add_column T"users", "down_votes_count", integer default: 0
   --   add_column T"users", "score_adjustment", integer default: 0
