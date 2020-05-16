@@ -376,7 +376,7 @@ class Posts extends Model
         if category.last_topic_id = topic.id
           category\refresh_last_topic!
 
-      if was_soft_deleted
+      if was_soft_deleted and not @is_moderation_event!
         -- deleted_posts_count only counts living deleted posts, so we undo the increment
         topic\increment_counter "deleted_posts_count", -1
 

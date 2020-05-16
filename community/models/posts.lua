@@ -223,7 +223,7 @@ do
               end
             end
           end
-          if was_soft_deleted then
+          if was_soft_deleted and not self:is_moderation_event() then
             topic:increment_counter("deleted_posts_count", -1)
           end
           local posts_count

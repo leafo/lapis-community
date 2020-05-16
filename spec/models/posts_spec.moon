@@ -367,6 +367,37 @@ describe "models.posts", ->
       -- we expect this to go to -1 because it was never incremented
       assert.same -1, cu.posts_count
 
+    it "soft deletes then hard deletes moderation event", ->
+      topic = factory.Topics permanent: true
+      post = factory.Posts :topic, moderation_log_id: -1
+
+      topic\refresh!
+
+      assert.same 1, topic.root_posts_count, "before root_posts_count"
+      assert.same 0, topic.posts_count, "before posts_count"
+
+      cu = CommunityUsers\for_user post\get_user!
+      assert.same 0, cu.posts_count
+
+      post\soft_delete!
+      topic\refresh!
+
+      assert.same 1, topic.root_posts_count, "root_posts_count after soft"
+      assert.same 0, topic.posts_count, "posts_count after soft"
+      assert.same 0, topic.deleted_posts_count, "deleted_posts_count after soft"
+
+      post\hard_delete!
+      topic\refresh!
+
+      assert.same 0, topic.root_posts_count, "root_posts_count after hard"
+      assert.same 0, topic.posts_count, "posts_count after hard"
+      assert.same 0, topic.deleted_posts_count, "deleted_posts_count after hard"
+
+      cu\refresh!
+      -- we expect this to go to -1 because it was never incremented
+      assert.same 0, cu.posts_count, "after user posts_count"
+
+
     it "hard deletes a post", ->
       assert.same 1, topic.root_posts_count
       assert.same 1, topic.posts_count
