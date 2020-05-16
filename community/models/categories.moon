@@ -152,27 +152,22 @@ class Categories extends Model
 
     Model.create @, opts
 
-  @recount: (category_id) =>
+  @recount: (...) =>
     import Topics from require "community.models"
 
-    category_id = if type(category_id) == "table"
-      db.list category_id
-    else
-      category_id
+    id_field = "#{db.escape_identifier @table_name!}.id"
 
     db.update @table_name!, {
       topics_count: db.raw "(
         select count(*) from #{db.escape_identifier Topics\table_name!}
-          where category_id = #{db.escape_identifier @table_name!}.id
+          where category_id = #{id_field}
         )"
       deleted_topics_count: db.raw "(
         select count(*) from #{db.escape_identifier Topics\table_name!}
-          where category_id = #{db.escape_identifier @table_name!}.id
+          where category_id = #{id_field}
           and deleted
         )"
-    }, {
-      id: category_id
-    }
+    }, ...
 
   @preload_ancestors: (categories) =>
     categories_by_id = {c.id, c for c in *categories}

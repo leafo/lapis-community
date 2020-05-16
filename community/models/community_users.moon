@@ -13,7 +13,8 @@ import Model from require "community.model"
 --   updated_at timestamp without time zone NOT NULL,
 --   flair character varying(255),
 --   recent_posts_count integer DEFAULT 0 NOT NULL,
---   last_post_at timestamp without time zone
+--   last_post_at timestamp without time zone,
+--   posting_permission smallint DEFAULT 1 NOT NULL
 -- );
 -- ALTER TABLE ONLY community_users
 --   ADD CONSTRAINT community_users_pkey PRIMARY KEY (user_id);
@@ -146,6 +147,7 @@ class CommunityUsers extends Model
     for post in *posts
       post\delete "hard"
 
+    -- TODO: this should no longer be necessary since counter adjustment is fixed
     @update {
       posts_count: 0
       topics_count: 0

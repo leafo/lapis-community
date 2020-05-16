@@ -94,29 +94,32 @@ class Topics extends Model
 
     math.floor (time_score + adjusted_score) * 1000
 
-  @recount: (where) =>
+  @recount: (...) =>
     import Posts from require "community.models"
+
+    id_field = "#{db.escape_identifier @table_name!}.id"
+
     db.update @table_name!, {
       root_posts_count: db.raw "
         (select count(*) from #{db.escape_identifier Posts\table_name!}
-          where topic_id = #{db.escape_identifier @table_name!}.id
+          where topic_id = #{id_field}
           and depth = 1)
       "
 
       deleted_posts_count: db.raw "
         (select count(*) from #{db.escape_identifier Posts\table_name!}
-          where topic_id = #{db.escape_identifier @table_name!}.id and
+          where topic_id = #{id_field} and
             deleted and
             moderation_log_id is null)
       "
 
       posts_count: db.raw "
         (select count(*) from #{db.escape_identifier Posts\table_name!}
-          where topic_id = #{db.escape_identifier @table_name!}.id and
+          where topic_id = #{id_field} and
             not deleted and
             moderation_log_id is null)
       "
-    }, where
+    }, ...
 
   @preload_bans: (topics, user) =>
     return unless user

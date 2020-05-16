@@ -23,8 +23,8 @@ describe "models.categories", ->
       cat = factory.Categories!
       cat2 = factory.Categories!
 
-      Categories\recount cat.id
-      Categories\recount { cat.id, cat2.id }
+      Categories\recount id: cat.id
+      Categories\recount "id in ?", db.list { cat.id, cat2.id }
 
   describe "tags", ->
     import CategoryTags from require "spec.community_models"

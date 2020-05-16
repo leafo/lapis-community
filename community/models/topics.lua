@@ -791,14 +791,15 @@ do
     end
     return math.floor((time_score + adjusted_score) * 1000)
   end
-  self.recount = function(self, where)
+  self.recount = function(self, ...)
     local Posts
     Posts = require("community.models").Posts
+    local id_field = tostring(db.escape_identifier(self:table_name())) .. ".id"
     return db.update(self:table_name(), {
-      root_posts_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where topic_id = " .. tostring(db.escape_identifier(self:table_name())) .. ".id\n          and depth = 1)\n      "),
-      deleted_posts_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where topic_id = " .. tostring(db.escape_identifier(self:table_name())) .. ".id and\n            deleted and\n            moderation_log_id is null)\n      "),
-      posts_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where topic_id = " .. tostring(db.escape_identifier(self:table_name())) .. ".id and\n            not deleted and\n            moderation_log_id is null)\n      ")
-    }, where)
+      root_posts_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where topic_id = " .. tostring(id_field) .. "\n          and depth = 1)\n      "),
+      deleted_posts_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where topic_id = " .. tostring(id_field) .. " and\n            deleted and\n            moderation_log_id is null)\n      "),
+      posts_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where topic_id = " .. tostring(id_field) .. " and\n            not deleted and\n            moderation_log_id is null)\n      ")
+    }, ...)
   end
   self.preload_bans = function(self, topics, user)
     if not (user) then
