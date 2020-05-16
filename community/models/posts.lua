@@ -188,7 +188,7 @@ do
         return true
       end
     end,
-    hard_delete = function(self)
+    hard_delete = function(self, deleted_topic)
       local res = db.query("delete from " .. tostring(db.escape_identifier(self.__class:table_name())) .. " where " .. tostring(db.encode_clause(self:_primary_cond())) .. " returning *")
       if not (res and res.affected_rows and res.affected_rows > 0) then
         return false
@@ -201,7 +201,11 @@ do
         CommunityUsers, ModerationLogs, PostEdits, PostReports, Votes, ActivityLogs, CategoryPostLogs = _obj_0.CommunityUsers, _obj_0.ModerationLogs, _obj_0.PostEdits, _obj_0.PostReports, _obj_0.Votes, _obj_0.ActivityLogs, _obj_0.CategoryPostLogs
       end
       if not was_soft_deleted and not self:is_moderation_event() then
-        CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
+        local t = deleted_topic or self:get_topic()
+        local topic_post = self:is_topic_post() and not (t and t.permanent)
+        if not (topic_post) then
+          CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
+        end
         CategoryPostLogs:clear_post(self)
       end
       local orphans = self.__class:select("where parent_post_id = ?", self.id)

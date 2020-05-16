@@ -245,9 +245,17 @@ class Topics extends Model
       @soft_delete!
 
   hard_delete: =>
-    return false unless super.delete @
+    res = db.query "delete from #{db.escape_identifier @@table_name!} where #{db.encode_clause @_primary_cond!} returning *"
+
+    unless res and res.affected_rows and res.affected_rows > 0
+      return false
+
+    deleted_topic = unpack res
+
+    was_soft_deleted = deleted_topic.deleted
+
     for post in *@get_posts!
-      post\hard_delete!
+      post\hard_delete deleted_topic
 
     import
       PendingPosts
@@ -259,10 +267,19 @@ class Topics extends Model
 
     CategoryPostLogs\clear_posts_for_topic @
 
-    if @user_id
+    if not was_soft_deleted and @user_id
       CommunityUsers\for_user(@get_user!)\increment "topics_count", -1
 
     if category = @get_category!
+      restore_deleted_count = if was_soft_deleted
+        db.raw "deleted_topics_count - 1"
+
+      category\update {
+        topics_count: db.raw "topics_count - 1"
+        deleted_topics_count: restore_deleted_count
+      }, timestamp: false
+
+
       if category.last_topic_id == @id
         category\refresh_last_topic!
 

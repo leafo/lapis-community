@@ -341,7 +341,7 @@ class Posts extends Model
 
   false
 
-  hard_delete: =>
+  hard_delete: (deleted_topic) =>
     res = db.query "delete from #{db.escape_identifier @@table_name!} where #{db.encode_clause @_primary_cond!} returning *"
 
     unless res and res.affected_rows and res.affected_rows > 0
@@ -361,7 +361,12 @@ class Posts extends Model
       from require "community.models"
 
     if not was_soft_deleted and not @is_moderation_event!
-      CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
+      t = deleted_topic or @get_topic!
+
+      topic_post = @is_topic_post! and not (t and t.permanent)
+      unless topic_post
+        CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
+
       CategoryPostLogs\clear_post @
 
     orphans = @@select "where parent_post_id = ?", @id

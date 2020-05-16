@@ -165,13 +165,16 @@ do
       end
     end,
     hard_delete = function(self)
-      if not (_class_0.__parent.delete(self)) then
+      local res = db.query("delete from " .. tostring(db.escape_identifier(self.__class:table_name())) .. " where " .. tostring(db.encode_clause(self:_primary_cond())) .. " returning *")
+      if not (res and res.affected_rows and res.affected_rows > 0) then
         return false
       end
+      local deleted_topic = unpack(res)
+      local was_soft_deleted = deleted_topic.deleted
       local _list_0 = self:get_posts()
       for _index_0 = 1, #_list_0 do
         local post = _list_0[_index_0]
-        post:hard_delete()
+        post:hard_delete(deleted_topic)
       end
       local PendingPosts, TopicParticipants, UserTopicLastSeens, CategoryPostLogs, CommunityUsers
       do
@@ -179,12 +182,22 @@ do
         PendingPosts, TopicParticipants, UserTopicLastSeens, CategoryPostLogs, CommunityUsers = _obj_0.PendingPosts, _obj_0.TopicParticipants, _obj_0.UserTopicLastSeens, _obj_0.CategoryPostLogs, _obj_0.CommunityUsers
       end
       CategoryPostLogs:clear_posts_for_topic(self)
-      if self.user_id then
+      if not was_soft_deleted and self.user_id then
         CommunityUsers:for_user(self:get_user()):increment("topics_count", -1)
       end
       do
         local category = self:get_category()
         if category then
+          local restore_deleted_count
+          if was_soft_deleted then
+            restore_deleted_count = db.raw("deleted_topics_count - 1")
+          end
+          category:update({
+            topics_count = db.raw("topics_count - 1"),
+            deleted_topics_count = restore_deleted_count
+          }, {
+            timestamp = false
+          })
           if category.last_topic_id == self.id then
             category:refresh_last_topic()
           end

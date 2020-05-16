@@ -366,7 +366,7 @@ describe "models.topics", ->
       assert.same post2.id, last_seen.post_id
 
   describe "delete", ->
-    import PendingPosts, TopicParticipants from require "spec.community_models"
+    import PendingPosts, TopicParticipants, CommunityUsers from require "spec.community_models"
 
     it "deletes a topic", ->
       topic = factory.Topics!
@@ -387,11 +387,23 @@ describe "models.topics", ->
 
     it "hard deletes a topic", ->
       category = factory.Categories!
-      topic = factory.Topics category_id: category.id
-      post = factory.Posts topic_id: topic.id
+      user = factory.Users!
+      topic = factory.Topics category_id: category.id, user_id: user.id
+      post = factory.Posts topic_id: topic.id, user_id: user.id
 
       topic\increment_from_post post
       category\increment_from_topic topic
+
+      cu = CommunityUsers\for_user user
+      cu\increment_from_post post, true
+
+      cu\refresh!
+      assert.same 0, cu.posts_count, "user posts_count before"
+      assert.same 1, cu.topics_count, "user topics count before"
+
+      category\refresh!
+      assert.same 1, category.topics_count, "category topics before"
+      assert.same 0, category.deleted_topics_count, "category deleted_topics_count before"
 
       TopicParticipants\increment topic.id, post.user_id
       topic\set_seen factory.Users!
@@ -400,10 +412,65 @@ describe "models.topics", ->
 
       topic\hard_delete!
 
-      assert.same 0, Posts\count!
-      assert.same 0, PendingPosts\count!
-      assert.same 0, TopicParticipants\count!
-      assert.same 0, UserTopicLastSeens\count!
+      assert.same 0, Topics\count!, "topics after delete"
+      assert.same 0, Posts\count!, "posts count after delete"
+      assert.same 0, PendingPosts\count!, "pending posts count after delete"
+      assert.same 0, TopicParticipants\count!, "topic participants count after delete"
+      assert.same 0, UserTopicLastSeens\count!, "user topic last seens after delete"
+
+      cu\refresh!
+      assert.same 0, cu.posts_count, "user posts_count after hard"
+      assert.same 0, cu.topics_count, "user topics count after hard"
+
+      category\refresh!
+      assert.same 0, category.topics_count, "category topics count after hard"
+      assert.same 0, category.deleted_topics_count, "category deleted_topics_count after hard"
+
+    it "soft deletes, then hard deletes a topic", ->
+      category = factory.Categories!
+      user = factory.Users!
+      topic = factory.Topics {
+        category_id: category.id
+        user_id: user.id
+      }
+      post = factory.Posts {
+        topic_id: topic.id
+        user_id: user.id
+      }
+
+      topic\increment_from_post post
+      category\increment_from_topic topic
+
+      cu = CommunityUsers\for_user user
+
+      cu\increment_from_post post, true
+      assert.same 0, cu.posts_count, "user posts_count before"
+      assert.same 1, cu.topics_count, "user topics count before"
+
+      category\refresh!
+      assert.same 1, category.topics_count, "category topics count before"
+      assert.same 0, category.deleted_topics_count, "category deleted_topics_count before"
+
+      topic\soft_delete!
+
+      cu\refresh!
+      assert.same 0, cu.posts_count, "user posts_count after soft"
+      assert.same 0, cu.topics_count, "user topics count after soft"
+
+      category\refresh!
+      assert.same 1, category.topics_count, "category topics count after soft"
+      assert.same 1, category.deleted_topics_count, "category deleted_topics_count after soft"
+
+      topic\hard_delete!
+
+      cu\refresh!
+      assert.same 0, cu.posts_count, "user posts_count after hard"
+      assert.same 0, cu.topics_count, "user topics count after hard"
+
+      category\refresh!
+      assert.same 0, category.topics_count, "category topics count after hard"
+      assert.same 0, category.deleted_topics_count, "category deleted_topics_count after hard"
+
 
   describe "renumber_posts", ->
     it "renumbers root posts", ->
