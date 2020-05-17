@@ -1255,6 +1255,13 @@ CREATE INDEX community_subscriptions_user_id_idx ON public.community_subscriptio
 
 
 --
+-- Name: community_topics_category_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX community_topics_category_id_idx ON public.community_topics USING btree (category_id) WHERE (category_id IS NOT NULL);
+
+
+--
 -- Name: community_topics_category_id_sticky_status_category_order_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -1347,6 +1354,7 @@ community_28
 community_29
 community_30
 community_31
+community_32
 \.
 
 

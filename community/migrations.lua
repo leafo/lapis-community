@@ -1175,5 +1175,10 @@ return {
     return create_index(T("topics"), "user_id", {
       where = "user_id is not null"
     })
+  end,
+  [32] = function(self)
+    return create_index(T("topics"), "category_id", {
+      where = "category_id is not null"
+    })
   end
 }
