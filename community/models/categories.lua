@@ -837,12 +837,16 @@ do
     return Model.create(self, opts)
   end
   self.recount = function(self, ...)
-    local Topics
-    Topics = require("community.models").Topics
+    local Topics, CategoryGroupCategories
+    do
+      local _obj_0 = require("community.models")
+      Topics, CategoryGroupCategories = _obj_0.Topics, _obj_0.CategoryGroupCategories
+    end
     local id_field = tostring(db.escape_identifier(self:table_name())) .. ".id"
     return db.update(self:table_name(), {
-      topics_count = db.raw("(\n        select count(*) from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n          where category_id = " .. tostring(id_field) .. "\n        )"),
-      deleted_topics_count = db.raw("(\n        select count(*) from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n          where category_id = " .. tostring(id_field) .. "\n          and deleted\n        )")
+      topics_count = db.raw("(\n        select count(*) from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n          where category_id = " .. tostring(id_field) .. "\n      )"),
+      deleted_topics_count = db.raw("(\n        select count(*) from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n          where category_id = " .. tostring(id_field) .. "\n          and deleted\n      )"),
+      category_groups_count = db.raw("(\n        select count(*) from " .. tostring(db.escape_identifier(CategoryGroupCategories:table_name())) .. "\n          where category_id = " .. tostring(id_field) .. "\n      )")
     }, ...)
   end
   self.preload_ancestors = function(self, categories)

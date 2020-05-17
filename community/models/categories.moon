@@ -153,7 +153,7 @@ class Categories extends Model
     Model.create @, opts
 
   @recount: (...) =>
-    import Topics from require "community.models"
+    import Topics, CategoryGroupCategories from require "community.models"
 
     id_field = "#{db.escape_identifier @table_name!}.id"
 
@@ -161,12 +161,16 @@ class Categories extends Model
       topics_count: db.raw "(
         select count(*) from #{db.escape_identifier Topics\table_name!}
           where category_id = #{id_field}
-        )"
+      )"
       deleted_topics_count: db.raw "(
         select count(*) from #{db.escape_identifier Topics\table_name!}
           where category_id = #{id_field}
           and deleted
-        )"
+      )"
+      category_groups_count: db.raw "(
+        select count(*) from #{db.escape_identifier CategoryGroupCategories\table_name!}
+          where category_id = #{id_field}
+      )"
     }, ...
 
   @preload_ancestors: (categories) =>
