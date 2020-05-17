@@ -214,6 +214,7 @@ do
           topic_id = self.id
         })
       end
+      return true
     end,
     soft_delete = function(self)
       local soft_delete

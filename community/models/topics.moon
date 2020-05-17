@@ -294,6 +294,8 @@ class Topics extends Model
     }
       db.delete model\table_name!, topic_id: @id
 
+    true
+
   soft_delete: =>
     import soft_delete from require "community.helpers.models"
 
