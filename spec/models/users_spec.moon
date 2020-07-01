@@ -18,6 +18,60 @@ describe "models.users", ->
     cu = CommunityUsers\for_user user.id
     assert.same user.id, cu.user_id
 
+  describe "purge", ->
+    import Posts, Votes from require "spec.community_models"
+
+    it "purges posts with no posts", ->
+      user = factory.Users!
+      cu = CommunityUsers\for_user user.id
+      cu\purge_posts!
+
+    it "purges votes with no posts", ->
+      user = factory.Users!
+      cu = CommunityUsers\for_user user.id
+      cu\purge_votes!
+
+    it "purges posts", ->
+      user = factory.Users!
+
+      cu = CommunityUsers\for_user user.id
+
+      topic = factory.Topics!
+
+      factory.Posts user_id: user.id, topic_id: topic.id
+      factory.Posts user_id: user.id
+
+      cu\recount!
+      assert.same 2, cu.posts_count
+      assert.same 1, cu.topics_count
+
+      cu\purge_posts!
+
+      assert.same 0, Posts\count!
+
+      assert.same 0, cu.posts_count
+      assert.same 0, cu.topics_count
+
+    it "purges votes", ->
+      user = factory.Users!
+
+      cu = CommunityUsers\for_user user.id
+      factory.Votes user_id: user.id, positive: true
+      factory.Votes user_id: user.id, positive: false
+
+      cu\recount!
+      assert.same 2, cu.votes_count
+      assert.same 2, Votes\count!
+
+      print "purging votes..."
+      cu\purge_votes!
+      print "done"
+
+      cu\refresh!
+      assert.same 0, cu.votes_count
+      assert.same 0, Votes\count!
+
+
   describe "posting rate", ->
     import ActivityLogs from require "spec.community_models"
 
