@@ -25,9 +25,10 @@ do
       end
     end,
     recount = function(self)
-      return self.__class:recount({
+      self.__class:recount({
         user_id = self.user_id
       })
+      return self:refresh()
     end,
     increment = function(self, field, amount)
       if amount == nil then

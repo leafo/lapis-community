@@ -115,6 +115,7 @@ class CommunityUsers extends Model
 
   recount: =>
     @@recount user_id: @user_id
+    @refresh!
 
   increment: (field, amount=1) =>
     @update {
