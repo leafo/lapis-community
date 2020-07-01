@@ -40,6 +40,7 @@ describe "models.users", ->
 
       factory.Posts user_id: user.id, topic_id: topic.id
       factory.Posts user_id: user.id
+      other_post = factory.Posts!
 
       cu\recount!
       assert.same 2, cu.posts_count
@@ -47,7 +48,7 @@ describe "models.users", ->
 
       cu\purge_posts!
 
-      assert.same 0, Posts\count!
+      assert.same 1, Posts\count!
 
       assert.same 0, cu.posts_count
       assert.same 0, cu.topics_count
@@ -58,10 +59,11 @@ describe "models.users", ->
       cu = CommunityUsers\for_user user.id
       factory.Votes user_id: user.id, positive: true
       factory.Votes user_id: user.id, positive: false
+      other_vote = factory.Votes!
 
       cu\recount!
       assert.same 2, cu.votes_count
-      assert.same 2, Votes\count!
+      assert.same 3, Votes\count!
 
       print "purging votes..."
       cu\purge_votes!
@@ -69,7 +71,7 @@ describe "models.users", ->
 
       cu\refresh!
       assert.same 0, cu.votes_count
-      assert.same 0, Votes\count!
+      assert.same 1, Votes\count!
 
 
   describe "posting rate", ->
