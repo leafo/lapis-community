@@ -103,23 +103,18 @@ class Votes extends Model
   @unvote: (object, user) =>
     object_type = @object_type_for_object object
 
-    clause = {
+    vote = @load {
       :object_type
       object_id: object.id
       user_id: user.id
     }
 
-    res = unpack db.query "
-      delete from #{db.escape_identifier @table_name!}
-      where #{db.encode_clause clause}
-      returning *
-    "
+    vote\delete!
 
-    return unless res
-
-    deleted_vote = @load res
-    deleted_vote\decrement!
-    true
+  delete: =>
+    if super!
+      @decrement!
+      true
 
   name: =>
     @positive and "up" or "down"
@@ -137,30 +132,32 @@ class Votes extends Model
     res
 
   increment: =>
+    return if @counted == false
+
     model = @@model_for_object_type @object_type
     counter_name = @post_counter_name!
 
     score = @score_adjustment!
 
-    unless @counted == false
-      @trigger_vote_callback db.update model\table_name!, {
-        [counter_name]: db.raw "#{db.escape_identifier counter_name} + #{db.escape_literal score}"
-      }, {
-        id: @object_id
-      }, db.raw "*"
+    @trigger_vote_callback db.update model\table_name!, {
+      [counter_name]: db.raw "#{db.escape_identifier counter_name} + #{db.escape_literal score}"
+    }, {
+      id: @object_id
+    }, db.raw "*"
 
   decrement: =>
+    return if @counted == false
+
     model = @@model_for_object_type @object_type
     counter_name = @post_counter_name!
 
     score = @score_adjustment!
 
-    unless @counted == false
-      @trigger_vote_callback db.update model\table_name!, {
-        [counter_name]: db.raw "#{db.escape_identifier counter_name} - #{db.escape_literal score}"
-      }, {
-        id: @object_id
-      }, db.raw "*"
+    @trigger_vote_callback db.update model\table_name!, {
+      [counter_name]: db.raw "#{db.escape_identifier counter_name} - #{db.escape_literal score}"
+    }, {
+      id: @object_id
+    }, db.raw "*"
 
   updated_counted: (counted) =>
     res = db.update @@table_name!, {

@@ -65,7 +65,6 @@ describe "models.users", ->
       assert.same 2, cu.votes_count
       assert.same 3, Votes\count!
 
-      print "purging votes..."
       cu\purge_votes!
       print "done"
 

@@ -6,6 +6,12 @@ do
   local _class_0
   local _parent_0 = Model
   local _base_0 = {
+    delete = function(self)
+      if _class_0.__parent.__base.delete(self) then
+        self:decrement()
+        return true
+      end
+    end,
     name = function(self)
       return self.positive and "up" or "down"
     end,
@@ -22,28 +28,30 @@ do
       return res
     end,
     increment = function(self)
+      if self.counted == false then
+        return 
+      end
       local model = self.__class:model_for_object_type(self.object_type)
       local counter_name = self:post_counter_name()
       local score = self:score_adjustment()
-      if not (self.counted == false) then
-        return self:trigger_vote_callback(db.update(model:table_name(), {
-          [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " + " .. tostring(db.escape_literal(score)))
-        }, {
-          id = self.object_id
-        }, db.raw("*")))
-      end
+      return self:trigger_vote_callback(db.update(model:table_name(), {
+        [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " + " .. tostring(db.escape_literal(score)))
+      }, {
+        id = self.object_id
+      }, db.raw("*")))
     end,
     decrement = function(self)
+      if self.counted == false then
+        return 
+      end
       local model = self.__class:model_for_object_type(self.object_type)
       local counter_name = self:post_counter_name()
       local score = self:score_adjustment()
-      if not (self.counted == false) then
-        return self:trigger_vote_callback(db.update(model:table_name(), {
-          [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " - " .. tostring(db.escape_literal(score)))
-        }, {
-          id = self.object_id
-        }, db.raw("*")))
-      end
+      return self:trigger_vote_callback(db.update(model:table_name(), {
+        [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " - " .. tostring(db.escape_literal(score)))
+      }, {
+        id = self.object_id
+      }, db.raw("*")))
     end,
     updated_counted = function(self, counted)
       local res = db.update(self.__class:table_name(), {
@@ -229,18 +237,12 @@ do
   end
   self.unvote = function(self, object, user)
     local object_type = self:object_type_for_object(object)
-    local clause = {
+    local vote = self:load({
       object_type = object_type,
       object_id = object.id,
       user_id = user.id
-    }
-    local res = unpack(db.query("\n      delete from " .. tostring(db.escape_identifier(self:table_name())) .. "\n      where " .. tostring(db.encode_clause(clause)) .. "\n      returning *\n    "))
-    if not (res) then
-      return 
-    end
-    local deleted_vote = self:load(res)
-    deleted_vote:decrement()
-    return true
+    })
+    return vote:delete()
   end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)

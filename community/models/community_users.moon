@@ -146,7 +146,6 @@ class CommunityUsers extends Model
     decrement = 0
     for vote in *Votes\select "where user_id = ?", @user_id
       if vote\delete!
-        vote\decrement!
         decrement += 1
 
     @update {
