@@ -103,13 +103,14 @@ class Votes extends Model
   @unvote: (object, user) =>
     object_type = @object_type_for_object object
 
-    vote = @load {
+    vote = @find {
       :object_type
       object_id: object.id
       user_id: user.id
     }
 
-    vote\delete!
+    if vote
+      vote\delete!
 
   delete: =>
     if super!

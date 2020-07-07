@@ -237,12 +237,14 @@ do
   end
   self.unvote = function(self, object, user)
     local object_type = self:object_type_for_object(object)
-    local vote = self:load({
+    local vote = self:find({
       object_type = object_type,
       object_id = object.id,
       user_id = user.id
     })
-    return vote:delete()
+    if vote then
+      return vote:delete()
+    end
   end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)

@@ -18,11 +18,11 @@ describe "models.votes", ->
   after_each ->
     snapshot\revert!
 
-  it "should create vote for post", ->
+  it "creates vote for post", ->
     post = factory.Posts!
     Votes\create object: post, user_id: current_user.id, positive: false
 
-  it "should vote on object", ->
+  it "vote object", ->
     post = factory.Posts!
     Votes\vote post, current_user, true
     post\refresh!
@@ -46,7 +46,7 @@ describe "models.votes", ->
     assert.same 0, post.up_votes_count
     assert.same 1, post.down_votes_count
 
-  it "should make a uncounted vote", ->
+  it "creates uncounted vote", ->
     post = factory.Posts!
     user = post\get_user!
 
@@ -65,8 +65,8 @@ describe "models.votes", ->
 
     post\refresh!
 
-    assert.same 0, post.up_votes_count
-    assert.same 0, post.down_votes_count
+    assert.same 0, post.up_votes_count, "post.up_votes_count"
+    assert.same 0, post.down_votes_count, "post.down_votes_count"
 
     vote = unpack Votes\select!
     assert.false vote.counted
@@ -76,10 +76,10 @@ describe "models.votes", ->
 
     post\refresh!
 
-    assert.same 0, post.up_votes_count
-    assert.same 0, post.down_votes_count
+    assert.same 0, post.up_votes_count, "post.up_votes_count after removed"
+    assert.same 0, post.down_votes_count, "post.down_votes_count after removed"
 
-    assert.same 0, Votes\count!
+    assert.same 0, Votes\count!, "votes count"
 
   it "makes a vote with an adjusted score", ->
     post = factory.Posts!

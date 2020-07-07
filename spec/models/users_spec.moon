@@ -66,12 +66,10 @@ describe "models.users", ->
       assert.same 3, Votes\count!
 
       cu\purge_votes!
-      print "done"
 
       cu\refresh!
       assert.same 0, cu.votes_count
       assert.same 1, Votes\count!
-
 
   describe "posting rate", ->
     import ActivityLogs from require "spec.community_models"
