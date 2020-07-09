@@ -53,21 +53,25 @@ do
         id = self.object_id
       }, db.raw("*")))
     end,
-    updated_counted = function(self, counted)
+    update_counted = function(self, counted)
+      assert(type(counted) == "boolean", "expected boolean for counted")
       local res = db.update(self.__class:table_name(), {
         counted = counted
       }, {
         user_id = self.user_id,
         object_type = self.object_type,
-        object_id = self.object_type,
+        object_id = self.object_id,
         counted = not counted
       })
       if res.affected_rows and res.affected_rows > 0 then
+        self.counted = true
         if counted then
-          return self:increment()
+          self:increment()
         else
-          return self:decrement()
+          self:decrement()
         end
+        self.counted = counted
+        return true
       end
     end,
     post_counter_name = function(self)

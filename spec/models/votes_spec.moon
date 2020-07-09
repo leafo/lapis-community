@@ -47,6 +47,7 @@ describe "models.votes", ->
     assert.same 1, post.down_votes_count
 
   it "creates uncounted vote", ->
+    -- uncounted because it's someone voting on their own post
     post = factory.Posts!
     user = post\get_user!
 
@@ -103,5 +104,44 @@ describe "models.votes", ->
 
     assert.same 2, post.up_votes_count
     assert.same 0, post.down_votes_count
+
+
+  describe "update_counted", ->
+    it "uncounts vote", ->
+      post = factory.Posts!
+      _, vote = Votes\vote post, current_user
+
+      assert vote.counted, "vote is initially counted"
+      post\refresh!
+
+      assert.same 1, post.up_votes_count
+
+      vote\update_counted false
+
+      post\refresh!
+      assert.same 0, post.up_votes_count
+
+      vote\update_counted false
+
+      post\refresh!
+      assert.same 0, post.up_votes_count
+
+    it "counts vote", ->
+      post = factory.Posts!
+      _, vote = Votes\vote post, current_user, true, {
+        counted: false
+      }
+
+      assert not vote.counted, "vote initially uncounted"
+      post\refresh!
+      assert.same 0, post.up_votes_count, "up_votes_count is 0 initially "
+
+      vote\update_counted true
+      assert.true vote.counted, "vote changed to counted"
+
+      post\refresh!
+      assert.same 1, post.up_votes_count, "up_votes_count is 1 after update"
+
+
 
 

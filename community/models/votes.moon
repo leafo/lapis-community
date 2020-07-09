@@ -160,21 +160,30 @@ class Votes extends Model
       id: @object_id
     }, db.raw "*"
 
-  updated_counted: (counted) =>
+  update_counted: (counted) =>
+    assert type(counted) == "boolean", "expected boolean for counted"
+
     res = db.update @@table_name!, {
       :counted
     }, {
       user_id: @user_id
       object_type: @object_type
-      object_id: @object_type
+      object_id: @object_id
       counted: not counted
     }
 
     if res.affected_rows and res.affected_rows > 0
+
+      -- temporarily set to true so we can incrment/decrement
+      @counted = true
+
       if counted
         @increment!
       else
         @decrement!
+
+      @counted = counted
+      true
 
   post_counter_name: =>
     if @positive
