@@ -54,6 +54,7 @@ class Topics extends Model
     }}
     {"last_post", belongs_to: "Posts"}
     {"subscriptions", has_many: "Subscriptions", key: "object_id", where: {object_type: 1}}
+    {"moderation_logs", has_many: "ModerationLogs", key: "object_id", where: {object_type: 1}}
   }
 
   @statuses: enum {
