@@ -750,6 +750,14 @@ do
       where = {
         object_type = 1
       }
+    },
+    {
+      "moderation_logs",
+      has_many = "ModerationLogs",
+      key = "object_id",
+      where = {
+        object_type = 1
+      }
     }
   }
   self.statuses = enum({
