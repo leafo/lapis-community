@@ -1180,5 +1180,22 @@ return {
     return create_index(T("topics"), "category_id", {
       where = "category_id is not null"
     })
+  end,
+  [33] = function(self)
+    add_column(T("users"), "received_up_votes_count", integer({
+      default = 0
+    }))
+    add_column(T("users"), "received_down_votes_count", integer({
+      default = 0
+    }))
+    add_column(T("users"), "received_votes_adjustment", integer({
+      default = 0
+    }))
+    local posts_table = db.escape_identifier(T("posts"))
+    local users_table = db.escape_identifier(T("users"))
+    return db.update(T("users"), {
+      received_up_votes_count = db.raw("(select sum(up_votes_count) from " .. tostring(posts_table) .. " where not deleted and " .. tostring(posts_table) .. ".user_id = " .. tostring(users_table) .. ".user_id)"),
+      received_down_votes_count = db.raw("(select sum(down_votes_count) from " .. tostring(posts_table) .. " where not deleted and " .. tostring(posts_table) .. ".user_id = " .. tostring(users_table) .. ".user_id)")
+    })
   end
 }

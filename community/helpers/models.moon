@@ -81,7 +81,7 @@ memoize1 = (fn) ->
   cache = setmetatable {}, __mode: "k"
 
   (arg, more) =>
-    error "memoize1 function recieved second argument" if more
+    error "memoize1 function received second argument" if more
     key = if arg == nil then NIL else arg
 
     cache_value = cache[@] and cache[@][key]

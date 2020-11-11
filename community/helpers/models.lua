@@ -119,7 +119,7 @@ memoize1 = function(fn)
   })
   return function(self, arg, more)
     if more then
-      error("memoize1 function recieved second argument")
+      error("memoize1 function received second argument")
     end
     local key
     if arg == nil then

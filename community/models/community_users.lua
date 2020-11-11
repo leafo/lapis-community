@@ -8,6 +8,17 @@ do
   local _class_0
   local _parent_0 = Model
   local _base_0 = {
+    get_popularity_score = function(self)
+      return self.received_up_votes_count - self.received_down_votes_count + self.received_votes_adjustment
+    end,
+    refresh_received_votes = function(self)
+      return self:update({
+        received_up_votes_count = db.raw(db.interpolate_query("(select sum(up_votes_count) from posts where not deleted and user_id = ?)", self.user_id)),
+        received_down_votes_count = db.raw(db.interpolate_query("(select sum(down_votes_count) from posts where not deleted and user_id = ?)", self.user_id))
+      }, {
+        timestamp = false
+      })
+    end,
     allowed_to_post = function(self, object)
       local _exp_0 = self.posting_permission or self.__class.posting_permissions.default
       if self.__class.posting_permissions.default == _exp_0 then

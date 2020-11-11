@@ -608,18 +608,18 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
   [32]: =>
     create_index T"topics", "category_id", where: "category_id is not null"
 
-  -- [33]: =>
-  --   add_column T"users", "up_votes_count", integer default: 0
-  --   add_column T"users", "down_votes_count", integer default: 0
-  --   add_column T"users", "score_adjustment", integer default: 0
+  [33]: =>
+    add_column T"users", "received_up_votes_count", integer default: 0
+    add_column T"users", "received_down_votes_count", integer default: 0
+    add_column T"users", "received_votes_adjustment", integer default: 0
 
-  --   posts_table = db.escape_identifier T"posts"
-  --   users_table = db.escape_identifier T"users"
+    posts_table = db.escape_identifier T"posts"
+    users_table = db.escape_identifier T"users"
 
-  --   db.update T"users", {
-  --     up_votes_count: db.raw "(select sum(up_votes_count) from #{posts_table} where not deleted and #{posts_table}.user_id = #{users_table}.user_id)"
-  --     down_votes_count: db.raw "(select sum(down_votes_count) from #{posts_table} where not deleted and #{posts_table}.user_id = #{users_table}.user_id)"
-  --   }
+    db.update T"users", {
+      received_up_votes_count: db.raw "(select sum(up_votes_count) from #{posts_table} where not deleted and #{posts_table}.user_id = #{users_table}.user_id)"
+      received_down_votes_count: db.raw "(select sum(down_votes_count) from #{posts_table} where not deleted and #{posts_table}.user_id = #{users_table}.user_id)"
+    }
 
 }
 
