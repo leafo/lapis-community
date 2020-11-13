@@ -617,10 +617,15 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
     users_table = db.escape_identifier T"users"
 
     db.update T"users", {
-      received_up_votes_count: db.raw "(select sum(up_votes_count) from #{posts_table} where not deleted and #{posts_table}.user_id = #{users_table}.user_id)"
-      received_down_votes_count: db.raw "(select sum(down_votes_count) from #{posts_table} where not deleted and #{posts_table}.user_id = #{users_table}.user_id)"
+      received_up_votes_count: db.raw "coalesce((select sum(up_votes_count) from #{posts_table} where not deleted and #{posts_table}.user_id = #{users_table}.user_id), 0)"
+      received_down_votes_count: db.raw "coalesce((select sum(down_votes_count) from #{posts_table} where not deleted and #{posts_table}.user_id = #{users_table}.user_id), 0)"
     }
 
+  [34]: =>
+    add_column T"posts", "popularity_score", integer null: true
+    create_index T"posts", "topic_id", "popularity_score", where: "popularity_score is not null"
+    create_index T"posts", "parent_post_id", "popularity_score", where: "popularity_score is not null and parent_post_id is not null"
 }
+
 
 

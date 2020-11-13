@@ -1194,8 +1194,19 @@ return {
     local posts_table = db.escape_identifier(T("posts"))
     local users_table = db.escape_identifier(T("users"))
     return db.update(T("users"), {
-      received_up_votes_count = db.raw("(select sum(up_votes_count) from " .. tostring(posts_table) .. " where not deleted and " .. tostring(posts_table) .. ".user_id = " .. tostring(users_table) .. ".user_id)"),
-      received_down_votes_count = db.raw("(select sum(down_votes_count) from " .. tostring(posts_table) .. " where not deleted and " .. tostring(posts_table) .. ".user_id = " .. tostring(users_table) .. ".user_id)")
+      received_up_votes_count = db.raw("coalesce((select sum(up_votes_count) from " .. tostring(posts_table) .. " where not deleted and " .. tostring(posts_table) .. ".user_id = " .. tostring(users_table) .. ".user_id), 0)"),
+      received_down_votes_count = db.raw("coalesce((select sum(down_votes_count) from " .. tostring(posts_table) .. " where not deleted and " .. tostring(posts_table) .. ".user_id = " .. tostring(users_table) .. ".user_id), 0)")
+    })
+  end,
+  [34] = function(self)
+    add_column(T("posts"), "popularity_score", integer({
+      null = true
+    }))
+    create_index(T("posts"), "topic_id", "popularity_score", {
+      where = "popularity_score is not null"
+    })
+    return create_index(T("posts"), "parent_post_id", "popularity_score", {
+      where = "popularity_score is not null and parent_post_id is not null"
     })
   end
 }

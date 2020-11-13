@@ -13,8 +13,8 @@ do
     end,
     refresh_received_votes = function(self)
       return self:update({
-        received_up_votes_count = db.raw(db.interpolate_query("(select sum(up_votes_count) from posts where not deleted and user_id = ?)", self.user_id)),
-        received_down_votes_count = db.raw(db.interpolate_query("(select sum(down_votes_count) from posts where not deleted and user_id = ?)", self.user_id))
+        received_up_votes_count = db.raw(db.interpolate_query("coalesce((select sum(up_votes_count) from posts where not deleted and user_id = ?), 0)", self.user_id)),
+        received_down_votes_count = db.raw(db.interpolate_query("coalesce((select sum(down_votes_count) from posts where not deleted and user_id = ?), 0)", self.user_id))
       }, {
         timestamp = false
       })

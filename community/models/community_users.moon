@@ -108,8 +108,8 @@ class CommunityUsers extends Model
 
   refresh_received_votes: =>
     @update {
-      received_up_votes_count: db.raw db.interpolate_query "(select sum(up_votes_count) from posts where not deleted and user_id = ?)", @user_id
-      received_down_votes_count: db.raw db.interpolate_query "(select sum(down_votes_count) from posts where not deleted and user_id = ?)", @user_id
+      received_up_votes_count: db.raw db.interpolate_query "coalesce((select sum(up_votes_count) from posts where not deleted and user_id = ?), 0)", @user_id
+      received_down_votes_count: db.raw db.interpolate_query "coalesce((select sum(down_votes_count) from posts where not deleted and user_id = ?), 0)", @user_id
     }, timestamp: false
 
   allowed_to_post: (object) =>
