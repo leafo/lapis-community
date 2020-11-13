@@ -177,7 +177,7 @@ insert_on_conflict_ignore = function(model, opts)
   end
 end
 local insert_on_conflict_update
-insert_on_conflict_update = function(model, primary, create, update)
+insert_on_conflict_update = function(model, primary, create, update, opts)
   local encode_values, encode_assigns
   do
     local _obj_0 = require("lapis.db")
@@ -207,9 +207,9 @@ insert_on_conflict_update = function(model, primary, create, update)
   end)()
   if model.timestamp then
     local d = db.format_date()
-    full_insert.created_at = d
-    full_insert.updated_at = d
-    full_update.updated_at = d
+    full_insert.created_at = full_insert.created_at or d
+    full_insert.updated_at = full_insert.updated_at or d
+    full_update.updated_at = full_update.updated_at or d
   end
   local buffer = {
     "insert into ",
@@ -217,14 +217,24 @@ insert_on_conflict_update = function(model, primary, create, update)
     " "
   }
   encode_values(full_insert, buffer)
-  insert(buffer, " on conflict (")
-  for k in pairs(primary) do
-    insert(buffer, db.escape_identifier(k))
-    insert(buffer, ", ")
+  if opts and opts.constraint then
+    insert(buffer, " on conflict ")
+    insert(buffer, opts.constraint)
+    insert(buffer, " do update set ")
+  else
+    insert(buffer, " on conflict (")
+    assert(next(primary), "no primary constraint for insert on conflict update")
+    for k in pairs(primary) do
+      insert(buffer, db.escape_identifier(k))
+      insert(buffer, ", ")
+    end
+    buffer[#buffer] = ") do update set "
   end
-  buffer[#buffer] = ") do update set "
   encode_assigns(full_update, buffer)
   insert(buffer, " returning *")
+  if opts and opts.return_inserted then
+    insert(buffer, ", xmax = 0 as inserted")
+  end
   local q = concat(buffer)
   local res = db.query(q)
   if res.affected_rows and res.affected_rows > 0 then

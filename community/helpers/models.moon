@@ -130,7 +130,8 @@ insert_on_conflict_ignore = (model, opts) ->
   else
     nil, res
 
-insert_on_conflict_update = (model, primary, create, update) ->
+
+insert_on_conflict_update = (model, primary, create, update, opts) ->
   import encode_values, encode_assigns from require "lapis.db"
 
   full_insert = {k,v for k,v in pairs primary}
@@ -143,9 +144,9 @@ insert_on_conflict_update = (model, primary, create, update) ->
 
   if model.timestamp
     d = db.format_date!
-    full_insert.created_at = d
-    full_insert.updated_at = d
-    full_update.updated_at = d
+    full_insert.created_at or= d
+    full_insert.updated_at or= d
+    full_update.updated_at or= d
 
   buffer = {
     "insert into "
@@ -155,16 +156,27 @@ insert_on_conflict_update = (model, primary, create, update) ->
 
   encode_values full_insert, buffer
 
-  insert buffer, " on conflict ("
+  if opts and opts.constraint
+    insert buffer, " on conflict "
+    insert buffer, opts.constraint
+    insert buffer, " do update set "
+  else
+    insert buffer, " on conflict ("
 
-  for k in pairs primary
-    insert buffer, db.escape_identifier k
-    insert buffer, ", "
+    assert next(primary), "no primary constraint for insert on conflict update"
 
-  buffer[#buffer] = ") do update set " -- remove ,
+    for k in pairs primary
+      insert buffer, db.escape_identifier k
+      insert buffer, ", "
+
+    buffer[#buffer] = ") do update set " -- remove ,
+
   encode_assigns full_update, buffer
 
   insert buffer, " returning *"
+
+  if opts and opts.return_inserted
+    insert buffer, ", xmax = 0 as inserted"
 
   q = concat buffer
   res = db.query q
