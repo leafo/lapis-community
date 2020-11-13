@@ -14,7 +14,10 @@ import Model from require "community.model"
 --   flair character varying(255),
 --   recent_posts_count integer DEFAULT 0 NOT NULL,
 --   last_post_at timestamp without time zone,
---   posting_permission smallint DEFAULT 1 NOT NULL
+--   posting_permission smallint DEFAULT 1 NOT NULL,
+--   received_up_votes_count integer DEFAULT 0 NOT NULL,
+--   received_down_votes_count integer DEFAULT 0 NOT NULL,
+--   received_votes_adjustment integer DEFAULT 0 NOT NULL
 -- );
 -- ALTER TABLE ONLY community_users
 --   ADD CONSTRAINT community_users_pkey PRIMARY KEY (user_id);
