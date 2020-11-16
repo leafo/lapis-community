@@ -474,6 +474,20 @@ do
       self:update({
         [field_name] = value_update
       })
+      local CommunityUsers
+      CommunityUsers = require("community.models").CommunityUsers
+      local user_field_name
+      if vote.positive then
+        user_field_name = "received_up_votes_count"
+      else
+        user_field_name = "received_down_votes_count"
+      end
+      local _exp_1 = kind
+      if "increment" == _exp_1 then
+        CommunityUsers:for_user(self.user_id):increment(user_field_name, vote:score_adjustment())
+      elseif "decrement" == _exp_1 then
+        CommunityUsers:for_user(self.user_id):increment(user_field_name, -vote:score_adjustment())
+      end
       do
         local topic = self:is_topic_post() and self:get_topic()
         if topic then

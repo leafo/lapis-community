@@ -557,6 +557,18 @@ class Posts extends Model
       [field_name]: value_update
     }
 
+    import CommunityUsers from require "community.models"
+    user_field_name = if vote.positive
+      "received_up_votes_count"
+    else
+      "received_down_votes_count"
+
+    switch kind
+      when "increment"
+        CommunityUsers\for_user(@user_id)\increment user_field_name, vote\score_adjustment!
+      when "decrement"
+        CommunityUsers\for_user(@user_id)\increment user_field_name, -vote\score_adjustment!
+
     if topic = @is_topic_post! and @get_topic!
       topic.topic_post = @
 
