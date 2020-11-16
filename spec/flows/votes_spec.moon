@@ -109,6 +109,14 @@ describe "votes flow", ->
 
     cu = CommunityUsers\for_user current_user
     assert.same 1, cu.votes_count, "community user votes_count before remove"
+    assert.same 0, cu.received_up_votes_count
+    assert.same 0, cu.received_down_votes_count
+
+    post_cu = CommunityUsers\for_user post\get_user!
+
+    assert.same 0, post_cu.votes_count, "post's community user votes_count before remove"
+    assert.same 1, post_cu.received_up_votes_count
+    assert.same 0, post_cu.received_down_votes_count
 
     post\refresh!
     assert.same 1, post.up_votes_count, "post up_votes_count"
@@ -128,14 +136,28 @@ describe "votes flow", ->
 
     cu = CommunityUsers\for_user current_user
     assert.same 0, cu.votes_count, "community user votes_count"
+    assert.same 0, cu.received_up_votes_count
+    assert.same 0, cu.received_down_votes_count
+
+    post_cu = CommunityUsers\for_user post\get_user!
+    assert.same 0, post_cu.votes_count, "post's community user votes_count"
+    assert.same 0, post_cu.received_up_votes_count
+    assert.same 0, post_cu.received_down_votes_count
 
   it "removes negative vote on post", ->
     post = factory.Posts!
     _, vote = Votes\vote post, current_user, false
 
     cu = CommunityUsers\for_user current_user
-    assert.same 1, cu.votes_count,
-      "community user votes_count before remove"
+    assert.same 1, cu.votes_count, "community user votes_count before remove"
+    assert.same 0, cu.received_up_votes_count
+    assert.same 0, cu.received_down_votes_count
+
+    post_cu = CommunityUsers\for_user post\get_user!
+
+    assert.same 0, post_cu.votes_count, "post's community user votes_count before remove"
+    assert.same 0, post_cu.received_up_votes_count
+    assert.same 1, post_cu.received_down_votes_count
 
     post\refresh!
     assert.same 0, post.up_votes_count, "post up_votes_count"
@@ -155,7 +177,11 @@ describe "votes flow", ->
 
     cu = CommunityUsers\for_user current_user
     assert.same 0, cu.votes_count, "community user votes_count"
+    assert.same 0, cu.received_up_votes_count
+    assert.same 0, cu.received_down_votes_count
 
+    post_cu = CommunityUsers\for_user post\get_user!
 
-
-
+    assert.same 0, post_cu.votes_count, "post's community user votes_count"
+    assert.same 0, post_cu.received_up_votes_count
+    assert.same 0, post_cu.received_down_votes_count
