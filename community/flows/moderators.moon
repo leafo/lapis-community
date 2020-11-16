@@ -87,7 +87,7 @@ class ModeratorsFlow extends Flow
 
     @pager = Moderators\paginated "
       where object_type = ? and object_id = ?
-      order by created_at desc
+      order by created_at desc, user_id asc
     ", Moderators\object_type_for_object(@object), @object.id, {
       per_page: 20
       prepare_results: (moderators) ->
