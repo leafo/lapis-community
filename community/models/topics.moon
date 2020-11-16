@@ -273,7 +273,7 @@ class Topics extends Model
     CategoryPostLogs\clear_posts_for_topic @
 
     if not was_soft_deleted and @user_id
-      CommunityUsers\for_user(@get_user!)\increment "topics_count", -1
+      CommunityUsers\increment @user_id, "topics_count", -1
 
     if category = @get_category!
       restore_deleted_count = if was_soft_deleted
@@ -284,7 +284,6 @@ class Topics extends Model
         deleted_topics_count: restore_deleted_count
       }, timestamp: false
 
-
       if category.last_topic_id == @id
         category\refresh_last_topic!
 
@@ -293,7 +292,7 @@ class Topics extends Model
       TopicParticipants
       UserTopicLastSeens
     }
-      db.delete model\table_name!, topic_id: @id
+      db.delete model\table_name!, topic_id: assert @id
 
     true
 
@@ -307,7 +306,7 @@ class Topics extends Model
       CategoryPostLogs\clear_posts_for_topic @
 
       if @user_id
-        CommunityUsers\for_user(@get_user!)\increment "topics_count", -1
+        CommunityUsers\increment @user_id, "topics_count", -1
 
       if category = @get_category!
         category\update {

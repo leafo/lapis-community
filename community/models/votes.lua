@@ -29,7 +29,7 @@ do
       end
       local CommunityUsers
       CommunityUsers = require("community.models").CommunityUsers
-      CommunityUsers:for_user(self.user_id):increment("votes_count", 1)
+      CommunityUsers:increment(self.user_id, "votes_count", 1)
       return self:trigger_vote_callback("increment")
     end,
     decrement = function(self)
@@ -38,7 +38,7 @@ do
       end
       local CommunityUsers
       CommunityUsers = require("community.models").CommunityUsers
-      CommunityUsers:for_user(self.user_id):increment("votes_count", -1)
+      CommunityUsers:increment(self.user_id, "votes_count", -1)
       return self:trigger_vote_callback("decrement")
     end,
     update_counted = function(self, counted)
@@ -196,18 +196,19 @@ do
     }):delete()
     local CommunityUsers
     CommunityUsers = require("community.models").CommunityUsers
+    local cu
     local score
     if opts and opts.score ~= nil then
       score = opts.score
     else
-      local cu = cu or CommunityUsers:for_user(user)
+      cu = cu or CommunityUsers:for_user(user)
       score = cu:get_vote_score(object, positive)
     end
     local counted
     if opts and opts.counted ~= nil then
       counted = opts.counted
     else
-      local cu = cu or CommunityUsers:for_user(user)
+      cu = cu or CommunityUsers:for_user(user)
       counted = cu:count_vote_for(object)
     end
     local vote = insert_on_conflict_ignore(self, {

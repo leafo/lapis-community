@@ -162,7 +162,7 @@ do
           CommunityUsers, Topics, CategoryPostLogs = _obj_0.CommunityUsers, _obj_0.Topics, _obj_0.CategoryPostLogs
         end
         if not (self:is_moderation_event()) then
-          CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
+          CommunityUsers:increment(self.user_id, "posts_count", -1)
           CategoryPostLogs:clear_post(self)
           do
             local topic = self:get_topic()
@@ -204,7 +204,7 @@ do
         local t = deleted_topic or self:get_topic()
         local topic_post = self:is_topic_post() and not (t and t.permanent)
         if not (topic_post) then
-          CommunityUsers:for_user(self:get_user()):increment("posts_count", -1)
+          CommunityUsers:increment(self.user_id, "posts_count", -1)
         end
         CategoryPostLogs:clear_post(self)
       end
@@ -484,9 +484,9 @@ do
       end
       local _exp_1 = kind
       if "increment" == _exp_1 then
-        CommunityUsers:for_user(self.user_id):increment(user_field_name, vote:score_adjustment())
+        CommunityUsers:increment(self.user_id, user_field_name, vote:score_adjustment())
       elseif "decrement" == _exp_1 then
-        CommunityUsers:for_user(self.user_id):increment(user_field_name, -vote:score_adjustment())
+        CommunityUsers:increment(self.user_id, user_field_name, -vote:score_adjustment())
       end
       do
         local topic = self:is_topic_post() and self:get_topic()

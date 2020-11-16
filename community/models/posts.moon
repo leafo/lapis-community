@@ -327,7 +327,8 @@ class Posts extends Model
       import CommunityUsers, Topics, CategoryPostLogs from require "community.models"
 
       unless @is_moderation_event!
-        CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
+        CommunityUsers\increment @user_id, "posts_count", -1
+
         CategoryPostLogs\clear_post @
 
         if topic = @get_topic!
@@ -368,7 +369,7 @@ class Posts extends Model
 
       topic_post = @is_topic_post! and not (t and t.permanent)
       unless topic_post
-        CommunityUsers\for_user(@get_user!)\increment "posts_count", -1
+        CommunityUsers\increment @user_id, "posts_count", -1
 
       CategoryPostLogs\clear_post @
 
@@ -565,9 +566,9 @@ class Posts extends Model
 
     switch kind
       when "increment"
-        CommunityUsers\for_user(@user_id)\increment user_field_name, vote\score_adjustment!
+        CommunityUsers\increment @user_id, user_field_name, vote\score_adjustment!
       when "decrement"
-        CommunityUsers\for_user(@user_id)\increment user_field_name, -vote\score_adjustment!
+        CommunityUsers\increment @user_id, user_field_name, -vote\score_adjustment!
 
     if topic = @is_topic_post! and @get_topic!
       topic.topic_post = @

@@ -249,6 +249,20 @@ do
       key = "username"
     })
   end
+  self.increment = function(self, user_id, field, amount)
+    assert(user_id, "missing user_id")
+    assert(field, "missing field")
+    assert(type(amount) == "number", "missing or invalid number")
+    local insert_on_conflict_update
+    insert_on_conflict_update = require("community.helpers.models").insert_on_conflict_update
+    return insert_on_conflict_update(self, {
+      user_id = user_id
+    }, {
+      [field] = amount
+    }, {
+      [field] = db.raw(tostring(db.escape_identifier(self:table_name())) .. "." .. tostring(db.escape_identifier(field)) .. " + excluded." .. tostring(db.escape_identifier(field)))
+    })
+  end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end

@@ -104,6 +104,21 @@ class CommunityUsers extends Model
     import Users from require "models"
     Users\find_all names, key: "username"
 
+  @increment: (user_id, field, amount) =>
+    assert user_id, "missing user_id"
+    assert field, "missing field"
+    assert type(amount) == "number", "missing or invalid number"
+
+    import insert_on_conflict_update from require "community.helpers.models"
+
+    insert_on_conflict_update @, {
+      :user_id
+    }, {
+      [field]: amount
+    }, {
+      [field]: db.raw "#{db.escape_identifier @table_name!}.#{db.escape_identifier field} + excluded.#{db.escape_identifier field}"
+    }
+
   -- how popular are they (function of received votes)
   -- will help sort their replies
   get_popularity_score: =>

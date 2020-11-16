@@ -80,6 +80,8 @@ class Votes extends Model
 
     import CommunityUsers from require "community.models"
 
+    local cu
+
     score = if opts and opts.score != nil
       opts.score
     else
@@ -142,7 +144,7 @@ class Votes extends Model
     return if @counted == false
 
     import CommunityUsers from require "community.models"
-    CommunityUsers\for_user(@user_id)\increment "votes_count", 1
+    CommunityUsers\increment @user_id, "votes_count", 1
     @trigger_vote_callback "increment"
 
   -- decrement undoes the vote (regardless of positive or negative)
@@ -150,7 +152,7 @@ class Votes extends Model
     return if @counted == false
 
     import CommunityUsers from require "community.models"
-    CommunityUsers\for_user(@user_id)\increment "votes_count", -1
+    CommunityUsers\increment @user_id, "votes_count", -1
     @trigger_vote_callback "decrement"
 
   update_counted: (counted) =>

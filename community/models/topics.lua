@@ -183,7 +183,7 @@ do
       end
       CategoryPostLogs:clear_posts_for_topic(self)
       if not was_soft_deleted and self.user_id then
-        CommunityUsers:for_user(self:get_user()):increment("topics_count", -1)
+        CommunityUsers:increment(self.user_id, "topics_count", -1)
       end
       do
         local category = self:get_category()
@@ -211,7 +211,7 @@ do
       for _index_0 = 1, #_list_1 do
         local model = _list_1[_index_0]
         db.delete(model:table_name(), {
-          topic_id = self.id
+          topic_id = assert(self.id)
         })
       end
       return true
@@ -232,7 +232,7 @@ do
         end
         CategoryPostLogs:clear_posts_for_topic(self)
         if self.user_id then
-          CommunityUsers:for_user(self:get_user()):increment("topics_count", -1)
+          CommunityUsers:increment(self.user_id, "topics_count", -1)
         end
         do
           local category = self:get_category()
