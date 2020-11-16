@@ -35,8 +35,7 @@ class VotesFlow extends Flow
           assert_error @object\allowed_to_vote(@current_user, "remove"),
             "not allowed to unvote"
 
-          if Votes\unvote @object, @current_user
-            CommunityUsers\for_user(@current_user)\increment "votes_count", -1
+          Votes\unvote @object, @current_user
 
     else
       assert_valid @params, {
@@ -46,9 +45,8 @@ class VotesFlow extends Flow
       assert_error @object\allowed_to_vote(@current_user, @params.direction),
         "not allowed to vote"
 
-      action, @vote = Votes\vote @object, @current_user, @params.direction == "up"
-      if action == "insert"
-        CommunityUsers\for_user(@current_user)\increment "votes_count"
+      @vote = Votes\vote @object, @current_user, @params.direction == "up"
+      assert_error @vote, "vote changed in another request"
 
     true
 

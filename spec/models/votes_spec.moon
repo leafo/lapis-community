@@ -109,7 +109,7 @@ describe "models.votes", ->
   describe "update_counted", ->
     it "uncounts vote", ->
       post = factory.Posts!
-      _, vote = Votes\vote post, current_user
+      vote = Votes\vote post, current_user
 
       assert vote.counted, "vote is initially counted"
       post\refresh!
@@ -128,7 +128,7 @@ describe "models.votes", ->
 
     it "counts vote", ->
       post = factory.Posts!
-      _, vote = Votes\vote post, current_user, true, {
+      vote = Votes\vote post, current_user, true, {
         counted: false
       }
 

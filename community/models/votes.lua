@@ -7,51 +7,39 @@ do
   local _parent_0 = Model
   local _base_0 = {
     delete = function(self)
-      if _class_0.__parent.__base.delete(self) then
-        self:decrement()
-        return true
+      local deleted, res = _class_0.__parent.__base.delete(self, db.raw("*"))
+      if res and res[1] then
+        local deleted_vote = self.__class:load(res[1])
+        deleted_vote:decrement()
       end
+      return deleted
     end,
     name = function(self)
       return self.positive and "up" or "down"
     end,
-    trigger_vote_callback = function(self, res)
-      local object = unpack(res)
-      if not (object) then
-        return 
-      end
-      local model = self.__class:model_for_object_type(self.object_type)
-      model:load(object)
+    trigger_vote_callback = function(self, kind)
+      local object = self:get_object()
       if object.on_vote_callback then
-        object:on_vote_callback(self)
+        return object:on_vote_callback(kind, self)
       end
-      return res
     end,
     increment = function(self)
       if self.counted == false then
         return 
       end
-      local model = self.__class:model_for_object_type(self.object_type)
-      local counter_name = self:post_counter_name()
-      local score = self:score_adjustment()
-      return self:trigger_vote_callback(db.update(model:table_name(), {
-        [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " + " .. tostring(db.escape_literal(score)))
-      }, {
-        id = self.object_id
-      }, db.raw("*")))
+      local CommunityUsers
+      CommunityUsers = require("community.models").CommunityUsers
+      CommunityUsers:for_user(self.user_id):increment("votes_count", 1)
+      return self:trigger_vote_callback("increment")
     end,
     decrement = function(self)
       if self.counted == false then
         return 
       end
-      local model = self.__class:model_for_object_type(self.object_type)
-      local counter_name = self:post_counter_name()
-      local score = self:score_adjustment()
-      return self:trigger_vote_callback(db.update(model:table_name(), {
-        [counter_name] = db.raw(tostring(db.escape_identifier(counter_name)) .. " - " .. tostring(db.escape_literal(score)))
-      }, {
-        id = self.object_id
-      }, db.raw("*")))
+      local CommunityUsers
+      CommunityUsers = require("community.models").CommunityUsers
+      CommunityUsers:for_user(self.user_id):increment("votes_count", -1)
+      return self:trigger_vote_callback("decrement")
     end,
     update_counted = function(self, counted)
       assert(type(counted) == "boolean", "expected boolean for counted")
@@ -72,13 +60,6 @@ do
         end
         self.counted = counted
         return true
-      end
-    end,
-    post_counter_name = function(self)
-      if self.positive then
-        return "up_votes_count"
-      else
-        return "down_votes_count"
       end
     end,
     score_adjustment = function(self)
@@ -203,10 +184,16 @@ do
     if positive == nil then
       positive = true
     end
-    local upsert
-    upsert = require("community.helpers.models").upsert
+    assert(user, "missing user to create vote from")
+    assert(object, "missing object to create vote from")
+    local insert_on_conflict_ignore
+    insert_on_conflict_ignore = require("community.helpers.models").insert_on_conflict_ignore
     local object_type = self:object_type_for_object(object)
-    local old_vote = self:find(user.id, object_type, object.id)
+    self:load({
+      object_type = object_type,
+      object_id = object.id,
+      user_id = user.id
+    }):delete()
     local CommunityUsers
     CommunityUsers = require("community.models").CommunityUsers
     local score
@@ -223,7 +210,7 @@ do
       local cu = cu or CommunityUsers:for_user(user)
       counted = cu:count_vote_for(object)
     end
-    local params = {
+    local vote = insert_on_conflict_ignore(self, {
       object_type = object_type,
       object_id = object.id,
       user_id = user.id,
@@ -231,24 +218,19 @@ do
       ip = self:current_ip_address(),
       counted = counted,
       score = score
-    }
-    local action, vote = upsert(self, params)
-    if action == "update" and old_vote then
-      old_vote:decrement()
+    })
+    if vote then
+      vote:increment()
     end
-    vote:increment()
-    return action, vote
+    return vote
   end
   self.unvote = function(self, object, user)
     local object_type = self:object_type_for_object(object)
-    local vote = self:find({
+    return self:load({
       object_type = object_type,
       object_id = object.id,
       user_id = user.id
-    })
-    if vote then
-      return vote:delete()
-    end
+    }):delete()
   end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)

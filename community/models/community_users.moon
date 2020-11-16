@@ -159,14 +159,8 @@ class CommunityUsers extends Model
   purge_votes: =>
     import Votes from require "community.models"
 
-    decrement = 0
     for vote in *Votes\select "where user_id = ?", @user_id
-      if vote\delete!
-        decrement += 1
-
-    @update {
-      votes_count: db.raw db.interpolate_query "votes_count - ?", decrement
-    }
+      vote\delete!
 
     true
 

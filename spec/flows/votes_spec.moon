@@ -35,19 +35,19 @@ describe "votes flow", ->
     }
 
     vote = assert unpack Votes\select!
-    assert.same post.id, vote.object_id
-    assert.same Votes.object_types.post, vote.object_type
+    assert.same post.id, vote.object_id, "object_id is post.id"
+    assert.same Votes.object_types.post, vote.object_type, "object_type is post"
 
-    assert.same current_user.id, vote.user_id
-    assert.same true, vote.positive
+    assert.same current_user.id, vote.user_id, "vote user"
+    assert.same true, vote.positive, "vote positive"
 
     post\refresh!
 
-    assert.same 1, post.up_votes_count
-    assert.same 0, post.down_votes_count
+    assert.same 1, post.up_votes_count, "post up votes count"
+    assert.same 0, post.down_votes_count, "post down_votes_count"
 
     cu = CommunityUsers\for_user(current_user)
-    assert.same 1, cu.votes_count
+    assert.same 1, cu.votes_count, "community user votes count"
 
   it "updates a vote with no changes", ->
     post = factory.Posts!
@@ -66,19 +66,19 @@ describe "votes flow", ->
     }
 
     vote = assert unpack Votes\select!
-    assert.same post.id, vote.object_id
-    assert.same Votes.object_types.post, vote.object_type
+    assert.same post.id, vote.object_id, "vote object_id"
+    assert.same Votes.object_types.post, vote.object_type, "vote object_type"
 
-    assert.same current_user.id, vote.user_id
-    assert.same true, vote.positive
+    assert.same current_user.id, vote.user_id, "vote user_id"
+    assert.same true, vote.positive, "vote positive"
 
     post\refresh!
 
-    assert.same 1, post.up_votes_count
-    assert.same 0, post.down_votes_count
+    assert.same 1, post.up_votes_count, "post.up_votes_count"
+    assert.same 0, post.down_votes_count, "post.down_votes_count"
 
     cu = CommunityUsers\for_user(current_user)
-    assert.same 1, cu.votes_count
+    assert.same 1, cu.votes_count, "community user votes count"
 
   it "updates a vote", ->
     vote = factory.Votes user_id: current_user.id
@@ -103,9 +103,16 @@ describe "votes flow", ->
     cu = CommunityUsers\for_user(current_user)
     assert.same 0, cu.votes_count
 
-  it "removes vote on post", ->
+  it "removes positive vote on post", ->
     post = factory.Posts!
     _, vote = Votes\vote post, current_user
+
+    cu = CommunityUsers\for_user current_user
+    assert.same 1, cu.votes_count, "community user votes_count before remove"
+
+    post\refresh!
+    assert.same 1, post.up_votes_count, "post up_votes_count"
+    assert.same 0, post.down_votes_count, "post down_votes_count"
 
     do_vote {
       object_type: "post"
@@ -116,11 +123,39 @@ describe "votes flow", ->
     assert.same 0, #Votes\select!
 
     post\refresh!
-    assert.same 0, post.up_votes_count
-    assert.same 0, post.up_votes_count
+    assert.same 0, post.up_votes_count, "post up_votes_count"
+    assert.same 0, post.down_votes_count, "post down_votes_count"
 
     cu = CommunityUsers\for_user current_user
-    -- number off because factory didn't sync count to use
-    assert.same -1, cu.votes_count
+    assert.same 0, cu.votes_count, "community user votes_count"
+
+  it "removes negative vote on post", ->
+    post = factory.Posts!
+    _, vote = Votes\vote post, current_user, false
+
+    cu = CommunityUsers\for_user current_user
+    assert.same 1, cu.votes_count,
+      "community user votes_count before remove"
+
+    post\refresh!
+    assert.same 0, post.up_votes_count, "post up_votes_count"
+    assert.same 1, post.down_votes_count, "post down_votes_count"
+
+    do_vote {
+      object_type: "post"
+      object_id: post.id
+      action: "remove"
+    }
+
+    assert.same 0, #Votes\select!
+
+    post\refresh!
+    assert.same 0, post.up_votes_count, "post up_votes_count"
+    assert.same 0, post.down_votes_count, "post down_votes_count"
+
+    cu = CommunityUsers\for_user current_user
+    assert.same 0, cu.votes_count, "community user votes_count"
+
+
 
 

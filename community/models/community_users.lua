@@ -81,17 +81,11 @@ do
     purge_votes = function(self)
       local Votes
       Votes = require("community.models").Votes
-      local decrement = 0
       local _list_0 = Votes:select("where user_id = ?", self.user_id)
       for _index_0 = 1, #_list_0 do
         local vote = _list_0[_index_0]
-        if vote:delete() then
-          decrement = decrement + 1
-        end
+        vote:delete()
       end
-      self:update({
-        votes_count = db.raw(db.interpolate_query("votes_count - ?", decrement))
-      })
       return true
     end,
     purge_posts = function(self)

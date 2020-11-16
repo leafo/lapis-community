@@ -50,9 +50,7 @@ do
         local _exp_0 = self.params.action
         if "remove" == _exp_0 then
           assert_error(self.object:allowed_to_vote(self.current_user, "remove"), "not allowed to unvote")
-          if Votes:unvote(self.object, self.current_user) then
-            CommunityUsers:for_user(self.current_user):increment("votes_count", -1)
-          end
+          Votes:unvote(self.object, self.current_user)
         end
       else
         assert_valid(self.params, {
@@ -65,11 +63,8 @@ do
           }
         })
         assert_error(self.object:allowed_to_vote(self.current_user, self.params.direction), "not allowed to vote")
-        local action
-        action, self.vote = Votes:vote(self.object, self.current_user, self.params.direction == "up")
-        if action == "insert" then
-          CommunityUsers:for_user(self.current_user):increment("votes_count")
-        end
+        self.vote = Votes:vote(self.object, self.current_user, self.params.direction == "up")
+        assert_error(self.vote, "vote changed in another request")
       end
       return true
     end)

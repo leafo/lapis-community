@@ -60,11 +60,23 @@ class Votes extends Model
 
     super opts
 
+  -- this will attempt to record a vote, and update any related counters
+  -- if the vote could not be atomically created (because another request
+  -- created a vote) then this method will return nil
   @vote: (object, user, positive=true, opts) =>
-    import upsert from require "community.helpers.models"
+    assert user, "missing user to create vote from"
+    assert object, "missing object to create vote from"
+
+    import insert_on_conflict_ignore from require "community.helpers.models"
 
     object_type = @object_type_for_object object
-    old_vote = @find user.id, object_type, object.id
+
+    -- try to clear out existing vote
+    @load({
+      :object_type
+      object_id: object.id
+      user_id: user.id
+    })\delete!
 
     import CommunityUsers from require "community.models"
 
@@ -80,7 +92,7 @@ class Votes extends Model
       cu or= CommunityUsers\for_user user
       cu\count_vote_for object
 
-    params = {
+    vote = insert_on_conflict_ignore @, {
       :object_type
       object_id: object.id
       user_id: user.id
@@ -90,75 +102,56 @@ class Votes extends Model
       :score
     }
 
-    action, vote = upsert @, params
+    if vote
+      vote\increment!
 
-    -- decrement and increment if positive changed
-    if action == "update" and old_vote
-      old_vote\decrement!
-
-    vote\increment!
-
-    action, vote
+    vote
 
   @unvote: (object, user) =>
     object_type = @object_type_for_object object
 
-    vote = @find {
+    @load({
       :object_type
       object_id: object.id
       user_id: user.id
-    }
-
-    if vote
-      vote\delete!
+    })\delete!
 
   delete: =>
-    if super!
-      @decrement!
-      true
+    -- we refetch the row on delete to ensure the decrement is looking the
+    -- most recent vote data
+
+    deleted, res = super db.raw "*"
+
+    if res and res[1]
+      deleted_vote = @@load res[1]
+      deleted_vote\decrement!
+
+    deleted
 
   name: =>
     @positive and "up" or "down"
 
-  trigger_vote_callback: (res) =>
-    object = unpack res
-    return unless object
-
-    model = @@model_for_object_type @object_type
-    model\load object
-
+  -- kind: "increment", "decrement"
+  trigger_vote_callback: (kind) =>
+    object = @get_object!
     if object.on_vote_callback
-      object\on_vote_callback @
+      object\on_vote_callback kind, @
 
-    res
-
+  -- increment applies the vote (whether it's positive or negative)
   increment: =>
     return if @counted == false
 
-    model = @@model_for_object_type @object_type
-    counter_name = @post_counter_name!
+    import CommunityUsers from require "community.models"
+    CommunityUsers\for_user(@user_id)\increment "votes_count", 1
+    @trigger_vote_callback "increment"
 
-    score = @score_adjustment!
-
-    @trigger_vote_callback db.update model\table_name!, {
-      [counter_name]: db.raw "#{db.escape_identifier counter_name} + #{db.escape_literal score}"
-    }, {
-      id: @object_id
-    }, db.raw "*"
-
+  -- decrement undoes the vote (regardless of positive or negative)
   decrement: =>
     return if @counted == false
 
-    model = @@model_for_object_type @object_type
-    counter_name = @post_counter_name!
-
-    score = @score_adjustment!
-
-    @trigger_vote_callback db.update model\table_name!, {
-      [counter_name]: db.raw "#{db.escape_identifier counter_name} - #{db.escape_literal score}"
-    }, {
-      id: @object_id
-    }, db.raw "*"
+    import CommunityUsers from require "community.models"
+    CommunityUsers\for_user(@user_id)\increment "votes_count", -1
+    @trigger_vote_callback "decrement"
 
   update_counted: (counted) =>
     assert type(counted) == "boolean", "expected boolean for counted"
@@ -173,7 +166,6 @@ class Votes extends Model
     }
 
     if res.affected_rows and res.affected_rows > 0
-
       -- temporarily set to true so we can incrment/decrement
       @counted = true
 
@@ -184,12 +176,6 @@ class Votes extends Model
 
       @counted = counted
       true
-
-  post_counter_name: =>
-    if @positive
-      "up_votes_count"
-    else
-      "down_votes_count"
 
   score_adjustment: =>
     @score or 1

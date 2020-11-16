@@ -62,14 +62,14 @@ describe "models.users", ->
       other_vote = factory.Votes!
 
       cu\recount!
-      assert.same 2, cu.votes_count
-      assert.same 3, Votes\count!
+      assert.same 2, cu.votes_count, "community user votes_vount before purge"
+      assert.same 3, Votes\count!, "total votes count before purge"
 
       cu\purge_votes!
 
       cu\refresh!
-      assert.same 0, cu.votes_count
-      assert.same 1, Votes\count!
+      assert.same 0, cu.votes_count, "community user votes_count after purge"
+      assert.same 1, Votes\count!, "total votes count after purge"
 
   describe "posting rate", ->
     import ActivityLogs from require "spec.community_models"

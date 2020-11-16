@@ -455,7 +455,25 @@ do
     vote_score = function(self)
       return self.up_votes_count - self.down_votes_count
     end,
-    on_vote_callback = function(self, vote)
+    on_vote_callback = function(self, kind, vote)
+      local field_name
+      if vote.positive then
+        field_name = "up_votes_count"
+      else
+        field_name = "down_votes_count"
+      end
+      local value_update
+      local _exp_0 = kind
+      if "increment" == _exp_0 then
+        value_update = db.raw(tostring(db.escape_identifier(field_name)) .. " + " .. tostring(db.escape_literal(vote:score_adjustment())))
+      elseif "decrement" == _exp_0 then
+        value_update = db.raw(tostring(db.escape_identifier(field_name)) .. " - " .. tostring(db.escape_literal(vote:score_adjustment())))
+      else
+        value_update = error("unknown vote callback kind: " .. tostring(kind))
+      end
+      self:update({
+        [field_name] = value_update
+      })
       do
         local topic = self:is_topic_post() and self:get_topic()
         if topic then

@@ -535,7 +535,28 @@ class Posts extends Model
   vote_score: =>
     @up_votes_count - @down_votes_count
 
-  on_vote_callback: (vote) =>
+  -- call when a vote object related to this post is being incremented or
+  -- decremented
+  -- kind: "increment", "decrement"
+  -- vote: the vote object that is being applied or undone
+  on_vote_callback: (kind, vote) =>
+    field_name = if vote.positive
+      "up_votes_count"
+    else
+      "down_votes_count"
+
+    value_update = switch kind
+      when "increment"
+        db.raw "#{db.escape_identifier field_name} + #{db.escape_literal vote\score_adjustment!}"
+      when "decrement"
+        db.raw "#{db.escape_identifier field_name} - #{db.escape_literal vote\score_adjustment!}"
+      else
+        error "unknown vote callback kind: #{kind}"
+
+    @update {
+      [field_name]: value_update
+    }
+
     if topic = @is_topic_post! and @get_topic!
       topic.topic_post = @
 
