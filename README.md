@@ -12,7 +12,7 @@ different sub communities with distinct moderators and roles.
 
 ## How it works
 
-`laips-community` provides a collection of *Models* and *Flows* for a database
+`lapis-community` provides a collection of *Models* and *Flows* for a database
 backed message board. It includes the application layer (aka server side logic)
 for interacting with the community using *Flows*. A *Flow* is a class that
 groups common functionality into a single module that works on top of the Lapis
@@ -110,6 +110,11 @@ JavaScript templates.
 There are flows, however, for fetching the models and preloading all the
 necessary data. For example, loading the threaded replies for a particular
 topic on a particular page.
+
+## Where it's used
+
+* [itch.io](https://itch.io): global message board, game communities, every single comment thread eg. https://itch.io/community
+* [streak.club](https://streak.club): streak message boards
 
 ## Documentation
 
