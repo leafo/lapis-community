@@ -2,7 +2,7 @@
 
 A drop in, full featured community and comment system for Lapis projects.
 
-[![Build Status](https://travis-ci.org/leafo/lapis-community.svg?branch=master)](https://travis-ci.org/leafo/lapis-community)
+![test](https://github.com/leafo/lapis-community/workflows/test/badge.svg)
 
 Example community: https://itch.io/community
 
