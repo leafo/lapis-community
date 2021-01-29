@@ -61,6 +61,14 @@ class BrowsingFlow extends Flow
     @pending_posts = PendingPosts\select "where topic_id = ? and user_id = ?", @topic.id, @current_user.id
     @pending_posts
 
+
+  increment_topic_view_counter: (topic=@topic)=>
+    assert topic, "missing topic"
+    if view_counter = @view_counter!
+      key = "topic:#{topic.id}"
+      unless @throttle_view_count key
+        view_counter\increment key
+
   topic_posts: (opts={}) =>
     mark_seen = if opts.mark_seen == nil
       true
@@ -77,10 +85,7 @@ class BrowsingFlow extends Flow
     assert_error @allowed_to_view(@topic), "not allowed to view"
 
     if opts.increment_views != false
-      if view_counter = @view_counter!
-        key = "topic:#{@topic.id}"
-        unless @throttle_view_count key
-          view_counter\increment key
+      @increment_topic_view_counter
 
     before, after = @get_before_after!
 
