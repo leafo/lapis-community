@@ -27,8 +27,8 @@ moonc schema.moon
 moonc config.moon
 moonc community
 createdb -U postgres community_test
-LAPIS_SHOW_QUERIES=1 luajit -e 'require("schema").make_schema()'
+LAPIS_SHOW_QUERIES=1 /usr/local/openresty/luajit/bin/luajit -e 'require("schema").make_schema()'
 
-cat $(which busted) | sed 's/\/usr\/bin\/lua5\.1/\/usr\/bin\/luajit/' > busted
+cat $(which busted) | sed 's/\/usr\/bin\/lua5\.1/\/usr\/local\/openresty\/luajit\/bin\/luajit/' > busted
 chmod +x busted
 ./busted -o utfTerminal
