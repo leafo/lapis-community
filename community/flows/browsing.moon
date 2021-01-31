@@ -22,7 +22,7 @@ class BrowsingFlow extends Flow
 
   -- extension point for testing object visibiliy
   allowed_to_view: (obj) =>
-    obj\allowed_to_view @current_user,  @_req
+    obj\allowed_to_view @current_user, @_req
 
   throttle_view_count: (key) =>
     false
@@ -70,8 +70,6 @@ class BrowsingFlow extends Flow
 
 
   increment_topic_view_counter: (topic=@topic)=>
-    config = require("lapis.config").get!
-
     assert topic, "missing topic"
     if view_counter = @view_counter!
       key = "topic:#{topic.id}"
