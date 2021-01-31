@@ -47,20 +47,6 @@ class BrowsingApp extends TestApp
       topics: @flow\preview_category_topics @category
     }
 
-  "/topic-posts": capture_errors_json =>
-    @flow\topic_posts {
-      order: @params.order
-    }
-
-    filter_bans unpack [post.topic for post in *@posts]
-
-    json: {
-      success: true
-      posts: @posts
-      next_page: @next_page
-      prev_page: @prev_page
-    }
-
 describe "browsing flow", ->
   use_test_env!
 
@@ -75,11 +61,30 @@ describe "browsing flow", ->
       before_each ->
         current_user = factory.Users! if logged_in
 
-      describe "topic posts", ->
-        it "should error with no topic id", ->
-          res = BrowsingApp\get current_user, "/topic-posts"
-          assert.truthy res.errors
-          assert.same {"topic_id: expected integer"}, res.errors
+      describe "topic posts #ddd", ->
+        topic_posts = (params, opts) ->
+          in_request { get: params }, =>
+            @topic = topic
+            @current_user = current_user
+            @flow("browsing")\topic_posts opts
+            { posts: @posts, next_page: @next_page, prev_page: @prev_page}
+
+        it "errors with no topic id", ->
+          assert.has_error(
+            ->
+              topic_posts {}
+            {
+              message: { "topic_id: expected integer" }
+            }
+          )
+
+          assert.has_error(
+            ->
+              topic_posts { topic_id: "helfelfjew fwef"}
+            {
+              message: { "topic_id: expected integer" }
+            }
+          )
 
         it "get flat posts in topic", ->
           topic = factory.Topics!
@@ -88,8 +93,10 @@ describe "browsing flow", ->
             topic\increment_from_post post
             post
 
-          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
-          assert.truthy res.success
+          res = topic_posts {
+            topic_id:  topic.id
+          }
+
           assert.same 3, #res.posts
           assert.same [p.id for p in *posts], [p.id for p in *res.posts]
 
@@ -100,45 +107,52 @@ describe "browsing flow", ->
             topic\increment_from_post post
             post
 
-          res = BrowsingApp\get current_user, "/topic-posts", {
+          res = topic_posts {
             topic_id: topic.id
+          }, {
             order: "desc"
           }
 
-          assert.truthy res.success
-          assert.same 3, #res.posts
+          assert.same 3, #res.posts, "number of posts"
           assert.same [posts[i].id for i=#posts,1,-1], [p.id for p in *res.posts]
 
-        it "should get paginated posts with after", ->
+        it "get paginated posts with after", ->
           topic = factory.Topics!
-          for i=1,3
+          posts = for i=1,3
             post = factory.Posts topic_id: topic.id
             topic\increment_from_post post
+            post
 
-          res = BrowsingApp\get current_user, "/topic-posts", {
+          -- skip the first post
+          res = topic_posts {
             topic_id: topic.id
             after: 1
           }
 
-          assert.truthy res.success
-          assert.same 2, #res.posts
+          assert.same 2, #res.posts, "number of posts"
+          assert.same {posts[2].id, posts[3].id}, [p.id for p in *res.posts]
 
-          -- empty since it's first page
-          assert.same {}, res.prev_page
+          -- empty since it points to the first page first page
+          assert.same {}, res.prev_page, "prev_page"
+          assert.nil res.next_page, "next_page"
 
-        it "should get paginated posts with before", ->
+        it "gets paginated posts with before", ->
           topic = factory.Topics!
-          for i=1,3
+          posts = for i=1,3
             post = factory.Posts topic_id: topic.id
             topic\increment_from_post post
+            post
 
-          res = BrowsingApp\get current_user, "/topic-posts", {
+          res = topic_posts {
             topic_id: topic.id
             before: 2
           }
 
-          assert.truthy res.success
           assert.same 1, #res.posts
+          assert.same {posts[1].id }, [p.id for p in *res.posts]
+
+          assert.same { after: 1 }, res.next_page, "prev_page"
+          assert.nil res.prev_page, "next_page"
 
         it "sets pagination on posts", ->
           limits = require "community.limits"
@@ -148,33 +162,41 @@ describe "browsing flow", ->
             p = factory.Posts topic_id: topic.id
             topic\increment_from_post p
 
-          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
+          res = topic_posts topic_id: topic.id
 
-          assert.falsy res.next_page
-          assert.falsy res.prev_page
+          assert.nil res.next_page, "next_page"
+          assert.nil res.prev_page, "prev_page"
 
-          -- one more to push it over the limit
+          -- add one more to push it over the limit
           p = factory.Posts topic_id: topic.id
           topic\increment_from_post p
 
-          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
-          assert.same { after: 20 }, res.next_page
-          assert.falsy res.prev_page
+          res = topic_posts topic_id: topic.id
 
+          assert.same { after: 20 }, res.next_page, "next_page"
+          assert.nil res.prev_page, "prev_page"
 
-          for i=1,3
-            p = factory.Posts topic_id: topic.id
-            topic\increment_from_post p
+          more_posts = for i=1,3
+            pp = factory.Posts topic_id: topic.id
+            topic\increment_from_post pp
+            pp
 
-          res = BrowsingApp\get current_user, "/topic-posts", {
+          res = topic_posts {
             topic_id: topic.id
             after: res.next_page.after
           }
 
-          assert.same {}, res.prev_page
-          assert.nil res.next_page
+          assert.same {}, res.prev_page, "prev_page"
+          assert.nil res.next_page, "next_page"
 
-          assert.same 4, #res.posts
+          assert.same 4, #res.posts, "number of posts"
+          assert.same {
+            p.id
+            more_posts[1].id
+            more_posts[2].id
+            more_posts[3].id
+          }, [p.id for p in *res.posts]
+
 
         it "sets blank pagination on posts when there are archived in first position", ->
           topic = factory.Topics!
@@ -184,9 +206,9 @@ describe "browsing flow", ->
 
           assert posts[1]\archive!
 
-          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
-          assert.falsy res.next_page
-          assert.falsy res.prev_page
+          res = topic_posts topic_id: topic.id
+          assert.nil res.next_page, "next_page"
+          assert.nil res.prev_page, "prev_page"
 
         it "should get some nested posts", ->
           topic = factory.Topics!
@@ -212,9 +234,10 @@ describe "browsing flow", ->
                 id: ppp.id, children: {}
               }
 
-          res = BrowsingApp\get current_user, "/topic-posts", topic_id: topic.id
+          res = topic_posts topic_id: topic.id
 
           assert.truthy res.posts
+
           flatten = (list, accum={}) ->
             return for p in *list
               {
