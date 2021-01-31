@@ -98,7 +98,6 @@ do
       if topic == nil then
         topic = self.topic
       end
-      local config = require("lapis.config").get()
       assert(topic, "missing topic")
       do
         local view_counter = self:view_counter()

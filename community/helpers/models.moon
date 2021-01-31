@@ -208,5 +208,13 @@ encode_value_list = (tuples) ->
 
   table.concat buffer
 
+-- this will ensure json value is decoded after update/insert by using db.raw
+-- eg. thing\update data: db_json {hello: "world"}
+db_json = (v) ->
+  if type(v) == "string"
+    v
+  else
+    db.raw db.escape_literal json.encode v
+
 { :upsert, :filter_update, :soft_delete, :memoize1,
-  :insert_on_conflict_update, :insert_on_conflict_ignore, :encode_value_list }
+  :insert_on_conflict_update, :insert_on_conflict_ignore, :encode_value_list, :db_json }

@@ -32,7 +32,8 @@ VOTE_TYPES_DEFAULT = { down: true, up: true }
 --   status smallint DEFAULT 1 NOT NULL,
 --   tags character varying(255)[],
 --   rank_adjustment integer DEFAULT 0 NOT NULL,
---   protected boolean DEFAULT false NOT NULL
+--   protected boolean DEFAULT false NOT NULL,
+--   data jsonb
 -- );
 -- ALTER TABLE ONLY community_topics
 --   ADD CONSTRAINT community_topics_pkey PRIMARY KEY (id);
@@ -71,7 +72,11 @@ class Topics extends Model
     opts.status = opts.status and @statuses\for_db opts.status
     opts.category_order or= @update_category_order_sql opts.category_id
 
-    Model.create @, opts, returning: {"status"}
+    if opts.data
+      import db_json from require "helpers.models"
+      opts.data = db_json opts.data
+
+    super @, opts, returning: {"status"}
 
   @update_category_order_sql: (category_id) =>
     return nil unless category_id

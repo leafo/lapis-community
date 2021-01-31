@@ -1208,5 +1208,8 @@ return {
     return create_index(T("posts"), "parent_post_id", "popularity_score", {
       where = "popularity_score is not null and parent_post_id is not null"
     })
+  end,
+  [35] = function(self)
+    return add_column(T("topics"), "data", "jsonb")
   end
 }

@@ -775,7 +775,12 @@ do
     end
     opts.status = opts.status and self.statuses:for_db(opts.status)
     opts.category_order = opts.category_order or self:update_category_order_sql(opts.category_id)
-    return Model.create(self, opts, {
+    if opts.data then
+      local db_json
+      db_json = require("helpers.models").db_json
+      opts.data = db_json(opts.data)
+    end
+    return _class_0.__parent.create(self, self, opts, {
       returning = {
         "status"
       }

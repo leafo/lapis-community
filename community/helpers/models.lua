@@ -267,6 +267,14 @@ encode_value_list = function(tuples)
   i = i + 1
   return table.concat(buffer)
 end
+local db_json
+db_json = function(v)
+  if type(v) == "string" then
+    return v
+  else
+    return db.raw(db.escape_literal(json.encode(v)))
+  end
+end
 return {
   upsert = upsert,
   filter_update = filter_update,
@@ -274,5 +282,6 @@ return {
   memoize1 = memoize1,
   insert_on_conflict_update = insert_on_conflict_update,
   insert_on_conflict_ignore = insert_on_conflict_ignore,
-  encode_value_list = encode_value_list
+  encode_value_list = encode_value_list,
+  db_json = db_json
 }
