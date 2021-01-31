@@ -53,17 +53,26 @@ do
       return tonumber(self.params.before), tonumber(self.params.after)
     end,
     view_counter = function(self)
-      local config = require("lapis.config").get()
-      if not (config.community) then
-        return 
+      local running_in_test
+      running_in_test = require("lapis.spec").running_in_test
+      local in_test = running_in_test()
+      local dict_name
+      if in_test then
+        dict_name = nil
+      else
+        local config = require("lapis.config").get()
+        if not (config.community) then
+          return 
+        end
+        dict_name = config.community.view_counter_dict
       end
-      local dict_name = config.community.view_counter_dict
       local AsyncCounter, bulk_increment
       do
         local _obj_0 = require("community.helpers.counters")
         AsyncCounter, bulk_increment = _obj_0.AsyncCounter, _obj_0.bulk_increment
       end
       return AsyncCounter(dict_name, {
+        increment_immediately = in_test,
         sync_types = {
           topic = function(updates)
             return bulk_increment(Topics, "views_count", updates)
@@ -85,6 +94,22 @@ do
       self.pending_posts = PendingPosts:select("where topic_id = ? and user_id = ?", self.topic.id, self.current_user.id)
       return self.pending_posts
     end,
+    increment_topic_view_counter = function(self, topic)
+      if topic == nil then
+        topic = self.topic
+      end
+      local config = require("lapis.config").get()
+      assert(topic, "missing topic")
+      do
+        local view_counter = self:view_counter()
+        if view_counter then
+          local key = "topic:" .. tostring(topic.id)
+          if not (self:throttle_view_count(key)) then
+            return view_counter:increment(key)
+          end
+        end
+      end
+    end,
     topic_posts = function(self, opts)
       if opts == nil then
         opts = { }
@@ -101,15 +126,7 @@ do
       TopicsFlow(self):load_topic()
       assert_error(self:allowed_to_view(self.topic), "not allowed to view")
       if opts.increment_views ~= false then
-        do
-          local view_counter = self:view_counter()
-          if view_counter then
-            local key = "topic:" .. tostring(self.topic.id)
-            if not (self:throttle_view_count(key)) then
-              view_counter:increment(key)
-            end
-          end
-        end
+        self:increment_topic_view_counter()
       end
       local before, after = self:get_before_after()
       assert_valid(self.params, {

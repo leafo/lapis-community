@@ -61,7 +61,7 @@ describe "browsing flow", ->
       before_each ->
         current_user = factory.Users! if logged_in
 
-      describe "topic posts #ddd", ->
+      describe "topic posts", ->
         topic_posts = (params, opts) ->
           in_request { get: params }, =>
             @topic = topic
@@ -247,6 +247,17 @@ describe "browsing flow", ->
 
           nesting = flatten res.posts
           assert.same expected_nesting, nesting
+
+        it "increments views", ->
+          topic = factory.Topics!
+          post = factory.Posts topic_id: topic.id
+          topic\increment_from_post post
+
+          res = topic_posts { topic_id: topic.id }
+          assert.truthy res.posts
+
+          topic\refresh!
+          assert.same 1, topic.views_count, "views_count"
 
       describe "preview category topics", ->
         it "gets empty category", ->

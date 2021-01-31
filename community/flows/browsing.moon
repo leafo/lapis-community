@@ -36,13 +36,20 @@ class BrowsingFlow extends Flow
     tonumber(@params.before), tonumber(@params.after)
 
   view_counter: =>
-    config = require("lapis.config").get!
-    return unless config.community
-    dict_name = config.community.view_counter_dict
+    import running_in_test from require "lapis.spec"
+    in_test = running_in_test!
+
+    dict_name = if in_test
+      nil
+    else
+      config = require("lapis.config").get!
+      return unless config.community
+      config.community.view_counter_dict
 
     import AsyncCounter, bulk_increment from require "community.helpers.counters"
 
     AsyncCounter dict_name, {
+      increment_immediately: in_test
       sync_types: {
         topic: (updates) ->
           bulk_increment Topics, "views_count", updates
@@ -63,6 +70,8 @@ class BrowsingFlow extends Flow
 
 
   increment_topic_view_counter: (topic=@topic)=>
+    config = require("lapis.config").get!
+
     assert topic, "missing topic"
     if view_counter = @view_counter!
       key = "topic:#{topic.id}"
@@ -85,7 +94,7 @@ class BrowsingFlow extends Flow
     assert_error @allowed_to_view(@topic), "not allowed to view"
 
     if opts.increment_views != false
-      @increment_topic_view_counter
+      @increment_topic_view_counter!
 
     before, after = @get_before_after!
 

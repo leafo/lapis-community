@@ -29,6 +29,8 @@ class AsyncCounter
   lock_key: "counter_lock"
   flush_key: "counter_flush"
 
+  increment_immediately: false
+
   sync_types: {}
 
   new: (@dict_name, @opts={}) =>
@@ -62,6 +64,13 @@ class AsyncCounter
     i
 
   increment: (key, amount=1) =>
+    if @increment_immediately
+      t, id = key\match "(%w+):(%d+)"
+      if sync = @sync_types[t]
+        sync { {tonumber(id), amount} }
+
+      return true
+
     return unless @dict
 
     @with_lock ->

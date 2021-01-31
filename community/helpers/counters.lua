@@ -26,6 +26,7 @@ do
     FLUSH_TIME = 5,
     lock_key = "counter_lock",
     flush_key = "counter_flush",
+    increment_immediately = false,
     sync_types = { },
     with_lock = function(self, fn)
       local i = 0
@@ -49,6 +50,21 @@ do
     increment = function(self, key, amount)
       if amount == nil then
         amount = 1
+      end
+      if self.increment_immediately then
+        local t, id = key:match("(%w+):(%d+)")
+        do
+          local sync = self.sync_types[t]
+          if sync then
+            sync({
+              {
+                tonumber(id),
+                amount
+              }
+            })
+          end
+        end
+        return true
       end
       if not (self.dict) then
         return 
