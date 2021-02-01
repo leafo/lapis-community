@@ -76,7 +76,7 @@ class Topics extends Model
       import db_json from require "helpers.models"
       opts.data = db_json opts.data
 
-    super @, opts, returning: {"status"}
+    super opts, returning: {"status"}
 
   @update_category_order_sql: (category_id) =>
     return nil unless category_id

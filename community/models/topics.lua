@@ -780,7 +780,7 @@ do
       db_json = require("helpers.models").db_json
       opts.data = db_json(opts.data)
     end
-    return _class_0.__parent.create(self, self, opts, {
+    return _class_0.__parent.create(self, opts, {
       returning = {
         "status"
       }
