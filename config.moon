@@ -23,6 +23,10 @@ config "test", ->
   postgres {
     backend: "pgmoon"
     database: "community_test"
+
+    host: os.getenv "PGHOST"
+    user: os.getenv "PGUSER"
+    password: os.getenv "PGPASSWORD"
   }
 
 
