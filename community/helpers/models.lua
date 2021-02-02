@@ -1,4 +1,5 @@
 local db = require("lapis.db")
+local json = require("cjson")
 local next, unpack, ipairs, pairs
 do
   local _obj_0 = _G
