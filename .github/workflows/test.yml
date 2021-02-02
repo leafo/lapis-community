@@ -33,7 +33,9 @@ jobs:
         luarocks install moonscript
         luarocks install cmark # optional dep
         luarocks make
-        moonc .
+        moonc schema.moon
+        moonc config.moon
+        moonc community
 
     - name: setup db
       run: |
