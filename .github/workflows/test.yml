@@ -5,13 +5,41 @@ jobs:
   docker:
     runs-on: ubuntu-latest
 
+    env:
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGHOST: 127.0.0.1
+
+    services:
+      postgres:
+        image: postgres:12
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
     - uses: actions/checkout@master
+    - uses: leafo/gh-actions-lua@master
+      with:
+        luaVersion: "luajit-openresty"
+
+    - uses: leafo/gh-actions-luarocks@master
 
     - name: build
       run: |
-        docker build -t lapis-community-test .
+        luarocks install busted
+        luarocks install moonscript
+        luarocks make
+        moonc .
+
+    - name: setup db
+      run: |
+        psql -c 'create database community_test'
+        lapis migrate
 
     - name: test
       run: |
-        docker run lapis-community-test
+        busted -o utfTerminal
+
