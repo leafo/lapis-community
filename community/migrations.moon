@@ -628,6 +628,16 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
 
   [35]: =>
     add_column T"topics", "data", "jsonb"
+
+  -- optimize index
+  [36]: =>
+    create_index T"posts", "moderation_log_id", {
+      unique: true
+      index_name: "#{T"posts"}_moderation_log_id_not_null_key"
+      where: "moderation_log_id is not null"
+    }
+
+    db.query "alter table #{db.escape_identifier T"posts"} drop constraint #{db.escape_identifier "#{T"posts"}_moderation_log_id_key"}"
 }
 
 

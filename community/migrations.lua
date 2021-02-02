@@ -1211,5 +1211,13 @@ return {
   end,
   [35] = function(self)
     return add_column(T("topics"), "data", "jsonb")
+  end,
+  [36] = function(self)
+    create_index(T("posts"), "moderation_log_id", {
+      unique = true,
+      index_name = tostring(T("posts")) .. "_moderation_log_id_not_null_key",
+      where = "moderation_log_id is not null"
+    })
+    return db.query("alter table " .. tostring(db.escape_identifier(T("posts"))) .. " drop constraint " .. tostring(db.escape_identifier(tostring(T("posts")) .. "_moderation_log_id_key")))
   end
 }
