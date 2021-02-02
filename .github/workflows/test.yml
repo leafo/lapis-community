@@ -31,6 +31,7 @@ jobs:
       run: |
         luarocks install busted
         luarocks install moonscript
+        luarocks install cmark # optional dep
         luarocks make
         moonc .
 
