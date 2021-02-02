@@ -37,6 +37,7 @@ jobs:
     - name: setup db
       run: |
         psql -c 'create database community_test'
+        echo "return 'test'" > lapis_environment.lua
         LAPIS_SHOW_QUERIES=1 lua -e 'require("schema").make_schema()'
 
     - name: test
