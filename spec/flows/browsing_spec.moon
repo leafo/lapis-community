@@ -64,7 +64,6 @@ describe "browsing flow", ->
       describe "topic posts", ->
         topic_posts = (params, opts) ->
           in_request { get: params }, =>
-            @topic = topic
             @current_user = current_user
             @flow("browsing")\topic_posts opts
             { posts: @posts, next_page: @next_page, prev_page: @prev_page}
