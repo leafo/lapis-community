@@ -15,6 +15,8 @@ dependencies = {
   "lua == 5.1",
   "lapis",
   "tableshape",
+  "lua-cjson",
+  "date",
 }
 
 build = {

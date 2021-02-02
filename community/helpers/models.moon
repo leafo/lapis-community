@@ -1,5 +1,6 @@
 
 db = require "lapis.db"
+json = require "cjson"
 
 import next, unpack, ipairs, pairs from _G
 import insert, concat from table

@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.2
--- Dumped by pg_dump version 12.2
+-- Dumped from database version 13.1
+-- Dumped by pg_dump version 13.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -509,7 +509,8 @@ CREATE TABLE public.community_posts (
     status smallint DEFAULT 1 NOT NULL,
     moderation_log_id integer,
     body_format smallint DEFAULT 1 NOT NULL,
-    pin_position integer
+    pin_position integer,
+    popularity_score integer DEFAULT 0
 );
 
 
@@ -609,7 +610,8 @@ CREATE TABLE public.community_topics (
     status smallint DEFAULT 1 NOT NULL,
     tags character varying(255)[],
     rank_adjustment integer DEFAULT 0 NOT NULL,
-    protected boolean DEFAULT false NOT NULL
+    protected boolean DEFAULT false NOT NULL,
+    data jsonb
 );
 
 
@@ -678,7 +680,10 @@ CREATE TABLE public.community_users (
     flair character varying(255),
     recent_posts_count integer DEFAULT 0 NOT NULL,
     last_post_at timestamp without time zone,
-    posting_permission smallint DEFAULT 1 NOT NULL
+    posting_permission smallint DEFAULT 1 NOT NULL,
+    received_up_votes_count integer DEFAULT 0 NOT NULL,
+    received_down_votes_count integer DEFAULT 0 NOT NULL,
+    received_votes_adjustment integer DEFAULT 0 NOT NULL
 );
 
 
@@ -956,14 +961,6 @@ ALTER TABLE ONLY public.community_post_reports
 
 
 --
--- Name: community_posts community_posts_moderation_log_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.community_posts
-    ADD CONSTRAINT community_posts_moderation_log_id_key UNIQUE (moderation_log_id);
-
-
---
 -- Name: community_posts community_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1192,6 +1189,20 @@ CREATE INDEX community_post_reports_post_id_id_status_idx ON public.community_po
 
 
 --
+-- Name: community_posts_moderation_log_id_not_null_key; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX community_posts_moderation_log_id_not_null_key ON public.community_posts USING btree (moderation_log_id) WHERE (moderation_log_id IS NOT NULL);
+
+
+--
+-- Name: community_posts_parent_post_id_popularity_score_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX community_posts_parent_post_id_popularity_score_idx ON public.community_posts USING btree (parent_post_id, popularity_score) WHERE ((popularity_score IS NOT NULL) AND (parent_post_id IS NOT NULL));
+
+
+--
 -- Name: community_posts_parent_post_id_post_number_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -1238,6 +1249,13 @@ CREATE UNIQUE INDEX community_posts_topic_id_parent_post_id_depth_post_number_id
 --
 
 CREATE INDEX community_posts_topic_id_parent_post_id_depth_status_post_numbe ON public.community_posts USING btree (topic_id, parent_post_id, depth, status, post_number);
+
+
+--
+-- Name: community_posts_topic_id_popularity_score_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX community_posts_topic_id_popularity_score_idx ON public.community_posts USING btree (topic_id, popularity_score) WHERE (popularity_score IS NOT NULL);
 
 
 --
@@ -1304,8 +1322,8 @@ CREATE UNIQUE INDEX users_lower_username_idx ON public.users USING btree (lower(
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.2
--- Dumped by pg_dump version 12.2
+-- Dumped from database version 13.1
+-- Dumped by pg_dump version 13.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1355,6 +1373,10 @@ community_29
 community_30
 community_31
 community_32
+community_33
+community_34
+community_35
+community_36
 \.
 
 
