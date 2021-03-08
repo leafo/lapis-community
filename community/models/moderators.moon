@@ -34,13 +34,16 @@ class Moderators extends Model
 
   @create: (opts={}) =>
     assert opts.user_id, "missing user_id"
-    assert opts.object, "missing object"
 
-    opts.object_id = opts.object.id
-    opts.object_type = @object_type_for_object opts.object
-    opts.object = nil
+    if opts.object
+      opts.object_id = opts.object.id
+      opts.object_type = @object_type_for_object opts.object
+      opts.object = nil
+    else
+      assert opts.id, "missing object_id"
+      opts.object_type = @object_types\for_db opts.object_type
 
-    Model.create @, opts
+    insert_on_conflict_ignore @, opts
 
   @find_for_object_user: (object, user) =>
     return nil, "invalid object" unless object

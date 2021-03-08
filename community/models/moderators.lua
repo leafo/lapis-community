@@ -64,11 +64,15 @@ do
       opts = { }
     end
     assert(opts.user_id, "missing user_id")
-    assert(opts.object, "missing object")
-    opts.object_id = opts.object.id
-    opts.object_type = self:object_type_for_object(opts.object)
-    opts.object = nil
-    return Model.create(self, opts)
+    if opts.object then
+      opts.object_id = opts.object.id
+      opts.object_type = self:object_type_for_object(opts.object)
+      opts.object = nil
+    else
+      assert(opts.id, "missing object_id")
+      opts.object_type = self.object_types:for_db(opts.object_type)
+    end
+    return insert_on_conflict_ignore(self, opts)
   end
   self.find_for_object_user = function(self, object, user)
     if not (object) then
