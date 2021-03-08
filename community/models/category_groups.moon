@@ -22,8 +22,7 @@ class CategoryGroups extends Model
   @timestamp: true
 
   @relations: {
-    -- TODO: see comment in Categories
-    {"moderators", has_many: "Moderators", key: "object_id", where: { accepted: true, object_type: 2}}
+    {"moderators", has_many: "Moderators", key: "object_id", where: { object_type: 2}}
 
     {"user", belongs_to: "Users"}
     {"category_group_categories", has_many: "CategoryGroupCategories"}

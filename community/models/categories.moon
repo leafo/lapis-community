@@ -102,9 +102,7 @@ class Categories extends Model
   }
 
   @relations: {
-    -- TODO: don't hardcode 1
-    -- TODO: rename to accepted_moderators
-    {"moderators", has_many: "Moderators", key: "object_id", where: { accepted: true, object_type: 1}}
+    {"moderators", has_many: "Moderators", key: "object_id", where: { object_type: 1 } }
 
     {"category_group_category", has_one: "CategoryGroupCategories"}
     {"user", belongs_to: "Users"}
@@ -114,6 +112,8 @@ class Categories extends Model
     {"subscriptions", has_many: "Subscriptions", key: "object_id", where: {object_type: 2}}
     {"topics", has_many: "Topics", order: "category_order desc"}
 
+    -- this includes all moderators in the hierarchy
+    -- TODO: this should also included all moderators from categroy groups
     {"active_moderators", fetch: =>
       import Moderators from require "community.models"
       import encode_clause from require "lapis.db"

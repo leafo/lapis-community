@@ -756,7 +756,6 @@ do
       has_many = "Moderators",
       key = "object_id",
       where = {
-        accepted = true,
         object_type = 1
       }
     },
