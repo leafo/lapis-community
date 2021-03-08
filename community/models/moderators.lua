@@ -57,10 +57,6 @@ do
     {
       "user",
       belongs_to = "Users"
-    },
-    {
-      "category",
-      belongs_to = "Categories"
     }
   }
   self.create = function(self, opts)

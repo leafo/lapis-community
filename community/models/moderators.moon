@@ -30,7 +30,6 @@ class Moderators extends Model
     }}
 
     {"user", belongs_to: "Users"}
-    {"category", belongs_to: "Categories"}
   }
 
   @create: (opts={}) =>
