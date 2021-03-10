@@ -42,7 +42,7 @@ class Moderators extends Model
       opts.object_type = @object_type_for_object opts.object
       opts.object = nil
     else
-      assert opts.id, "missing object_id"
+      assert opts.object_id, "missing object_id"
       opts.object_type = @object_types\for_db opts.object_type
 
     insert_on_conflict_ignore @, opts

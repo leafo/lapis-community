@@ -71,7 +71,7 @@ do
       opts.object_type = self:object_type_for_object(opts.object)
       opts.object = nil
     else
-      assert(opts.id, "missing object_id")
+      assert(opts.object_id, "missing object_id")
       opts.object_type = self.object_types:for_db(opts.object_type)
     end
     return insert_on_conflict_ignore(self, opts)
