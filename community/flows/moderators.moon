@@ -7,6 +7,8 @@ import assert_valid from require "lapis.validate"
 import assert_error from require "lapis.application"
 import assert_page, require_login from require "community.helpers.app"
 
+shapes = require "community.helpers.shapes"
+
 import Users from require "models"
 
 import Moderators from require "community.models"
@@ -37,15 +39,12 @@ class ModeratorsFlow extends Flow
 
     return if @user
 
-    assert_valid @params, {
-      {"user_id", optional: true, is_integer: true}
-      {"username", optional: true}
-    }
-
     @user = if @params.user_id
-      Users\find @params.user_id
+      user_id = assert_error shapes.db_id\describe("user_id")\transform @params.user_id
+      Users\find user_id
     elseif @params.username
-      Users\find username: @params.username
+      username = assert_error shapes.limited_text(255)\describe("username")\transform @params.username
+      Users\find { :username }
 
     assert_error @user, "invalid user"
 

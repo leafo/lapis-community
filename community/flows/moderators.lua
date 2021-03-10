@@ -10,6 +10,7 @@ do
   local _obj_0 = require("community.helpers.app")
   assert_page, require_login = _obj_0.assert_page, _obj_0.require_login
 end
+local shapes = require("community.helpers.shapes")
 local Users
 Users = require("models").Users
 local Moderators
@@ -45,22 +46,13 @@ do
       if self.user then
         return 
       end
-      assert_valid(self.params, {
-        {
-          "user_id",
-          optional = true,
-          is_integer = true
-        },
-        {
-          "username",
-          optional = true
-        }
-      })
       if self.params.user_id then
-        self.user = Users:find(self.params.user_id)
+        local user_id = assert_error(shapes.db_id:describe("user_id"):transform(self.params.user_id))
+        self.user = Users:find(user_id)
       elseif self.params.username then
+        local username = assert_error(shapes.limited_text(255):describe("username"):transform(self.params.username))
         self.user = Users:find({
-          username = self.params.username
+          username = username
         })
       end
       assert_error(self.user, "invalid user")

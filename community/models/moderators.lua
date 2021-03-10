@@ -1,5 +1,7 @@
 local Model
 Model = require("community.model").Model
+local insert_on_conflict_ignore
+insert_on_conflict_ignore = require("community.helpers.models").insert_on_conflict_ignore
 local Moderators
 do
   local _class_0

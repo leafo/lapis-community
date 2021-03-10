@@ -1,5 +1,7 @@
 import Model from require "community.model"
 
+import insert_on_conflict_ignore from require "community.helpers.models"
+
 -- Generated schema dump: (do not edit)
 --
 -- CREATE TABLE community_moderators (
