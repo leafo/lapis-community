@@ -643,7 +643,7 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
     add_column T"post_reports", "post_user_id", foreign_key null: true
     create_index T"post_reports", "post_user_id", where: "post_user_id is not null"
 
-    add_column T"post_reports", "post_parent_post_id", text null: true
+    add_column T"post_reports", "post_parent_post_id", foreign_key null: true
     add_column T"post_reports", "post_body", text null: true
     add_column T"post_reports", "post_body_format", enum null: true
 

@@ -142,7 +142,10 @@ describe "reports", ->
       report = factory.PostReports user_id: current_user.id
 
       post = report\get_post!
-      post\update body: "here is a new body that should be copied into the report"
+      post\update {
+        body: "here is a new body that should be copied into the report"
+        parent_post_id: 999
+      }
 
       action = update_or_create_report {
         post_id: report.post_id
@@ -165,6 +168,7 @@ describe "reports", ->
         post_body_format: post.body_format
         post_body: "here is a new body that should be copied into the report"
         post_user_id: post.user_id
+        post_parent_post_id: 999
       }
 
       assert_report report

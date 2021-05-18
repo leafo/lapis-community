@@ -33,7 +33,7 @@ do
       local PostsFlow = require("community.flows.posts")
       PostsFlow(self):load_post()
       self.topic = self.post:get_topic()
-      assert_error(self.post:allowed_to_report(self.current_user, self._req), "invalid post")
+      assert_error(self.post:allowed_to_report(self.current_user, self._req), "invalid post: not allowed to create report")
       self.report = PostReports:find({
         user_id = self.current_user.id,
         post_id = self.post.id

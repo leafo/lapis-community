@@ -1227,7 +1227,7 @@ return {
     create_index(T("post_reports"), "post_user_id", {
       where = "post_user_id is not null"
     })
-    add_column(T("post_reports"), "post_parent_post_id", text({
+    add_column(T("post_reports"), "post_parent_post_id", foreign_key({
       null = true
     }))
     add_column(T("post_reports"), "post_body", text({
