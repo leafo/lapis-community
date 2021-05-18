@@ -132,32 +132,43 @@ do
       self.reports = self.pager:get_page(params.page)
       return true
     end),
-    purge_report = require_login(function(self)
-      local report = self:find_report_for_moderation()
-      return report:delete()
-    end),
     moderate_report = require_login(function(self)
       local report = self:find_report_for_moderation()
-      local report_update = shapes.assert_valid(self.params.report, {
+      local action
+      action = shapes.assert_valid(self.params, {
         {
-          "status",
-          shapes.db_enum(PostReports.statuses)
+          "action",
+          shapes.empty / "update" + types.one_of({
+            "update",
+            "purge"
+          })
         }
-      })
-      report:update({
-        status = report_update.status,
-        moderating_user_id = self.current_user.id,
-        moderated_at = db.format_date()
-      })
-      local ModerationLogs
-      ModerationLogs = require("community.models").ModerationLogs
-      ModerationLogs:create({
-        user_id = self.current_user.id,
-        object = report,
-        category_id = report.category_id,
-        action = "report.status(" .. tostring(PostReports.statuses:to_name(report.status)) .. ")"
-      })
-      return true
+      }).action
+      local _exp_0 = action
+      if "purge" == _exp_0 then
+        report:delete()
+      elseif "update" == _exp_0 then
+        local report_update = shapes.assert_valid(self.params.report, {
+          {
+            "status",
+            shapes.db_enum(PostReports.statuses)
+          }
+        })
+        report:update({
+          status = report_update.status,
+          moderating_user_id = self.current_user.id,
+          moderated_at = db.format_date()
+        })
+        local ModerationLogs
+        ModerationLogs = require("community.models").ModerationLogs
+        ModerationLogs:create({
+          user_id = self.current_user.id,
+          object = report,
+          category_id = report.category_id,
+          action = "report.status(" .. tostring(PostReports.statuses:to_name(report.status)) .. ")"
+        })
+      end
+      return action
     end)
   }
   _base_0.__index = _base_0

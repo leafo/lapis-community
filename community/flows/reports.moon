@@ -117,32 +117,36 @@ class ReportsFlow extends Flow
     @reports = @pager\get_page params.page
     true
 
-  purge_report: require_login =>
-    report = @find_report_for_moderation!
-    report\delete!
-
   moderate_report: require_login =>
     report = @find_report_for_moderation!
 
-    report_update = shapes.assert_valid @params.report, {
-      {"status", shapes.db_enum PostReports.statuses}
+    {:action} = shapes.assert_valid @params, {
+      {"action", shapes.empty / "update" + types.one_of {"update", "purge"}}
     }
 
-    report\update {
-      status: report_update.status
-      moderating_user_id: @current_user.id
-      moderated_at: db.format_date!
-    }
+    switch action
+      when "purge"
+        report\delete!
+      when "update"
+        report_update = shapes.assert_valid @params.report, {
+          {"status", shapes.db_enum PostReports.statuses}
+        }
 
-    import ModerationLogs from require "community.models"
+        report\update {
+          status: report_update.status
+          moderating_user_id: @current_user.id
+          moderated_at: db.format_date!
+        }
 
-    ModerationLogs\create {
-      user_id: @current_user.id
-      object: report
-      category_id: report.category_id
-      action: "report.status(#{PostReports.statuses\to_name report.status})"
-    }
+        import ModerationLogs from require "community.models"
 
-    true
+        ModerationLogs\create {
+          user_id: @current_user.id
+          object: report
+          category_id: report.category_id
+          action: "report.status(#{PostReports.statuses\to_name report.status})"
+        }
+
+    action
 
 

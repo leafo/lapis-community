@@ -208,10 +208,12 @@ describe "reports", ->
       category = factory.Categories user_id: current_user.id
       report = factory.PostReports category_id: category.id
 
-      moderate_report {
+      action = moderate_report {
         report_id: report.id
         "report[status]": "resolved"
       }
+
+      assert.same "update", action
 
       report\refresh!
 
@@ -249,6 +251,38 @@ describe "reports", ->
 
       report\refresh!
       assert.same PostReports.statuses.pending, report.status
+
+    it "purges report", ->
+      category = factory.Categories user_id: current_user.id
+      report = factory.PostReports category_id: category.id
+
+      other_report = factory.PostReports!
+
+      -- moderation log should also be removed
+      factory.ModerationLogs {
+        object: report
+        action: "report.hello"
+      }
+
+      factory.ModerationLogs {
+        object: other_report
+        action: "report.hello"
+      }
+
+      action = moderate_report {
+        report_id: report.id
+        action: "purge"
+        "report[status]": "resolved"
+      }
+
+      assert.same "purge", action
+
+      assert.same 1, PostReports\count!
+      assert.same 1, ModerationLogs\count!
+
+      assert.same 1, PostReports\count "id = ?", other_report.id
+      assert.same 1, ModerationLogs\count "object_id = ?", other_report.id
+
 
   describe "show_reports", ->
     local category
