@@ -29,6 +29,19 @@ do
   local _parent_0 = Flow
   local _base_0 = {
     expose_assigns = true,
+    find_report_for_moderation = function(self)
+      local params = shapes.assert_valid(self.params, {
+        {
+          "report_id",
+          shapes.db_id
+        }
+      })
+      local report = assert_error(PostReports:find(self.params.report_id), "invalid report")
+      local topic = report:get_post():get_topic()
+      assert_error(topic:allowed_to_moderate(self.current_user), "invalid report")
+      self.report = report
+      return report
+    end,
     load_post = function(self)
       local PostsFlow = require("community.flows.posts")
       PostsFlow(self):load_post()
@@ -119,33 +132,19 @@ do
       self.reports = self.pager:get_page(params.page)
       return true
     end),
-    purge_report = function(self)
-      local params = shapes.assert_valid(self.params, {
-        {
-          "report_id",
-          shapes.db_id
-        }
-      })
-      self.report = assert_error(PostReports:find(self.params.report_id), "invalid report")
-      return self.report:delete()
-    end,
+    purge_report = require_login(function(self)
+      local report = self:find_report_for_moderation()
+      return report:delete()
+    end),
     moderate_report = require_login(function(self)
-      local params = shapes.assert_valid(self.params, {
-        {
-          "report_id",
-          shapes.db_id
-        }
-      })
-      self.report = assert_error(PostReports:find(self.params.report_id), "invalid report")
-      local topic = self.report:get_post():get_topic()
-      assert_error(topic:allowed_to_moderate(self.current_user), "invalid report")
+      local report = self:find_report_for_moderation()
       local report_update = shapes.assert_valid(self.params.report, {
         {
           "status",
           shapes.db_enum(PostReports.statuses)
         }
       })
-      self.report:update({
+      report:update({
         status = report_update.status,
         moderating_user_id = self.current_user.id,
         moderated_at = db.format_date()
@@ -154,9 +153,9 @@ do
       ModerationLogs = require("community.models").ModerationLogs
       ModerationLogs:create({
         user_id = self.current_user.id,
-        object = self.report,
-        category_id = self.report.category_id,
-        action = "report.status(" .. tostring(PostReports.statuses:to_name(self.report.status)) .. ")"
+        object = report,
+        category_id = report.category_id,
+        action = "report.status(" .. tostring(PostReports.statuses:to_name(report.status)) .. ")"
       })
       return true
     end)

@@ -16,14 +16,6 @@ class ReportingApp extends TestApp
     ReportsFlow = require "community.flows.reports"
     @flow = ReportsFlow @
 
-  "/report": capture_errors_json =>
-    @flow\update_or_create_report!
-    json: { success: true }
-
-  "/moderate-report": capture_errors_json =>
-    @flow\moderate_report!
-    json: { success: true }
-
   "/show": capture_errors_json =>
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
@@ -200,43 +192,60 @@ describe "reports", ->
       assert.same 1, r3.category_report_number
 
   describe "moderate_report", ->
-    it "should fail with no params", ->
-      res = ReportingApp\get current_user, "/moderate-report", {}
-      assert.truthy res.errors
+    moderate_report = (params) ->
+      ReportsFlow = require "community.flows.reports"
+      in_request { post: params }, =>
+        @current_user = current_user
+        ReportsFlow(@)\moderate_report!
 
-    it "should update report", ->
+    it "fails with no params", ->
+      assert.has_error(
+        -> moderate_report {}
+        { message: {"report_id: expected integer"} }
+      )
+
+    it "updates report", ->
       category = factory.Categories user_id: current_user.id
       report = factory.PostReports category_id: category.id
 
-      res = ReportingApp\get current_user, "/moderate-report", {
+      moderate_report {
         report_id: report.id
         "report[status]": "resolved"
       }
 
-      assert.truthy res.success
       report\refresh!
-      assert.same PostReports.statuses.resolved, report.status
-      assert.same current_user.id, report.moderating_user_id
 
-      assert.same 1, ModerationLogs\count!
+      assert_report = types.assert types.partial {
+        status: PostReports.statuses.resolved
+        moderating_user_id: current_user.id
+      }
 
-      log = unpack ModerationLogs\select!
-      assert.same category.id, log.category_id
-      assert.same current_user.id, log.user_id
-      assert.same report.id, log.object_id
-      assert.same ModerationLogs.object_types.post_report, log.object_type
-      assert.same "report.status(resolved)", log.action
+      assert_report report
 
-    it "should not let unrelated user update report", ->
+      assert_moderation_logs = types.assert types.shape {
+        types.partial {
+          category_id: category.id
+          user_id: current_user.id
+          object_id: report.id
+          object_type: ModerationLogs.object_types.post_report
+          action: "report.status(resolved)"
+        }
+      }
+
+      assert_moderation_logs ModerationLogs\select!
+
+    it "does not let unrelated user update report", ->
       report = factory.PostReports!
 
-      res = ReportingApp\get current_user, "/moderate-report", {
-        report_id: report.id
-        "report[status]": "resolved"
-      }
+      assert.has_error(
+        ->
+          moderate_report {
+            report_id: report.id
+            "report[status]": "resolved"
+          }
 
-      assert.truthy res.errors
-      assert.falsy res.success
+        { message: {"invalid report"}}
+      )
 
       report\refresh!
       assert.same PostReports.statuses.pending, report.status
@@ -246,7 +255,6 @@ describe "reports", ->
 
     before_each ->
       category = factory.Categories user_id: current_user.id
-
 
     it "doesn't let unrelated user view reports", ->
       other_user = factory.Users!

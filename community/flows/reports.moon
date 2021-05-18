@@ -23,6 +23,19 @@ class ReportsFlow extends Flow
     super req
     assert @current_user, "missing current user for reports flow"
 
+  find_report_for_moderation: =>
+    params = shapes.assert_valid @params, {
+      {"report_id", shapes.db_id}
+    }
+
+    report = assert_error PostReports\find(@params.report_id), "invalid report"
+
+    topic = report\get_post!\get_topic!
+    assert_error topic\allowed_to_moderate(@current_user), "invalid report"
+
+    @report = report
+    report
+
   load_post: =>
     PostsFlow = require "community.flows.posts"
     PostsFlow(@)\load_post!
@@ -104,29 +117,18 @@ class ReportsFlow extends Flow
     @reports = @pager\get_page params.page
     true
 
-  purge_report: =>
-    params = shapes.assert_valid @params, {
-      {"report_id", shapes.db_id}
-    }
-
-    @report = assert_error PostReports\find(@params.report_id), "invalid report"
-    @report\delete!
+  purge_report: require_login =>
+    report = @find_report_for_moderation!
+    report\delete!
 
   moderate_report: require_login =>
-    params = shapes.assert_valid @params, {
-      {"report_id", shapes.db_id}
-    }
-
-    @report = assert_error PostReports\find(@params.report_id), "invalid report"
-    topic = @report\get_post!\get_topic!
-
-    assert_error topic\allowed_to_moderate(@current_user), "invalid report"
+    report = @find_report_for_moderation!
 
     report_update = shapes.assert_valid @params.report, {
       {"status", shapes.db_enum PostReports.statuses}
     }
 
-    @report\update {
+    report\update {
       status: report_update.status
       moderating_user_id: @current_user.id
       moderated_at: db.format_date!
@@ -136,9 +138,9 @@ class ReportsFlow extends Flow
 
     ModerationLogs\create {
       user_id: @current_user.id
-      object: @report
-      category_id: @report.category_id
-      action: "report.status(#{PostReports.statuses\to_name @report.status})"
+      object: report
+      category_id: report.category_id
+      action: "report.status(#{PostReports.statuses\to_name report.status})"
     }
 
     true
