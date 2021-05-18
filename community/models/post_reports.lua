@@ -86,7 +86,7 @@ do
       belongs_to = "Users"
     },
     {
-      "reported_user",
+      "post_user",
       belongs_to = "Users"
     }
   }

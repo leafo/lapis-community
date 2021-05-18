@@ -51,6 +51,7 @@ do
           shapes.empty / db.NULL + shapes.limited_text(limits.MAX_BODY_LEN)
         }
       })
+      params = self:copy_post_params(params)
       if self.report then
         self.report:update(filter_update(self.report, params))
         return "update"
@@ -62,6 +63,21 @@ do
         return "create"
       end
     end),
+    copy_post_params = function(self, params)
+      local out
+      do
+        local _tbl_0 = { }
+        for k, v in pairs(params) do
+          _tbl_0[k] = v
+        end
+        out = _tbl_0
+      end
+      out.post_user_id = self.post.user_id
+      out.post_body = self.post.body
+      out.post_body_format = self.post.body_format
+      out.post_parent_post_id = self.post.parent_post_id
+      return out
+    end,
     show_reports = require_login(function(self, category)
       assert(category, "missing report object")
       assert_error(category:allowed_to_moderate(self.current_user), "invalid category")
@@ -103,6 +119,16 @@ do
       self.reports = self.pager:get_page(params.page)
       return true
     end),
+    purge_report = function(self)
+      local params = shapes.assert_valid(self.params, {
+        {
+          "report_id",
+          shapes.db_id
+        }
+      })
+      self.report = assert_error(PostReports:find(self.params.report_id), "invalid report")
+      return self.report:delete()
+    end,
     moderate_report = require_login(function(self)
       local params = shapes.assert_valid(self.params, {
         {

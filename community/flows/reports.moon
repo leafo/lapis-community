@@ -45,6 +45,8 @@ class ReportsFlow extends Flow
       {"body", shapes.empty / db.NULL + shapes.limited_text limits.MAX_BODY_LEN}
     }
 
+    params = @copy_post_params params
+
     if @report
       @report\update filter_update @report, params
       "update"
@@ -54,6 +56,15 @@ class ReportsFlow extends Flow
       params.category_id = @topic.category_id
       @report = PostReports\create params
       "create"
+
+  copy_post_params: (params) =>
+    out = {k,v for k,v in pairs params}
+    out.post_user_id = @post.user_id
+    out.post_body = @post.body
+    out.post_body_format = @post.body_format
+    out.post_parent_post_id = @post.parent_post_id
+
+    out
 
   show_reports: require_login (category) =>
     assert category, "missing report object"
@@ -92,6 +103,14 @@ class ReportsFlow extends Flow
 
     @reports = @pager\get_page params.page
     true
+
+  purge_report: =>
+    params = shapes.assert_valid @params, {
+      {"report_id", shapes.db_id}
+    }
+
+    @report = assert_error PostReports\find(@params.report_id), "invalid report"
+    @report\delete!
 
   moderate_report: require_login =>
     params = shapes.assert_valid @params, {

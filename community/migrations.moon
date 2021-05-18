@@ -640,15 +640,15 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
     db.query "alter table #{db.escape_identifier T"posts"} drop constraint #{db.escape_identifier "#{T"posts"}_moderation_log_id_key"}"
 
   [37]: =>
-    add_column T"post_reports", "reported_user_id", foreign_key null: true
-    create_index T"post_reports", "reported_user_id", where: "reported_user_id is not null"
+    add_column T"post_reports", "post_user_id", foreign_key null: true
+    create_index T"post_reports", "post_user_id", where: "post_user_id is not null"
 
     add_column T"post_reports", "post_parent_post_id", text null: true
     add_column T"post_reports", "post_body", text null: true
     add_column T"post_reports", "post_body_format", enum null: true
 
     db.query "update #{db.escape_identifier T"post_reports"} as pr
-        set reported_user_id = p.user_id,
+        set post_user_id = p.user_id,
           post_parent_post_id = p.parent_post_id,
           post_body = p.body,
           post_body_format = p.body_format

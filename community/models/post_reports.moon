@@ -45,7 +45,7 @@ class PostReports extends Model
     {"post", belongs_to: "Posts"}
     {"user", belongs_to: "Users"}
     {"moderating_user", belongs_to: "Users"}
-    {"reported_user", belongs_to: "Users"}
+    {"post_user", belongs_to: "Users"}
   }
 
   @create: (opts={}) =>
