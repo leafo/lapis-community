@@ -195,10 +195,10 @@ do
       end
       local deleted_post = unpack(res)
       local was_soft_deleted = deleted_post.deleted
-      local CommunityUsers, ModerationLogs, PostEdits, PostReports, Votes, ActivityLogs, CategoryPostLogs
+      local CommunityUsers, PostEdits, PostReports, Votes, ActivityLogs, CategoryPostLogs
       do
         local _obj_0 = require("community.models")
-        CommunityUsers, ModerationLogs, PostEdits, PostReports, Votes, ActivityLogs, CategoryPostLogs = _obj_0.CommunityUsers, _obj_0.ModerationLogs, _obj_0.PostEdits, _obj_0.PostReports, _obj_0.Votes, _obj_0.ActivityLogs, _obj_0.CategoryPostLogs
+        CommunityUsers, PostEdits, PostReports, Votes, ActivityLogs, CategoryPostLogs = _obj_0.CommunityUsers, _obj_0.PostEdits, _obj_0.PostReports, _obj_0.Votes, _obj_0.ActivityLogs, _obj_0.CategoryPostLogs
       end
       if not was_soft_deleted and not self:is_moderation_event() then
         local t = deleted_topic or self:get_topic()
@@ -252,15 +252,8 @@ do
           end
         end
       end
-      db.delete(ModerationLogs:table_name(), {
-        object_type = ModerationLogs.object_types.post_report,
-        object_id = db.list({
-          db.raw(db.interpolate_query("\n          select id from " .. tostring(db.escape_identifier(PostReports:table_name())) .. "\n          where post_id = ?\n        ", self.id))
-        })
-      })
       local _list_0 = {
-        PostEdits,
-        PostReports
+        PostEdits
       }
       for _index_0 = 1, #_list_0 do
         local model = _list_0[_index_0]

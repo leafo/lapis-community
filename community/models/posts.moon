@@ -355,7 +355,6 @@ class Posts extends Model
 
     import
       CommunityUsers
-      ModerationLogs
       PostEdits
       PostReports
       Votes
@@ -402,17 +401,7 @@ class Posts extends Model
       if posts_count
         topic\on_increment_callback "posts_count", -1
 
-    db.delete ModerationLogs\table_name!, {
-      object_type: ModerationLogs.object_types.post_report
-      object_id: db.list {
-        db.raw db.interpolate_query "
-          select id from #{db.escape_identifier PostReports\table_name!}
-          where post_id = ?
-        ", @id
-      }
-    }
-
-    for model in *{PostEdits, PostReports}
+    for model in *{PostEdits}
       db.delete model\table_name!, post_id: @id
 
     for model in *{Votes, ActivityLogs}

@@ -16,6 +16,15 @@ do
     end,
     is_ignored = function(self)
       return self.status == self.__class.statuses.ignored
+    end,
+    delete = function(self, ...)
+      local ModerationLogs
+      ModerationLogs = require("community.models").ModerationLogs
+      db.delete(ModerationLogs:table_name(), {
+        object_type = assert(ModerationLogs.object_types.post_report),
+        object_id = assert(self.id)
+      })
+      return _class_0.__parent.__base.delete(self, ...)
     end
   }
   _base_0.__index = _base_0
@@ -74,6 +83,10 @@ do
     },
     {
       "moderating_user",
+      belongs_to = "Users"
+    },
+    {
+      "reported_user",
       belongs_to = "Users"
     }
   }

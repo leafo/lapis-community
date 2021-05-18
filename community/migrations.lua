@@ -1219,5 +1219,23 @@ return {
       where = "moderation_log_id is not null"
     })
     return db.query("alter table " .. tostring(db.escape_identifier(T("posts"))) .. " drop constraint " .. tostring(db.escape_identifier(tostring(T("posts")) .. "_moderation_log_id_key")))
+  end,
+  [37] = function(self)
+    add_column(T("post_reports"), "reported_user_id", foreign_key({
+      null = true
+    }))
+    create_index(T("post_reports"), "reported_user_id", {
+      where = "reported_user_id is not null"
+    })
+    add_column(T("post_reports"), "post_parent_post_id", text({
+      null = true
+    }))
+    add_column(T("post_reports"), "post_body", text({
+      null = true
+    }))
+    add_column(T("post_reports"), "post_body_format", enum({
+      null = true
+    }))
+    return db.query("update " .. tostring(db.escape_identifier(T("post_reports"))) .. " as pr\n        set reported_user_id = p.user_id,\n          post_parent_post_id = p.parent_post_id,\n          post_body = p.body,\n          post_body_format = p.body_format\n\n        from " .. tostring(db.escape_identifier(T("posts"))) .. " as p\n          where pr.post_id = p.id")
   end
 }

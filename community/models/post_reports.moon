@@ -45,6 +45,7 @@ class PostReports extends Model
     {"post", belongs_to: "Posts"}
     {"user", belongs_to: "Users"}
     {"moderating_user", belongs_to: "Users"}
+    {"reported_user", belongs_to: "Users"}
   }
 
   @create: (opts={}) =>
@@ -71,5 +72,15 @@ class PostReports extends Model
   is_resolved: => @status == @@statuses.resolved
   is_pending: => @status == @@statuses.pending
   is_ignored: => @status == @@statuses.ignored
+
+  delete: (...) =>
+    import ModerationLogs from require "community.models"
+
+    db.delete ModerationLogs\table_name!, {
+      object_type: assert ModerationLogs.object_types.post_report
+      object_id: assert @id
+    }
+
+    super ...
 
 
