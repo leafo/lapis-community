@@ -30,7 +30,7 @@ class ReportsFlow extends Flow
     @topic = @post\get_topic!
 
     assert_error @post\allowed_to_report(@current_user, @_req),
-      "invalid post"
+      "invalid post: not allowed to create report"
 
     -- get existing report
     @report = PostReports\find {

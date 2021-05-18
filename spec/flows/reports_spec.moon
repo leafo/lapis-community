@@ -1,16 +1,14 @@
-import use_test_env from require "lapis.spec"
-
-import truncate_tables from require "lapis.spec.db"
+import in_request from require "spec.flow_helpers"
 
 import Users from require "models"
 import TestApp from require "spec.helpers"
 
 factory = require "spec.factory"
 
-import mock_request from require "lapis.spec.request"
-
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
+
+import types from require "tableshape"
 
 class ReportingApp extends TestApp
   @before_filter =>
@@ -39,8 +37,6 @@ class ReportingApp extends TestApp
 
 
 describe "reports", ->
-  use_test_env!
-
   local current_user
 
   import Users from require "spec.models"
@@ -50,65 +46,89 @@ describe "reports", ->
     current_user = factory.Users!
 
   describe "report", ->
-    it "should fail to create report", ->
-      res = ReportingApp\get current_user, "/report", {}
-      assert.truthy res.errors
+    update_or_create_report = (params) ->
+      ReportsFlow = require "community.flows.reports"
+      in_request { post: params }, =>
+        @current_user = current_user
+        ReportsFlow(@)\update_or_create_report!
 
-    it "should not report be created for own post", ->
+    it "fails to create report without required parameters", ->
+      assert.has_error(
+        -> update_or_create_report {}
+        { message: {"post_id: expected integer"} }
+      )
+
+    it "doesn't create report for own post", ->
       post = factory.Posts user_id: current_user.id
 
-      res = ReportingApp\get current_user, "/report", {
-        post_id: post.id
-        "report[reason]": "other"
-        "report[body]": "this is the problem"
-      }
+      assert.has_error(
+        ->
+          update_or_create_report {
+            post_id: post.id
+            "report[reason]": "other"
+            "report[body]": "this is the problem"
+          }
+        {message: {"invalid post: not allowed to create report"}}
+      )
 
-      assert.truthy res.errors
       assert.same 0, PostReports\count!
 
-    it "should create a new report", ->
+    it "creates report", ->
       post = factory.Posts!
 
-      res = ReportingApp\get current_user, "/report", {
+      action = update_or_create_report {
         post_id: post.id
         "report[reason]": "other"
         "report[body]": "this is the problem   \0  "
       }
 
-      assert.same {success: true}, res
+      assert.same "create", action
+
       reports = PostReports\select!
       assert.same 1, #reports
 
       topic = post\get_topic!
       report = unpack reports
-      assert.same topic.category_id, report.category_id
-      assert.same post.id, report.post_id
-      assert.same current_user.id, report.user_id
-      assert.same PostReports.statuses.pending, report.status
-      assert.same PostReports.reasons.other, report.reason
-      assert.same "this is the problem", report.body
+
+      assert_report = types.assert types.partial {
+        body: "this is the problem"
+        reason: PostReports.reasons.other
+        status: PostReports.statuses.pending
+        user_id: current_user.id
+        post_id: post.id
+        category_id: topic.category_id
+
+        post_body_format: post.body_format
+        post_body: post.body
+        post_user_id: post.user_id
+      }
+
+      assert_report report
 
     it "creates new report without body", ->
       post = factory.Posts!
 
-      res = ReportingApp\get current_user, "/report", {
+      update_or_create_report {
         post_id: post.id
         "report[reason]": "other"
       }
 
-      assert.falsy res.errors
+      reports = PostReports\select!
+      assert.same 1, #reports
+      report = unpack reports
 
-    it "should create new report for post in topic without category", ->
+      assert.same nil, report.body
+
+
+    it "creates new report for post in topic without category", ->
       topic = factory.Topics category: false
       post = factory.Posts topic_id: topic.id
 
-      res = ReportingApp\get current_user, "/report", {
+      update_or_create_report {
         post_id: post.id
         "report[reason]": "other"
         "report[body]": "please report"
       }
-
-      assert.truthy res.success
 
       reports = PostReports\select!
       assert.same 1, #reports
@@ -116,35 +136,50 @@ describe "reports", ->
       report = unpack reports
       assert.same nil, report.category_id
       assert.same post.id, report.post_id
+      assert.same 0, report.category_report_number
 
-    it "should update existing report", ->
+    it "updates existing report", ->
       report = factory.PostReports user_id: current_user.id
 
-      res = ReportingApp\get current_user, "/report", {
+      post = report\get_post!
+      post\update body: "here is a new body that should be copied into the report"
+
+      action = update_or_create_report {
         post_id: report.post_id
         "report[reason]": "spam"
         "report[body]": "I am updating my report"
       }
 
-      assert.falsy res.errors
-      assert.truthy res.success
+      assert.same "update", action
 
       assert.same 1, PostReports\count!
-      report\refresh!
+      report = unpack PostReports\select!
 
-      assert.same "I am updating my report", report.body
-      assert.same PostReports.reasons.spam, report.reason
+      assert_report = types.assert types.partial {
+        body: "I am updating my report"
+        reason: PostReports.reasons.spam
+        status: PostReports.statuses.pending
+        user_id: current_user.id
+        post_id: post.id
 
-    it "updates report removing body", ->
+        post_body_format: post.body_format
+        post_body: "here is a new body that should be copied into the report"
+        post_user_id: post.user_id
+      }
+
+      assert_report report
+
+    it "updates report and removes empty body", ->
       report = factory.PostReports user_id: current_user.id
 
-      res = ReportingApp\get current_user, "/report", {
+      update_or_create_report {
         post_id: report.post_id
         "report[reason]": "spam"
         "report[body]": ""
       }
 
       assert.same 1, PostReports\count!
+
       report\refresh!
 
       assert.same nil, report.body
