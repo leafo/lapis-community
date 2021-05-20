@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.1
--- Dumped by pg_dump version 13.1
+-- Dumped from database version 13.2
+-- Dumped by pg_dump version 13.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -458,7 +458,11 @@ CREATE TABLE public.community_post_reports (
     body text,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    moderated_at timestamp without time zone
+    moderated_at timestamp without time zone,
+    post_user_id integer,
+    post_parent_post_id integer,
+    post_body text,
+    post_body_format smallint
 );
 
 
@@ -1189,6 +1193,13 @@ CREATE INDEX community_post_reports_post_id_id_status_idx ON public.community_po
 
 
 --
+-- Name: community_post_reports_post_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX community_post_reports_post_user_id_idx ON public.community_post_reports USING btree (post_user_id) WHERE (post_user_id IS NOT NULL);
+
+
+--
 -- Name: community_posts_moderation_log_id_not_null_key; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -1322,8 +1333,8 @@ CREATE UNIQUE INDEX users_lower_username_idx ON public.users USING btree (lower(
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.1
--- Dumped by pg_dump version 13.1
+-- Dumped from database version 13.2
+-- Dumped by pg_dump version 13.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1377,6 +1388,7 @@ community_33
 community_34
 community_35
 community_36
+community_37
 \.
 
 
