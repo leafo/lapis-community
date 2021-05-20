@@ -17,12 +17,17 @@ import Model from require "community.model"
 --   body text,
 --   created_at timestamp without time zone NOT NULL,
 --   updated_at timestamp without time zone NOT NULL,
---   moderated_at timestamp without time zone
+--   moderated_at timestamp without time zone,
+--   post_user_id integer,
+--   post_parent_post_id integer,
+--   post_body text,
+--   post_body_format smallint
 -- );
 -- ALTER TABLE ONLY community_post_reports
 --   ADD CONSTRAINT community_post_reports_pkey PRIMARY KEY (id);
 -- CREATE INDEX community_post_reports_category_id_id_idx ON community_post_reports USING btree (category_id, id) WHERE (category_id IS NOT NULL);
 -- CREATE INDEX community_post_reports_post_id_id_status_idx ON community_post_reports USING btree (post_id, id, status);
+-- CREATE INDEX community_post_reports_post_user_id_idx ON community_post_reports USING btree (post_user_id) WHERE (post_user_id IS NOT NULL);
 --
 class PostReports extends Model
   @timestamp: true
