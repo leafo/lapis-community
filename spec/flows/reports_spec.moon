@@ -1,32 +1,8 @@
 import in_request from require "spec.flow_helpers"
 
-import Users from require "models"
-import TestApp from require "spec.helpers"
-
 factory = require "spec.factory"
 
-import Application from require "lapis"
-import capture_errors_json from require "lapis.application"
-
 import types from require "tableshape"
-
-class ReportingApp extends TestApp
-  @before_filter =>
-    @current_user = Users\find assert @params.current_user_id, "missing user id"
-    ReportsFlow = require "community.flows.reports"
-    @flow = ReportsFlow @
-
-  "/show": capture_errors_json =>
-    CategoriesFlow = require "community.flows.categories"
-    CategoriesFlow(@)\load_category!
-    @flow\show_reports @category
-
-    json: {
-      page: @page
-      reports: @reports
-      success: true
-    }
-
 
 describe "reports", ->
   local current_user
@@ -290,25 +266,42 @@ describe "reports", ->
     before_each ->
       category = factory.Categories user_id: current_user.id
 
+    show_reports = (user=current_user, params) ->
+      CategoriesFlow = require "community.flows.categories"
+      ReportsFlow = require "community.flows.reports"
+      in_request { get: params }, =>
+        @current_user = user
+        CategoriesFlow(@)\load_category!
+        ReportsFlow(@)\show_reports @category
+
+        {
+          page: @page
+          reports: @reports
+        }
+
+
     it "doesn't let unrelated user view reports", ->
       other_user = factory.Users!
 
-      res = ReportingApp\get other_user, "/show", {
-        category_id: category.id
-      }
-
-      assert.same {errors: {"invalid category"}}, res
-
+      assert.has_error(
+        ->
+          show_reports other_user, {
+            category_id: category.id
+          }
+        {
+          message: {"invalid category"}
+        }
+      )
 
     it "shows empty reports", ->
-      res = ReportingApp\get current_user, "/show", {
+      res = show_reports current_user, {
         category_id: category.id
       }
 
       assert.same {}, res.reports
 
-    it "shows reports with status", ->
-      res = ReportingApp\get current_user, "/show", {
+    it "shows empty reports with status", ->
+      res = show_reports current_user, {
         category_id: category.id
         status: "ignored"
       }
@@ -319,15 +312,20 @@ describe "reports", ->
       report = factory.PostReports category_id: category.id
       other_report = factory.PostReports category_id: factory.Categories!.id
 
-      res = ReportingApp\get current_user, "/show", {
+      res = show_reports current_user, {
         category_id: category.id
       }
 
-      for r in *res.reports
-        assert.same category.id, r.category_id
+      assert_reports = types.assert types.shape {
+        types.partial {
+          category_id: category.id
+        }
+      }
+
+      assert_reports res.reports
 
       -- gets page 2
-      res = ReportingApp\get current_user, "/show", {
+      res = show_reports current_user, {
         page: "2"
         category_id: category.id
       }
