@@ -88,6 +88,10 @@ do
     {
       "post_user",
       belongs_to = "Users"
+    },
+    {
+      "post_topic",
+      belongs_to = "Topics"
     }
   }
   self.create = function(self, opts)

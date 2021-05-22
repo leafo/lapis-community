@@ -51,6 +51,7 @@ class PostReports extends Model
     {"user", belongs_to: "Users"}
     {"moderating_user", belongs_to: "Users"}
     {"post_user", belongs_to: "Users"}
+    {"post_topic", belongs_to: "Topics"}
   }
 
   @create: (opts={}) =>
