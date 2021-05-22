@@ -655,6 +655,14 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
 
         from #{db.escape_identifier T"posts"} as p
           where pr.post_id = p.id"
+
+  [38]: =>
+    add_column T"post_reports", "post_topic_id", foreign_key null: true
+
+    db.query "update #{db.escape_identifier T"post_reports"} as pr
+        set post_topic_id = p.topic_id
+        from #{db.escape_identifier T"posts"} as p
+          where pr.post_id = p.id"
 }
 
 

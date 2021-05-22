@@ -462,7 +462,8 @@ CREATE TABLE public.community_post_reports (
     post_user_id integer,
     post_parent_post_id integer,
     post_body text,
-    post_body_format smallint
+    post_body_format smallint,
+    post_topic_id integer
 );
 
 
@@ -1389,6 +1390,7 @@ community_34
 community_35
 community_36
 community_37
+community_38
 \.
 
 

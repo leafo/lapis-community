@@ -1237,5 +1237,11 @@ return {
       null = true
     }))
     return db.query("update " .. tostring(db.escape_identifier(T("post_reports"))) .. " as pr\n        set post_user_id = p.user_id,\n          post_parent_post_id = p.parent_post_id,\n          post_body = p.body,\n          post_body_format = p.body_format\n\n        from " .. tostring(db.escape_identifier(T("posts"))) .. " as p\n          where pr.post_id = p.id")
+  end,
+  [38] = function(self)
+    add_column(T("post_reports"), "post_topic_id", foreign_key({
+      null = true
+    }))
+    return db.query("update " .. tostring(db.escape_identifier(T("post_reports"))) .. " as pr\n        set post_topic_id = p.topic_id\n        from " .. tostring(db.escape_identifier(T("posts"))) .. " as p\n          where pr.post_id = p.id")
   end
 }

@@ -69,6 +69,7 @@ describe "reports", ->
         post_body_format: post.body_format
         post_body: post.body
         post_user_id: post.user_id
+        post_topic_id: post.topic_id
       }
 
       assert_report report

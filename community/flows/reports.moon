@@ -73,6 +73,7 @@ class ReportsFlow extends Flow
   copy_post_params: (params) =>
     out = {k,v for k,v in pairs params}
     out.post_user_id = @post.user_id
+    out.post_topic_id = @post.topic_id
     out.post_body = @post.body
     out.post_body_format = @post.body_format
     out.post_parent_post_id = @post.parent_post_id

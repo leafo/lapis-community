@@ -86,6 +86,7 @@ do
         out = _tbl_0
       end
       out.post_user_id = self.post.user_id
+      out.post_topic_id = self.post.topic_id
       out.post_body = self.post.body
       out.post_body_format = self.post.body_format
       out.post_parent_post_id = self.post.parent_post_id
