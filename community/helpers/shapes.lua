@@ -35,6 +35,10 @@ local empty = types.one_of({
     return "empty"
   end
 })
+local color = types.one_of({
+  types.pattern("^#" .. tostring(("[a-fA-F%d]"):rep("6")) .. "$"),
+  types.pattern("^#" .. tostring(("[a-fA-F%d]"):rep("3")) .. "$")
+}):describe("hex color")
 local page_number = types.one_of({
   empty / 1,
   types.one_of({
@@ -77,7 +81,7 @@ db_enum = function(e)
   })
 end
 local test_valid
-test_valid = function(object, validations)
+test_valid = function(object, validations, opts)
   local errors
   local out = { }
   local pass, err = types.table(object)
@@ -93,6 +97,9 @@ test_valid = function(object, validations)
     local res, state_or_err = shape:_transform(object[key])
     if res == tableshape.FailedTransform then
       local err_msg = v.error or tostring(v.label or key) .. ": " .. tostring(state_or_err)
+      if opts and opts.prefix then
+        err_msg = tostring(opts.prefix) .. ": " .. tostring(err_msg)
+      end
       if errors then
         table.insert(errors, err_msg)
       else
@@ -121,6 +128,7 @@ assert_valid = function(...)
 end
 return {
   empty = empty,
+  color = color,
   page_number = page_number,
   valid_text = valid_text,
   trimmed_text = trimmed_text,

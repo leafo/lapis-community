@@ -29,6 +29,13 @@ VALIDATIONS = {
   {"voting_type", one_of: Categories.voting_types}
 }
 
+TAG_VALIDATION = {
+  {"id",  shapes.db_id + shapes.empty}
+  {"label", shapes.limited_text limits.MAX_TAG_LEN}
+  {"description", shapes.limited_text(80) + shapes.empty / db.NULL}
+  {"color", shapes.color + shapes.empty / db.NULL}
+}
+
 class CategoriesFlow extends Flow
   expose_assigns: true
 
@@ -277,6 +284,7 @@ class CategoriesFlow extends Flow
   -- category_tags[1][label] = "what"
   -- category_tags[1][id] = 1123
   -- category_tags[2][label] = "new one"
+  -- category_tags[2][description] = "hello"
   set_tags: require_login =>
     @load_category!
     assert_error @category\allowed_to_edit(@current_user), "invalid category"
@@ -290,16 +298,6 @@ class CategoriesFlow extends Flow
       {"category_tags", type: "table"}
     }
 
-    for tag in *@params.category_tags
-      trim_filter tag, { "label", "id", "color" }
-      assert_valid tag, {
-        {"id", is_integer: true, optional: true}
-        {"label",
-          exists: "true", type: "string", max_length: limits.MAX_TAG_LEN
-          "topic tag must be at most #{limits.MAX_TAG_LEN} charcaters"}
-        {"color", is_color: true, optional: true}
-      }
-
     existing_tags = @category\get_tags!
     existing_by_id = {t.id, t for t in *existing_tags}
 
@@ -308,34 +306,34 @@ class CategoriesFlow extends Flow
     actions = {}
     used_slugs = {}
 
-    for position, tag in ipairs @params.category_tags
-      slug = CategoryTags\slugify tag.label
-      continue if slug == ""
-      continue if used_slugs[slug]
-      used_slugs[slug] = true
-
-      opts = {
-        label: tag.label
-        color: tag.color or db.NULL
-        tag_order: position
+    for position, tag_params in ipairs @params.category_tags
+      tag = shapes.assert_valid tag_params, TAG_VALIDATION, {
+        prefix: "topic tag #{position}"
       }
+      tag.tag_order = position
 
-      if tid = tonumber tag.id
-        existing = existing_by_id[tid]
+      tag.slug = CategoryTags\slugify tag.label
+
+      continue if tag.slug == ""
+      continue if used_slugs[tag.slug]
+      used_slugs[tag.slug] = true
+
+      if tag.id
+        existing = existing_by_id[tag.id]
         continue unless existing
-        existing_by_id[tid] = nil
+        existing_by_id[tag.id] = nil
+        tag.id = nil -- don't pass id to the update
 
-        opts.slug = slug
-        if slug == opts.label
-          opts.label = db.NULL
+        if tag.slug == tag.label
+          tag.label = db.NULL
 
         table.insert actions, ->
-          existing\update filter_update existing, opts
+          existing\update filter_update existing, tag
       else
-        opts.category_id = @category.id
+        tag.category_id = @category.id
 
         table.insert actions, ->
-          CategoryTags\create opts
+          CategoryTags\create tag
 
     for _, old in pairs existing_by_id
       old\delete!

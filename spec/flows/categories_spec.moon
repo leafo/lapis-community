@@ -279,7 +279,7 @@ describe "categories", ->
 
       it "edits tags", ->
         existing = for i=1,2
-          factory.CategoryTags category_id: category.id
+          factory.CategoryTags category_id: category.id, description: "wipe me"
 
         res = CategoryApp\get current_user, "/set-tags", {
           category_id: category.id
@@ -287,6 +287,7 @@ describe "categories", ->
           "category_tags[1][id]": "#{existing[2].id}"
           "category_tags[1][color]": "#daddad"
           "category_tags[2][label]": "new one"
+          "category_tags[2][description]": "Hey there"
         }
 
         assert.same {success: true}, res
@@ -302,6 +303,9 @@ describe "categories", ->
         -- created a new second one
         assert.not.same existing[1].id, second.id
 
+        assert.nil first.description
+        assert.same "Hey there", second.description
+
       it "rejects tag that is too long", ->
         res = CategoryApp\get current_user, "/set-tags", {
           category_id: category.id
@@ -312,7 +316,7 @@ describe "categories", ->
 
         assert.same {
           errors: {
-            "topic tag must be at most 30 charcaters"
+            "topic tag 2: label: expected text between 1 and 30 characters"
           }
         }, res
 

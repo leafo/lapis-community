@@ -663,6 +663,9 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
         set post_topic_id = p.topic_id
         from #{db.escape_identifier T"posts"} as p
           where pr.post_id = p.id"
+
+  [39]: =>
+    add_column T"category_tags", "description", text null: true
 }
 
 

@@ -1243,5 +1243,10 @@ return {
       null = true
     }))
     return db.query("update " .. tostring(db.escape_identifier(T("post_reports"))) .. " as pr\n        set post_topic_id = p.topic_id\n        from " .. tostring(db.escape_identifier(T("posts"))) .. " as p\n          where pr.post_id = p.id")
+  end,
+  [39] = function(self)
+    return add_column(T("category_tags"), "description", text({
+      null = true
+    }))
   end
 }
