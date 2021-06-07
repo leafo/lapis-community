@@ -21,7 +21,8 @@ import Model from require "community.model"
 --   post_user_id integer,
 --   post_parent_post_id integer,
 --   post_body text,
---   post_body_format smallint
+--   post_body_format smallint,
+--   post_topic_id integer
 -- );
 -- ALTER TABLE ONLY community_post_reports
 --   ADD CONSTRAINT community_post_reports_pkey PRIMARY KEY (id);

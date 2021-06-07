@@ -11,7 +11,8 @@ import Model from require "community.model"
 --   image_url character varying(255),
 --   tag_order integer DEFAULT 0 NOT NULL,
 --   created_at timestamp without time zone NOT NULL,
---   updated_at timestamp without time zone NOT NULL
+--   updated_at timestamp without time zone NOT NULL,
+--   description text
 -- );
 -- ALTER TABLE ONLY community_category_tags
 --   ADD CONSTRAINT community_category_tags_pkey PRIMARY KEY (id);
