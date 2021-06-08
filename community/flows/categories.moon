@@ -19,16 +19,6 @@ db = require "lapis.db"
 shapes = require "community.helpers.shapes"
 import types from require "tableshape"
 
-VALIDATIONS = {
-  {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
-
-  {"short_description", optional: true, max_length: limits.MAX_TITLE_LEN}
-  {"description", optional: true, max_length: limits.MAX_BODY_LEN}
-
-  {"membership_type", one_of: Categories.membership_types}
-  {"voting_type", one_of: Categories.voting_types}
-}
-
 CATEOGRY_VALIDATION = {
   {"title",                    shapes.limited_text limits.MAX_TITLE_LEN}
   {"short_description",        shapes.db_nullable shapes.limited_text(limits.MAX_TITLE_LEN)}
