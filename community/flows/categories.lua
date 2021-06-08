@@ -30,31 +30,6 @@ local db = require("lapis.db")
 local shapes = require("community.helpers.shapes")
 local types
 types = require("tableshape").types
-local VALIDATIONS = {
-  {
-    "title",
-    exists = true,
-    max_length = limits.MAX_TITLE_LEN
-  },
-  {
-    "short_description",
-    optional = true,
-    max_length = limits.MAX_TITLE_LEN
-  },
-  {
-    "description",
-    optional = true,
-    max_length = limits.MAX_BODY_LEN
-  },
-  {
-    "membership_type",
-    one_of = Categories.membership_types
-  },
-  {
-    "voting_type",
-    one_of = Categories.voting_types
-  }
-}
 local CATEOGRY_VALIDATION = {
   {
     "title",
@@ -116,6 +91,36 @@ local TAG_VALIDATION = {
   {
     "color",
     shapes.db_nullable(shapes.color)
+  }
+}
+local CATEGORY_CHILD_VALIDATION = {
+  {
+    "id",
+    shapes.db_id + shapes.empty
+  },
+  {
+    "title",
+    shapes.limited_text(limits.MAX_TITLE_LEN)
+  },
+  {
+    "short_description",
+    shapes.db_nullable(shapes.limited_text(limits.MAX_TITLE_LEN))
+  },
+  {
+    "archived",
+    shapes.empty / false + types.any / true
+  },
+  {
+    "hidden",
+    shapes.empty / false + types.any / true
+  },
+  {
+    "directory",
+    shapes.empty / false + types.any / true
+  },
+  {
+    "children",
+    shapes.empty + types.table
   }
 }
 local CategoriesFlow
@@ -494,58 +499,36 @@ do
           depth = 1
         end
         assert_error(depth <= limits.MAX_CATEGORY_DEPTH, "category depth must be at most " .. tostring(limits.MAX_CATEGORY_DEPTH))
-        assert_valid(params, {
-          {
-            "id",
-            optional = true,
-            is_integer = true
-          },
-          {
-            "title",
-            exists = true,
-            max_length = limits.MAX_TITLE_LEN
-          },
-          {
-            "short_description",
-            optional = true,
-            max_length = limits.MAX_TITLE_LEN
-          },
-          {
-            "hidden",
-            optional = true,
-            type = "string"
-          },
-          {
-            "archived",
-            optional = true,
-            type = "string"
-          },
-          {
-            "directory",
-            optional = true,
-            type = "string"
-          },
-          {
-            "children",
-            optional = true,
-            type = "table"
-          }
-        })
-        if params.children then
-          assert_categores_length(params.children)
-          local _list_0 = params.children
-          for _index_0 = 1, #_list_0 do
-            local child = _list_0[_index_0]
-            validate_category_params(child, depth + 1)
+        local out = shapes.assert_valid(params, CATEGORY_CHILD_VALIDATION)
+        if out.children then
+          assert_categores_length(out.children)
+          do
+            local _accum_0 = { }
+            local _len_0 = 1
+            local _list_0 = out.children
+            for _index_0 = 1, #_list_0 do
+              local child = _list_0[_index_0]
+              _accum_0[_len_0] = validate_category_params(child, depth + 1)
+              _len_0 = _len_0 + 1
+            end
+            out.children = _accum_0
           end
         end
+        return out
       end
       assert_categores_length(self.params.categories)
       local initial_depth = #self.category:get_ancestors() + 1
-      local _list_0 = self.params.categories
-      for _index_0 = 1, #_list_0 do
-        local category = _list_0[_index_0]
-        validate_category_params(category, initial_depth)
+      local categories
+      do
+        local _accum_0 = { }
+        local _len_0 = 1
+        local _list_0 = self.params.categories
+        for _index_0 = 1, #_list_0 do
+          local category = _list_0[_index_0]
+          _accum_0[_len_0] = validate_category_params(category, initial_depth)
+          _len_0 = _len_0 + 1
+        end
+        categories = _accum_0
       end
       local existing = self.category:get_flat_children()
       local existing_by_id
@@ -591,10 +574,10 @@ do
             position = position,
             parent_category_id = parent.id,
             title = c.title,
-            short_description = c.short_description or db.NULL,
-            hidden = not not c.hidden,
-            archived = not not c.archived,
-            directory = not not c.directory
+            short_description = c.short_description,
+            hidden = c.hidden,
+            archived = c.archived,
+            directory = c.directory
           }
           if c.category then
             existing_assigned[c.category.id] = true
@@ -613,7 +596,7 @@ do
           end
         end
       end
-      set_children(self.category, self.params.categories)
+      set_children(self.category, categories)
       local orphans
       do
         local _accum_0 = { }

@@ -55,10 +55,6 @@ class CategoryApp extends TestApp
       :post
     }
 
-  "/set-children": capture_errors_json =>
-    @flow\set_children!
-    json: { success: true }
-
   "/set-tags": capture_errors_json =>
     @flow\set_tags!
     json: { success: true }
@@ -649,41 +645,62 @@ describe "categories", ->
         pending_post\refresh!
         assert.same PendingPosts.statuses.deleted, pending_post.status
 
-  describe "set children", =>
+  describe "set children", ->
     local category
 
-    simplify_children = (children) ->
+    simplify_children = (children, fields={}) ->
       return for c in *children
-        {
+        node = {
           title: c.title
-          children: c.children and next(c.children) and simplify_children(c.children) or nil
+          children: c.children and next(c.children) and simplify_children(c.children, fields) or nil
         }
 
-    assert_children = (tree, category) ->
+        for f in *fields
+          node[f] = c[f]
+
+        node
+
+    assert_children = (tree, category, ...) ->
       category = Categories\find category.id
       category\get_children!
-      assert.same tree, simplify_children category.children
+      assert.same tree, simplify_children category.children, ...
+
+    set_children = (post, user=current_user) ->
+      in_request {
+        :post
+      }, =>
+        @current_user = user
+        @flow("categories")\set_children!
 
     before_each ->
       category = factory.Categories user_id: current_user.id
 
-    it "should set empty cateogires", ->
-      CategoryApp\get current_user, "/set-children", {
+    it "sets empty cateogires", ->
+      set_children {
         category_id: category.id
       }
 
     it "creates new categories", ->
-      res = CategoryApp\get current_user, "/set-children", {
+      set_children {
         category_id: category.id
         "categories[1][title]": "alpha"
+        "categories[1][archived]": "on"
+        "categories[1][short_description]": " HHayllo World\n"
         "categories[2][title]": "beta"
+        "categories[2][hidden]": "on"
+        "categories[3][title]": "gamma"
       }
 
-      assert.nil res.errors
       assert_children {
-        {title: "alpha"}
-        {title: "beta"}
-      }, category
+        {
+          title: "alpha"
+          hidden: false
+          archived: true
+          short_description: "HHayllo World"
+        }
+        {title: "beta", hidden: true, archived: false}
+        {title: "gamma", hidden: false, archived: false}
+      }, category, {"archived", "hidden", "short_description"}
 
     it "doesn't too deeply nested categories", ->
       limits = require "community.limits"
@@ -699,12 +716,10 @@ describe "categories", ->
       for key in *keys
         params["#{key}[title]"] = "hello world"
 
-      res = CategoryApp\get current_user, "/set-children", params
-      assert.same {
-        errors: {
-          "category depth must be at most 4"
-        }
-      }, res
+      assert.has_error(
+        -> set_children params
+        message: {"category depth must be at most 4"}
+      )
 
     it "doesn't set too many categories", ->
       limits = require "community.limits"
@@ -713,12 +728,10 @@ describe "categories", ->
       for i=1,limits.MAX_CATEGORY_CHILDREN+1
         params["categories[#{i}][title]"] = "category #{i}"
 
-      res = CategoryApp\get current_user, "/set-children", params
-      assert.same {
-        errors: {
-          "category can have at most 12 children"
-        }
-      }, res
+      assert.has_error(
+        -> set_children params
+        message: {"category can have at most 12 children"}
+      )
 
     it "doesn't set too many categories in child", ->
       limits = require "community.limits"
@@ -730,50 +743,51 @@ describe "categories", ->
       for i=1,limits.MAX_CATEGORY_CHILDREN+1
         params["categories[1][children][#{i}][title]"] = "category #{i}"
 
-      res = CategoryApp\get current_user, "/set-children", params
-      assert.same {
-        errors: {
-          "category can have at most 12 children"
-        }
-      }, res
+      assert.has_error(
+        -> set_children params
+        message: {"category can have at most 12 children"}
+      )
 
 
     it "creates new categories with nesting", ->
-      res = CategoryApp\get current_user, "/set-children", {
+      set_children {
         category_id: category.id
 
         "categories[1][title]": "alpha"
+        "categories[1][directory]": "on"
         "categories[1][children][1][title]": "alpha one"
         "categories[1][children][2][title]": "alpha two"
         "categories[2][title]": "beta"
         "categories[3][title]": "cow"
         "categories[3][children][1][title]": "cow moo"
+        "categories[3][children][1][directory]": "on"
       }
 
-      assert.nil res.errors
       assert_children {
         {
           title: "alpha"
+          directory: true
           children: {
-            {title: "alpha one"}
-            {title: "alpha two"}
+            {title: "alpha one", directory: false}
+            {title: "alpha two", directory: false}
           }
         }
-        {title: "beta"}
+        {title: "beta", directory: false}
         {
           title: "cow"
+          directory: false
           children: {
-            {title: "cow moo"}
+            { title: "cow moo", directory: true }
           }
         }
-      }, category
+      }, category, {"directory"}
 
     it "creates new nested child", ->
       b1 = factory.Categories parent_category_id: category.id, title: "before1"
       b2 = factory.Categories parent_category_id: category.id, title: "before2"
       b3 = factory.Categories parent_category_id: category.id, title: "before2"
 
-      res = CategoryApp\get current_user, "/set-children", {
+      set_children {
         category_id: category.id
 
         "categories[1][id]": b1.id
@@ -785,7 +799,6 @@ describe "categories", ->
         "categories[2][title]": "Another thing here?"
       }
 
-      assert.nil res.errors
       assert_children {
         {
           title: "Hey cool category yeah"
@@ -803,7 +816,7 @@ describe "categories", ->
       b1 = factory.Categories parent_category_id: category.id, title: "before1"
       b2 = factory.Categories parent_category_id: category.id, title: "before2"
 
-      res = CategoryApp\get current_user, "/set-children", {
+      set_children {
         category_id: category.id
 
         "categories[1][id]": "#{b1.id}"
@@ -813,7 +826,6 @@ describe "categories", ->
         "categories[3][title]": "before2"
       }
 
-      assert.nil res.errors
       assert_children {
         {title: "before1 updated"}
         {title: "beta"}
@@ -833,7 +845,7 @@ describe "categories", ->
     it "renests existing into new parent", ->
       b1 = factory.Categories parent_category_id: category.id, title: "before1"
 
-      res = CategoryApp\get current_user, "/set-children", {
+      set_children {
         category_id: category.id
 
         "categories[1][title]": "new parent"
@@ -841,7 +853,6 @@ describe "categories", ->
         "categories[1][children][1][title]": b1.title
       }
 
-      assert.nil res.errors
       assert_children {
         {
           title: "new parent"
@@ -859,7 +870,7 @@ describe "categories", ->
       b1 = factory.Categories parent_category_id: category.id, title: "before1"
       b2 = factory.Categories parent_category_id: b1.id, title: "before2"
 
-      res = CategoryApp\get current_user, "/set-children", {
+      set_children {
         category_id: category.id
 
         "categories[1][title]": "cool parent"
@@ -876,7 +887,7 @@ describe "categories", ->
       topic = factory.Topics category_id: b1.id
       b1\increment_from_topic topic
 
-      res = CategoryApp\get current_user, "/set-children", {
+      set_children {
         category_id: category.id
         "categories[1][title]": "new category"
       }
@@ -887,7 +898,7 @@ describe "categories", ->
       assert.same 2, b1.position
 
     it "updates hidden/archive", ->
-      res = CategoryApp\get current_user, "/set-children", {
+      set_children {
         category_id: category.id
         "categories[1][title]": "new category"
         "categories[1][hidden]": "on"
@@ -897,7 +908,7 @@ describe "categories", ->
       assert.true child.hidden
       assert.false child.archived
 
-      res = CategoryApp\get current_user, "/set-children", {
+      set_children {
         category_id: category.id
         "categories[1][id]": "#{child.id}"
         "categories[1][title]": "new category"

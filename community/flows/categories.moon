@@ -37,10 +37,20 @@ CATEOGRY_VALIDATION = {
 }
 
 TAG_VALIDATION = {
-  {"id",  shapes.db_id + shapes.empty}
-  {"label", shapes.limited_text limits.MAX_TAG_LEN}
-  {"description", shapes.db_nullable shapes.limited_text(80)}
-  {"color", shapes.db_nullable shapes.color}
+  {"id",                       shapes.db_id + shapes.empty}
+  {"label",                    shapes.limited_text limits.MAX_TAG_LEN}
+  {"description",              shapes.db_nullable shapes.limited_text(80)}
+  {"color",                    shapes.db_nullable shapes.color}
+}
+
+CATEGORY_CHILD_VALIDATION = {
+  {"id",                       shapes.db_id + shapes.empty}
+  {"title",                    shapes.limited_text limits.MAX_TITLE_LEN}
+  {"short_description",        shapes.db_nullable shapes.limited_text(limits.MAX_TITLE_LEN)}
+  {"archived",                 shapes.empty / false + types.any / true}
+  {"hidden",                   shapes.empty / false + types.any / true}
+  {"directory",                shapes.empty / false + types.any / true}
+  {"children",                 shapes.empty + types.table}
 }
 
 class CategoriesFlow extends Flow
@@ -342,27 +352,20 @@ class CategoriesFlow extends Flow
       assert_error depth <= limits.MAX_CATEGORY_DEPTH,
         "category depth must be at most #{limits.MAX_CATEGORY_DEPTH}"
 
-      -- TODO: synchronize with the other validate
-      assert_valid params, {
-        {"id", optional: true, is_integer: true}
-        {"title", exists: true, max_length: limits.MAX_TITLE_LEN}
-        {"short_description", optional: true, max_length: limits.MAX_TITLE_LEN}
-        {"hidden", optional: true, type: "string"}
-        {"archived", optional: true, type: "string"}
-        {"directory", optional: true, type: "string"}
-        {"children", optional: true, type: "table"}
-      }
+      out = shapes.assert_valid params, CATEGORY_CHILD_VALIDATION
 
-      if params.children
-        assert_categores_length params.children
+      if out.children
+        assert_categores_length out.children
 
-        for child in *params.children
+        out.children = for child in *out.children
           validate_category_params child, depth + 1
+
+      out
 
     assert_categores_length @params.categories
 
     initial_depth = #@category\get_ancestors! + 1
-    for category in *@params.categories
+    categories = for category in *@params.categories
       validate_category_params category, initial_depth
 
     existing = @category\get_flat_children!
@@ -382,10 +385,10 @@ class CategoriesFlow extends Flow
           :position
           parent_category_id: parent.id
           title: c.title
-          short_description: c.short_description or db.NULL
-          hidden: not not c.hidden
-          archived: not not c.archived
-          directory: not not c.directory
+          short_description: c.short_description
+          hidden: c.hidden
+          archived: c.archived
+          directory: c.directory
         }
 
         if c.category
@@ -401,7 +404,7 @@ class CategoriesFlow extends Flow
         if c.children and next c.children
           set_children c.category, c.children
 
-    set_children @category, @params.categories
+    set_children @category, categories
 
     orphans = for c in *existing
       continue if existing_assigned[c.id]
