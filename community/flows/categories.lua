@@ -14,11 +14,8 @@ do
 end
 local assert_valid
 assert_valid = require("lapis.validate").assert_valid
-local trim_filter, slugify
-do
-  local _obj_0 = require("lapis.util")
-  trim_filter, slugify = _obj_0.trim_filter, _obj_0.slugify
-end
+local slugify
+slugify = require("lapis.util").slugify
 local assert_page, require_login
 do
   local _obj_0 = require("community.helpers.app")
@@ -58,6 +55,51 @@ local VALIDATIONS = {
     one_of = Categories.voting_types
   }
 }
+local CATEOGRY_VALIDATION = {
+  {
+    "title",
+    shapes.limited_text(limits.MAX_TITLE_LEN)
+  },
+  {
+    "short_description",
+    shapes.db_nullable(shapes.limited_text(limits.MAX_TITLE_LEN))
+  },
+  {
+    "description",
+    shapes.db_nullable(shapes.limited_text(limits.MAX_BODY_LEN))
+  },
+  {
+    "membership_type",
+    shapes.db_nullable(shapes.db_enum(Categories.membership_types))
+  },
+  {
+    "voting_type",
+    shapes.db_nullable(shapes.db_enum(Categories.voting_types))
+  },
+  {
+    "topic_posting_type",
+    shapes.db_nullable(shapes.db_enum(Categories.topic_posting_types))
+  },
+  {
+    "archived",
+    shapes.empty / false + types.any / true
+  },
+  {
+    "hidden",
+    shapes.empty / false + types.any / true
+  },
+  {
+    "rules",
+    shapes.db_nullable(shapes.limited_text(limits.MAX_BODY_LEN))
+  },
+  {
+    "type",
+    shapes.empty + types.one_of({
+      "directory",
+      "post_list"
+    })
+  }
+}
 local TAG_VALIDATION = {
   {
     "id",
@@ -69,11 +111,11 @@ local TAG_VALIDATION = {
   },
   {
     "description",
-    shapes.limited_text(80) + shapes.empty / db.NULL
+    shapes.db_nullable(shapes.limited_text(80))
   },
   {
     "color",
-    shapes.color + shapes.empty / db.NULL
+    shapes.db_nullable(shapes.color)
   }
 }
 local CategoriesFlow
@@ -293,93 +335,54 @@ do
       end
       return true, self.post
     end,
-    validate_params = function(self)
-      self.params.category = self.params.category or { }
-      assert_valid(self.params, {
-        {
-          "category",
-          type = "table"
-        }
-      })
-      local has_field
-      do
-        local _tbl_0 = { }
-        for k in pairs(self.params.category) do
-          _tbl_0[k] = true
-        end
-        has_field = _tbl_0
-      end
-      local category_params = trim_filter(self.params.category, {
-        "title",
-        "membership_type",
-        "topic_posting_type",
-        "voting_type",
-        "description",
-        "short_description",
-        "archived",
-        "hidden",
-        "rules",
-        "type"
-      })
-      assert_valid(category_params, (function()
-        local _accum_0 = { }
-        local _len_0 = 1
-        for _index_0 = 1, #VALIDATIONS do
-          local v = VALIDATIONS[_index_0]
-          if has_field[v] then
-            _accum_0[_len_0] = v
+    validate_params = function(self, fields_list)
+      local validation
+      if fields_list then
+        local out
+        do
+          local _accum_0 = { }
+          local _len_0 = 1
+          for _index_0 = 1, #fields_list do
+            local field = fields_list[_index_0]
+            local found
+            for _index_1 = 1, #CATEOGRY_VALIDATION do
+              local v = CATEOGRY_VALIDATION[_index_1]
+              if v[1] == field then
+                found = v
+                break
+              end
+            end
+            if not (found) then
+              error("tried to validate for invalid field: " .. tostring(field))
+            end
+            local _value_0 = found
+            _accum_0[_len_0] = _value_0
             _len_0 = _len_0 + 1
           end
+          out = _accum_0
         end
-        return _accum_0
-      end)())
-      if has_field.archived or has_field.update_archived then
-        category_params.archived = not not category_params.archived
+        if not (next(out)) then
+          error("no fields to validate")
+        end
+        validation = out
+      else
+        validation = CATEOGRY_VALIDATION
       end
-      if has_field.hidden or has_field.update_hidden then
-        category_params.hidden = not not category_params.hidden
-      end
-      if has_field.membership_type then
-        category_params.membership_type = Categories.membership_types:for_db(category_params.membership_type)
-      end
-      if has_field.voting_type then
-        category_params.voting_type = Categories.voting_types:for_db(category_params.voting_type)
-      end
-      if has_field.topic_posting_type then
-        category_params.topic_posting_type = Categories.topic_posting_types:for_db(category_params.topic_posting_type)
-      end
-      if has_field.title then
-        category_params.slug = slugify(category_params.title)
-      end
-      if has_field.description then
-        category_params.description = category_params.description or db.NULL
-      end
-      if has_field.short_description then
-        category_params.short_description = category_params.short_description or db.NULL
-      end
-      if has_field.rules then
-        category_params.rules = category_params.rules or db.NULL
-      end
-      if has_field.type then
+      local params = shapes.assert_valid(self.params.category or { }, validation)
+      if params.type then
         if self.category then
           assert_error(not self.category.parent_category_id, "only root category can have type set")
         end
-        assert_valid(category_params, {
-          {
-            "type",
-            one_of = {
-              "directory",
-              "post_list"
-            }
-          }
-        })
-        category_params.directory = category_params.type == "directory"
-        category_params.type = nil
+        params.directory = params.type == "directory"
+        params.type = nil
       end
-      return category_params
+      if params.title then
+        params.slug = slugify(params.title)
+      end
+      return params
     end,
-    new_category = require_login(function(self)
-      local create_params = self:validate_params()
+    new_category = require_login(function(self, ...)
+      local create_params = self:validate_params(...)
       create_params.user_id = self.current_user.id
       self.category = Categories:create(create_params)
       ActivityLogs:create({
@@ -387,7 +390,7 @@ do
         object = self.category,
         action = "create"
       })
-      return true
+      return self.category
     end),
     set_tags = require_login(function(self)
       self:load_category()
@@ -666,10 +669,10 @@ do
       end
       return true, archived
     end),
-    edit_category = require_login(function(self)
+    edit_category = require_login(function(self, fields_list)
       self:load_category()
       assert_error(self.category:allowed_to_edit(self.current_user), "invalid category")
-      local update_params = self:validate_params()
+      local update_params = self:validate_params(fields_list)
       update_params = filter_update(self.category, update_params)
       self.category:update(update_params)
       self:set_tags()

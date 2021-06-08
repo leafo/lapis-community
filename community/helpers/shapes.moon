@@ -38,6 +38,10 @@ page_number = types.one_of({
   })\describe "an integer"
 }) / (n) -> math.floor math.max 1, n
 
+db_nullable = (t) ->
+  db = require "lapis.db"
+  t + empty / db.NULL
+
 db_id = types.one_of({
   types.number * types.custom (v) -> v == math.floor(v)
   types.string / trim * types.pattern("^%d+$") / tonumber
@@ -95,6 +99,7 @@ assert_valid = (...) ->
   :page_number
   :valid_text, :trimmed_text, :limited_text
   :db_id, :db_enum
+  :db_nullable
 
   :test_valid, :assert_valid
 }

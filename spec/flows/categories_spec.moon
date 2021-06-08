@@ -16,14 +16,6 @@ class CategoryApp extends TestApp
     CategoriesFlow = require "community.flows.categories"
     @flow = CategoriesFlow @
 
-  "/new-category": capture_errors_json =>
-    @flow\new_category!
-    json: { success: true }
-
-  "/edit-category": capture_errors_json =>
-    @flow\edit_category!
-    json: { success: true }
-
   "/show-members": capture_errors_json =>
     @flow\members_flow!\show_members!
     json: { success: true, members: @members }
@@ -95,8 +87,24 @@ describe "categories", ->
   before_each ->
     current_user = factory.Users!
 
-  it "should create category", ->
-    res = CategoryApp\get current_user, "/new-category", {
+  new_category = (post, user=current_user) ->
+    in_request {
+      :post
+    }, =>
+      @current_user = user
+      @flow("categories")\new_category!
+
+  edit_category = (post, user=current_user, ...) ->
+    args = {...}
+
+    in_request {
+      :post
+    }, =>
+      @current_user = user
+      @flow("categories")\edit_category unpack args
+
+  it "creates new category", ->
+    new_category {
       "category[title]": "hello world"
       "category[membership_type]": "public"
       "category[voting_type]": "disabled"
@@ -104,9 +112,6 @@ describe "categories", ->
       "category[hidden]": "on"
     }
 
-    assert.falsy res.errors
-
-    assert.truthy res.success
     category = unpack Categories\select!
     assert.truthy category
 
@@ -128,7 +133,6 @@ describe "categories", ->
     assert.same ActivityLogs.object_types.category, log.object_type
     assert.same "create", log\action_name!
 
-
   describe "with category", ->
     local category
 
@@ -136,10 +140,10 @@ describe "categories", ->
       category = factory.Categories user_id: current_user.id, description: "okay okay"
 
     describe "edit", ->
-      it "should edit category", ->
-        res = CategoryApp\get current_user, "/edit-category", {
+      it "edits category", ->
+        edit_category {
           category_id: category.id
-          "category[title]": "The good category"
+          "category[title]": "\tThe good category  "
           "category[membership_type]": "members_only"
           "category[voting_type]": "up"
           "category[topic_posting_type]": "moderators_only"
@@ -147,12 +151,12 @@ describe "categories", ->
           "category[archived]": "on"
         }
 
-        assert.same {success: true}, res
         category\refresh!
 
         assert.same "The good category", category.title
+        assert.same "the-good-category", category.slug
         assert.same "yeah yeah", category.short_description
-        assert.same "okay okay", category.description
+        assert.nil category.description
         assert.truthy category.archived
         assert.falsy category.hidden
 
@@ -167,69 +171,98 @@ describe "categories", ->
         assert.same ActivityLogs.object_types.category, log.object_type
         assert.same "edit", log\action_name!
 
-      it "should update partial", ->
-        category\update archived: true
-        res = CategoryApp\get current_user, "/edit-category", {
-          category_id: category.id
-          "category[update_archived]": "yes"
+      it "partially updates category", ->
+        category\update {
+          archived: true
+          short_description: "cool"
+
+          category_order_type: Categories.category_order_types.topic_score
+          membership_type: Categories.membership_types.members_only
+          topic_posting_type: db.NULL
         }
 
-        assert.same {success: true}, res
-        category\refresh!
-        assert.false category.hidden
+        title = category.title
 
-      it "should make category a directory", ->
-        res = CategoryApp\get current_user, "/edit-category", {
+        edit_category {
+          category_id: category.id
+        }, current_user, { "archived", "short_description" }
+
+        category\refresh!
+
+        assert.false category.hidden
+        assert.nil category.short_description
+
+        -- these are unchanged
+        assert.same Categories.category_order_types.topic_score, category.category_order_type
+        assert.same Categories.membership_types.members_only, category.membership_type
+        assert.nil category.topic_posting_type
+        assert.same title, category.title
+
+      it "makes category a directory", ->
+        edit_category {
           category_id: category.id
           "category[type]": "directory"
-        }
+        }, current_user, { "type" }
 
         category\refresh!
         assert.true category.directory
 
         -- back to post list
-        res = CategoryApp\get current_user, "/edit-category", {
+        edit_category {
           category_id: category.id
           "category[type]": "post_list"
-        }
+        }, current_user, { "type" }
 
         category\refresh!
         assert.false category.directory
 
-      it "should not let child category edit type", ->
+      it "doesn't let child category edit type", ->
         child = factory.Categories {
           parent_category_id: category.id
           user_id: current_user.id
         }
 
-        res = CategoryApp\get current_user, "/edit-category", {
-          category_id: child.id
-          "category[type]": "directory"
-        }
+        assert.has_error(
+          ->
+            edit_category {
+              category_id: child.id
+              "category[type]": "directory"
+            }, current_user, { "type" }
 
-        assert.same {
-          errors: {
-            "only root category can have type set"
+          {
+            message: {
+              "only root category can have type set"
+            }
           }
-        }, res
 
-      it "should noop edit", ->
-        res = CategoryApp\get current_user, "/edit-category", {
+        )
+
+      it "doesn't create log when making no changes", ->
+        edit_category {
           category_id: category.id
+          "category[title]": category.title
+          "category[description]": category.description
         }
 
-        assert.same {success: true}, res
         assert.same 0, ActivityLogs\count!
 
     it "should not let unknown user edit category", ->
       other_user = factory.Users!
-      res = CategoryApp\get other_user, "/edit-category", {
-        category_id: category.id
-        "category[title]": "The good category"
-        "category[membership_type]": "members_only"
-      }
 
-      assert.same {errors: {"invalid category"}}, res
+      assert.has_error(
+        ->
+          edit_category {
+            category_id: category.id
+            "category[title]": "The good category"
+            "category[membership_type]": "members_only"
+          }, other_user
+
+        {
+          message: {
+            "invalid category"
+          }
+        }
+      )
 
     describe "tags", ->
       it "sets tags", ->

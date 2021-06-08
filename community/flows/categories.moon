@@ -5,7 +5,7 @@ import Categories, Posts, CategoryMembers, ActivityLogs from require "community.
 
 import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
-import trim_filter, slugify from require "lapis.util"
+import slugify from require "lapis.util"
 
 import assert_page, require_login from require "community.helpers.app"
 import filter_update from require "community.helpers.models"
@@ -29,11 +29,28 @@ VALIDATIONS = {
   {"voting_type", one_of: Categories.voting_types}
 }
 
+CATEOGRY_VALIDATION = {
+  {"title",                    shapes.limited_text limits.MAX_TITLE_LEN}
+  {"short_description",        shapes.db_nullable shapes.limited_text(limits.MAX_TITLE_LEN)}
+  {"description",              shapes.db_nullable shapes.limited_text(limits.MAX_BODY_LEN)}
+
+  -- these can be nulled out to inherit from parent/default
+  {"membership_type",          shapes.db_nullable shapes.db_enum Categories.membership_types}
+  {"voting_type",              shapes.db_nullable shapes.db_enum Categories.voting_types}
+  {"topic_posting_type",       shapes.db_nullable shapes.db_enum Categories.topic_posting_types}
+
+  {"archived",                 shapes.empty / false + types.any / true}
+  {"hidden",                   shapes.empty / false + types.any / true}
+  {"rules",                    shapes.db_nullable shapes.limited_text limits.MAX_BODY_LEN }
+
+  {"type",                     shapes.empty + types.one_of { "directory", "post_list" }}
+}
+
 TAG_VALIDATION = {
   {"id",  shapes.db_id + shapes.empty}
   {"label", shapes.limited_text limits.MAX_TAG_LEN}
-  {"description", shapes.limited_text(80) + shapes.empty / db.NULL}
-  {"color", shapes.color + shapes.empty / db.NULL}
+  {"description", shapes.db_nullable shapes.limited_text(80)}
+  {"color", shapes.db_nullable shapes.color}
 }
 
 class CategoriesFlow extends Flow
@@ -200,76 +217,43 @@ class CategoriesFlow extends Flow
 
     true, @post
 
+  -- this will only validate fields in the array if provided, suitable for partial updates
+  -- otherwise, every field n CATEOGRY_VALIDATION will be validated
+  validate_params: (fields_list) =>
+    validation = if fields_list
+      out = for field in *fields_list
+        local found
+        for v in *CATEOGRY_VALIDATION
+          if v[1] == field
+            found = v
+            break
 
-  validate_params: =>
-    @params.category or= {}
-    assert_valid @params, {
-      {"category", type: "table"}
-    }
+        unless found
+          error "tried to validate for invalid field: #{field}"
 
-    has_field = {k, true for k in pairs @params.category}
+        found
+      error "no fields to validate" unless next out
+      out
+    else
+      CATEOGRY_VALIDATION
 
-    category_params = trim_filter @params.category, {
-      "title"
-      "membership_type"
-      "topic_posting_type"
-      "voting_type"
-      "description"
-      "short_description"
-      "archived"
-      "hidden"
-      "rules"
-      "type"
-    }
+    params = shapes.assert_valid @params.category or {}, validation
 
-    assert_valid category_params, [v for v in *VALIDATIONS when has_field[v]]
-
-    if has_field.archived or has_field.update_archived
-      category_params.archived = not not category_params.archived
-
-    if has_field.hidden or has_field.update_hidden
-      category_params.hidden = not not category_params.hidden
-
-    if has_field.membership_type
-      category_params.membership_type = Categories.membership_types\for_db category_params.membership_type
-
-    if has_field.voting_type
-      category_params.voting_type = Categories.voting_types\for_db category_params.voting_type
-
-    if has_field.topic_posting_type
-      category_params.topic_posting_type = Categories.topic_posting_types\for_db category_params.topic_posting_type
-
-    if has_field.title
-      category_params.slug = slugify category_params.title
-
-    if has_field.description
-      category_params.description or= db.NULL
-
-    if has_field.short_description
-      category_params.short_description or= db.NULL
-
-    if has_field.rules
-      category_params.rules or= db.NULL
-
-    if has_field.type
+    if params.type
       if @category
         assert_error not @category.parent_category_id,
           "only root category can have type set"
 
-      assert_valid category_params, {
-        {"type", one_of: {
-          "directory"
-          "post_list"
-        }}
-      }
+      params.directory = params.type == "directory"
+      params.type = nil
 
-      category_params.directory = category_params.type == "directory"
-      category_params.type = nil
+    if params.title
+      params.slug = slugify params.title
 
-    category_params
+    params
 
-  new_category: require_login =>
-    create_params = @validate_params!
+  new_category: require_login (...) =>
+    create_params = @validate_params ...
     create_params.user_id = @current_user.id
     @category = Categories\create create_params
 
@@ -279,7 +263,7 @@ class CategoriesFlow extends Flow
       action: "create"
     }
 
-    true
+    @category
 
   -- category_tags[1][label] = "what"
   -- category_tags[1][id] = 1123
@@ -448,11 +432,11 @@ class CategoriesFlow extends Flow
 
     true, archived
 
-  edit_category: require_login =>
+  edit_category: require_login (fields_list) =>
     @load_category!
     assert_error @category\allowed_to_edit(@current_user), "invalid category"
 
-    update_params = @validate_params!
+    update_params = @validate_params fields_list
     update_params = filter_update @category, update_params
 
     @category\update update_params

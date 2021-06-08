@@ -48,6 +48,11 @@ local page_number = types.one_of({
 }) / function(n)
   return math.floor(math.max(1, n))
 end
+local db_nullable
+db_nullable = function(t)
+  local db = require("lapis.db")
+  return t + empty / db.NULL
+end
 local db_id = types.one_of({
   types.number * types.custom(function(v)
     return v == math.floor(v)
@@ -135,6 +140,7 @@ return {
   limited_text = limited_text,
   db_id = db_id,
   db_enum = db_enum,
+  db_nullable = db_nullable,
   test_valid = test_valid,
   assert_valid = assert_valid
 }
