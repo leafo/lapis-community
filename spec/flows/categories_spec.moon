@@ -55,10 +55,6 @@ class CategoryApp extends TestApp
       :post
     }
 
-  "/set-tags": capture_errors_json =>
-    @flow\set_tags!
-    json: { success: true }
-
 describe "categories", ->
   use_test_env!
 
@@ -260,16 +256,22 @@ describe "categories", ->
         }
       )
 
-    describe "tags", ->
+    describe "tags #ddd", ->
+      set_tags = (post, user=current_user) ->
+        in_request {
+          :post
+        }, =>
+          @current_user = user
+          @flow("categories")\set_tags!
+
       it "sets tags", ->
-        res = CategoryApp\get current_user, "/set-tags", {
+        set_tags {
           category_id: category.id
           "category_tags[1][label]": "the first one"
           "category_tags[2][label]": "Second here"
           "category_tags[2][color]": "#dfdfee"
         }
 
-        assert.same {success: true}, res
         ts = for t in *category\get_tags!
           {
             category_id: t.category_id
@@ -299,18 +301,17 @@ describe "categories", ->
         for i=1,2
           factory.CategoryTags category_id: category.id
 
-        res = CategoryApp\get current_user, "/set-tags", {
+        set_tags {
           category_id: category.id
         }
 
-        assert.same {success: true}, res
         assert.same {}, category\get_tags!
 
       it "edits tags", ->
         existing = for i=1,2
           factory.CategoryTags category_id: category.id, description: "wipe me"
 
-        res = CategoryApp\get current_user, "/set-tags", {
+        set_tags {
           category_id: category.id
           "category_tags[1][label]": "the first one"
           "category_tags[1][id]": "#{existing[2].id}"
@@ -319,7 +320,6 @@ describe "categories", ->
           "category_tags[2][description]": "Hey there"
         }
 
-        assert.same {success: true}, res
         tags = category\get_tags!
         assert.same 2, #tags
 
@@ -336,23 +336,22 @@ describe "categories", ->
         assert.same "Hey there", second.description
 
       it "rejects tag that is too long", ->
-        res = CategoryApp\get current_user, "/set-tags", {
-          category_id: category.id
-          "category_tags[1][label]": "the first one"
-          "category_tags[1][color]": "#daddad"
-          "category_tags[2][label]": "new one one one one one one oen oen oen eone n two three four file ve islfwele"
-        }
+        assert.has_error(
+          ->
+            set_tags {
+              category_id: category.id
+              "category_tags[1][label]": "the first one"
+              "category_tags[1][color]": "#daddad"
+              "category_tags[2][label]": "new one one one one one one oen oen oen eone n two three four file ve islfwele"
+            }
 
-        assert.same {
-          errors: {
-            "topic tag 2: label: expected text between 1 and 30 characters"
-          }
-        }, res
+          message: {"topic tag 2: label: expected text between 1 and 30 characters"}
+        )
 
       it "doesn't fail when recreating tag of same slug", ->
         existing = factory.CategoryTags category_id: category.id
 
-        res = CategoryApp\get current_user, "/set-tags", {
+        set_tags {
           category_id: category.id
           "category_tags[1][label]": existing.label
         }
@@ -360,7 +359,7 @@ describe "categories", ->
         assert.same 1, #category\get_tags!
 
       it "doesn't fail when trying to create dupes", ->
-        res = CategoryApp\get current_user, "/set-tags", {
+        set_tags {
           category_id: category.id
           "category_tags[1][label]": "alpha"
           "category_tags[1][label]": "alpha"
