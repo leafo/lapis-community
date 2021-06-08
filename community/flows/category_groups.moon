@@ -34,9 +34,9 @@ class CategoryGroupsFlow extends Flow
 
   validate_params: =>
     shapes.assert_valid @params.category_group, {
-      {"title", shapes.empty / db.NULL + shapes.limited_text limits.MAX_TITLE_LEN }
-      {"description", shapes.empty / db.NULL + shapes.limited_text limits.MAX_BODY_LEN }
-      {"rules", shapes.empty / db.NULL + shapes.limited_text limits.MAX_BODY_LEN }
+      {"title", shapes.db_nullable shapes.limited_text limits.MAX_TITLE_LEN }
+      {"description", shapes.db_nullable shapes.limited_text limits.MAX_BODY_LEN }
+      {"rules", shapes.db_nullable shapes.limited_text limits.MAX_BODY_LEN }
     }
 
   new_category_group: require_login =>

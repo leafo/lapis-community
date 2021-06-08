@@ -43,15 +43,15 @@ do
       return shapes.assert_valid(self.params.category_group, {
         {
           "title",
-          shapes.empty / db.NULL + shapes.limited_text(limits.MAX_TITLE_LEN)
+          shapes.db_nullable(shapes.limited_text(limits.MAX_TITLE_LEN))
         },
         {
           "description",
-          shapes.empty / db.NULL + shapes.limited_text(limits.MAX_BODY_LEN)
+          shapes.db_nullable(shapes.limited_text(limits.MAX_BODY_LEN))
         },
         {
           "rules",
-          shapes.empty / db.NULL + shapes.limited_text(limits.MAX_BODY_LEN)
+          shapes.db_nullable(shapes.limited_text(limits.MAX_BODY_LEN))
         }
       })
     end,

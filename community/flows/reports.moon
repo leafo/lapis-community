@@ -55,7 +55,7 @@ class ReportsFlow extends Flow
     @load_post!
     params = shapes.assert_valid @params.report, {
       {"reason", shapes.db_enum PostReports.reasons}
-      {"body", shapes.empty / db.NULL + shapes.limited_text limits.MAX_BODY_LEN}
+      {"body", shapes.db_nullable shapes.limited_text limits.MAX_BODY_LEN}
     }
 
     params = @copy_post_params params
