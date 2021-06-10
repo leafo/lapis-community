@@ -4,7 +4,6 @@ import in_request, flow from require "spec.flow_helpers"
 db = require "lapis.db"
 factory = require "spec.factory"
 
-import TestApp from require "spec.helpers"
 import capture_errors_json from require "lapis.application"
 
 import types from require "tableshape"

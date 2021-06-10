@@ -10,8 +10,6 @@ db = require "lapis.db"
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
 
-import TestApp from require "spec.helpers"
-
 PostsFlow = require "community.flows.posts"
 
 import Users from require "models"

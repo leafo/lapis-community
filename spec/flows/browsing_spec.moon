@@ -6,46 +6,11 @@ factory = require "spec.factory"
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
 
-import TestApp from require "spec.helpers"
-
 import filter_bans from require "spec.helpers"
 
 import Users from require "models"
 
 import types from require "tableshape"
-
-class BrowsingApp extends TestApp
-  @before_filter =>
-    @current_user = @params.current_user_id and assert Users\find @params.current_user_id
-    Browsing = require "community.flows.browsing"
-    @flow = Browsing @
-
-  "/post": capture_errors_json =>
-    @flow\post_single!
-    filter_bans @post\get_topic!
-
-    json: {
-      success: true
-      post: @post
-    }
-
-  "/category": capture_errors_json =>
-    @flow\category_single!
-    filter_bans @category
-
-    json: {
-      success: true
-      category: @category
-    }
-
-  "/category-preview": capture_errors_json =>
-    CategoriesFlow = require "community.flows.categories"
-    CategoriesFlow(@)\load_category!
-
-    json: {
-      success: true
-      topics: @flow\preview_category_topics @category
-    }
 
 describe "browsing flow", ->
   use_test_env!
@@ -259,11 +224,19 @@ describe "browsing flow", ->
           assert.same 1, topic.views_count, "views_count"
 
       describe "preview category topics", ->
+        get_category_preview = (user, params) ->
+          in_request { get: params }, =>
+            @current_user = user
+            @flow("categories")\load_category!
+            @flow("browsing")\preview_category_topics @category
+
         it "gets empty category", ->
           category = factory.Categories!
-          res = BrowsingApp\get current_user, "/category-preview", category_id: category.id
-          assert.truthy res.success
-          assert.same 0, #res.topics
+          topics = get_category_preview current_user, {
+            category_id: category.id
+          }
+
+          assert.same {}, topics
           assert.same 0, UserCategoryLastSeens\count!
 
         it "gets some topics", ->
@@ -280,12 +253,25 @@ describe "browsing flow", ->
           topics[2]\delete!
           topics[2]\refresh!
 
-          res = BrowsingApp\get current_user, "/category-preview", category_id: category.id
+          res = get_category_preview current_user, {
+            category_id: category.id
+          }
 
-          assert.truthy res.success
-          assert.same 3, #res.topics
+          assert.same 3, #res
           assert.same { t.id, true for t in *topics when not t.deleted },
-            {t.id, true for t in *res.topics}
+            {t.id, true for t in *res}
+
+          assert types.shape({
+            types.partial {
+              id: topics[4].id
+            }
+            types.partial {
+              id: topics[3].id
+            }
+            types.partial {
+              id: topics[1].id
+            }
+          }) res
 
 
       describe "category topics", ->
@@ -459,17 +445,40 @@ describe "browsing flow", ->
           assert.same {after: 1}, prev_page
 
       describe "post", ->
+        get_post_single = (user, params) ->
+          in_request { get: params }, =>
+            @current_user = user
+            @flow("browsing")\post_single!
+            filter_bans @post\get_topic!
+            @post
+
         it "gets post with no nested content", ->
           post = factory.Posts!
 
-          res = BrowsingApp\get current_user, "/post", {
+          res = get_post_single current_user, {
             post_id: post.id
           }
 
-          assert.same post.id, res.post.id
-          assert.same {}, res.post.children
-          assert.truthy res.post.user
-          assert.truthy res.post.topic
+          assert.same post.id, res.id
+          assert.same {}, res.children
+          assert.truthy res.user
+          assert.truthy res.topic
+
+        it "gets post while logged out", ->
+          post = factory.Posts!
+
+          res = get_post_single nil, {
+            post_id: post.id
+          }
+
+          assert types.partial({
+            id: post.id
+            children: types.shape {}
+
+            -- check that fields were preloaded
+            user: types.table
+            topic: types.table
+          }) res
 
         it "gets post with nested content", ->
           p = factory.Posts!
@@ -484,20 +493,33 @@ describe "browsing flow", ->
           ppp1 = factory.Posts topic_id: topic.id, parent_post: pp1
           topic\increment_from_post ppp1
 
-          res = BrowsingApp\get current_user, "/post", {
+          res = get_post_single current_user, {
             post_id: p.id
           }
 
-          assert.same p.id, res.post.id
-          assert.truthy res.post.user
-          assert.truthy res.post.topic
+          assert types.partial({
+            id: p.id
+            user: types.table
+            topic: types.table
 
-          assert.same {pp1.id, pp2.id}, [child.id for child in *res.post.children]
+            children: types.shape {
+              types.partial {
+                id: pp1.id
+                parent_post_id: p.id
 
-          for child in *res.post.children
-            assert.same p.id, child.parent_post_id
-            assert.truthy child.user
-            assert.truthy child.topic
+                user: types.table
+                topic: types.table
+              }
+              types.partial {
+                id: pp2.id
+                parent_post_id: p.id
+
+                user: types.table
+                topic: types.table
+              }
+            }
+
+          }) res
 
         it "gets post without spam nested content", ->
           p = factory.Posts!
@@ -510,12 +532,12 @@ describe "browsing flow", ->
           c2 = factory.Posts topic_id: topic.id, parent_post_id: p.id
           topic\increment_from_post c2
 
-          res = BrowsingApp\get current_user, "/post", {
+          res = get_post_single current_user, {
             post_id: p.id
           }
 
-          assert.same 1, #res.post.children
-          assert.same c2.id, res.post.children[1].id
+          assert.same 1, #res.children
+          assert.same c2.id, res.children[1].id
 
         it "shows archive children when viewing archived post", ->
           -- NOTE: this is currently impossible in practice since only root
@@ -532,25 +554,35 @@ describe "browsing flow", ->
           c2 = factory.Posts status: "archived", topic_id: topic.id, parent_post_id: p.id
           topic\increment_from_post c2
 
-          res = BrowsingApp\get current_user, "/post", {
+          res = get_post_single current_user, {
             post_id: p.id
           }
 
-          assert.same 2, #res.post.children
+          assert.same 2, #res.children
           assert.same {
             [c1.id]: true
             [c2.id]: true
-          }, {c.id, true for c in *res.post.children}
+          }, {c.id, true for c in *res.children}
 
       describe "category", ->
+        get_category_single = (user, params) ->
+          in_request { get: params }, =>
+            @current_user = user
+            @flow("browsing")\category_single!
+            filter_bans @category
+            @category
+
         it "gets empty category", ->
           category = factory.Categories!
 
-          res = BrowsingApp\get current_user, "/category", {
+          res = get_category_single current_user, {
             category_id: category.id
           }
 
-          assert.same {}, res.category.children
+          assert types.partial({
+            id: category.id
+            children: types.shape {}
+          }) res
 
         it "gets category with children preloaded", ->
           category = factory.Categories!
@@ -569,11 +601,11 @@ describe "browsing flow", ->
           a_topic = category_topic a
           b_topic = category_topic b
 
-          res = BrowsingApp\get current_user, "/category", {
+          res = get_category_single current_user, {
             category_id: category.id
           }
 
-          children = res.category.children
+          children = res.children
 
           assert.same 2, #children
 
