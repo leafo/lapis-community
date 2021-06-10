@@ -9,36 +9,6 @@ import capture_errors_json from require "lapis.application"
 
 import types from require "tableshape"
 
-class CategoryApp extends TestApp
-  @require_user!
-
-  @before_filter =>
-    CategoriesFlow = require "community.flows.categories"
-    @flow = CategoriesFlow @
-
-  "/moderation-logs": capture_errors_json =>
-    @flow\moderation_logs!
-    json: {
-      success: true
-      page: @page
-      moderation_logs: @moderation_logs
-    }
-
-  "/pending-posts": capture_errors_json =>
-    @flow\pending_posts!
-    json: {
-      success: true
-      page: @page
-      pending_posts: @pending_posts
-    }
-
-  "/pending-post": capture_errors_json =>
-    status, post = @flow\edit_pending_post!
-    json: {
-      :status
-      :post
-    }
-
 describe "categories", ->
   use_test_env!
 
@@ -608,28 +578,42 @@ describe "categories", ->
     before_each ->
       category = factory.Categories user_id: current_user.id
 
+    get_moderation_logs = (user=current_user) ->
+      in_request {
+        post: {
+          category_id: category.id
+        }
+      }, =>
+        @current_user = user
+        @flow("categories")\moderation_logs!
+        @moderation_logs, @page
+
     it "gets moderation log", ->
-      ModerationLogs\create {
+      log = ModerationLogs\create {
         category_id: category.id
         object: category
         user_id: current_user.id
         action: "did.something"
       }
 
-      res = CategoryApp\get current_user, "/moderation-logs", {
-        category_id: category.id
-      }
+      logs, page = get_moderation_logs!
 
-      assert.truthy res.moderation_logs
-      assert.same 1, #res.moderation_logs
+      assert.same 1, page
+
+      assert types.shape({
+        types.partial {
+          id: log.id
+          object: types.table -- ensure it's preloaded
+          user: types.table
+        }
+      }) logs
 
     it "doesn't get moderation log for unrelated user", ->
       other_user = factory.Users!
-      res = CategoryApp\get other_user, "/moderation-logs", {
-        category_id: category.id
-      }
-
-      assert.same {errors: {"invalid category"}}, res
+      assert.has_error(
+        -> get_moderation_logs other_user
+        message: {"invalid category"}
+      )
 
   describe "pending posts", ->
     local category
@@ -637,12 +621,31 @@ describe "categories", ->
     before_each ->
       category = factory.Categories user_id: current_user.id
 
-    it "gets empty pending posts", ->
-      res = CategoryApp\get current_user, "/pending-posts", {
-        category_id: category.id
-      }
+    get_pending_posts = (user=current_user, get) ->
+      in_request {
+        :get
+        post: {
+          category_id: category.id
+        }
+      }, =>
+        @current_user = user
+        @flow("categories")\pending_posts!
+        @pending_posts, @page
 
-      assert.same {}, res.pending_posts
+    edit_pending_post = (user=current_user, params) ->
+      in_request {
+        get: params
+        post: {
+          category_id: category.id
+        }
+      }, =>
+        @current_user = user
+        @flow("categories")\edit_pending_post!
+
+    it "gets empty pending posts", ->
+      pending_posts, page = get_pending_posts!
+      assert.same {}, pending_posts
+      assert.same 1, page
 
     describe "with pending posts", ->
       local pending_post
@@ -651,30 +654,42 @@ describe "categories", ->
         pending_post = factory.PendingPosts category_id: category.id
 
       it "gets pending posts", ->
-        res = CategoryApp\get current_user, "/pending-posts", {
-          category_id: category.id
-        }
-        assert.same 1, #res.pending_posts
-        assert.same pending_post.id, res.pending_posts[1].id
+        other_post = factory.PendingPosts!
+
+        pending_posts, page = get_pending_posts!
+
+        assert types.shape({
+          types.partial {
+            id: pending_post.id
+          }
+        }) pending_posts
 
       it "doesn't let stranger view pending posts", ->
-        res = CategoryApp\get factory.Users!, "/pending-posts", {
-          category_id: category.id
-        }
-        assert.truthy res.errors
+        assert.has_error(
+          -> get_pending_posts factory.Users!
+          message: { "invalid category" }
+        )
 
-      it "doesn't get incorrect satus", ->
-        res = CategoryApp\get current_user, "/pending-posts", {
+      it "filters by status", ->
+        deleted_pp = factory.PendingPosts {
           category_id: category.id
           status: "deleted"
         }
-        assert.same {}, res.pending_posts
+
+        pending_posts = get_pending_posts current_user, {
+          status: "deleted"
+        }
+
+        assert types.shape({
+          types.partial {
+            id: deleted_pp.id
+          }
+        }) pending_posts
 
       it "promotes pending post", ->
         s = spy.on(Posts.__base, "on_body_updated_callback")
 
-        res = CategoryApp\get current_user, "/pending-post", {
-          category_id: category.id
+        edit_pending_post current_user, {
           pending_post_id: pending_post.id
           action: "promote"
         }
@@ -684,17 +699,17 @@ describe "categories", ->
         assert.spy(s, "on_body_updated_callback").was.called!
 
       it "doesn't let stranger edit pending post", ->
-        res = CategoryApp\get factory.Users!, "/pending-post", {
-          category_id: category.id
-          pending_post_id: pending_post.id
-          action: "promote"
-        }
-
-        assert.truthy res.errors
+        assert.has_error(
+          ->
+            edit_pending_post factory.Users!, {
+              pending_post_id: pending_post.id
+              action: "promote"
+            }
+          message: {"invalid pending post"}
+        )
 
       it "deletes pending post", ->
-        res = CategoryApp\get current_user, "/pending-post", {
-          category_id: category.id
+        edit_pending_post current_user, {
           pending_post_id: pending_post.id
           action: "deleted"
         }
