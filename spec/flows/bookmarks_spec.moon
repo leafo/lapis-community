@@ -15,17 +15,12 @@ describe "flows.bookmarks", ->
     current_user = factory.Users!
 
   describe "show", ->
-    import filter_bans from require "spec.helpers"
-
     show_topic_bookmarks = (get) ->
       in_request {
         :get
       }, =>
         @current_user = current_user
         @flow("bookmarks")\show_topic_bookmarks!
-
-        filter_bans unpack @topics
-
         @topics
 
     it "fetches empty topic list", ->

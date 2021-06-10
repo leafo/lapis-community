@@ -6,8 +6,6 @@ factory = require "spec.factory"
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
 
-import filter_bans from require "spec.helpers"
-
 import Users from require "models"
 
 import types from require "tableshape"
@@ -449,7 +447,6 @@ describe "browsing flow", ->
           in_request { get: params }, =>
             @current_user = user
             @flow("browsing")\post_single!
-            filter_bans @post\get_topic!
             @post
 
         it "gets post with no nested content", ->
@@ -569,7 +566,6 @@ describe "browsing flow", ->
           in_request { get: params }, =>
             @current_user = user
             @flow("browsing")\category_single!
-            filter_bans @category
             @category
 
         it "gets empty category", ->
