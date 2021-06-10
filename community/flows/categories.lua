@@ -137,7 +137,7 @@ do
     members_flow = function(self)
       self:load_category()
       local MembersFlow = require("community.flows.members")
-      return MembersFlow(self, self)
+      return MembersFlow(self)
     end,
     bans_flow = function(self)
       self:load_category()

@@ -14,9 +14,9 @@ import preload from require "lapis.db.model"
 class MembersFlow extends Flow
   expose_assigns: true
 
-  new: (req, @category_flow) =>
+  new: (req) =>
     super req
-    assert @category, "missing category"
+    assert @category, "can't create a members flow without a category on the request object"
 
   load_user: =>
     assert_valid @params, {
@@ -38,7 +38,7 @@ class MembersFlow extends Flow
 
     @pager = CategoryMembers\paginated [[
       where category_id = ?
-      order by created_at desc
+      order by created_at desc, user_id desc
     ]], @category.id, per_page: 20, prepare_results: (members) ->
       preload members, "user"
       members

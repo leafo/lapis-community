@@ -1,5 +1,5 @@
 import use_test_env from require "lapis.spec"
-import in_request from require "spec.flow_helpers"
+import in_request, flow from require "spec.flow_helpers"
 
 db = require "lapis.db"
 factory = require "spec.factory"
@@ -15,22 +15,6 @@ class CategoryApp extends TestApp
   @before_filter =>
     CategoriesFlow = require "community.flows.categories"
     @flow = CategoriesFlow @
-
-  "/show-members": capture_errors_json =>
-    @flow\members_flow!\show_members!
-    json: { success: true, members: @members }
-
-  "/add-member": capture_errors_json =>
-    @flow\members_flow!\add_member!
-    json: { success: true }
-
-  "/remove-member": capture_errors_json =>
-    @flow\members_flow!\remove_member!
-    json: { success: true }
-
-  "/accept-member": capture_errors_json =>
-    @flow\members_flow!\accept_member!
-    json: { success: true }
 
   "/moderation-logs": capture_errors_json =>
     @flow\moderation_logs!
@@ -256,7 +240,7 @@ describe "categories", ->
         }
       )
 
-    describe "tags #ddd", ->
+    describe "tags", ->
       set_tags = (post, user=current_user) ->
         in_request {
           :post
@@ -463,50 +447,69 @@ describe "categories", ->
     before_each ->
       category = factory.Categories user_id: current_user.id
 
-    it "shows empty members", ->
-      res = CategoryApp\get current_user, "/show-members", {
-        category_id: category.id
-        user_id: current_user.id
-      }
+    show_members = ->
+      in_request {
+        post: {
+          category_id: category.id
+          user_id: current_user.id
+        }
+      }, =>
+        @current_user = current_user
+        @flow("categories")\members_flow!\show_members!
 
-      assert.nil res.errors
-      assert.same {}, res.members
+    it "shows empty members", ->
+      members = show_members!
+      assert.same {}, members
 
     it "shows members", ->
-      CategoryMembers\create {
+      first = CategoryMembers\create {
         user_id: factory.Users!.id
         category_id: category.id
         accepted: true
       }
 
-      CategoryMembers\create {
+      second = CategoryMembers\create {
         user_id: factory.Users!.id
         category_id: category.id
         accepted: false
       }
 
-      res = CategoryApp\get current_user, "/show-members", {
-        category_id: category.id
-        user_id: current_user.id
+      other = CategoryMembers\create {
+        user_id: factory.Users!.id
+        category_id: factory.Categories!.id
+        accepted: true
       }
 
-      assert.nil res.errors
-      assert.same 2, #res.members
-      assert.truthy res.members[1].user
+      members = show_members!
 
-  describe "add_member", ->
+      assert types.shape({
+        types.partial {
+          category_id: category.id
+          user_id: second.user_id
+        }
+        types.partial {
+          category_id: category.id
+          user_id: first.user_id
+        }
+      }) members
+
+  describe "add/remove members", ->
     local category
 
     before_each ->
       category = factory.Categories user_id: current_user.id
 
-    it "should add member", ->
+    it "adds member", ->
       other_user = factory.Users!
 
-      res = CategoryApp\get current_user, "/add-member", {
-        category_id: category.id
-        user_id: other_user.id
-      }
+      in_request {
+        post: {
+          category_id: category.id
+          user_id: other_user.id
+        }
+      }, =>
+        @current_user = current_user
+        @flow("categories")\members_flow!\add_member!
 
       members = CategoryMembers\select!
       assert.same 1, #members
@@ -516,30 +519,88 @@ describe "categories", ->
       assert.same other_user.id, member.user_id
       assert.same false, member.accepted
 
-      assert.same { success: true }, res
+    it "removes member", ->
+      first = CategoryMembers\create {
+        user_id: factory.Users!.id
+        category_id: category.id
+        accepted: true
+      }
 
-    it "should accept member", ->
+      in_request {
+        post: {
+          category_id: category.id
+          user_id: first.user_id
+        }
+      }, =>
+        @current_user = current_user
+        @flow("categories")\members_flow!\remove_member!
+
+      assert.same {}, CategoryMembers\select!
+
+    it "fails to remove invalid member", ->
+      first = CategoryMembers\create {
+        user_id: factory.Users!.id
+        category_id: factory.Categories!.id
+        accepted: true
+      }
+      
+      assert.has_error(
+        ->
+          in_request {
+            post: {
+              category_id: category.id
+              user_id: first.user_id
+            }
+          }, =>
+            @current_user = current_user
+            @flow("categories")\members_flow!\remove_member!
+
+          assert.same {}, CategoryMembers\select!
+        message: {"user is not member"}
+      )
+
+    it "accepts membership", ->
       other_user = factory.Users!
 
-      factory.CategoryMembers {
+      member = factory.CategoryMembers {
         user_id: other_user.id
         category_id: category.id
         accepted: false
       }
 
-      res = CategoryApp\get other_user, "/accept-member", {
-        category_id: category.id
-      }
+      in_request {
+        post: {
+          category_id: category.id
+        }
+      }, =>
+        @current_user = other_user
+        @flow("categories")\members_flow!\accept_member!
 
-      assert.same { success: true }, res
+      member\refresh!
+      assert.true member.accepted
 
-    it "should not accept unininvited user", ->
+
+    it "does not accept unininvited user", ->
       other_user = factory.Users!
-      res = CategoryApp\get other_user, "/accept-member", {
-        category_id: category.id
+
+      member = factory.CategoryMembers {
+        user_id: other_user.id
+        category_id: factory.Categories!.id
+        accepted: false
       }
 
-      assert.same { errors: {"no pending membership"} }, res
+      assert.has_error(
+        ->
+          in_request {
+            post: {
+              category_id: category.id
+            }
+          }, =>
+            @current_user = other_user
+            @flow("categories")\members_flow!\accept_member!
+
+        message: {"no pending membership"}
+      )
 
   describe "moderation_logs", ->
     local category

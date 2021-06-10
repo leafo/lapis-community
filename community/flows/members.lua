@@ -48,7 +48,7 @@ do
     show_members = function(self)
       assert_page(self)
       self.pager = CategoryMembers:paginated([[      where category_id = ?
-      order by created_at desc
+      order by created_at desc, user_id desc
     ]], self.category.id, {
         per_page = 20,
         prepare_results = function(members)
@@ -92,10 +92,9 @@ do
   _base_0.__index = _base_0
   setmetatable(_base_0, _parent_0.__base)
   _class_0 = setmetatable({
-    __init = function(self, req, category_flow)
-      self.category_flow = category_flow
+    __init = function(self, req)
       _class_0.__parent.__init(self, req)
-      return assert(self.category, "missing category")
+      return assert(self.category, "can't create a members flow without a category on the request object")
     end,
     __base = _base_0,
     __name = "MembersFlow",
