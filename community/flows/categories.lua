@@ -257,7 +257,7 @@ do
           for _index_0 = 1, #fields_list do
             local field = fields_list[_index_0]
             local found
-            local _list_0 = self.__class.CATEOGRY_VALIDATION
+            local _list_0 = self.__class.CATEGORY_VALIDATION
             for _index_1 = 1, #_list_0 do
               local v = _list_0[_index_1]
               if v[1] == field then
@@ -279,7 +279,7 @@ do
         end
         validation = out
       else
-        validation = self.__class.CATEOGRY_VALIDATION
+        validation = self.__class.CATEGORY_VALIDATION
       end
       local params = shapes.assert_valid(self.params.category or { }, validation)
       if params.type then
@@ -606,7 +606,7 @@ do
   })
   _base_0.__class = _class_0
   local self = _class_0
-  self.CATEOGRY_VALIDATION = {
+  self.CATEGORY_VALIDATION = {
     {
       "title",
       shapes.limited_text(limits.MAX_TITLE_LEN)

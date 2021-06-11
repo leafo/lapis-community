@@ -749,7 +749,7 @@ describe "categories", ->
     before_each ->
       category = factory.Categories user_id: current_user.id
 
-    it "sets empty cateogires", ->
+    it "sets empty categories", ->
       set_children {
         category_id: category.id
       }

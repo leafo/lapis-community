@@ -21,7 +21,7 @@ import types from require "tableshape"
 
 
 class CategoriesFlow extends Flow
-  @CATEOGRY_VALIDATION: {
+  @CATEGORY_VALIDATION: {
     {"title",                    shapes.limited_text limits.MAX_TITLE_LEN}
     {"short_description",        shapes.db_nullable shapes.limited_text(limits.MAX_TITLE_LEN)}
     {"description",              shapes.db_nullable shapes.limited_text(limits.MAX_BODY_LEN)}
@@ -219,12 +219,12 @@ class CategoriesFlow extends Flow
     true, @post
 
   -- this will only validate fields in the array if provided, suitable for partial updates
-  -- otherwise, every field n CATEOGRY_VALIDATION will be validated
+  -- otherwise, every field n CATEGORY_VALIDATION will be validated
   validate_params: (fields_list) =>
     validation = if fields_list
       out = for field in *fields_list
         local found
-        for v in *@@CATEOGRY_VALIDATION
+        for v in *@@CATEGORY_VALIDATION
           if v[1] == field
             found = v
             break
@@ -236,7 +236,7 @@ class CategoriesFlow extends Flow
       error "no fields to validate" unless next out
       out
     else
-      @@CATEOGRY_VALIDATION
+      @@CATEGORY_VALIDATION
 
     params = shapes.assert_valid @params.category or {}, validation
 

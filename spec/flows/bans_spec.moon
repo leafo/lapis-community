@@ -327,7 +327,7 @@ describe "bans", ->
       assert.same 0, Bans\count!
 
   -- flow is created as a sub flow of category flow
-  describe "cateogry bans flow", ->
+  describe "category bans flow", ->
     local category
 
     before_each ->
