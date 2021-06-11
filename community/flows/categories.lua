@@ -30,99 +30,6 @@ local db = require("lapis.db")
 local shapes = require("community.helpers.shapes")
 local types
 types = require("tableshape").types
-local CATEOGRY_VALIDATION = {
-  {
-    "title",
-    shapes.limited_text(limits.MAX_TITLE_LEN)
-  },
-  {
-    "short_description",
-    shapes.db_nullable(shapes.limited_text(limits.MAX_TITLE_LEN))
-  },
-  {
-    "description",
-    shapes.db_nullable(shapes.limited_text(limits.MAX_BODY_LEN))
-  },
-  {
-    "membership_type",
-    shapes.db_nullable(shapes.db_enum(Categories.membership_types))
-  },
-  {
-    "voting_type",
-    shapes.db_nullable(shapes.db_enum(Categories.voting_types))
-  },
-  {
-    "topic_posting_type",
-    shapes.db_nullable(shapes.db_enum(Categories.topic_posting_types))
-  },
-  {
-    "archived",
-    shapes.empty / false + types.any / true
-  },
-  {
-    "hidden",
-    shapes.empty / false + types.any / true
-  },
-  {
-    "rules",
-    shapes.db_nullable(shapes.limited_text(limits.MAX_BODY_LEN))
-  },
-  {
-    "type",
-    shapes.empty + types.one_of({
-      "directory",
-      "post_list"
-    })
-  }
-}
-local TAG_VALIDATION = {
-  {
-    "id",
-    shapes.db_id + shapes.empty
-  },
-  {
-    "label",
-    shapes.limited_text(limits.MAX_TAG_LEN)
-  },
-  {
-    "description",
-    shapes.db_nullable(shapes.limited_text(80))
-  },
-  {
-    "color",
-    shapes.db_nullable(shapes.color)
-  }
-}
-local CATEGORY_CHILD_VALIDATION = {
-  {
-    "id",
-    shapes.db_id + shapes.empty
-  },
-  {
-    "title",
-    shapes.limited_text(limits.MAX_TITLE_LEN)
-  },
-  {
-    "short_description",
-    shapes.db_nullable(shapes.limited_text(limits.MAX_TITLE_LEN))
-  },
-  {
-    "archived",
-    shapes.empty / false + types.any / true
-  },
-  {
-    "hidden",
-    shapes.empty / false + types.any / true
-  },
-  {
-    "directory",
-    shapes.empty / false + types.any / true
-  },
-  {
-    "children",
-    shapes.empty + types.table
-  }
-}
 local CategoriesFlow
 do
   local _class_0
@@ -350,8 +257,9 @@ do
           for _index_0 = 1, #fields_list do
             local field = fields_list[_index_0]
             local found
-            for _index_1 = 1, #CATEOGRY_VALIDATION do
-              local v = CATEOGRY_VALIDATION[_index_1]
+            local _list_0 = self.__class.CATEOGRY_VALIDATION
+            for _index_1 = 1, #_list_0 do
+              local v = _list_0[_index_1]
               if v[1] == field then
                 found = v
                 break
@@ -371,7 +279,7 @@ do
         end
         validation = out
       else
-        validation = CATEOGRY_VALIDATION
+        validation = self.__class.CATEOGRY_VALIDATION
       end
       local params = shapes.assert_valid(self.params.category or { }, validation)
       if params.type then
@@ -427,7 +335,7 @@ do
       for position, tag_params in ipairs(self.params.category_tags) do
         local _continue_0 = false
         repeat
-          local tag = shapes.assert_valid(tag_params, TAG_VALIDATION, {
+          local tag = shapes.assert_valid(tag_params, self.__class.TAG_VALIDATION, {
             prefix = "topic tag " .. tostring(position)
           })
           tag.tag_order = position
@@ -499,7 +407,7 @@ do
           depth = 1
         end
         assert_error(depth <= limits.MAX_CATEGORY_DEPTH, "category depth must be at most " .. tostring(limits.MAX_CATEGORY_DEPTH))
-        local out = shapes.assert_valid(params, CATEGORY_CHILD_VALIDATION)
+        local out = shapes.assert_valid(params, self.__class.CATEGORY_CHILD_VALIDATION)
         if out.children then
           assert_categores_length(out.children)
           do
@@ -697,6 +605,100 @@ do
     end
   })
   _base_0.__class = _class_0
+  local self = _class_0
+  self.CATEOGRY_VALIDATION = {
+    {
+      "title",
+      shapes.limited_text(limits.MAX_TITLE_LEN)
+    },
+    {
+      "short_description",
+      shapes.db_nullable(shapes.limited_text(limits.MAX_TITLE_LEN))
+    },
+    {
+      "description",
+      shapes.db_nullable(shapes.limited_text(limits.MAX_BODY_LEN))
+    },
+    {
+      "membership_type",
+      shapes.db_nullable(shapes.db_enum(Categories.membership_types))
+    },
+    {
+      "voting_type",
+      shapes.db_nullable(shapes.db_enum(Categories.voting_types))
+    },
+    {
+      "topic_posting_type",
+      shapes.db_nullable(shapes.db_enum(Categories.topic_posting_types))
+    },
+    {
+      "archived",
+      shapes.empty / false + types.any / true
+    },
+    {
+      "hidden",
+      shapes.empty / false + types.any / true
+    },
+    {
+      "rules",
+      shapes.db_nullable(shapes.limited_text(limits.MAX_BODY_LEN))
+    },
+    {
+      "type",
+      shapes.empty + types.one_of({
+        "directory",
+        "post_list"
+      })
+    }
+  }
+  self.TAG_VALIDATION = {
+    {
+      "id",
+      shapes.db_id + shapes.empty
+    },
+    {
+      "label",
+      shapes.limited_text(limits.MAX_TAG_LEN)
+    },
+    {
+      "description",
+      shapes.db_nullable(shapes.limited_text(80))
+    },
+    {
+      "color",
+      shapes.db_nullable(shapes.color)
+    }
+  }
+  self.CATEGORY_CHILD_VALIDATION = {
+    {
+      "id",
+      shapes.db_id + shapes.empty
+    },
+    {
+      "title",
+      shapes.limited_text(limits.MAX_TITLE_LEN)
+    },
+    {
+      "short_description",
+      shapes.db_nullable(shapes.limited_text(limits.MAX_TITLE_LEN))
+    },
+    {
+      "archived",
+      shapes.empty / false + types.any / true
+    },
+    {
+      "hidden",
+      shapes.empty / false + types.any / true
+    },
+    {
+      "directory",
+      shapes.empty / false + types.any / true
+    },
+    {
+      "children",
+      shapes.empty + types.table
+    }
+  }
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end

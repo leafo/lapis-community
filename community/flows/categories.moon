@@ -19,41 +19,42 @@ db = require "lapis.db"
 shapes = require "community.helpers.shapes"
 import types from require "tableshape"
 
-CATEOGRY_VALIDATION = {
-  {"title",                    shapes.limited_text limits.MAX_TITLE_LEN}
-  {"short_description",        shapes.db_nullable shapes.limited_text(limits.MAX_TITLE_LEN)}
-  {"description",              shapes.db_nullable shapes.limited_text(limits.MAX_BODY_LEN)}
-
-  -- these can be nulled out to inherit from parent/default
-  {"membership_type",          shapes.db_nullable shapes.db_enum Categories.membership_types}
-  {"voting_type",              shapes.db_nullable shapes.db_enum Categories.voting_types}
-  {"topic_posting_type",       shapes.db_nullable shapes.db_enum Categories.topic_posting_types}
-
-  {"archived",                 shapes.empty / false + types.any / true}
-  {"hidden",                   shapes.empty / false + types.any / true}
-  {"rules",                    shapes.db_nullable shapes.limited_text limits.MAX_BODY_LEN }
-
-  {"type",                     shapes.empty + types.one_of { "directory", "post_list" }}
-}
-
-TAG_VALIDATION = {
-  {"id",                       shapes.db_id + shapes.empty}
-  {"label",                    shapes.limited_text limits.MAX_TAG_LEN}
-  {"description",              shapes.db_nullable shapes.limited_text(80)}
-  {"color",                    shapes.db_nullable shapes.color}
-}
-
-CATEGORY_CHILD_VALIDATION = {
-  {"id",                       shapes.db_id + shapes.empty}
-  {"title",                    shapes.limited_text limits.MAX_TITLE_LEN}
-  {"short_description",        shapes.db_nullable shapes.limited_text(limits.MAX_TITLE_LEN)}
-  {"archived",                 shapes.empty / false + types.any / true}
-  {"hidden",                   shapes.empty / false + types.any / true}
-  {"directory",                shapes.empty / false + types.any / true}
-  {"children",                 shapes.empty + types.table}
-}
 
 class CategoriesFlow extends Flow
+  @CATEOGRY_VALIDATION: {
+    {"title",                    shapes.limited_text limits.MAX_TITLE_LEN}
+    {"short_description",        shapes.db_nullable shapes.limited_text(limits.MAX_TITLE_LEN)}
+    {"description",              shapes.db_nullable shapes.limited_text(limits.MAX_BODY_LEN)}
+
+    -- these can be nulled out to inherit from parent/default
+    {"membership_type",          shapes.db_nullable shapes.db_enum Categories.membership_types}
+    {"voting_type",              shapes.db_nullable shapes.db_enum Categories.voting_types}
+    {"topic_posting_type",       shapes.db_nullable shapes.db_enum Categories.topic_posting_types}
+
+    {"archived",                 shapes.empty / false + types.any / true}
+    {"hidden",                   shapes.empty / false + types.any / true}
+    {"rules",                    shapes.db_nullable shapes.limited_text limits.MAX_BODY_LEN }
+
+    {"type",                     shapes.empty + types.one_of { "directory", "post_list" }}
+  }
+
+  @TAG_VALIDATION: {
+    {"id",                       shapes.db_id + shapes.empty}
+    {"label",                    shapes.limited_text limits.MAX_TAG_LEN}
+    {"description",              shapes.db_nullable shapes.limited_text(80)}
+    {"color",                    shapes.db_nullable shapes.color}
+  }
+
+  @CATEGORY_CHILD_VALIDATION: {
+    {"id",                       shapes.db_id + shapes.empty}
+    {"title",                    shapes.limited_text limits.MAX_TITLE_LEN}
+    {"short_description",        shapes.db_nullable shapes.limited_text(limits.MAX_TITLE_LEN)}
+    {"archived",                 shapes.empty / false + types.any / true}
+    {"hidden",                   shapes.empty / false + types.any / true}
+    {"directory",                shapes.empty / false + types.any / true}
+    {"children",                 shapes.empty + types.table}
+  }
+
   expose_assigns: true
 
   moderators_flow: =>
@@ -223,7 +224,7 @@ class CategoriesFlow extends Flow
     validation = if fields_list
       out = for field in *fields_list
         local found
-        for v in *CATEOGRY_VALIDATION
+        for v in *@@CATEOGRY_VALIDATION
           if v[1] == field
             found = v
             break
@@ -235,7 +236,7 @@ class CategoriesFlow extends Flow
       error "no fields to validate" unless next out
       out
     else
-      CATEOGRY_VALIDATION
+      @@CATEOGRY_VALIDATION
 
     params = shapes.assert_valid @params.category or {}, validation
 
@@ -291,7 +292,7 @@ class CategoriesFlow extends Flow
     used_slugs = {}
 
     for position, tag_params in ipairs @params.category_tags
-      tag = shapes.assert_valid tag_params, TAG_VALIDATION, {
+      tag = shapes.assert_valid tag_params, @@TAG_VALIDATION, {
         prefix: "topic tag #{position}"
       }
       tag.tag_order = position
@@ -352,7 +353,7 @@ class CategoriesFlow extends Flow
       assert_error depth <= limits.MAX_CATEGORY_DEPTH,
         "category depth must be at most #{limits.MAX_CATEGORY_DEPTH}"
 
-      out = shapes.assert_valid params, CATEGORY_CHILD_VALIDATION
+      out = shapes.assert_valid params, @@CATEGORY_CHILD_VALIDATION
 
       if out.children
         assert_categores_length out.children
