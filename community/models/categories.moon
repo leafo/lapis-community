@@ -132,23 +132,26 @@ class Categories extends Model
     ", parent_id
 
   @create: (opts={}) =>
-    if opts.membership_type
+    if opts.membership_type and opts.membership_type != db.NULL
       opts.membership_type = @membership_types\for_db opts.membership_type
 
-    if opts.voting_type
+    if opts.voting_type and opts.voting_type != db.NULL
       opts.voting_type = @voting_types\for_db opts.voting_type
 
-    if opts.approval_type
+    if opts.approval_type and opts.approval_type != db.NULL
       opts.approval_type = @approval_types\for_db opts.approval_type
+
+    if opts.category_order_type and opts.category_order_type != db.NULL
+      opts.category_order_type = @category_order_types\for_db opts.category_order_type
+
+    if opts.topic_posting_type and opts.topic_posting_type != db.NULL
+      opts.topic_posting_type = @topic_posting_types\for_db opts.topic_posting_type
 
     if opts.title
       opts.slug or= slugify opts.title
 
     if opts.parent_category_id and not opts.position
       opts.position = @next_position opts.parent_category_id
-
-    if opts.category_order_type
-      opts.category_order_type = @category_order_types\for_db opts.category_order_type
 
     super opts
 

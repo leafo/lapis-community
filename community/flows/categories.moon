@@ -30,6 +30,7 @@ class CategoriesFlow extends Flow
     {"membership_type",          shapes.db_nullable shapes.db_enum Categories.membership_types}
     {"voting_type",              shapes.db_nullable shapes.db_enum Categories.voting_types}
     {"topic_posting_type",       shapes.db_nullable shapes.db_enum Categories.topic_posting_types}
+    {"approval_type",            shapes.db_nullable shapes.db_enum Categories.approval_types}
 
     {"archived",                 shapes.empty / false + types.any / true}
     {"hidden",                   shapes.empty / false + types.any / true}

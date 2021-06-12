@@ -632,6 +632,10 @@ do
       shapes.db_nullable(shapes.db_enum(Categories.topic_posting_types))
     },
     {
+      "approval_type",
+      shapes.db_nullable(shapes.db_enum(Categories.approval_types))
+    },
+    {
       "archived",
       shapes.empty / false + types.any / true
     },

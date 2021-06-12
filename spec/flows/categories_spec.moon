@@ -90,6 +90,7 @@ describe "categories", ->
           category_id: category.id
           "category[title]": "\tThe good category  "
           "category[membership_type]": "members_only"
+          "category[approval_type]": "pending"
           "category[voting_type]": "up"
           "category[topic_posting_type]": "moderators_only"
           "category[short_description]": "yeah yeah"
@@ -106,6 +107,7 @@ describe "categories", ->
         assert.falsy category.hidden
 
         assert.same Categories.membership_types.members_only, category.membership_type
+        assert.same Categories.approval_types.pending, category.approval_type
         assert.same Categories.voting_types.up, category.voting_type
         assert.same Categories.topic_posting_types.moderators_only, category.topic_posting_type
 

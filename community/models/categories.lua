@@ -815,23 +815,26 @@ do
     if opts == nil then
       opts = { }
     end
-    if opts.membership_type then
+    if opts.membership_type and opts.membership_type ~= db.NULL then
       opts.membership_type = self.membership_types:for_db(opts.membership_type)
     end
-    if opts.voting_type then
+    if opts.voting_type and opts.voting_type ~= db.NULL then
       opts.voting_type = self.voting_types:for_db(opts.voting_type)
     end
-    if opts.approval_type then
+    if opts.approval_type and opts.approval_type ~= db.NULL then
       opts.approval_type = self.approval_types:for_db(opts.approval_type)
+    end
+    if opts.category_order_type and opts.category_order_type ~= db.NULL then
+      opts.category_order_type = self.category_order_types:for_db(opts.category_order_type)
+    end
+    if opts.topic_posting_type and opts.topic_posting_type ~= db.NULL then
+      opts.topic_posting_type = self.topic_posting_types:for_db(opts.topic_posting_type)
     end
     if opts.title then
       opts.slug = opts.slug or slugify(opts.title)
     end
     if opts.parent_category_id and not opts.position then
       opts.position = self:next_position(opts.parent_category_id)
-    end
-    if opts.category_order_type then
-      opts.category_order_type = self.category_order_types:for_db(opts.category_order_type)
     end
     return _class_0.__parent.create(self, opts)
   end
