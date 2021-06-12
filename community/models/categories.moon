@@ -150,7 +150,7 @@ class Categories extends Model
     if opts.category_order_type
       opts.category_order_type = @category_order_types\for_db opts.category_order_type
 
-    Model.create @, opts
+    super opts
 
   @recount: (...) =>
     import Topics, CategoryGroupCategories from require "community.models"

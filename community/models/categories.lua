@@ -833,7 +833,7 @@ do
     if opts.category_order_type then
       opts.category_order_type = self.category_order_types:for_db(opts.category_order_type)
     end
-    return Model.create(self, opts)
+    return _class_0.__parent.create(self, opts)
   end
   self.recount = function(self, ...)
     local Topics, CategoryGroupCategories
