@@ -30,6 +30,30 @@ local db = require("lapis.db")
 local shapes = require("community.helpers.shapes")
 local types
 types = require("tableshape").types
+local split_field
+split_field = function(fields, name)
+  if fields then
+    for _index_0 = 1, #fields do
+      local f = fields[_index_0]
+      if f == name then
+        return true, (function()
+          local _accum_0 = { }
+          local _len_0 = 1
+          for _index_1 = 1, #fields do
+            local ff = fields[_index_1]
+            if ff ~= name then
+              _accum_0[_len_0] = ff
+              _len_0 = _len_0 + 1
+            end
+          end
+          return _accum_0
+        end)()
+      end
+    end
+    local _ = false, fields
+  end
+  return true, fields
+end
 local CategoriesFlow
 do
   local _class_0
@@ -332,6 +356,7 @@ do
       CategoryTags = require("community.models").CategoryTags
       local actions = { }
       local used_slugs = { }
+      local made_change = false
       for position, tag_params in ipairs(self.params.category_tags) do
         local _continue_0 = false
         repeat
@@ -361,12 +386,15 @@ do
               tag.label = db.NULL
             end
             table.insert(actions, function()
-              return existing:update(filter_update(existing, tag))
+              if existing:update(filter_update(existing, tag)) then
+                made_change = true
+              end
             end)
           else
             tag.category_id = self.category.id
             table.insert(actions, function()
-              return CategoryTags:create(tag)
+              CategoryTags:create(tag)
+              made_change = true
             end)
           end
           _continue_0 = true
@@ -376,13 +404,15 @@ do
         end
       end
       for _, old in pairs(existing_by_id) do
-        old:delete()
+        if old:delete() then
+          made_change = true
+        end
       end
       for _index_0 = 1, #actions do
         local a = actions[_index_0]
         a()
       end
-      return true
+      return made_change
     end),
     set_children = require_login(function(self)
       self:load_category()
@@ -563,11 +593,22 @@ do
     edit_category = require_login(function(self, fields_list)
       self:load_category()
       assert_error(self.category:allowed_to_edit(self.current_user), "invalid category")
-      local update_params = self:validate_params(fields_list)
-      update_params = filter_update(self.category, update_params)
-      self.category:update(update_params)
-      self:set_tags()
-      if next(update_params) then
+      local category_updated = false
+      local update_tags
+      update_tags, fields_list = split_field(fields_list, "category_tags")
+      if not fields_list or next(fields_list) then
+        local update_params = self:validate_params(fields_list)
+        update_params = filter_update(self.category, update_params)
+        if self.category:update(update_params) then
+          category_updated = true
+        end
+      end
+      if update_tags then
+        if self:set_tags() then
+          category_updated = true
+        end
+      end
+      if category_updated then
         ActivityLogs:create({
           user_id = self.current_user.id,
           object = self.category,

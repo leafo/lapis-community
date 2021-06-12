@@ -86,6 +86,9 @@ describe "categories", ->
 
     describe "edit", ->
       it "edits category", ->
+        -- this will get deleted because by default it updates category tags
+        factory.CategoryTags category_id: category.id
+
         edit_category {
           category_id: category.id
           "category[title]": "\tThe good category  "
@@ -117,6 +120,8 @@ describe "categories", ->
         assert.same category.id, log.object_id
         assert.same ActivityLogs.object_types.category, log.object_type
         assert.same "edit", log\action_name!
+
+        assert.same {}, CategoryTags\select!
 
       it "partially updates category", ->
         category\update {
@@ -185,10 +190,17 @@ describe "categories", ->
         )
 
       it "doesn't create log when making no changes", ->
+        ct = factory.CategoryTags {
+          category_id: category.id
+          tag_order: 1
+        }
+
         edit_category {
           category_id: category.id
           "category[title]": category.title
           "category[description]": category.description
+          "category_tags[1][id]": ct.id
+          "category_tags[1][label]": ct.label
         }
 
         assert.same 0, ActivityLogs\count!
@@ -321,6 +333,30 @@ describe "categories", ->
         }
 
         assert.same 1, #category\get_tags!
+
+      it "edits tags through edit_category", ->
+        factory.CategoryTags category_id: category.id
+
+        edit_category {
+          category_id: category.id
+          "category_tags[1][label]": "some tag"
+        }, current_user, {"category_tags"}
+
+        assert types.shape({
+          types.partial {
+            category_id: category.id
+            label: "some tag"
+          }
+        }) CategoryTags\select!
+
+        assert types.shape({
+          types.partial {
+            user_id: current_user.id
+            object_id: category.id
+            object_type: assert ActivityLogs.object_types.category
+            action: assert ActivityLogs.actions.category.edit
+          }
+        }) ActivityLogs\select!
 
     describe "recent posts", ->
       get_recent_posts = (opts) ->

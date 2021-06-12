@@ -19,6 +19,15 @@ db = require "lapis.db"
 shapes = require "community.helpers.shapes"
 import types from require "tableshape"
 
+split_field = (fields, name) ->
+  if fields
+    for f in *fields
+      if f == name
+        return true, [ff for ff in *fields when ff != name]
+
+    false, fields
+
+  true, fields
 
 class CategoriesFlow extends Flow
   @CATEGORY_VALIDATION: {
@@ -292,6 +301,8 @@ class CategoriesFlow extends Flow
     actions = {}
     used_slugs = {}
 
+    made_change = false
+
     for position, tag_params in ipairs @params.category_tags
       tag = shapes.assert_valid tag_params, @@TAG_VALIDATION, {
         prefix: "topic tag #{position}"
@@ -314,20 +325,23 @@ class CategoriesFlow extends Flow
           tag.label = db.NULL
 
         table.insert actions, ->
-          existing\update filter_update existing, tag
+          if existing\update filter_update existing, tag
+            made_change = true
       else
         tag.category_id = @category.id
 
         table.insert actions, ->
           CategoryTags\create tag
+          made_change = true
 
     for _, old in pairs existing_by_id
-      old\delete!
+      if old\delete!
+        made_change = true
 
     for a in *actions
       a!
 
-    true
+    made_change
 
   -- categories[1][title] = "hello!"
   -- categories[1][children][1][title] = "a child!"
@@ -427,17 +441,26 @@ class CategoriesFlow extends Flow
 
     true, archived
 
+  -- fields_list: can contain any name from CATEGORY_VALIDATION, or "category_tags"
   edit_category: require_login (fields_list) =>
     @load_category!
     assert_error @category\allowed_to_edit(@current_user), "invalid category"
 
-    update_params = @validate_params fields_list
-    update_params = filter_update @category, update_params
+    category_updated = false
 
-    @category\update update_params
-    @set_tags!
+    update_tags, fields_list = split_field fields_list, "category_tags"
 
-    if next update_params
+    if not fields_list or next fields_list
+      update_params = @validate_params fields_list
+      update_params = filter_update @category, update_params
+      if @category\update update_params
+        category_updated = true
+
+    if update_tags
+      if @set_tags!
+        category_updated = true
+
+    if category_updated
       ActivityLogs\create {
         user_id: @current_user.id
         object: @category
