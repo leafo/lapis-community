@@ -54,6 +54,10 @@ split_field = function(fields, name)
   end
   return true, fields
 end
+local nullable_html
+nullable_html = function(t)
+  return shapes.empty_html / db.NULL + t
+end
 local CategoriesFlow
 do
   local _class_0
@@ -596,23 +600,32 @@ do
       local category_updated = false
       local update_tags
       update_tags, fields_list = split_field(fields_list, "category_tags")
+      local updated_fields = { }
       if not fields_list or next(fields_list) then
         local update_params = self:validate_params(fields_list)
         update_params = filter_update(self.category, update_params)
         if self.category:update(update_params) then
+          for k in pairs(update_params) do
+            table.insert(updated_fields, k)
+          end
           category_updated = true
         end
       end
       if update_tags then
         if self:set_tags() then
+          table.insert(updated_fields, "categroy_tags")
           category_updated = true
         end
       end
       if category_updated then
+        table.sort(updated_fields)
         ActivityLogs:create({
           user_id = self.current_user.id,
           object = self.category,
-          action = "edit"
+          action = "edit",
+          data = {
+            fields = updated_fields
+          }
         })
       end
       return true
@@ -658,7 +671,7 @@ do
     },
     {
       "description",
-      shapes.db_nullable(shapes.limited_text(limits.MAX_BODY_LEN))
+      nullable_html(shapes.limited_text(limits.MAX_BODY_LEN))
     },
     {
       "membership_type",
@@ -686,7 +699,7 @@ do
     },
     {
       "rules",
-      shapes.db_nullable(shapes.limited_text(limits.MAX_BODY_LEN))
+      nullable_html(shapes.limited_text(limits.MAX_BODY_LEN))
     },
     {
       "type",

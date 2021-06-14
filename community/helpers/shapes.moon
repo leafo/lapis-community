@@ -25,6 +25,11 @@ empty = types.one_of {
     types.literal(ngx.null) / nil
 }, describe: -> "empty"
 
+empty_html = empty + types.custom((str) ->
+  import is_empty_html from require "community.helpers.html"
+  is_empty_html str
+) / nil
+
 color = types.one_of({
   types.pattern "^##{"[a-fA-F%d]"\rep "6"}$"
   types.pattern "^##{"[a-fA-F%d]"\rep "3"}$"
@@ -94,7 +99,7 @@ assert_valid = (...) ->
   result
 
 {
-  :empty
+  :empty, :empty_html
   :color
   :page_number
   :valid_text, :trimmed_text, :limited_text

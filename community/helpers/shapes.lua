@@ -35,6 +35,11 @@ local empty = types.one_of({
     return "empty"
   end
 })
+local empty_html = empty + types.custom(function(str)
+  local is_empty_html
+  is_empty_html = require("community.helpers.html").is_empty_html
+  return is_empty_html(str)
+end) / nil
 local color = types.one_of({
   types.pattern("^#" .. tostring(("[a-fA-F%d]"):rep("6")) .. "$"),
   types.pattern("^#" .. tostring(("[a-fA-F%d]"):rep("3")) .. "$")
@@ -133,6 +138,7 @@ assert_valid = function(...)
 end
 return {
   empty = empty,
+  empty_html = empty_html,
   color = color,
   page_number = page_number,
   valid_text = valid_text,

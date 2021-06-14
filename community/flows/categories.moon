@@ -29,11 +29,14 @@ split_field = (fields, name) ->
 
   true, fields
 
+nullable_html = (t) ->
+  shapes.empty_html / db.NULL + t
+
 class CategoriesFlow extends Flow
   @CATEGORY_VALIDATION: {
     {"title",                    shapes.limited_text limits.MAX_TITLE_LEN}
     {"short_description",        shapes.db_nullable shapes.limited_text(limits.MAX_TITLE_LEN)}
-    {"description",              shapes.db_nullable shapes.limited_text(limits.MAX_BODY_LEN)}
+    {"description",              nullable_html shapes.limited_text(limits.MAX_BODY_LEN)}
 
     -- these can be nulled out to inherit from parent/default
     {"membership_type",          shapes.db_nullable shapes.db_enum Categories.membership_types}
@@ -43,7 +46,7 @@ class CategoriesFlow extends Flow
 
     {"archived",                 shapes.empty / false + types.any / true}
     {"hidden",                   shapes.empty / false + types.any / true}
-    {"rules",                    shapes.db_nullable shapes.limited_text limits.MAX_BODY_LEN }
+    {"rules",                    nullable_html shapes.limited_text limits.MAX_BODY_LEN }
 
     {"type",                     shapes.empty + types.one_of { "directory", "post_list" }}
   }
@@ -450,21 +453,31 @@ class CategoriesFlow extends Flow
 
     update_tags, fields_list = split_field fields_list, "category_tags"
 
+    updated_fields = {}
+
     if not fields_list or next fields_list
       update_params = @validate_params fields_list
       update_params = filter_update @category, update_params
       if @category\update update_params
+        for k in pairs update_params
+          table.insert updated_fields, k
+
         category_updated = true
 
     if update_tags
       if @set_tags!
+        table.insert updated_fields, "categroy_tags"
         category_updated = true
 
     if category_updated
+      table.sort updated_fields
       ActivityLogs\create {
         user_id: @current_user.id
         object: @category
         action: "edit"
+        data: {
+          fields: updated_fields
+        }
       }
 
     true
