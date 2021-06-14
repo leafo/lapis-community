@@ -73,7 +73,7 @@ class Topics extends Model
     opts.category_order or= @update_category_order_sql opts.category_id
 
     if opts.data
-      import db_json from require "helpers.models"
+      import db_json from require "community.helpers.models"
       opts.data = db_json opts.data
 
     super opts, returning: {"status"}

@@ -666,6 +666,9 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
 
   [39]: =>
     add_column T"category_tags", "description", text null: true
+
+  [40]: =>
+    db.query "alter table #{db.escape_identifier T"activity_logs"} alter column data type jsonb using data::jsonb"
 }
 
 

@@ -11,7 +11,7 @@ import to_json from require "lapis.util"
 --   object_id integer NOT NULL,
 --   publishable boolean DEFAULT false NOT NULL,
 --   action integer DEFAULT 0 NOT NULL,
---   data text,
+--   data jsonb,
 --   created_at timestamp without time zone NOT NULL,
 --   updated_at timestamp without time zone NOT NULL
 -- );
@@ -72,7 +72,8 @@ class ActivityLogs extends Model
     opts.action = actions\for_db opts.action
 
     if opts.data
-      opts.data = to_json opts.data
+      import db_json from require "community.helpers.models"
+      opts.data = db_json opts.data
 
     super opts
 

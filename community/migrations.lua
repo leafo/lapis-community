@@ -1248,5 +1248,8 @@ return {
     return add_column(T("category_tags"), "description", text({
       null = true
     }))
+  end,
+  [40] = function(self)
+    return db.query("alter table " .. tostring(db.escape_identifier(T("activity_logs"))) .. " alter column data type jsonb using data::jsonb")
   end
 }

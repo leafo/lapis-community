@@ -31,7 +31,7 @@ CREATE TABLE public.community_activity_logs (
     object_id integer NOT NULL,
     publishable boolean DEFAULT false NOT NULL,
     action integer DEFAULT 0 NOT NULL,
-    data text,
+    data jsonb,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL
 );
@@ -1393,6 +1393,7 @@ community_36
 community_37
 community_38
 community_39
+community_40
 \.
 
 

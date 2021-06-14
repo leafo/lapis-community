@@ -106,7 +106,9 @@ do
     end
     opts.action = actions:for_db(opts.action)
     if opts.data then
-      opts.data = to_json(opts.data)
+      local db_json
+      db_json = require("community.helpers.models").db_json
+      opts.data = db_json(opts.data)
     end
     return _class_0.__parent.create(self, opts)
   end
