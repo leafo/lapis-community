@@ -369,7 +369,7 @@ do
           })
           tag.tag_order = position
           tag.slug = CategoryTags:slugify(tag.label)
-          if tag.slug == "" then
+          if not (tag.slug) then
             _continue_0 = true
             break
           end

@@ -314,7 +314,7 @@ class CategoriesFlow extends Flow
 
       tag.slug = CategoryTags\slugify tag.label
 
-      continue if tag.slug == ""
+      continue unless tag.slug
       continue if used_slugs[tag.slug]
       used_slugs[tag.slug] = true
 

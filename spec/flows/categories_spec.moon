@@ -239,30 +239,21 @@ describe "categories", ->
           "category_tags[2][color]": "#dfdfee"
         }
 
-        ts = for t in *category\get_tags!
-          {
-            category_id: t.category_id
-            label: t.label
-            slug: t.slug
-            tag_order: t.tag_order
-            color: t.color
-          }
-
-        assert.same {
-          {
+        assert types.shape({
+          types.partial {
             category_id: category.id
             tag_order: 1
             label: "the first one"
             slug: "the-first-one"
           }
-          {
+          types.partial {
             category_id: category.id
             tag_order: 2
             label: "Second here"
             slug: "second-here"
             color: "#dfdfee"
           }
-        }, ts
+        }) category\get_tags!
 
       it "clears tags", ->
         for i=1,2
@@ -273,6 +264,21 @@ describe "categories", ->
         }
 
         assert.same {}, category\get_tags!
+
+      it "creates tag with emoji", ->
+        set_tags {
+          category_id: category.id
+          "category_tags[1][label]": "Fanart 🎨"
+          "category_tags[2][label]": "🤬"
+        }
+
+        -- since a slug can not be created, the emoji only tag is rejected
+        assert types.shape({
+          types.partial {
+            slug: "fanart"
+            label: "Fanart 🎨"
+          }
+        }) CategoryTags\select!
 
       it "edits tags", ->
         existing = for i=1,2
