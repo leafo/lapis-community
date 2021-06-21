@@ -43,6 +43,7 @@ describe "posting flow", ->
     in_request { :post }, =>
       @current_user = current_user
       @flow("topics")\new_topic!
+      @pending_post or @topic
 
   delete_topic = (post, user=current_user) ->
     in_request { :post }, =>
@@ -170,6 +171,7 @@ describe "posting flow", ->
           publishable: false
         }, open: true
       }) logs
+
 
     it "creates new topic with body format", ->
       category = factory.Categories!
@@ -336,7 +338,69 @@ describe "posting flow", ->
 
       assert.same 1, Topics\count!
 
+    describe "pending topic", ->
+      import PendingPosts from require "spec.community_models"
 
+      it "creates a pending topic post", ->
+        category = factory.Categories!
+        category\update {
+          approval_type: Categories.approval_types.pending
+        }
+
+        CategoryTags\create {
+          slug: "hello-world"
+          category_id: category.id
+        }
+
+        new_topic {
+          category_id: category.id
+          "topic[title]": "Hello world"
+          "topic[body]": "This is the body"
+          "topic[body_format]": "markdown"
+          "topic[tags]": "hello-world"
+        }
+
+        assert.same {}, Topics\select!
+        assert.same {}, Posts\select!
+
+        pending_posts = PendingPosts\select!
+
+        assert types.shape({
+          types.partial {
+            status: PendingPosts.statuses.pending
+            category_id: category.id
+            topic_id: types.nil
+            parent_post_id: types.nil
+            title: "Hello world"
+            body: "This is the body"
+            body_format: Posts.body_formats.markdown
+            user_id: current_user.id
+            data: types.shape {
+              topic_tags: types.shape { "hello-world" }
+            }
+          }
+        }) pending_posts
+
+        pending_posts[1]\promote!
+
+        assert.same {}, PendingPosts\select!
+
+        assert types.shape({
+          types.partial {
+            title: "Hello world"
+            user_id: current_user.id
+            category_id: category.id
+            tags: types.shape { "hello-world" }
+          }
+        }) Topics\select!
+
+        assert types.shape({
+          types.partial {
+            body: "This is the body"
+            body_format: Posts.body_formats.markdown
+            user_id: current_user.id
+          }
+        }) Posts\select!
 
   describe "new post", ->
     local topic

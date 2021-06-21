@@ -716,3 +716,8 @@ class Categories extends Model
     }
 
     @refresh_topic_category_order!
+
+  topic_needs_approval: (user, topic_params) =>
+    return false if @allowed_to_moderate user
+    @get_approval_type! == Categories.approval_types.pending
+

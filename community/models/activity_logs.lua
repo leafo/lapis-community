@@ -56,7 +56,8 @@ do
     }),
     category = enum({
       create = 1,
-      edit = 2
+      edit = 2,
+      create_pending_topic = 3
     })
   }
   self.relations = {

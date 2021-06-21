@@ -1,10 +1,10 @@
 local db = require("lapis.db")
 local Flow
 Flow = require("lapis.flow").Flow
-local Topics, Posts, CommunityUsers, ActivityLogs
+local Topics, Posts, CommunityUsers, ActivityLogs, PendingPosts
 do
   local _obj_0 = require("community.models")
-  Topics, Posts, CommunityUsers, ActivityLogs = _obj_0.Topics, _obj_0.Posts, _obj_0.CommunityUsers, _obj_0.ActivityLogs
+  Topics, Posts, CommunityUsers, ActivityLogs, PendingPosts = _obj_0.Topics, _obj_0.Posts, _obj_0.CommunityUsers, _obj_0.ActivityLogs, _obj_0.PendingPosts
 end
 local assert_error
 assert_error = require("lapis.application").assert_error
@@ -118,43 +118,82 @@ do
         sticky = new_topic.sticky
         locked = new_topic.locked
       end
-      self.topic = Topics:create({
-        user_id = self.current_user.id,
-        category_id = self.category.id,
-        title = new_topic.title,
-        tags = new_topic.tags and db.array((function()
-          local _accum_0 = { }
-          local _len_0 = 1
-          local _list_0 = new_topic.tags
-          for _index_0 = 1, #_list_0 do
-            local t = _list_0[_index_0]
-            _accum_0[_len_0] = t.slug
-            _len_0 = _len_0 + 1
-          end
-          return _accum_0
-        end)()),
-        category_order = self.category:next_topic_category_order(),
-        sticky = sticky,
-        locked = locked
-      })
-      self.post = Posts:create({
-        user_id = self.current_user.id,
-        topic_id = self.topic.id,
+      if self.category:topic_needs_approval(self.current_user, {
+        title = title,
         body_format = new_topic.body_format,
         body = body
-      })
-      self.topic:increment_from_post(self.post, {
-        update_category_order = false
-      })
-      self.category:increment_from_topic(self.topic)
-      CommunityUsers:for_user(self.current_user):increment_from_post(self.post, true)
-      self.topic:increment_participant(self.current_user)
-      self.post:on_body_updated_callback(self)
-      ActivityLogs:create({
-        user_id = self.current_user.id,
-        object = self.topic,
-        action = "create"
-      })
+      }) then
+        self.pending_post = PendingPosts:create({
+          user_id = self.current_user.id,
+          category_id = self.category.id,
+          title = new_topic.title,
+          body_format = new_topic.body_format,
+          body = body,
+          data = (function()
+            if new_topic.tags and next(new_topic.tags) then
+              return {
+                topic_tags = (function()
+                  local _accum_0 = { }
+                  local _len_0 = 1
+                  local _list_0 = new_topic.tags
+                  for _index_0 = 1, #_list_0 do
+                    local t = _list_0[_index_0]
+                    _accum_0[_len_0] = t.slug
+                    _len_0 = _len_0 + 1
+                  end
+                  return _accum_0
+                end)()
+              }
+            end
+          end)()
+        })
+        ActivityLogs:create({
+          user_id = self.current_user.id,
+          object = self.category,
+          action = "create_pending_topic",
+          data = {
+            pending_post_id = self.pending_post.id
+          }
+        })
+      else
+        self.topic = Topics:create({
+          user_id = self.current_user.id,
+          category_id = self.category.id,
+          title = new_topic.title,
+          tags = new_topic.tags and db.array((function()
+            local _accum_0 = { }
+            local _len_0 = 1
+            local _list_0 = new_topic.tags
+            for _index_0 = 1, #_list_0 do
+              local t = _list_0[_index_0]
+              _accum_0[_len_0] = t.slug
+              _len_0 = _len_0 + 1
+            end
+            return _accum_0
+          end)()),
+          category_order = self.category:next_topic_category_order(),
+          sticky = sticky,
+          locked = locked
+        })
+        self.post = Posts:create({
+          user_id = self.current_user.id,
+          topic_id = self.topic.id,
+          body_format = new_topic.body_format,
+          body = body
+        })
+        self.topic:increment_from_post(self.post, {
+          update_category_order = false
+        })
+        self.category:increment_from_topic(self.topic)
+        CommunityUsers:for_user(self.current_user):increment_from_post(self.post, true)
+        self.topic:increment_participant(self.current_user)
+        self.post:on_body_updated_callback(self)
+        ActivityLogs:create({
+          user_id = self.current_user.id,
+          object = self.topic,
+          action = "create"
+        })
+      end
       return true
     end),
     delete_topic = require_login(function(self)

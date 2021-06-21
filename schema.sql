@@ -375,7 +375,8 @@ CREATE TABLE public.community_pending_posts (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     title character varying(255),
-    body_format smallint DEFAULT 1 NOT NULL
+    body_format smallint DEFAULT 1 NOT NULL,
+    data jsonb
 );
 
 
@@ -1394,6 +1395,7 @@ community_37
 community_38
 community_39
 community_40
+community_41
 \.
 
 

@@ -39,6 +39,7 @@ class ActivityLogs extends Model
     category: enum {
       create: 1
       edit: 2
+      create_pending_topic: 3
     }
   }
 

@@ -57,7 +57,11 @@ class PostsFlow extends Flow
       assert_error parent_post\allowed_to_reply(@current_user, @_req),
         "can't reply to post"
 
-    if @topic\post_needs_approval!
+    if @topic\post_needs_approval @current_user, {
+      :body
+      body_format: new_post.body_format
+      parent_post_id: parent_post and parent_post.id
+    }
       @pending_post = PendingPosts\create {
         user_id: @current_user.id
         topic_id: @topic.id

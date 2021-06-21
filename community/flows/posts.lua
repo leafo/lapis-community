@@ -73,7 +73,11 @@ do
         assert_error(parent_post.topic_id == self.topic.id, "parent post doesn't belong to same topic")
         assert_error(parent_post:allowed_to_reply(self.current_user, self._req), "can't reply to post")
       end
-      if self.topic:post_needs_approval() then
+      if self.topic:post_needs_approval(self.current_user, {
+        body = body,
+        body_format = new_post.body_format,
+        parent_post_id = parent_post and parent_post.id
+      }) then
         self.pending_post = PendingPosts:create({
           user_id = self.current_user.id,
           topic_id = self.topic.id,

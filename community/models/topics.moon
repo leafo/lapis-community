@@ -482,7 +482,7 @@ class Topics extends Model
       where posts.id = foo.id and posts.post_number != new_number
     "
 
-  post_needs_approval: =>
+  post_needs_approval: (user, post_params) =>
     category = @get_category!
     return false unless category
     import Categories from require "community.models"

@@ -4,6 +4,8 @@ import Model from require "community.model"
 
 import enum from require "lapis.db.model"
 
+import db_json from require "community.helpers.models"
+
 -- Generated schema dump: (do not edit)
 --
 -- CREATE TABLE community_pending_posts (
@@ -17,7 +19,8 @@ import enum from require "lapis.db.model"
 --   created_at timestamp without time zone NOT NULL,
 --   updated_at timestamp without time zone NOT NULL,
 --   title character varying(255),
---   body_format smallint DEFAULT 1 NOT NULL
+--   body_format smallint DEFAULT 1 NOT NULL,
+--   data jsonb
 -- );
 -- ALTER TABLE ONLY community_pending_posts
 --   ADD CONSTRAINT community_pending_posts_pkey PRIMARY KEY (id);
@@ -44,6 +47,10 @@ class PendingPosts extends Model
     opts.status = @statuses\for_db opts.status or "pending"
     import Posts from require "community.models"
     opts.body_format = Posts.body_formats\for_db opts.body_format or 1
+
+    if opts.data
+      opts.data = db_json opts.data
+
     super opts
 
   allowed_to_moderate: (user) =>
@@ -53,14 +60,20 @@ class PendingPosts extends Model
 
     false
 
+  is_topic: =>
+    not @topic_id
+
   -- convert to real post
   promote: (req_or_flow=nil) =>
     import Posts, Topics, CommunityUsers from require "community.models"
 
-    topic = @get_topic!
     created_topic = false
-    unless topic
-      category = assert @get_category!, "attempting to create new pending topic but there is no category_id"
+
+    -- create the topic
+    topic = if @is_topic!
+      unless category
+        return nil, "could not create topic for pending post due to lack of category"
+
       created_topic = true
 
       topic = Topics\create {
@@ -68,13 +81,21 @@ class PendingPosts extends Model
         category_id: @category_id
         category_order: category\next_topic_category_order!
         title: assert @title, "missing title for pending topic"
+        tags: if @data and @data.topic_tags
+          db.array @data.topic_tags
       }
+    else
+      @get_topic!
+
+    unless topic
+      return nil, "failed to get or create topic to place pending post"
 
     post = Posts\create {
       topic_id: topic.id
       user_id: @user_id
       parent_post: @parent_post
       body: @body
+      body_format: @body_format
       created_at: @created_at
     }
 

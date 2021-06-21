@@ -686,6 +686,12 @@ do
         category_order_type = category_order
       })
       return self:refresh_topic_category_order()
+    end,
+    topic_needs_approval = function(self, user, topic_params)
+      if self:allowed_to_moderate(user) then
+        return false
+      end
+      return self:get_approval_type() == Categories.approval_types.pending
     end
   }
   _base_0.__index = _base_0

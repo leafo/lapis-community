@@ -3,6 +3,8 @@ local Model
 Model = require("community.model").Model
 local enum
 enum = require("lapis.db.model").enum
+local db_json
+db_json = require("community.helpers.models").db_json
 local PendingPosts
 do
   local _class_0
@@ -19,6 +21,9 @@ do
       end
       return false
     end,
+    is_topic = function(self)
+      return not self.topic_id
+    end,
     promote = function(self, req_or_flow)
       if req_or_flow == nil then
         req_or_flow = nil
@@ -28,23 +33,36 @@ do
         local _obj_0 = require("community.models")
         Posts, Topics, CommunityUsers = _obj_0.Posts, _obj_0.Topics, _obj_0.CommunityUsers
       end
-      local topic = self:get_topic()
       local created_topic = false
-      if not (topic) then
-        local category = assert(self:get_category(), "attempting to create new pending topic but there is no category_id")
+      local topic
+      if self:is_topic() then
+        if not (category) then
+          return nil, "could not create topic for pending post due to lack of category"
+        end
         created_topic = true
         topic = Topics:create({
           user_id = self.user_id,
           category_id = self.category_id,
           category_order = category:next_topic_category_order(),
-          title = assert(self.title, "missing title for pending topic")
+          title = assert(self.title, "missing title for pending topic"),
+          tags = (function()
+            if self.data and self.data.topic_tags then
+              return db.array(self.data.topic_tags)
+            end
+          end)()
         })
+      else
+        topic = self:get_topic()
+      end
+      if not (topic) then
+        return nil, "failed to get or create topic to place pending post"
       end
       local post = Posts:create({
         topic_id = topic.id,
         user_id = self.user_id,
         parent_post = self.parent_post,
         body = self.body,
+        body_format = self.body_format,
         created_at = self.created_at
       })
       topic:increment_from_post(post, {
@@ -122,6 +140,9 @@ do
     local Posts
     Posts = require("community.models").Posts
     opts.body_format = Posts.body_formats:for_db(opts.body_format or 1)
+    if opts.data then
+      opts.data = db_json(opts.data)
+    end
     return _class_0.__parent.create(self, opts)
   end
   if _parent_0.__inherited then

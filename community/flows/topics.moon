@@ -2,7 +2,7 @@
 db = require "lapis.db"
 
 import Flow from require "lapis.flow"
-import Topics, Posts, CommunityUsers, ActivityLogs from require "community.models"
+import Topics, Posts, CommunityUsers, ActivityLogs, PendingPosts from require "community.models"
 
 import assert_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
@@ -88,36 +88,66 @@ class TopicsFlow extends Flow
       sticky = new_topic.sticky
       locked = new_topic.locked
 
-    @topic = Topics\create {
-      user_id: @current_user.id
-      category_id: @category.id
-      title: new_topic.title
-      tags: new_topic.tags and db.array([t.slug for t in *new_topic.tags])
-      category_order: @category\next_topic_category_order!
-      :sticky
-      :locked
-    }
-
-    @post = Posts\create {
-      user_id: @current_user.id
-      topic_id: @topic.id
+    if @category\topic_needs_approval @current_user, {
+      :title
       body_format: new_topic.body_format
       :body
     }
+      @pending_post = PendingPosts\create {
+        user_id: @current_user.id
+        category_id: @category.id
+        title: new_topic.title
+        body_format: new_topic.body_format
+        :body
 
-    @topic\increment_from_post @post, update_category_order: false
-    @category\increment_from_topic @topic
+        -- TODO; sticky and locked should be supported?
+        data: if new_topic.tags and next new_topic.tags
+          {
+            topic_tags: [t.slug for t in *new_topic.tags]
+          }
+      }
 
-    CommunityUsers\for_user(@current_user)\increment_from_post @post, true
-    @topic\increment_participant @current_user
+      ActivityLogs\create {
+        user_id: @current_user.id
+        object: @category
+        action: "create_pending_topic"
+        data: {
+          pending_post_id: @pending_post.id
+        }
+      }
 
-    @post\on_body_updated_callback @
 
-    ActivityLogs\create {
-      user_id: @current_user.id
-      object: @topic
-      action: "create"
-    }
+    else
+      @topic = Topics\create {
+        user_id: @current_user.id
+        category_id: @category.id
+        title: new_topic.title
+        tags: new_topic.tags and db.array([t.slug for t in *new_topic.tags])
+        category_order: @category\next_topic_category_order!
+        :sticky
+        :locked
+      }
+
+      @post = Posts\create {
+        user_id: @current_user.id
+        topic_id: @topic.id
+        body_format: new_topic.body_format
+        :body
+      }
+
+      @topic\increment_from_post @post, update_category_order: false
+      @category\increment_from_topic @topic
+
+      CommunityUsers\for_user(@current_user)\increment_from_post @post, true
+      @topic\increment_participant @current_user
+
+      @post\on_body_updated_callback @
+
+      ActivityLogs\create {
+        user_id: @current_user.id
+        object: @topic
+        action: "create"
+      }
 
     true
 
