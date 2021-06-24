@@ -81,26 +81,32 @@ do
     purge_votes = function(self)
       local Votes
       Votes = require("community.models").Votes
+      local count = 0
       local _list_0 = Votes:select("where user_id = ?", self.user_id)
       for _index_0 = 1, #_list_0 do
         local vote = _list_0[_index_0]
-        vote:delete()
+        if vote:delete() then
+          count = count + 1
+        end
       end
-      return true
+      return count
     end,
     purge_posts = function(self)
       local Posts
       Posts = require("community.models").Posts
+      local count = 0
       local posts = Posts:select("where user_id = ?", self.user_id)
       for _index_0 = 1, #posts do
         local post = posts[_index_0]
-        post:delete("hard")
+        if post:delete("hard") then
+          count = count + 1
+        end
       end
       self:update({
         posts_count = 0,
         topics_count = 0
       })
-      return true
+      return count
     end,
     posting_rate = function(self, minutes)
       assert(type(minutes) == "number" and minutes > 0)

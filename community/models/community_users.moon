@@ -174,18 +174,22 @@ class CommunityUsers extends Model
   purge_votes: =>
     import Votes from require "community.models"
 
+    count = 0
     for vote in *Votes\select "where user_id = ?", @user_id
-      vote\delete!
+      if vote\delete!
+        count += 1
 
-    true
+    count
 
   -- remove every single post
   purge_posts: =>
     import Posts from require "community.models"
 
+    count = 0
     posts = Posts\select "where user_id = ?", @user_id
     for post in *posts
-      post\delete "hard"
+      if post\delete "hard"
+        count += 1
 
     -- TODO: this should no longer be necessary since counter adjustment is fixed
     @update {
@@ -193,7 +197,7 @@ class CommunityUsers extends Model
       topics_count: 0
     }
 
-    true
+    count
 
   posting_rate: (minutes) =>
     assert type(minutes) == "number" and minutes > 0
