@@ -82,9 +82,15 @@ do
       local Votes
       Votes = require("community.models").Votes
       local count = 0
-      local _list_0 = Votes:select("where user_id = ?", self.user_id)
-      for _index_0 = 1, #_list_0 do
-        local vote = _list_0[_index_0]
+      local OrderedPaginator
+      OrderedPaginator = require("lapis.db.pagination").OrderedPaginator
+      local pager = OrderedPaginator(Votes, {
+        "object_type",
+        "object_id"
+      }, "where user_id = ?", self.user_id, {
+        per_page = 1000
+      })
+      for vote in pager:each_item() do
         if vote:delete() then
           count = count + 1
         end
@@ -95,9 +101,14 @@ do
       local Posts
       Posts = require("community.models").Posts
       local count = 0
-      local posts = Posts:select("where user_id = ?", self.user_id)
-      for _index_0 = 1, #posts do
-        local post = posts[_index_0]
+      local OrderedPaginator
+      OrderedPaginator = require("lapis.db.pagination").OrderedPaginator
+      local pager = OrderedPaginator(Posts, {
+        "id"
+      }, "where user_id = ?", self.user_id, {
+        per_page = 1000
+      })
+      for post in pager:each_item() do
         if post:delete("hard") then
           count = count + 1
         end

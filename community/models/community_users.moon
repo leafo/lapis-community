@@ -175,7 +175,14 @@ class CommunityUsers extends Model
     import Votes from require "community.models"
 
     count = 0
-    for vote in *Votes\select "where user_id = ?", @user_id
+
+    import OrderedPaginator from require "lapis.db.pagination"
+
+    pager = OrderedPaginator Votes, {"object_type", "object_id"},"where user_id = ?", @user_id, {
+      per_page: 1000
+    }
+
+    for vote in pager\each_item!
       if vote\delete!
         count += 1
 
@@ -186,8 +193,14 @@ class CommunityUsers extends Model
     import Posts from require "community.models"
 
     count = 0
-    posts = Posts\select "where user_id = ?", @user_id
-    for post in *posts
+
+    import OrderedPaginator from require "lapis.db.pagination"
+
+    pager = OrderedPaginator Posts, {"id"}, "where user_id = ?", @user_id, {
+      per_page: 1000
+    }
+
+    for post in pager\each_item!
       if post\delete "hard"
         count += 1
 
