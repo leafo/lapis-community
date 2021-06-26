@@ -71,6 +71,8 @@ class PendingPosts extends Model
 
     -- create the topic
     topic = if @is_topic!
+      category = @get_category!
+
       unless category
         return nil, "could not create topic for pending post due to lack of category"
 

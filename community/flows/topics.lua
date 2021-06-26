@@ -119,7 +119,7 @@ do
         locked = new_topic.locked
       end
       if self.category:topic_needs_approval(self.current_user, {
-        title = title,
+        title = new_topic.title,
         body_format = new_topic.body_format,
         body = body
       }) then

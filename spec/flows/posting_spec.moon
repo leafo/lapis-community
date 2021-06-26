@@ -360,8 +360,9 @@ describe "posting flow", ->
           "topic[tags]": "hello-world"
         }
 
-        assert.same {}, Topics\select!
-        assert.same {}, Posts\select!
+        assert.same {}, Topics\select!, "topic should not be created"
+        assert.same {}, Posts\select!, "post should not be created"
+
 
         pending_posts = PendingPosts\select!
 
@@ -381,9 +382,9 @@ describe "posting flow", ->
           }
         }) pending_posts
 
-        pending_posts[1]\promote!
+        assert pending_posts[1]\promote!
 
-        assert.same {}, PendingPosts\select!
+        assert.same {}, PendingPosts\select!, "pending post should be removed after promoting"
 
         assert types.shape({
           types.partial {

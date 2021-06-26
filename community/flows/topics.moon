@@ -89,7 +89,7 @@ class TopicsFlow extends Flow
       locked = new_topic.locked
 
     if @category\topic_needs_approval @current_user, {
-      :title
+      title: new_topic.title
       body_format: new_topic.body_format
       :body
     }

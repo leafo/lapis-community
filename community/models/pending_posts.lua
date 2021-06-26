@@ -36,6 +36,7 @@ do
       local created_topic = false
       local topic
       if self:is_topic() then
+        local category = self:get_category()
         if not (category) then
           return nil, "could not create topic for pending post due to lack of category"
         end
