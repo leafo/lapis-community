@@ -83,11 +83,18 @@ class CommunityUsers extends Model
       -- TODO: this should not count topics, but it currently does
       -- or we need to work out something to make this work
       posts_count: db.raw "
-        (select count(*) from #{db.escape_identifier Posts\table_name!}
+        (select count(*) from #{db.escape_identifier Posts\table_name!} as posts
           where user_id = #{id_field}
-          and not deleted and moderation_log_id is null)
+          and not deleted and moderation_log_id is null
+
+          and (case when topic_id is not null and post_number = 1 and depth = 1
+            then exists(select 1 from #{db.escape_identifier Topics\table_name!} as topics where topics.id = posts.topic_id and topics.permanent)
+            else true
+          end)
+          )
       "
 
+      -- TODO: should this count "uncounted" votes?
       votes_count: db.raw "
         (select count(*) from #{db.escape_identifier Votes\table_name!}
           where user_id = #{id_field})
@@ -96,7 +103,7 @@ class CommunityUsers extends Model
       topics_count: db.raw "
         (select count(*) from #{db.escape_identifier Topics\table_name!}
           where user_id = #{id_field}
-          and not deleted)
+          and not deleted and not permanent)
       "
     }, ...
 
@@ -222,12 +229,6 @@ class CommunityUsers extends Model
     for post in pager\each_item!
       if post\delete "hard"
         count += 1
-
-    -- TODO: this should no longer be necessary since counter adjustment is fixed
-    @update {
-      posts_count: 0
-      topics_count: 0
-    }
 
     count
 

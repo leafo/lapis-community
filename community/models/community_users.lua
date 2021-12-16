@@ -129,10 +129,6 @@ do
           count = count + 1
         end
       end
-      self:update({
-        posts_count = 0,
-        topics_count = 0
-      })
       return count
     end,
     posting_rate = function(self, minutes)
@@ -270,9 +266,9 @@ do
     end
     local id_field = tostring(db.escape_identifier(self:table_name())) .. ".user_id"
     return db.update(self:table_name(), {
-      posts_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Posts:table_name())) .. "\n          where user_id = " .. tostring(id_field) .. "\n          and not deleted and moderation_log_id is null)\n      "),
+      posts_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Posts:table_name())) .. " as posts\n          where user_id = " .. tostring(id_field) .. "\n          and not deleted and moderation_log_id is null\n\n          and (case when topic_id is not null and post_number = 1 and depth = 1\n            then exists(select 1 from " .. tostring(db.escape_identifier(Topics:table_name())) .. " as topics where topics.id = posts.topic_id and topics.permanent)\n            else true\n          end)\n          )\n      "),
       votes_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Votes:table_name())) .. "\n          where user_id = " .. tostring(id_field) .. ")\n      "),
-      topics_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n          where user_id = " .. tostring(id_field) .. "\n          and not deleted)\n      ")
+      topics_count = db.raw("\n        (select count(*) from " .. tostring(db.escape_identifier(Topics:table_name())) .. "\n          where user_id = " .. tostring(id_field) .. "\n          and not deleted and not permanent)\n      ")
     }, ...)
   end
   self.find_users_by_name = function(self, names)
