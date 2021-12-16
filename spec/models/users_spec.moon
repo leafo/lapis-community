@@ -23,37 +23,77 @@ describe "models.users", ->
   describe "purge", ->
     import Posts, Votes from require "spec.community_models"
 
-    it "purges posts with no posts", ->
-      user = factory.Users!
-      cu = CommunityUsers\for_user user.id
-      cu\purge_posts!
+    it "purges posts from user with no posts", ->
+      some_post = factory.Posts!
 
-    it "purges votes with no posts", ->
       user = factory.Users!
       cu = CommunityUsers\for_user user.id
-      cu\purge_votes!
+      assert.same 0, (cu\purge_posts!)
+
+      -- does not delete unrelated post
+      assert_posts = types.assert types.shape {
+        types.partial {
+          id: some_post.id
+        }
+      }
+
+      assert_posts Posts\select!
+
+
+    it "purges votes from user with no votes", ->
+      some_vote = factory.Votes!
+
+      user = factory.Users!
+      cu = CommunityUsers\for_user user.id
+      assert.same 0, (cu\purge_votes!)
+
+      -- does not delete unrelated vote
+      assert_votes = types.assert types.shape {
+        types.partial {
+          user_id: some_vote.user_id
+          object_type: some_vote.object_type
+          object_id: some_vote.object_id
+        }
+      }
+
+      assert_votes Votes\select!
 
     it "purges posts", ->
       user = factory.Users!
 
       cu = CommunityUsers\for_user user.id
 
-      topic = factory.Topics!
+      topic = factory.Topics permanent: true
 
       factory.Posts user_id: user.id, topic_id: topic.id
       factory.Posts user_id: user.id
+
       other_post = factory.Posts!
+      factory.Posts user_id: user.id, topic_id: assert other_post.topic_id
 
       cu\recount!
-      assert.same 2, cu.posts_count
-      assert.same 1, cu.topics_count
+      assert.same 2, cu.posts_count, "posts_count"
+      assert.same 1, cu.topics_count, "topic topics_count"
 
-      cu\purge_posts!
+      assert.same 3, (cu\purge_posts!)
 
-      assert.same 1, Posts\count!
+      -- TODO: we should also assert the remaining topics
+      assert_posts = types.assert types.shape {
+        types.partial {
+          id: other_post.id
+        }
+      }
 
-      assert.same 0, cu.posts_count
-      assert.same 0, cu.topics_count
+      assert_posts Posts\select!
+
+      cu\refresh!
+
+      assert_user = types.assert types.partial {
+        topics_count: types.annotate 0
+        posts_count: types.annotate 0
+      }
+
+      assert_user cu
 
     it "purges votes", ->
       user = factory.Users!
@@ -242,14 +282,21 @@ describe "models.users", ->
         topics_count: 0
       }
 
-      factory.Posts user_id: cu.user_id
-      factory.Topics user_id: cu.user_id
+      factory.Posts user_id: cu.user_id -- this is a topic post on a non pemanent topic
+      factory.Topics user_id: cu.user_id -- this is an empty topic with no post
+
+      perm_topic = factory.Topics permanent: true, user_id: cu.user_id -- pemanent topic should not increment topics
+      factory.Posts topic_id: perm_topic.id, user_id: cu.user_id -- first post in perm topic
+
+      other_post = factory.Posts!
+      factory.Posts topic_id: other_post.topic_id, user_id: cu.user_id -- this is a post that is not topic post
+
 
       CommunityUsers\recount user_id: cu.user_id
       cu\refresh!
 
       assert_counts cu, {
-        posts_count: 1
+        posts_count: 2
         votes_count: 0
         topics_count: 2
       }
