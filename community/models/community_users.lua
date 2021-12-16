@@ -78,6 +78,22 @@ do
     count_vote_for = function(self, object)
       return object.user_id ~= self.user_id
     end,
+    purge_reports = function(self)
+      local PostReports
+      PostReports = require("community.models").PostReports
+      local OrderedPaginator
+      OrderedPaginator = require("lapis.db.pagination").OrderedPaginator
+      local count = 0
+      local pager = OrderedPaginator(PostReports, "id", "where user_id = ?", self.user_id, {
+        per_page = 1000
+      })
+      for report in pager:each_item() do
+        if report:delete() then
+          count = count + 1
+        end
+      end
+      return count
+    end,
     purge_votes = function(self)
       local Votes
       Votes = require("community.models").Votes

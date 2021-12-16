@@ -171,6 +171,25 @@ class CommunityUsers extends Model
   count_vote_for: (object) =>
     object.user_id != @user_id
 
+  -- this purges the reports the user has *created*, not received
+  purge_reports: =>
+    import PostReports from require "community.models"
+
+    import OrderedPaginator from require "lapis.db.pagination"
+
+    count = 0
+
+    -- TODO: there is no index on this query
+    pager = OrderedPaginator PostReports, "id", "where user_id = ?", @user_id, {
+      per_page: 1000
+    }
+
+    for report in pager\each_item!
+      if report\delete!
+        count += 1
+
+    count
+
   purge_votes: =>
     import Votes from require "community.models"
 

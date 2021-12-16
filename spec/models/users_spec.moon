@@ -4,6 +4,8 @@ db = require "lapis.db"
 
 factory = require "spec.factory"
 
+import types from require "tableshape"
+
 describe "models.users", ->
   use_test_env!
 
@@ -70,6 +72,46 @@ describe "models.users", ->
       cu\refresh!
       assert.same 0, cu.votes_count, "community user votes_count after purge"
       assert.same 1, Votes\count!, "total votes count after purge"
+
+    describe "purge reports", ->
+      import PostReports from require "spec.community_models"
+
+      it "with no reports", ->
+        report = factory.PostReports!
+        other_cu = factory.CommunityUsers!
+
+        count = other_cu\purge_reports!
+        assert.same 0, count
+
+        assert_reports = types.assert types.shape {
+          types.partial {
+            id: report.id
+            user_id: report.user_id
+            body: report.body
+          }
+        }
+
+        assert_reports PostReports\select!
+
+      it "with no reports", ->
+        cu = factory.CommunityUsers!
+
+        report1 = factory.PostReports user_id: cu.user_id
+        report2 = factory.PostReports user_id: cu.user_id
+        report3 = factory.PostReports!
+
+        count = cu\purge_reports!
+        assert.same 2, count
+
+        assert_reports = types.assert types.shape {
+          types.partial {
+            id: report3.id
+            user_id: report3.user_id
+            body: report3.body
+          }
+        }
+
+        assert_reports PostReports\select!
 
   describe "posting rate", ->
     import ActivityLogs from require "spec.community_models"
