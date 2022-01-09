@@ -95,7 +95,7 @@ class PendingPosts extends Model
     post = Posts\create {
       topic_id: topic.id
       user_id: @user_id
-      parent_post: @parent_post
+      parent_post: @get_parent_post!
       body: @body
       body_format: @body_format
       created_at: @created_at
