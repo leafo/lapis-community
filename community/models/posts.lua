@@ -785,7 +785,7 @@ do
     end
     return body
   end
-  self.create = function(self, opts)
+  self.create = function(self, opts, ...)
     if opts == nil then
       opts = { }
     end
@@ -823,7 +823,7 @@ do
     if opts.body_format then
       opts.body_format = self.body_formats:for_db(opts.body_format)
     end
-    return _class_0.__parent.create(self, opts, {
+    return _class_0.__parent.create(self, opts, ... or {
       returning = {
         "status"
       }

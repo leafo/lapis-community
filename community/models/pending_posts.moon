@@ -63,7 +63,10 @@ class PendingPosts extends Model
   is_topic: =>
     not @topic_id
 
-  -- convert to real post
+  -- Convert pending to real post, and delete the pending post
+  -- note this does not check if post is currently allowed to be added to
+  -- topic (because it's deleted, locked, etc.) If desired that check needs to
+  -- be done before calling promote
   promote: (req_or_flow=nil) =>
     import Posts, Topics, CommunityUsers from require "community.models"
 
@@ -99,7 +102,7 @@ class PendingPosts extends Model
       body: @body
       body_format: @body_format
       created_at: @created_at
-    }
+    }, returning: "*"
 
     topic\increment_from_post post, category_order: false
 

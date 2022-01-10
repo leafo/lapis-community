@@ -170,7 +170,7 @@ class Posts extends Model
 
     body
 
-  @create: (opts={}) =>
+  @create: (opts={}, ...) =>
     assert opts.topic_id, "missing topic id"
     assert opts.user_id, "missing user id"
     assert opts.body, "missing body"
@@ -204,7 +204,7 @@ class Posts extends Model
     opts.body_format = if opts.body_format
       @body_formats\for_db opts.body_format
 
-    super opts, returning: {"status"}
+    super opts, ... or returning: {"status"}
 
   @preload_mentioned_users: (posts) =>
     import CommunityUsers from require "community.models"

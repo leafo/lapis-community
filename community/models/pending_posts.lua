@@ -65,6 +65,8 @@ do
         body = self.body,
         body_format = self.body_format,
         created_at = self.created_at
+      }, {
+        returning = "*"
       })
       topic:increment_from_post(post, {
         category_order = false

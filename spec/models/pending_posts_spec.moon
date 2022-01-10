@@ -43,12 +43,27 @@ describe "models.pending_posts", ->
     other_topic = factory.Topics category_id: category.id
     category\increment_from_topic other_topic
 
-    pending = factory.PendingPosts topic_id: topic.id
+    pending = factory.PendingPosts {
+      created_at: "2006-1-5"
+      topic_id: topic.id
+      body: "Hello world!"
+      body_format: "markdown"
+    }
 
     post = pending\promote!
 
     assert.same 1, Posts\count!
     assert.same 0, PendingPosts\count!
+
+    assert_promoted_post = types.assert types.partial {
+      parent_post_id: types.nil
+      topic_id: topic.id
+      body: "Hello world!"
+      body_format: Posts.body_formats.markdown
+      created_at: "2006-01-05 00:00:00"
+    }
+
+    assert_promoted_post post
 
     topic\refresh!
     assert.same post.id, topic.last_post_id
