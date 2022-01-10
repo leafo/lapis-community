@@ -365,10 +365,7 @@ class Posts extends Model
     if not was_soft_deleted and not @is_moderation_event!
       t = deleted_topic or @get_topic!
 
-      topic_post = @is_topic_post! and not (t and t.permanent)
-      unless topic_post
-        CommunityUsers\increment @user_id, "posts_count", -1
-
+      CommunityUsers\increment @user_id, "posts_count", -1
       CategoryPostLogs\clear_post @
 
     orphans = @@select "where parent_post_id = ?", @id

@@ -301,6 +301,8 @@ class Topics extends Model
 
     true
 
+  -- soft delete does not delete all the posts in the topic, so the post
+  -- counters of the users are not incremented
   soft_delete: =>
     import soft_delete from require "community.helpers.models"
 

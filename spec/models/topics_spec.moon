@@ -398,7 +398,7 @@ describe "models.topics", ->
       cu\increment_from_post post, true
 
       cu\refresh!
-      assert.same 0, cu.posts_count, "user posts_count before"
+      assert.same 1, cu.posts_count, "user posts_count before"
       assert.same 1, cu.topics_count, "user topics count before"
 
       category\refresh!
@@ -443,7 +443,7 @@ describe "models.topics", ->
       cu = CommunityUsers\for_user user
 
       cu\increment_from_post post, true
-      assert.same 0, cu.posts_count, "user posts_count before"
+      assert.same 1, cu.posts_count, "user posts_count before"
       assert.same 1, cu.topics_count, "user topics count before"
 
       category\refresh!
@@ -453,7 +453,7 @@ describe "models.topics", ->
       topic\soft_delete!
 
       cu\refresh!
-      assert.same 0, cu.posts_count, "user posts_count after soft"
+      assert.same 1, cu.posts_count, "user posts_count after soft"
       assert.same 0, cu.topics_count, "user topics count after soft"
 
       category\refresh!

@@ -61,7 +61,7 @@ do
       local post = Posts:create({
         topic_id = topic.id,
         user_id = self.user_id,
-        parent_post = self.parent_post,
+        parent_post = self:get_parent_post(),
         body = self.body,
         body_format = self.body_format,
         created_at = self.created_at

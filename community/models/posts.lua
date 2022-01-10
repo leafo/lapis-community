@@ -202,10 +202,7 @@ do
       end
       if not was_soft_deleted and not self:is_moderation_event() then
         local t = deleted_topic or self:get_topic()
-        local topic_post = self:is_topic_post() and not (t and t.permanent)
-        if not (topic_post) then
-          CommunityUsers:increment(self.user_id, "posts_count", -1)
-        end
+        CommunityUsers:increment(self.user_id, "posts_count", -1)
         CategoryPostLogs:clear_post(self)
       end
       local orphans = self.__class:select("where parent_post_id = ?", self.id)

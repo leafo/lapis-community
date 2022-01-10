@@ -17,6 +17,7 @@ filter_update = (model, update) ->
   update
 
 -- returns "update" or "insert" depending on action, the loaded model
+-- TODO: this is deprecated for insert_on_conflict_update
 upsert = (model, insert, update, cond) ->
   table_name = db.escape_identifier model\table_name!
 

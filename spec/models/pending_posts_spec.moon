@@ -16,10 +16,22 @@ describe "models.pending_posts", ->
 
   it "promotes pending post", ->
     pending = factory.PendingPosts!
-    pending\promote!
+    post = pending\promote!
 
     assert.same 1, Posts\count!
     assert.same 0, PendingPosts\count!
+
+
+    user = post\get_user!
+    cu = CommunityUsers\for_user user
+
+    assert_cu = types.assert types.partial {
+      posts_count: 1
+      topics_count: 0
+    }
+
+    assert_cu cu
+
 
   it "promotes pending post with topic and category being updated", ->
     category = factory.Categories!
@@ -45,20 +57,33 @@ describe "models.pending_posts", ->
 
     cu = CommunityUsers\for_user pending\get_user!
 
-    assert types.partial({
-      topics_count: 0
+    assert_cu = types.assert types.partial {
       posts_count: 1
-    }) cu
+      topics_count: 0
+    }
+
+    assert_cu cu
 
   it "promotes pending post with parent", ->
     post = factory.Posts!
     topic = post\get_topic!
 
-    pending = factory.PendingPosts parent_post_id: post.id, topic_id: topic.id
-    pending\promote!
+    pending = factory.PendingPosts {
+      parent_post_id: post.id
+      topic_id: topic.id
+    }
+
+    promoted = pending\promote!
 
     assert.same 2, Posts\count!
     assert.same 0, PendingPosts\count!
+
+    assert_promoted_post = types.assert types.partial {
+      parent_post_id: post.id
+      topic_id: topic.id
+    }
+
+    assert_promoted_post promoted
 
   it "promotes a pending topic", ->
     category = factory.Categories!
@@ -89,7 +114,7 @@ describe "models.pending_posts", ->
 
     assert types.partial({
       topics_count: 1
-      posts_count: 0
+      posts_count: 1
     }) cu
 
 

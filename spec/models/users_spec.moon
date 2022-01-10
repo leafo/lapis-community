@@ -72,10 +72,10 @@ describe "models.users", ->
       factory.Posts user_id: user.id, topic_id: assert other_post.topic_id
 
       cu\recount!
-      assert.same 2, cu.posts_count, "posts_count"
+      assert.same 3, cu.posts_count, "posts_count"
       assert.same 1, cu.topics_count, "topic topics_count"
 
-      assert.same 3, (cu\purge_posts!)
+      assert.same 3, (cu\purge_posts!), "total purged posts"
 
       -- TODO: we should also assert the remaining topics
       assert_posts = types.assert types.shape {
@@ -291,12 +291,14 @@ describe "models.users", ->
       other_post = factory.Posts!
       factory.Posts topic_id: other_post.topic_id, user_id: cu.user_id -- this is a post that is not topic post
 
+      -- deleted post does not count
+      factory.Posts topic_id: other_post.topic_id, user_id: cu.user_id, deleted: true
 
       CommunityUsers\recount user_id: cu.user_id
       cu\refresh!
 
       assert_counts cu, {
-        posts_count: 2
+        posts_count: 3
         votes_count: 0
         topics_count: 2
       }

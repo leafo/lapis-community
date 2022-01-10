@@ -85,13 +85,7 @@ class CommunityUsers extends Model
       posts_count: db.raw "
         (select count(*) from #{db.escape_identifier Posts\table_name!} as posts
           where user_id = #{id_field}
-          and not deleted and moderation_log_id is null
-
-          and (case when topic_id is not null and post_number = 1 and depth = 1
-            then exists(select 1 from #{db.escape_identifier Topics\table_name!} as topics where topics.id = posts.topic_id and topics.permanent)
-            else true
-          end)
-          )
+          and not deleted and moderation_log_id is null)
       "
 
       -- TODO: should this count "uncounted" votes?
@@ -162,7 +156,7 @@ class CommunityUsers extends Model
 
   increment_from_post: (post, created_topic=false) =>
     @update {
-      posts_count: if not created_topic then db.raw "posts_count + 1"
+      posts_count: db.raw "posts_count + 1"
       topics_count: if created_topic then db.raw "topics_count + 1"
       -- start over if it's been longer than interval since the last recent post
       recent_posts_count: db.raw db.interpolate_query(

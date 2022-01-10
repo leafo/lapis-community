@@ -147,7 +147,7 @@ describe "posting flow", ->
 
       assert (types.shape {
         topics_count: 1
-        posts_count: 0
+        posts_count: 1
       }, open: true) cu
 
       tps = TopicParticipants\select "where topic_id = ?", topic.id
