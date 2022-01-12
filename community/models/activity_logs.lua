@@ -111,6 +111,11 @@ do
       db_json = require("community.helpers.models").db_json
       opts.data = db_json(opts.data)
     end
+    if not (opts.ip) then
+      local CommunityUsers
+      CommunityUsers = require("community.models").CommunityUsers
+      opts.ip = CommunityUsers:current_ip_address()
+    end
     return _class_0.__parent.create(self, opts)
   end
   if _parent_0.__inherited then

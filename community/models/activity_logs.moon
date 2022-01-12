@@ -76,6 +76,10 @@ class ActivityLogs extends Model
       import db_json from require "community.helpers.models"
       opts.data = db_json opts.data
 
+    unless opts.ip
+      import CommunityUsers from require "community.models"
+      opts.ip = CommunityUsers\current_ip_address!
+
     super opts
 
   action_name: =>
