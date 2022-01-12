@@ -43,8 +43,14 @@ class PendingPosts extends Model
     spam: 3
   }
 
+  @reasons: enum {
+    manual: 1
+  }
+
   @create: (opts={}) =>
     opts.status = @statuses\for_db opts.status or "pending"
+    opts.reason = @reasons\for_db opts.reason or "manual"
+
     import Posts from require "community.models"
     opts.body_format = Posts.body_formats\for_db opts.body_format or 1
 

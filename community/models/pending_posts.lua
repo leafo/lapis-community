@@ -135,11 +135,15 @@ do
     deleted = 2,
     spam = 3
   })
+  self.reasons = enum({
+    manual = 1
+  })
   self.create = function(self, opts)
     if opts == nil then
       opts = { }
     end
     opts.status = self.statuses:for_db(opts.status or "pending")
+    opts.reason = self.reasons:for_db(opts.reason or "manual")
     local Posts
     Posts = require("community.models").Posts
     opts.body_format = Posts.body_formats:for_db(opts.body_format or 1)
