@@ -185,6 +185,9 @@ do
   local self = _class_0
   self.timestamp = true
   self.primary_key = "user_id"
+  self.current_ip_address = function(self)
+    return ngx and ngx.var.remote_addr
+  end
   self.posting_permissions = enum({
     default = 1,
     only_own = 2,

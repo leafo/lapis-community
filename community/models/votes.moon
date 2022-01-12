@@ -22,9 +22,6 @@ class Votes extends Model
   @timestamp: true
   @primary_key: {"user_id", "object_type", "object_id"}
 
-  @current_ip_address: =>
-    ngx and ngx.var.remote_addr
-
   @relations: {
     {"user", belongs_to: "Users"}
 
@@ -56,7 +53,10 @@ class Votes extends Model
       opts.object = nil
 
     opts.object_type = @object_types\for_db opts.object_type
-    opts.ip or= @current_ip_address!
+
+    unless opts.ip
+      import CommunityUsers from require "community.models"
+      opts.ip = CommunityUsers\current_ip_address!
 
     super opts
 
@@ -99,7 +99,7 @@ class Votes extends Model
       object_id: object.id
       user_id: user.id
       positive: not not positive
-      ip: @current_ip_address!
+      ip: CommunityUsers\current_ip_address!
       :counted
       :score
     }

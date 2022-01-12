@@ -122,9 +122,6 @@ do
     "object_type",
     "object_id"
   }
-  self.current_ip_address = function(self)
-    return ngx and ngx.var.remote_addr
-  end
   self.relations = {
     {
       "user",
@@ -177,7 +174,11 @@ do
       opts.object = nil
     end
     opts.object_type = self.object_types:for_db(opts.object_type)
-    opts.ip = opts.ip or self:current_ip_address()
+    if not (opts.ip) then
+      local CommunityUsers
+      CommunityUsers = require("community.models").CommunityUsers
+      opts.ip = CommunityUsers:current_ip_address()
+    end
     return _class_0.__parent.create(self, opts)
   end
   self.vote = function(self, object, user, positive, opts)
@@ -216,7 +217,7 @@ do
       object_id = object.id,
       user_id = user.id,
       positive = not not positive,
-      ip = self:current_ip_address(),
+      ip = CommunityUsers:current_ip_address(),
       counted = counted,
       score = score
     })

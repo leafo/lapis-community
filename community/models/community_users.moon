@@ -26,6 +26,10 @@ class CommunityUsers extends Model
   @timestamp: true
   @primary_key: "user_id"
 
+  -- this method is used by any model that wants to know the current IP.
+  @current_ip_address: =>
+    ngx and ngx.var.remote_addr
+
   @posting_permissions: enum {
     default: 1
     only_own: 2
