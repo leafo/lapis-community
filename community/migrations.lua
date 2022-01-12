@@ -1254,5 +1254,12 @@ return {
   end,
   [41] = function(self)
     return add_column(T("pending_posts"), "data", "jsonb")
+  end,
+  [42] = function(self)
+    add_column(T("pending_posts"), "reason", enum({
+      default = 1
+    }))
+    db.query("delete from " .. tostring(db.escape_identifier(T("activity_logs"))) .. " where object_type = ? and action = ?", 3, 3)
+    return add_column(T("activity_logs"), "ip", "inet")
   end
 }

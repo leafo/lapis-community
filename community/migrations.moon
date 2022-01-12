@@ -672,6 +672,12 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
 
   [41]: =>
     add_column T"pending_posts", "data", "jsonb"
+
+  [42]: =>
+    add_column T"pending_posts", "reason", enum default: 1
+    -- delete all the legacy pending post events
+    db.query "delete from #{db.escape_identifier T"activity_logs"} where object_type = ? and action = ?", 3, 3
+    add_column T"activity_logs", "ip", "inet"
 }
 
 
