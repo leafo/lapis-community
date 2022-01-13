@@ -50,7 +50,6 @@ class ActivityLogs extends Model
 
   @relations: {
     {"user", belongs_to: "Users"}
-    {"category", belongs_to: "Categories"}
 
     {"object", polymorphic_belongs_to: {
       [1]: {"topic", "Topics"}
