@@ -3,7 +3,7 @@ schema = require "lapis.db.schema"
 
 config = require("lapis.config").get!
 
-import create_table, create_index, drop_table, add_column, drop_index from schema
+import create_table, create_index, drop_table, add_column, drop_column, drop_index from schema
 {prefix_table: T} = require "community.model"
 
 {
@@ -678,6 +678,7 @@ import create_table, create_index, drop_table, add_column, drop_index from schem
     -- delete all the legacy pending post events
     db.query "delete from #{db.escape_identifier T"activity_logs"} where object_type = ? and action = ?", 3, 3
     add_column T"activity_logs", "ip", "inet"
+    drop_column T"activity_logs", "publishable"
 }
 
 

@@ -1,8 +1,8 @@
 local db = require("lapis.db.postgres")
 local schema = require("lapis.db.schema")
 local config = require("lapis.config").get()
-local create_table, create_index, drop_table, add_column, drop_index
-create_table, create_index, drop_table, add_column, drop_index = schema.create_table, schema.create_index, schema.drop_table, schema.add_column, schema.drop_index
+local create_table, create_index, drop_table, add_column, drop_column, drop_index
+create_table, create_index, drop_table, add_column, drop_column, drop_index = schema.create_table, schema.create_index, schema.drop_table, schema.add_column, schema.drop_column, schema.drop_index
 local T
 T = require("community.model").prefix_table
 local serial, varchar, text, time, integer, foreign_key, boolean, numeric, double, enum
@@ -1260,6 +1260,7 @@ return {
       default = 1
     }))
     db.query("delete from " .. tostring(db.escape_identifier(T("activity_logs"))) .. " where object_type = ? and action = ?", 3, 3)
-    return add_column(T("activity_logs"), "ip", "inet")
+    add_column(T("activity_logs"), "ip", "inet")
+    return drop_column(T("activity_logs"), "publishable")
   end
 }
