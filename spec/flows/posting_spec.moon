@@ -168,7 +168,6 @@ describe "posting flow", ->
           object_id: topic.id
           object_type: ActivityLogs.object_types.topic
           action: ActivityLogs.actions.topic.create
-          publishable: false
         }, open: true
       }) logs
 
@@ -369,6 +368,7 @@ describe "posting flow", ->
         assert types.shape({
           types.partial {
             status: PendingPosts.statuses.pending
+            reason: PendingPosts.statuses.manual
             category_id: category.id
             topic_id: types.nil
             parent_post_id: types.nil
@@ -381,6 +381,20 @@ describe "posting flow", ->
             }
           }
         }) pending_posts
+
+        assert types.shape({
+          types.partial {
+            object_type: ActivityLogs.object_types.pending_post
+            object_id: pending_posts[1].id
+            user_id: current_user.id
+            action: ActivityLogs.actions.pending_post.create_topic
+            data: types.shape {
+              category_id: category.id
+            }
+          }
+        }) ActivityLogs\select!
+
+        assert pending_posts[1]\get_activity_log_create!
 
         assert pending_posts[1]\promote!
 
@@ -499,7 +513,6 @@ describe "posting flow", ->
           object_id: post.id
           object_type: ActivityLogs.object_types.posts
           action: ActivityLogs.actions.post.create
-          publishable: false
         }
       }) logs
 
@@ -713,6 +726,7 @@ describe "posting flow", ->
           body: "Hello from my pending post"
           body_format: Posts.body_formats.html
           status: PendingPosts.statuses.pending
+          reason: PendingPosts.reasons.manual
 
           created_at: types.string
           updated_at: types.string
@@ -725,6 +739,21 @@ describe "posting flow", ->
           root_posts_count: 0
           last_post_id: types.nil
         }) topic
+
+        assert types.shape({
+          types.partial {
+            object_id: pending_post.id
+            object_type: ActivityLogs.object_types.pending_post
+            action: ActivityLogs.actions.pending_post.create_post
+            data: types.shape {
+              topic_id: pending_post.topic_id
+              category_id: pending_post.category_id
+            }
+          }
+        }), ActivityLogs\select!
+
+        assert pending_post\get_activity_log_create!
+
 
       it "creates pending post body_format", ->
         pending_post = new_pending_post {
@@ -774,7 +803,6 @@ describe "posting flow", ->
           object_id: topic.id
           object_type: ActivityLogs.object_types.topic
           action: ActivityLogs.actions.topic.delete
-          publishable: false
         }, open: true
       }) logs
 
@@ -822,7 +850,6 @@ describe "posting flow", ->
           object_id: post.id
           object_type: ActivityLogs.object_types.post
           action: ActivityLogs.actions.post.edit
-          publishable: false
         }, open: true
       }) logs
 
