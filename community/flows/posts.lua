@@ -86,6 +86,16 @@ do
           body_format = new_post.body_format,
           parent_post_id = parent_post and parent_post.id
         })
+        ActivityLogs:create({
+          user_id = self.current_user.id,
+          object = self.pending_post,
+          action = "create_post",
+          data = {
+            topic_id = self.topic.id,
+            category_id = self.topic.category_id,
+            parent_post_id = parent_post and parent_post.id
+          }
+        })
       else
         self.post = Posts:create({
           user_id = self.current_user.id,

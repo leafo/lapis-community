@@ -128,6 +128,18 @@ do
     {
       "category",
       belongs_to = "Categories"
+    },
+    {
+      "activity_log_create",
+      has_one = "ActivityLogs",
+      key = "object_id",
+      where = {
+        object_type = 4,
+        action = db.list({
+          1,
+          2
+        })
+      }
     }
   }
   self.statuses = enum({

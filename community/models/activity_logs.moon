@@ -39,7 +39,12 @@ class ActivityLogs extends Model
     category: enum {
       create: 1
       edit: 2
-      create_pending_topic: 3
+    }
+
+    pending_post: enum {
+      create_post: 1
+      create_topic: 2
+      delete: 3
     }
   }
 
@@ -51,6 +56,7 @@ class ActivityLogs extends Model
       [1]: {"topic", "Topics"}
       [2]: {"post", "Posts"}
       [3]: {"category", "Categories"}
+      [4]: {"pending_post", "PendingPosts"}
     }}
   }
 

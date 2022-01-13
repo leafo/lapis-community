@@ -70,6 +70,18 @@ class PostsFlow extends Flow
         body_format: new_post.body_format
         parent_post_id: parent_post and parent_post.id
       }
+
+      ActivityLogs\create {
+        user_id: @current_user.id
+        object: @pending_post
+        action: "create_post"
+        data: {
+          topic_id: @topic.id
+          category_id: @topic.category_id
+          parent_post_id: parent_post and parent_post.id
+        }
+      }
+
     else
       @post = Posts\create {
         user_id: @current_user.id

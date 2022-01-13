@@ -56,8 +56,12 @@ do
     }),
     category = enum({
       create = 1,
-      edit = 2,
-      create_pending_topic = 3
+      edit = 2
+    }),
+    pending_post = enum({
+      create_post = 1,
+      create_topic = 2,
+      delete = 3
     })
   }
   self.relations = {
@@ -83,6 +87,10 @@ do
         [3] = {
           "category",
           "Categories"
+        },
+        [4] = {
+          "pending_post",
+          "PendingPosts"
         }
       }
     }

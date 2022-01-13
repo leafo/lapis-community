@@ -109,13 +109,12 @@ class TopicsFlow extends Flow
 
       ActivityLogs\create {
         user_id: @current_user.id
-        object: @category
-        action: "create_pending_topic"
+        object: @pending_post
+        action: "create_topic"
         data: {
-          pending_post_id: @pending_post.id
+          category_id: @category.id
         }
       }
-
 
     else
       @topic = Topics\create {

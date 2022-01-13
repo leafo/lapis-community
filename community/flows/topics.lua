@@ -149,10 +149,10 @@ do
         })
         ActivityLogs:create({
           user_id = self.current_user.id,
-          object = self.category,
-          action = "create_pending_topic",
+          object = self.pending_post,
+          action = "create_topic",
           data = {
-            pending_post_id = self.pending_post.id
+            category_id = self.category.id
           }
         })
       else

@@ -35,6 +35,14 @@ class PendingPosts extends Model
     {"user", belongs_to: "Users"}
     {"parent_post", belongs_to: "Posts"}
     {"category", belongs_to: "Categories"}
+
+    {"activity_log_create"
+      has_one: "ActivityLogs"
+      key: "object_id", where: {
+        object_type: 4
+        action: db.list { 1, 2 } -- create_post, create_topic
+      }
+    }
   }
 
   @statuses: enum {
