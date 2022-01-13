@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.3
--- Dumped by pg_dump version 13.3
+-- Dumped from database version 13.4
+-- Dumped by pg_dump version 13.4
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -29,11 +29,11 @@ CREATE TABLE public.community_activity_logs (
     user_id integer NOT NULL,
     object_type integer DEFAULT 0 NOT NULL,
     object_id integer NOT NULL,
-    publishable boolean DEFAULT false NOT NULL,
     action integer DEFAULT 0 NOT NULL,
     data jsonb,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    ip inet
 );
 
 
@@ -376,7 +376,8 @@ CREATE TABLE public.community_pending_posts (
     updated_at timestamp without time zone NOT NULL,
     title character varying(255),
     body_format smallint DEFAULT 1 NOT NULL,
-    data jsonb
+    data jsonb,
+    reason smallint DEFAULT 1 NOT NULL
 );
 
 
@@ -1336,8 +1337,8 @@ CREATE UNIQUE INDEX users_lower_username_idx ON public.users USING btree (lower(
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.3
--- Dumped by pg_dump version 13.3
+-- Dumped from database version 13.4
+-- Dumped by pg_dump version 13.4
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1396,6 +1397,7 @@ community_38
 community_39
 community_40
 community_41
+community_42
 \.
 
 
