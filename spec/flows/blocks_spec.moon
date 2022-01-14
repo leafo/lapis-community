@@ -1,11 +1,8 @@
-import use_test_env from require "lapis.spec"
 import in_request from require "spec.flow_helpers"
 
 factory = require "spec.factory"
 
 describe "blocks", ->
-  use_test_env!
-
   import Users from require "spec.models"
   import Blocks from require "spec.community_models"
 

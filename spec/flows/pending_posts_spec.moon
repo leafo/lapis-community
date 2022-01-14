@@ -2,8 +2,6 @@ import in_request from require "spec.flow_helpers"
 
 factory = require "spec.factory"
 
-import types from require "tableshape"
-
 describe "reports", ->
   local current_user
 

@@ -1,6 +1,4 @@
 -- TODO: move this to respetive category/topic specs
-import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
 import in_request from require "spec.flow_helpers"
 
 factory = require "spec.factory"
@@ -17,8 +15,6 @@ import Users from require "models"
 import types from require "tableshape"
 
 describe "posting flow", ->
-  use_test_env!
-
   local current_user
 
   import Users from require "spec.models"

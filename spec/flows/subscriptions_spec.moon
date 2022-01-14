@@ -1,4 +1,3 @@
-import use_test_env from require "lapis.spec"
 import in_request from require "spec.flow_helpers"
 
 factory = require "spec.factory"
@@ -6,8 +5,6 @@ factory = require "spec.factory"
 import types from require "tableshape"
 
 describe "flows.bookmarks", ->
-  use_test_env!
-
   import Users from require "spec.models"
   import Subscriptions, Categories, Topics from require "spec.community_models"
 

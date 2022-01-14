@@ -1,10 +1,6 @@
-import use_test_env from require "lapis.spec"
-
 factory = require "spec.factory"
 
 describe "models.moderation_logs", ->
-  use_test_env!
-
   import Users from require "spec.models"
 
   import

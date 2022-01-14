@@ -1,10 +1,6 @@
-import use_test_env from require "lapis.spec"
-
 factory = require "spec.factory"
 
 describe "models.category_groups", ->
-  use_test_env!
-
   import Users from require "spec.models"
   import Categories, CategoryGroups,
     CategoryGroupCategories from require "spec.community_models"

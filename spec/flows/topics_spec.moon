@@ -1,4 +1,3 @@
-import use_test_env from require "lapis.spec"
 import in_request from require "spec.flow_helpers"
 
 import types from require "tableshape"
@@ -6,8 +5,6 @@ import types from require "tableshape"
 factory = require "spec.factory"
 
 describe "topics", ->
-  use_test_env!
-
   local current_user, topic
 
   import Users from require "spec.models"

@@ -1,4 +1,3 @@
-import use_test_env from require "lapis.spec"
 import in_request from require "spec.flow_helpers"
 
 factory = require "spec.factory"
@@ -6,13 +5,9 @@ factory = require "spec.factory"
 import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
 
-import Users from require "models"
-
 import types from require "tableshape"
 
 describe "browsing flow", ->
-  use_test_env!
-
   import Users from require "spec.models"
   import Categories, Topics, Posts, Votes,
     UserCategoryLastSeens, UserTopicLastSeens from require "spec.community_models"

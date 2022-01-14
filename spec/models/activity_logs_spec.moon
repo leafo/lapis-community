@@ -1,11 +1,6 @@
-import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
 factory = require "spec.factory"
 
 describe "models.activity_logs", ->
-  use_test_env!
-
   import Users from require "spec.models"
   import Categories, Topics, Posts, ActivityLogs from require "spec.community_models"
 

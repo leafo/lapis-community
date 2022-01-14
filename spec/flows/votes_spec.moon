@@ -1,11 +1,8 @@
-import use_test_env from require "lapis.spec"
 import in_request from require "spec.flow_helpers"
 
 factory = require "spec.factory"
 
 describe "votes flow", ->
-  use_test_env!
-
   local current_user
 
   import Users from require "spec.models"

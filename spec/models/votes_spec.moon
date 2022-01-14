@@ -1,10 +1,6 @@
-import use_test_env from require "lapis.spec"
-
 factory = require "spec.factory"
 
 describe "models.votes", ->
-  use_test_env!
-
   import Users from require "spec.models"
   import Votes, Posts, Topics, CommunityUsers from require "spec.community_models"
 

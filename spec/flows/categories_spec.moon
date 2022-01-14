@@ -1,4 +1,3 @@
-import use_test_env from require "lapis.spec"
 import in_request, flow from require "spec.flow_helpers"
 
 db = require "lapis.db"
@@ -9,8 +8,6 @@ import capture_errors_json from require "lapis.application"
 import types from require "tableshape"
 
 describe "categories", ->
-  use_test_env!
-
   local current_user
 
   import Users from require "spec.models"

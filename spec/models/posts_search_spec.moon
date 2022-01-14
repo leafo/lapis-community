@@ -1,11 +1,7 @@
-import use_test_env from require "lapis.spec"
-
 db = require "lapis.db"
 factory = require "spec.factory"
 
 describe "models.posts", ->
-  use_test_env!
-
   import Users from require "spec.models"
   import Categories, Topics, Posts, PostsSearch from require "spec.community_models"
 

@@ -1,17 +1,13 @@
-import use_test_env from require "lapis.spec"
-import truncate_tables from require "lapis.spec.db"
-
 import Users from require "models"
-import  Topics from require "community.models"
+import Topics from require "community.models"
 
 factory = require "spec.factory"
 
 describe "community.helpers.counters", ->
-  use_test_env!
+  import Users from require "spec.models"
+  import Topics from require "spec.community_models"
 
   it "should bulk increment", ->
-    truncate_tables Users, Topics
-
     t1 = factory.Topics!
     t2 = factory.Topics!
     t3 = factory.Topics!

@@ -1,7 +1,4 @@
-import use_test_env from require "lapis.spec"
-
 describe "community.helpers", ->
-  use_test_env!
 
   describe "models", ->
     import memoize1 from require "community.helpers.models"
