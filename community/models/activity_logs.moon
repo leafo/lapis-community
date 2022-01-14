@@ -45,6 +45,7 @@ class ActivityLogs extends Model
       create_post: 1
       create_topic: 2
       delete: 3
+      promote: 4
     }
   }
 

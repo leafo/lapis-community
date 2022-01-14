@@ -31,6 +31,7 @@ build = {
     ["community.flows.category_groups"] = "community/flows/category_groups.lua",
     ["community.flows.members"] = "community/flows/members.lua",
     ["community.flows.moderators"] = "community/flows/moderators.lua",
+    ["community.flows.pending_posts"] = "community/flows/pending_posts.lua",
     ["community.flows.posts"] = "community/flows/posts.lua",
     ["community.flows.reports"] = "community/flows/reports.lua",
     ["community.flows.subscriptions"] = "community/flows/subscriptions.lua",

@@ -61,7 +61,8 @@ do
     pending_post = enum({
       create_post = 1,
       create_topic = 2,
-      delete = 3
+      delete = 3,
+      promote = 4
     })
   }
   self.relations = {
