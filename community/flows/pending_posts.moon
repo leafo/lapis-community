@@ -17,11 +17,14 @@ class PendingPosts extends Flow
 
   -- this is for when a moderator promotes the post
   promote_pending_post: (pending_post) =>
-    if pending_post\promote!
+    if post = pending_post\promote!
       ActivityLogs\create {
         user_id: @current_user.id
         object: pending_post
         action: "promote"
+        data: {
+          post_id: post.id
+        }
       }
       true
 

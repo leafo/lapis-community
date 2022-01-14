@@ -21,13 +21,19 @@ do
       end
     end,
     promote_pending_post = function(self, pending_post)
-      if pending_post:promote() then
-        ActivityLogs:create({
-          user_id = self.current_user.id,
-          object = pending_post,
-          action = "promote"
-        })
-        return true
+      do
+        local post = pending_post:promote()
+        if post then
+          ActivityLogs:create({
+            user_id = self.current_user.id,
+            object = pending_post,
+            action = "promote",
+            data = {
+              post_id = post.id
+            }
+          })
+          return true
+        end
       end
     end
   }
