@@ -488,7 +488,7 @@ class Posts extends Model
     ancestors = @get_ancestors!
     ancestors[#ancestors]
 
-  has_replies: => error "deprecated method for: post\\has_replies"
+  has_replies: => error "deprecated method, use: post\\get_has_children"
 
   set_status: (status) =>
     @update status: @@statuses\for_db status
