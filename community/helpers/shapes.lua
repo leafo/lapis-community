@@ -8,11 +8,7 @@ trim = require("lapis.util").trim
 local valid_text = types.string / strip_bad_chars
 local trimmed_text = valid_text / trim * types.custom(function(v)
   return v ~= "", "expected text"
-end, {
-  describe = function()
-    return "not empty"
-  end
-})
+end):describe("not empty")
 local limited_text
 limited_text = function(max_len, min_len)
   if min_len == nil then
@@ -30,11 +26,7 @@ local empty = types.one_of({
       return types.literal(ngx.null) / nil
     end
   end)()
-}, {
-  describe = function()
-    return "empty"
-  end
-})
+}):describe("empty")
 local empty_html = empty + types.custom(function(str)
   local is_empty_html
   is_empty_html = require("community.helpers.html").is_empty_html
@@ -63,11 +55,7 @@ local db_id = types.one_of({
     return v == math.floor(v)
   end),
   types.string / trim * types.pattern("^%d+$") / tonumber
-}, {
-  describe = function()
-    return "integer"
-  end
-}) * types.range(0, 2147483647):describe("database id")
+}):describe("integer") * types.range(0, 2147483647):describe("database id")
 local db_enum
 db_enum = function(e)
   local names = {
@@ -84,11 +72,7 @@ db_enum = function(e)
     (db_id / function(v)
       return e[v] and e:for_db(v)
     end) * db_id
-  }, {
-    describe = function()
-      return "enum(" .. tostring(table.concat(names, ", ")) .. ")"
-    end
-  })
+  }):describe("enum(" .. tostring(table.concat(names, ", ")) .. ")")
 end
 local test_valid
 test_valid = function(object, validations, opts)

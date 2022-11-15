@@ -10,20 +10,19 @@ valid_text = types.string / strip_bad_chars
 
 trimmed_text = valid_text / trim * types.custom(
   (v) -> v != "", "expected text"
-  describe: -> "not empty"
-)
+)\describe "not empty"
 
 limited_text = (max_len, min_len=1) ->
   out = trimmed_text * types.string\length min_len, max_len
   out\describe "text between #{min_len} and #{max_len} characters"
 
-empty = types.one_of {
+empty = types.one_of({
   types.nil
   types.pattern("^%s*$") / nil
   types.literal(require("cjson").null) / nil
   if ngx
     types.literal(ngx.null) / nil
-}, describe: -> "empty"
+})\describe "empty"
 
 empty_html = empty + types.custom((str) ->
   import is_empty_html from require "community.helpers.html"
@@ -50,16 +49,15 @@ db_nullable = (t) ->
 db_id = types.one_of({
   types.number * types.custom (v) -> v == math.floor(v)
   types.string / trim * types.pattern("^%d+$") / tonumber
-}, describe: -> "integer") * types.range(0, 2147483647)\describe "database id"
+})\describe("integer") * types.range(0, 2147483647)\describe "database id"
 
 db_enum = (e) ->
   names = {unpack e}
 
-  types.one_of {
+  types.one_of({
     types.one_of(names) / e\for_db
     (db_id / (v) -> e[v] and e\for_db v) * db_id
-  }, describe: ->
-    "enum(#{table.concat names, ", "})"
+  })\describe "enum(#{table.concat names, ", "})"
 
 test_valid = (object, validations, opts) ->
   local errors
