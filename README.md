@@ -10,6 +10,31 @@ On [itch.io](https://itch.io) every single community, message board, comment
 thread is powered by `lapis-community`. It's suitable for managing many
 different sub communities with distinct moderators and roles.
 
+## Note on versioning
+
+This project uses a 3 part version: `X.X.X`, which can be interpreted as
+`{major}.{schema}.{minor}`.
+
+The *schema* version number is incremented if the database schema is updated in
+some way. This update will include a corresponding database migration that
+matches the number. These changes may also include changes to the code
+interfaces. Read the change-log for notes about how to work with the update.
+
+In your own Lapis app, you can assert that migrations up to a certain version
+are run by writing a migration that looks like: (where 42 is an example schema version)
+
+```moonscript
+=> require("community.schema").run_migrations 42
+```
+
+The *minor* version number is incremented for bug fixes/minor changes that will
+continue to operate on the same schema. No significant changes to code
+interfaces are made.
+
+The *major* vesrion will only be incremented if the project is rewritten or
+there are substantial breaking changes such that require to concurrent versions
+of the library.
+
 ## How it works
 
 `lapis-community` provides a collection of *Models* and *Flows* for a database
