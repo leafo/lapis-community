@@ -282,7 +282,7 @@ class BrowsingFlow extends Flow
         and status = ?
         and not deleted
         and last_post_id is not null
-        order by category_order
+        order by category_order desc
         limit ?
       )) as topic
       from (#{encode_value_list [{id} for id in *ids]}) as t(category_id)

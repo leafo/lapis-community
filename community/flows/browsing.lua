@@ -419,7 +419,7 @@ do
       table.insert(ids, self.category.id)
       local encode_value_list
       encode_value_list = require("community.helpers.models").encode_value_list
-      local topic_tuples = db.query("\n      select unnest(array(\n        select row_to_json(community_topics) from community_topics\n        where category_id = t.category_id\n        and status = ?\n        and not deleted\n        and last_post_id is not null\n        order by category_order\n        limit ?\n      )) as topic\n      from (" .. tostring(encode_value_list((function()
+      local topic_tuples = db.query("\n      select unnest(array(\n        select row_to_json(community_topics) from community_topics\n        where category_id = t.category_id\n        and status = ?\n        and not deleted\n        and last_post_id is not null\n        order by category_order desc\n        limit ?\n      )) as topic\n      from (" .. tostring(encode_value_list((function()
         local _accum_0 = { }
         local _len_0 = 1
         for _index_0 = 1, #ids do
