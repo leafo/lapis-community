@@ -46,6 +46,6 @@ convert_arrays = function(p)
 end
 return {
   assert_page = assert_page,
-  require_current_usre = require_current_usre,
+  require_current_user = require_current_user,
   convert_arrays = convert_arrays
 }

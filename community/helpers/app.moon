@@ -34,4 +34,4 @@ convert_arrays = (p) ->
 
   p
 
-{:assert_page, :require_current_usre, :convert_arrays}
+{:assert_page, :require_current_user, :convert_arrays}
