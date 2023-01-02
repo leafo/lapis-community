@@ -28,7 +28,8 @@ class PostsFlow extends Flow
     @post = Posts\find params.post_id
     assert_error @post, "invalid post"
 
-  new_post: require_current_user =>
+  -- opts.force_pending -- always crated post as pending post, skip calling approval method
+  new_post: require_current_user (opts={}) =>
     TopicsFlow = require "community.flows.topics"
     TopicsFlow(@)\load_topic!
     assert_error @topic\allowed_to_post @current_user, @_req
@@ -57,7 +58,7 @@ class PostsFlow extends Flow
       assert_error parent_post\allowed_to_reply(@current_user, @_req),
         "can't reply to post"
 
-    if @topic\post_needs_approval @current_user, {
+    if opts.force_pending or @topic\post_needs_approval @current_user, {
       :body
       body_format: new_post.body_format
       parent_post_id: parent_post and parent_post.id

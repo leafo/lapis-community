@@ -39,7 +39,10 @@ do
       self.post = Posts:find(params.post_id)
       return assert_error(self.post, "invalid post")
     end,
-    new_post = require_current_user(function(self)
+    new_post = require_current_user(function(self, opts)
+      if opts == nil then
+        opts = { }
+      end
       local TopicsFlow = require("community.flows.topics")
       TopicsFlow(self):load_topic()
       assert_error(self.topic:allowed_to_post(self.current_user, self._req))
@@ -73,7 +76,7 @@ do
         assert_error(parent_post.topic_id == self.topic.id, "parent post doesn't belong to same topic")
         assert_error(parent_post:allowed_to_reply(self.current_user, self._req), "can't reply to post")
       end
-      if self.topic:post_needs_approval(self.current_user, {
+      if opts.force_pending or self.topic:post_needs_approval(self.current_user, {
         body = body,
         body_format = new_post.body_format,
         parent_post_id = parent_post and parent_post.id

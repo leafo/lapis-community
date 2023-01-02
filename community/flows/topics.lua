@@ -8,8 +8,6 @@ do
 end
 local assert_error
 assert_error = require("lapis.application").assert_error
-local assert_valid
-assert_valid = require("lapis.validate").assert_valid
 local require_current_user
 require_current_user = require("community.helpers.app").require_current_user
 local is_empty_html
@@ -64,7 +62,10 @@ do
       end
       return ModerationLogs:create(params)
     end,
-    new_topic = require_current_user(function(self)
+    new_topic = require_current_user(function(self, opts)
+      if opts == nil then
+        opts = { }
+      end
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()
       assert_error(self.category:allowed_to_post_topic(self.current_user, self._req))
@@ -73,12 +74,6 @@ do
         local can_post, err = CommunityUsers:allowed_to_post(self.current_user, self.category)
         assert_error(can_post, err or "your account is not authorized to post")
       end
-      assert_valid(self.params, {
-        {
-          "topic",
-          type = "table"
-        }
-      })
       local new_topic = shapes.assert_valid(self.params.topic, {
         {
           "title",
@@ -118,7 +113,7 @@ do
         sticky = new_topic.sticky
         locked = new_topic.locked
       end
-      if self.category:topic_needs_approval(self.current_user, {
+      if opts.force_pending or self.category:topic_needs_approval(self.current_user, {
         title = new_topic.title,
         body_format = new_topic.body_format,
         body = body

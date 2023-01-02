@@ -5,7 +5,6 @@ import Flow from require "lapis.flow"
 import Topics, Posts, CommunityUsers, ActivityLogs, PendingPosts from require "community.models"
 
 import assert_error from require "lapis.application"
-import assert_valid from require "lapis.validate"
 
 import require_current_user from require "community.helpers.app"
 import is_empty_html from require "community.helpers.html"
@@ -55,7 +54,8 @@ class TopicsFlow extends Flow
 
     ModerationLogs\create params
 
-  new_topic: require_current_user =>
+  -- opts.force_pending -- always crated post as pending post, skip calling approval method
+  new_topic: require_current_user (opts={}) =>
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
     assert_error @category\allowed_to_post_topic @current_user, @_req
@@ -65,10 +65,6 @@ class TopicsFlow extends Flow
     unless moderator
       can_post, err = CommunityUsers\allowed_to_post @current_user, @category
       assert_error can_post, err or "your account is not authorized to post"
-
-    assert_valid @params, {
-      {"topic", type: "table"}
-    }
 
     new_topic = shapes.assert_valid @params.topic, {
       {"title", shapes.limited_text limits.MAX_TITLE_LEN }
@@ -88,7 +84,7 @@ class TopicsFlow extends Flow
       sticky = new_topic.sticky
       locked = new_topic.locked
 
-    if @category\topic_needs_approval @current_user, {
+    if opts.force_pending or @category\topic_needs_approval @current_user, {
       title: new_topic.title
       body_format: new_topic.body_format
       :body
