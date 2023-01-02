@@ -7,7 +7,7 @@ import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 import slugify from require "lapis.util"
 
-import assert_page, require_login from require "community.helpers.app"
+import assert_page, require_current_user from require "community.helpers.app"
 import filter_update from require "community.helpers.models"
 
 import preload from require "lapis.db.model"
@@ -266,7 +266,7 @@ class CategoriesFlow extends Flow
 
     params
 
-  new_category: require_login (...) =>
+  new_category: require_current_user (...) =>
     create_params = @validate_params ...
     create_params.user_id = @current_user.id
     @category = Categories\create create_params
@@ -283,7 +283,7 @@ class CategoriesFlow extends Flow
   -- category_tags[1][id] = 1123
   -- category_tags[2][label] = "new one"
   -- category_tags[2][description] = "hello"
-  set_tags: require_login =>
+  set_tags: require_current_user =>
     @load_category!
     assert_error @category\allowed_to_edit(@current_user), "invalid category"
 
@@ -350,7 +350,7 @@ class CategoriesFlow extends Flow
   -- categories[1][children][1][title] = "a child!"
   -- categories[2][title] = "reused category"
   -- categories[2][id] = "1234"
-  set_children: require_login =>
+  set_children: require_current_user =>
     @load_category!
     assert_error @category\allowed_to_edit(@current_user), "invalid category"
 
@@ -445,7 +445,7 @@ class CategoriesFlow extends Flow
     true, archived
 
   -- fields_list: can contain any name from CATEGORY_VALIDATION, or "category_tags"
-  edit_category: require_login (fields_list) =>
+  edit_category: require_current_user (fields_list) =>
     @load_category!
     assert_error @category\allowed_to_edit(@current_user), "invalid category"
 

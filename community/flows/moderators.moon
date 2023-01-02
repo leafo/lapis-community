@@ -5,7 +5,7 @@ db = require "lapis.db"
 
 import assert_valid from require "lapis.validate"
 import assert_error from require "lapis.application"
-import assert_page, require_login from require "community.helpers.app"
+import assert_page, require_current_user from require "community.helpers.app"
 
 shapes = require "community.helpers.shapes"
 
@@ -54,7 +54,7 @@ class ModeratorsFlow extends Flow
 
     @moderator = Moderators\find_for_object_user @object, @user
 
-  add_moderator: require_login =>
+  add_moderator: require_current_user =>
     @load_user!
 
     assert_error @object\allowed_to_edit_moderators(@current_user),
@@ -68,7 +68,7 @@ class ModeratorsFlow extends Flow
       object: @object
     }
 
-  remove_moderator: require_login =>
+  remove_moderator: require_current_user =>
     @load_user true
 
     -- you can remove yourself
@@ -105,7 +105,7 @@ class ModeratorsFlow extends Flow
 
     @pending_moderator
 
-  accept_moderator_position: require_login =>
+  accept_moderator_position: require_current_user =>
     mod = assert_error @get_pending_moderator!, "invalid moderator"
     mod\update accepted: true
     true

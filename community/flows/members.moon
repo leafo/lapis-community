@@ -4,7 +4,7 @@ import Flow from require "lapis.flow"
 db = require "lapis.db"
 import assert_valid from require "lapis.validate"
 import assert_error from require "lapis.application"
-import assert_page, require_login from require "community.helpers.app"
+import assert_page, require_current_user from require "community.helpers.app"
 
 import Users from require "models"
 import CategoryMembers from require "community.models"
@@ -46,21 +46,21 @@ class MembersFlow extends Flow
     @members = @pager\get_page @page
     @members
 
-  add_member: require_login =>
+  add_member: require_current_user =>
     assert_error @category\allowed_to_edit_members(@current_user), "invalid category"
     @load_user!
     assert_error not @member, "already a member"
     CategoryMembers\create category_id: @category.id, user_id: @user.id
     true
 
-  remove_member: require_login =>
+  remove_member: require_current_user =>
     assert_error @category\allowed_to_edit_members(@current_user), "invalid category"
     @load_user!
     assert_error @member, "user is not member"
     @member\delete!
     true
 
-  accept_member: require_login =>
+  accept_member: require_current_user =>
     member = CategoryMembers\find {
       category_id: @category.id
       user_id: @current_user.id

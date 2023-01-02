@@ -3,7 +3,7 @@ db = require "lapis.db"
 import Flow from require "lapis.flow"
 
 import assert_error from require "lapis.application"
-import require_login from require "community.helpers.app"
+import require_current_user from require "community.helpers.app"
 import preload from require "lapis.db.model"
 import Bans, Categories, Topics from require "community.models"
 
@@ -123,7 +123,7 @@ class BansFlow extends Flow
       :log_objects
     }
 
-  create_ban: require_login =>
+  create_ban: require_current_user =>
     @load_banned_user!
     @load_object!
 
@@ -163,7 +163,7 @@ class BansFlow extends Flow
 
     ban
 
-  delete_ban: require_login =>
+  delete_ban: require_current_user =>
     @load_ban!
     assert_error @ban, "invalid ban"
 
@@ -174,7 +174,7 @@ class BansFlow extends Flow
 
     true
 
-  show_bans: require_login =>
+  show_bans: require_current_user =>
     @load_object!
 
     params = shapes.assert_valid @params, {

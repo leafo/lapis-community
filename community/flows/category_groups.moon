@@ -4,7 +4,7 @@ db = require "lapis.db"
 
 import assert_valid from require "lapis.validate"
 import assert_error from require "lapis.application"
-import require_login from require "community.helpers.app"
+import require_current_user from require "community.helpers.app"
 import filter_update from require "community.helpers.models"
 
 import CategoryGroups from require "community.models"
@@ -39,13 +39,13 @@ class CategoryGroupsFlow extends Flow
       {"rules", shapes.db_nullable shapes.limited_text limits.MAX_BODY_LEN }
     }
 
-  new_category_group: require_login =>
+  new_category_group: require_current_user =>
     create_params = @validate_params!
     create_params.user_id = @current_user.id
     @category_group = CategoryGroups\create create_params
     true
 
-  edit_category_group: require_login =>
+  edit_category_group: require_current_user =>
     @load_category_group!
     assert_error @category_group\allowed_to_edit(@current_user),
       "invalid category group"

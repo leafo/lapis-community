@@ -7,7 +7,7 @@ import Topics, Posts, CommunityUsers, ActivityLogs, PendingPosts from require "c
 import assert_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 
-import require_login from require "community.helpers.app"
+import require_current_user from require "community.helpers.app"
 import is_empty_html from require "community.helpers.html"
 
 limits = require "community.limits"
@@ -55,7 +55,7 @@ class TopicsFlow extends Flow
 
     ModerationLogs\create params
 
-  new_topic: require_login =>
+  new_topic: require_current_user =>
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
     assert_error @category\allowed_to_post_topic @current_user, @_req
@@ -152,7 +152,7 @@ class TopicsFlow extends Flow
 
 
   -- this is called indirectly through delete post
-  delete_topic: require_login =>
+  delete_topic: require_current_user =>
     @load_topic!
     assert_error @topic\allowed_to_edit(@current_user), "not allowed to edit"
     assert_error not @topic.permanent, "can't delete permanent topic"
@@ -174,7 +174,7 @@ class TopicsFlow extends Flow
 
       true
 
-  lock_topic: require_login =>
+  lock_topic: require_current_user =>
     @load_topic_for_moderation!
 
     params = shapes.assert_valid @params, {

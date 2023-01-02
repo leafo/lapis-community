@@ -9,7 +9,7 @@ assert_page = =>
   @page = math.max 1, tonumber(@params.page) or 1
   @page
 
-require_login = (fn) ->
+require_current_user = (fn) ->
   import assert_error from require "lapis.application"
   (...) =>
     assert_error @current_user, "you must be logged in"
@@ -34,4 +34,4 @@ convert_arrays = (p) ->
 
   p
 
-{:assert_page, :require_login, :convert_arrays}
+{:assert_page, :require_current_usre, :convert_arrays}

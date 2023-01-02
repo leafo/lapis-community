@@ -10,8 +10,8 @@ local assert_error
 assert_error = require("lapis.application").assert_error
 local assert_valid
 assert_valid = require("lapis.validate").assert_valid
-local require_login
-require_login = require("community.helpers.app").require_login
+local require_current_user
+require_current_user = require("community.helpers.app").require_current_user
 local is_empty_html
 is_empty_html = require("community.helpers.html").is_empty_html
 local limits = require("community.limits")
@@ -64,7 +64,7 @@ do
       end
       return ModerationLogs:create(params)
     end,
-    new_topic = require_login(function(self)
+    new_topic = require_current_user(function(self)
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()
       assert_error(self.category:allowed_to_post_topic(self.current_user, self._req))
@@ -196,7 +196,7 @@ do
       end
       return true
     end),
-    delete_topic = require_login(function(self)
+    delete_topic = require_current_user(function(self)
       self:load_topic()
       assert_error(self.topic:allowed_to_edit(self.current_user), "not allowed to edit")
       assert_error(not self.topic.permanent, "can't delete permanent topic")
@@ -218,7 +218,7 @@ do
         return true
       end
     end),
-    lock_topic = require_login(function(self)
+    lock_topic = require_current_user(function(self)
       self:load_topic_for_moderation()
       local params = shapes.assert_valid(self.params, {
         {

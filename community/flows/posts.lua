@@ -12,8 +12,8 @@ local assert_valid
 assert_valid = require("lapis.validate").assert_valid
 local slugify
 slugify = require("lapis.util").slugify
-local require_login
-require_login = require("community.helpers.app").require_login
+local require_current_user
+require_current_user = require("community.helpers.app").require_current_user
 local is_empty_html
 is_empty_html = require("community.helpers.html").is_empty_html
 local limits = require("community.limits")
@@ -39,7 +39,7 @@ do
       self.post = Posts:find(params.post_id)
       return assert_error(self.post, "invalid post")
     end,
-    new_post = require_login(function(self)
+    new_post = require_current_user(function(self)
       local TopicsFlow = require("community.flows.topics")
       TopicsFlow(self):load_topic()
       assert_error(self.topic:allowed_to_post(self.current_user, self._req))
@@ -116,7 +116,7 @@ do
       end
       return true
     end),
-    edit_post = require_login(function(self)
+    edit_post = require_current_user(function(self)
       self:load_post()
       assert_error(self.post:allowed_to_edit(self.current_user, "edit"), "not allowed to edit")
       self.topic = self.post:get_topic()
@@ -209,7 +209,7 @@ do
       end
       return true
     end),
-    delete_pending_post = require_login(function(self)
+    delete_pending_post = require_current_user(function(self)
       local params = shapes.assert_valid(self.params, {
         {
           "post_id",
@@ -221,7 +221,7 @@ do
       self.pending_post:delete()
       return true
     end),
-    delete_post = require_login(function(self)
+    delete_post = require_current_user(function(self)
       self:load_post()
       assert_error(self.post:allowed_to_edit(self.current_user, "delete"), "not allowed to edit")
       self.topic = self.post:get_topic()

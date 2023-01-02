@@ -9,10 +9,10 @@ local Users
 Users = require("models").Users
 local Bookmarks
 Bookmarks = require("community.models").Bookmarks
-local require_login, assert_page
+local require_current_user, assert_page
 do
   local _obj_0 = require("community.helpers.app")
-  require_login, assert_page = _obj_0.require_login, _obj_0.assert_page
+  require_current_user, assert_page = _obj_0.require_current_user, _obj_0.assert_page
 end
 local preload
 preload = require("lapis.db.model").preload
@@ -41,7 +41,7 @@ do
       assert_error(self.object, "invalid bookmark object")
       self.bookmark = Bookmarks:get(self.object, self.current_user)
     end,
-    show_topic_bookmarks = require_login(function(self)
+    show_topic_bookmarks = require_current_user(function(self)
       local BrowsingFlow = require("community.flows.browsing")
       local Topics, Categories
       do

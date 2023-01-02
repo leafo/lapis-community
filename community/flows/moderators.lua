@@ -5,10 +5,10 @@ local assert_valid
 assert_valid = require("lapis.validate").assert_valid
 local assert_error
 assert_error = require("lapis.application").assert_error
-local assert_page, require_login
+local assert_page, require_current_user
 do
   local _obj_0 = require("community.helpers.app")
-  assert_page, require_login = _obj_0.assert_page, _obj_0.require_login
+  assert_page, require_current_user = _obj_0.assert_page, _obj_0.require_current_user
 end
 local shapes = require("community.helpers.shapes")
 local Users
@@ -61,7 +61,7 @@ do
       end
       self.moderator = Moderators:find_for_object_user(self.object, self.user)
     end,
-    add_moderator = require_login(function(self)
+    add_moderator = require_current_user(function(self)
       self:load_user()
       assert_error(self.object:allowed_to_edit_moderators(self.current_user), "invalid moderatable object")
       assert_error(not self.object:allowed_to_moderate(self.user, true), "already moderator")
@@ -70,7 +70,7 @@ do
         object = self.object
       })
     end),
-    remove_moderator = require_login(function(self)
+    remove_moderator = require_current_user(function(self)
       self:load_user(true)
       if not (self.moderator and self.moderator.user_id == self.current_user.id) then
         assert_error(self.object:allowed_to_edit_moderators(self.current_user), "invalid moderatable object")
@@ -99,7 +99,7 @@ do
       end
       return self.pending_moderator
     end,
-    accept_moderator_position = require_login(function(self)
+    accept_moderator_position = require_current_user(function(self)
       local mod = assert_error(self:get_pending_moderator(), "invalid moderator")
       mod:update({
         accepted = true

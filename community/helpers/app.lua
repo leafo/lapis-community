@@ -12,8 +12,8 @@ assert_page = function(self)
   self.page = math.max(1, tonumber(self.params.page) or 1)
   return self.page
 end
-local require_login
-require_login = function(fn)
+local require_current_user
+require_current_user = function(fn)
   local assert_error
   assert_error = require("lapis.application").assert_error
   return function(self, ...)
@@ -46,6 +46,6 @@ convert_arrays = function(p)
 end
 return {
   assert_page = assert_page,
-  require_login = require_login,
+  require_current_usre = require_current_usre,
   convert_arrays = convert_arrays
 }

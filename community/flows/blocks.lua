@@ -8,10 +8,10 @@ local assert_error
 assert_error = require("lapis.application").assert_error
 local assert_valid
 assert_valid = require("lapis.validate").assert_valid
-local assert_page, require_login
+local assert_page, require_current_user
 do
   local _obj_0 = require("community.helpers.app")
-  assert_page, require_login = _obj_0.assert_page, _obj_0.require_login
+  assert_page, require_current_user = _obj_0.assert_page, _obj_0.require_current_user
 end
 local preload
 preload = require("lapis.db.model").preload

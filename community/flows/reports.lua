@@ -12,8 +12,8 @@ local preload
 preload = require("lapis.db.model").preload
 local filter_update
 filter_update = require("community.helpers.models").filter_update
-local require_login
-require_login = require("community.helpers.app").require_login
+local require_current_user
+require_current_user = require("community.helpers.app").require_current_user
 local PostReports, Posts, Topics
 do
   local _obj_0 = require("community.models")
@@ -52,7 +52,7 @@ do
         post_id = self.post.id
       })
     end,
-    update_or_create_report = require_login(function(self)
+    update_or_create_report = require_current_user(function(self)
       self:load_post()
       local params = shapes.assert_valid(self.params.report, {
         {
@@ -92,7 +92,7 @@ do
       out.post_parent_post_id = self.post.parent_post_id
       return out
     end,
-    show_reports = require_login(function(self, category)
+    show_reports = require_current_user(function(self, category)
       assert(category, "missing report object")
       assert_error(category:allowed_to_moderate(self.current_user), "invalid category")
       local params = shapes.assert_valid(self.params, {
@@ -133,7 +133,7 @@ do
       self.reports = self.pager:get_page(params.page)
       return true
     end),
-    moderate_report = require_login(function(self)
+    moderate_report = require_current_user(function(self)
       local report = self:find_report_for_moderation()
       local action
       action = shapes.assert_valid(self.params, {

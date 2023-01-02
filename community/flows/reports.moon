@@ -7,7 +7,7 @@ import assert_valid from require "lapis.validate"
 import preload from require "lapis.db.model"
 
 import filter_update from require "community.helpers.models"
-import require_login from require "community.helpers.app"
+import require_current_user from require "community.helpers.app"
 
 import PostReports, Posts, Topics from require "community.models"
 
@@ -51,7 +51,7 @@ class ReportsFlow extends Flow
       post_id: @post.id
     }
 
-  update_or_create_report: require_login =>
+  update_or_create_report: require_current_user =>
     @load_post!
     params = shapes.assert_valid @params.report, {
       {"reason", shapes.db_enum PostReports.reasons}
@@ -80,7 +80,7 @@ class ReportsFlow extends Flow
 
     out
 
-  show_reports: require_login (category) =>
+  show_reports: require_current_user (category) =>
     assert category, "missing report object"
     assert_error category\allowed_to_moderate(@current_user), "invalid category"
 
@@ -118,7 +118,7 @@ class ReportsFlow extends Flow
     @reports = @pager\get_page params.page
     true
 
-  moderate_report: require_login =>
+  moderate_report: require_current_user =>
     report = @find_report_for_moderation!
 
     {:action} = shapes.assert_valid @params, {

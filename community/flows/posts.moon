@@ -7,7 +7,7 @@ import assert_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 import slugify from require "lapis.util"
 
-import require_login from require "community.helpers.app"
+import require_current_user from require "community.helpers.app"
 import is_empty_html from require "community.helpers.html"
 
 limits = require "community.limits"
@@ -28,7 +28,7 @@ class PostsFlow extends Flow
     @post = Posts\find params.post_id
     assert_error @post, "invalid post"
 
-  new_post: require_login =>
+  new_post: require_current_user =>
     TopicsFlow = require "community.flows.topics"
     TopicsFlow(@)\load_topic!
     assert_error @topic\allowed_to_post @current_user, @_req
@@ -105,7 +105,7 @@ class PostsFlow extends Flow
 
     true
 
-  edit_post: require_login =>
+  edit_post: require_current_user =>
     @load_post!
     assert_error @post\allowed_to_edit(@current_user, "edit"), "not allowed to edit"
 
@@ -173,7 +173,7 @@ class PostsFlow extends Flow
 
     true
 
-  delete_pending_post: require_login =>
+  delete_pending_post: require_current_user =>
     -- TODO: needs specs
     params = shapes.assert_valid @params, {
       {"post_id", shapes.db_id}
@@ -184,7 +184,7 @@ class PostsFlow extends Flow
     @pending_post\delete!
     true
 
-  delete_post: require_login =>
+  delete_post: require_current_user =>
     @load_post!
     assert_error @post\allowed_to_edit(@current_user, "delete"), "not allowed to edit"
 

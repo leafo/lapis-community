@@ -10,8 +10,8 @@ local assert_error
 assert_error = require("lapis.application").assert_error
 local assert_valid
 assert_valid = require("lapis.validate").assert_valid
-local require_login
-require_login = require("community.helpers.app").require_login
+local require_current_user
+require_current_user = require("community.helpers.app").require_current_user
 local VotesFlow
 do
   local _class_0
@@ -36,7 +36,7 @@ do
       self.object = model:find(self.params.object_id)
       return assert_error(self.object, "invalid vote object")
     end,
-    vote = require_login(function(self)
+    vote = require_current_user(function(self)
       self:load_object()
       if self.params.action then
         assert_valid(self.params, {

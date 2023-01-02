@@ -5,10 +5,10 @@ local assert_valid
 assert_valid = require("lapis.validate").assert_valid
 local assert_error
 assert_error = require("lapis.application").assert_error
-local assert_page, require_login
+local assert_page, require_current_user
 do
   local _obj_0 = require("community.helpers.app")
-  assert_page, require_login = _obj_0.assert_page, _obj_0.require_login
+  assert_page, require_current_user = _obj_0.assert_page, _obj_0.require_current_user
 end
 local Users
 Users = require("models").Users
@@ -59,7 +59,7 @@ do
       self.members = self.pager:get_page(self.page)
       return self.members
     end,
-    add_member = require_login(function(self)
+    add_member = require_current_user(function(self)
       assert_error(self.category:allowed_to_edit_members(self.current_user), "invalid category")
       self:load_user()
       assert_error(not self.member, "already a member")
@@ -69,14 +69,14 @@ do
       })
       return true
     end),
-    remove_member = require_login(function(self)
+    remove_member = require_current_user(function(self)
       assert_error(self.category:allowed_to_edit_members(self.current_user), "invalid category")
       self:load_user()
       assert_error(self.member, "user is not member")
       self.member:delete()
       return true
     end),
-    accept_member = require_login(function(self)
+    accept_member = require_current_user(function(self)
       local member = CategoryMembers:find({
         category_id = self.category.id,
         user_id = self.current_user.id,

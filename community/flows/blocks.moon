@@ -6,7 +6,7 @@ import Blocks from require "community.models"
 
 import assert_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
-import assert_page, require_login from require "community.helpers.app"
+import assert_page, require_current_user from require "community.helpers.app"
 
 import preload from require "lapis.db.model"
 

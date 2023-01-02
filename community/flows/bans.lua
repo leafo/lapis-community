@@ -3,8 +3,8 @@ local Flow
 Flow = require("lapis.flow").Flow
 local assert_error
 assert_error = require("lapis.application").assert_error
-local require_login
-require_login = require("community.helpers.app").require_login
+local require_current_user
+require_current_user = require("community.helpers.app").require_current_user
 local preload
 preload = require("lapis.db.model").preload
 local Bans, Categories, Topics
@@ -143,7 +143,7 @@ do
         log_objects = log_objects
       })
     end,
-    create_ban = require_login(function(self)
+    create_ban = require_current_user(function(self)
       self:load_banned_user()
       self:load_object()
       local params = shapes.assert_valid(self.params, {
@@ -190,7 +190,7 @@ do
       end
       return ban
     end),
-    delete_ban = require_login(function(self)
+    delete_ban = require_current_user(function(self)
       self:load_ban()
       assert_error(self.ban, "invalid ban")
       local object_type_name = Bans.object_types:to_name(self.ban.object_type)
@@ -201,7 +201,7 @@ do
       end
       return true
     end),
-    show_bans = require_login(function(self)
+    show_bans = require_current_user(function(self)
       self:load_object()
       local params = shapes.assert_valid(self.params, {
         {

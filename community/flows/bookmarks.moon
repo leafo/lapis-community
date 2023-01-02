@@ -9,7 +9,7 @@ import assert_valid from require "lapis.validate"
 import Users from require "models"
 import Bookmarks from require "community.models"
 
-import require_login, assert_page from require "community.helpers.app"
+import require_current_user, assert_page from require "community.helpers.app"
 
 import preload from require "lapis.db.model"
 
@@ -35,7 +35,7 @@ class BookmarksFlow extends Flow
 
     @bookmark = Bookmarks\get @object, @current_user
   
-  show_topic_bookmarks: require_login =>
+  show_topic_bookmarks: require_current_user =>
     BrowsingFlow = require "community.flows.browsing"
 
     -- TODO: this query can be bad

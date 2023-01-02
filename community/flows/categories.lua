@@ -16,10 +16,10 @@ local assert_valid
 assert_valid = require("lapis.validate").assert_valid
 local slugify
 slugify = require("lapis.util").slugify
-local assert_page, require_login
+local assert_page, require_current_user
 do
   local _obj_0 = require("community.helpers.app")
-  assert_page, require_login = _obj_0.assert_page, _obj_0.require_login
+  assert_page, require_current_user = _obj_0.assert_page, _obj_0.require_current_user
 end
 local filter_update
 filter_update = require("community.helpers.models").filter_update
@@ -322,7 +322,7 @@ do
       end
       return params
     end,
-    new_category = require_login(function(self, ...)
+    new_category = require_current_user(function(self, ...)
       local create_params = self:validate_params(...)
       create_params.user_id = self.current_user.id
       self.category = Categories:create(create_params)
@@ -333,7 +333,7 @@ do
       })
       return self.category
     end),
-    set_tags = require_login(function(self)
+    set_tags = require_current_user(function(self)
       self:load_category()
       assert_error(self.category:allowed_to_edit(self.current_user), "invalid category")
       local convert_arrays
@@ -418,7 +418,7 @@ do
       end
       return made_change
     end),
-    set_children = require_login(function(self)
+    set_children = require_current_user(function(self)
       self:load_category()
       assert_error(self.category:allowed_to_edit(self.current_user), "invalid category")
       local convert_arrays
@@ -594,7 +594,7 @@ do
       end
       return true, archived
     end),
-    edit_category = require_login(function(self, fields_list)
+    edit_category = require_current_user(function(self, fields_list)
       self:load_category()
       assert_error(self.category:allowed_to_edit(self.current_user), "invalid category")
       local category_updated = false

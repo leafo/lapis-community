@@ -5,7 +5,7 @@ db = require "lapis.db"
 import assert_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 
-import require_login from require "community.helpers.app"
+import require_current_user from require "community.helpers.app"
 
 class VotesFlow extends Flow
   expose_assigns: true
@@ -22,7 +22,7 @@ class VotesFlow extends Flow
     @object = model\find @params.object_id
     assert_error @object, "invalid vote object"
 
-  vote: require_login =>
+  vote: require_current_user =>
     @load_object!
 
     if @params.action

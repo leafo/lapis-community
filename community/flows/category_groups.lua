@@ -5,8 +5,8 @@ local assert_valid
 assert_valid = require("lapis.validate").assert_valid
 local assert_error
 assert_error = require("lapis.application").assert_error
-local require_login
-require_login = require("community.helpers.app").require_login
+local require_current_user
+require_current_user = require("community.helpers.app").require_current_user
 local filter_update
 filter_update = require("community.helpers.models").filter_update
 local CategoryGroups
@@ -55,13 +55,13 @@ do
         }
       })
     end,
-    new_category_group = require_login(function(self)
+    new_category_group = require_current_user(function(self)
       local create_params = self:validate_params()
       create_params.user_id = self.current_user.id
       self.category_group = CategoryGroups:create(create_params)
       return true
     end),
-    edit_category_group = require_login(function(self)
+    edit_category_group = require_current_user(function(self)
       self:load_category_group()
       assert_error(self.category_group:allowed_to_edit(self.current_user), "invalid category group")
       local update_params = self:validate_params()
