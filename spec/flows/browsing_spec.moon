@@ -31,7 +31,7 @@ describe "browsing flow", ->
             ->
               topic_posts {}
             {
-              message: { "topic_id: expected integer" }
+              message: { "topic_id: expected database ID integer" }
             }
           )
 
@@ -39,7 +39,7 @@ describe "browsing flow", ->
             ->
               topic_posts { topic_id: "helfelfjew fwef"}
             {
-              message: { "topic_id: expected integer" }
+              message: { "topic_id: expected database ID integer" }
             }
           )
 

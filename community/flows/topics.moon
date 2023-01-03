@@ -257,13 +257,13 @@ class TopicsFlow extends Flow
     import Categories from require "community.models"
     @load_topic_for_moderation!
 
-    assert_valid @params, {
-      {"target_category_id", is_integer: true}
+    params = shapes.assert_valid @params, {
+      {"target_category_id", shapes.db_id}
     }
 
     old_category_id = @topic.category_id
 
-    @target_category = Categories\find @params.target_category_id
+    @target_category = Categories\find params.target_category_id
     assert_error @target_category\allowed_to_moderate(@current_user),
       "invalid category"
 

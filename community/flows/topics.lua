@@ -306,14 +306,14 @@ do
       local Categories
       Categories = require("community.models").Categories
       self:load_topic_for_moderation()
-      assert_valid(self.params, {
+      local params = shapes.assert_valid(self.params, {
         {
           "target_category_id",
-          is_integer = true
+          shapes.db_id
         }
       })
       local old_category_id = self.topic.category_id
-      self.target_category = Categories:find(self.params.target_category_id)
+      self.target_category = Categories:find(params.target_category_id)
       assert_error(self.target_category:allowed_to_moderate(self.current_user), "invalid category")
       assert_error(self.topic:can_move_to(self.current_user, self.target_category))
       assert_error(self.topic:move_to_category(self.target_category))

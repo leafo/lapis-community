@@ -365,7 +365,7 @@ do
         local _continue_0 = false
         repeat
           local tag = shapes.assert_valid(tag_params, self.__class.TAG_VALIDATION, {
-            prefix = "topic tag " .. tostring(position)
+            error_prefix = "topic tag " .. tostring(position)
           })
           tag.tag_order = position
           tag.slug = CategoryTags:slugify(tag.label)

@@ -629,7 +629,7 @@ describe "posting flow", ->
               "post[body]": "This is a sub message"
             }
 
-          { message: {"parent_post_id: expected integer then database id, or empty"} }
+          { message: {"parent_post_id: expected database ID integer, or empty"} }
         )
 
       it "fails with non-existent parent post", ->

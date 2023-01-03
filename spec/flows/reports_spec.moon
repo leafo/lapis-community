@@ -23,7 +23,7 @@ describe "reports", ->
     it "fails to create report without required parameters", ->
       assert.has_error(
         -> update_or_create_report {}
-        { message: {"post_id: expected integer"} }
+        { message: {"post_id: expected database ID integer"} }
       )
 
     it "doesn't create report for own post", ->
@@ -47,7 +47,7 @@ describe "reports", ->
       action = update_or_create_report {
         post_id: post.id
         "report[reason]": "other"
-        "report[body]": "this is the problem   \0  "
+        "report[body]": "this is the problem   \239\187\191  "
       }
 
       assert.same "create", action
@@ -178,7 +178,7 @@ describe "reports", ->
     it "fails with no params", ->
       assert.has_error(
         -> moderate_report {}
-        { message: {"report_id: expected integer"} }
+        { message: {"report_id: expected database ID integer"} }
       )
 
     it "updates report", ->

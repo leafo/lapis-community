@@ -308,7 +308,7 @@ class CategoriesFlow extends Flow
 
     for position, tag_params in ipairs @params.category_tags
       tag = shapes.assert_valid tag_params, @@TAG_VALIDATION, {
-        prefix: "topic tag #{position}"
+        error_prefix: "topic tag #{position}"
       }
       tag.tag_order = position
 
