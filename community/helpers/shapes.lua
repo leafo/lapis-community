@@ -1,9 +1,9 @@
 local types
 types = require("tableshape").types
-local db_id, db_enum, limited_text, trimmed_text, valid_text, validate_params
+local db_id, db_enum, limited_text, trimmed_text, valid_text, params_shape
 do
   local _obj_0 = require("lapis.validate.types")
-  db_id, db_enum, limited_text, trimmed_text, valid_text, validate_params = _obj_0.db_id, _obj_0.db_enum, _obj_0.limited_text, _obj_0.trimmed_text, _obj_0.valid_text, _obj_0.validate_params
+  db_id, db_enum, limited_text, trimmed_text, valid_text, params_shape = _obj_0.db_id, _obj_0.db_enum, _obj_0.limited_text, _obj_0.trimmed_text, _obj_0.valid_text, _obj_0.params_shape
 end
 local trim
 trim = require("lapis.util").trim
@@ -42,7 +42,7 @@ db_nullable = function(t)
 end
 local assert_valid
 assert_valid = function(params, spec, opts)
-  local t = validate_params(spec, opts):assert_errors()
+  local t = params_shape(spec, opts):assert_errors()
   return t:transform(params)
 end
 return {

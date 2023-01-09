@@ -1,6 +1,6 @@
 
 import types from require "tableshape"
-import db_id, db_enum, limited_text, trimmed_text, valid_text, validate_params from require "lapis.validate.types"
+import db_id, db_enum, limited_text, trimmed_text, valid_text, params_shape from require "lapis.validate.types"
 
 import trim from require "lapis.util"
 
@@ -35,7 +35,7 @@ db_nullable = (t) ->
   t + empty / db.NULL
 
 assert_valid = (params, spec, opts) ->
-  t = validate_params(spec, opts)\assert_errors!
+  t = params_shape(spec, opts)\assert_errors!
   t\transform params
 
 {
