@@ -64,24 +64,16 @@ insert_on_conflict_ignore = (model, opts) ->
     full_insert.created_at = d
     full_insert.updated_at = d
 
-  buffer = {
-    "insert into "
-    db.escape_identifier model\table_name!
-    " "
+
+  res = db.insert model\table_name!, full_insert, {
+    returning: "*"
+    on_conflict: "do_nothing"
   }
-
-  encode_values full_insert, buffer
-
-  insert buffer, " on conflict do nothing returning *"
-
-  q = concat buffer
-  res = db.query q
 
   if res.affected_rows and res.affected_rows > 0
     model\load res[1]
   else
     nil, res
-
 
 insert_on_conflict_update = (model, primary, create, update, opts) ->
   import encode_values, encode_assigns from require "lapis.db"

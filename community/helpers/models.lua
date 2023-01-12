@@ -83,15 +83,10 @@ insert_on_conflict_ignore = function(model, opts)
     full_insert.created_at = d
     full_insert.updated_at = d
   end
-  local buffer = {
-    "insert into ",
-    db.escape_identifier(model:table_name()),
-    " "
-  }
-  encode_values(full_insert, buffer)
-  insert(buffer, " on conflict do nothing returning *")
-  local q = concat(buffer)
-  local res = db.query(q)
+  local res = db.insert(model:table_name(), full_insert, {
+    returning = "*",
+    on_conflict = "do_nothing"
+  })
   if res.affected_rows and res.affected_rows > 0 then
     return model:load(res[1])
   else
