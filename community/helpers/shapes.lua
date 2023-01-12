@@ -1,40 +1,19 @@
-local types
-types = require("tableshape").types
-local db_id, db_enum, limited_text, trimmed_text, valid_text, params_shape
-do
-  local _obj_0 = require("lapis.validate.types")
-  db_id, db_enum, limited_text, trimmed_text, valid_text, params_shape = _obj_0.db_id, _obj_0.db_enum, _obj_0.limited_text, _obj_0.trimmed_text, _obj_0.valid_text, _obj_0.params_shape
-end
-local trim
-trim = require("lapis.util").trim
-local empty = types.one_of({
-  types["nil"],
-  types.pattern("^%s*$") / nil,
-  types.literal(require("cjson").null) / nil,
-  (function()
-    if ngx then
-      return types.literal(ngx.null) / nil
-    end
-  end)()
-}):describe("empty")
-local empty_html = empty + types.custom(function(str)
+local types = require("lapis.validate.types")
+local empty, db_id, db_enum, limited_text, trimmed_text, valid_text, params_shape
+empty, db_id, db_enum, limited_text, trimmed_text, valid_text, params_shape = types.empty, types.db_id, types.db_enum, types.limited_text, types.trimmed_text, types.valid_text, types.params_shape
+local empty_html = (empty + trimmed_text * types.custom(function(str)
   local is_empty_html
   is_empty_html = require("community.helpers.html").is_empty_html
   return is_empty_html(str)
-end) / nil
+end) / nil):describe("empty html")
 local color = types.one_of({
   types.pattern("^#" .. tostring(("[a-fA-F%d]"):rep("6")) .. "$"),
   types.pattern("^#" .. tostring(("[a-fA-F%d]"):rep("3")) .. "$")
 }):describe("hex color")
-local page_number = types.one_of({
-  empty / 1,
-  types.one_of({
-    types.number,
-    types.string:length(1, 10) / trim * types.pattern("^%d+$") / tonumber
-  }):describe("an integer")
-}) / function(n)
-  return math.floor(math.max(1, n))
-end
+local page_number = (types.empty / 1) + (types.one_of({
+  types.number / math.floor,
+  types.string:length(0, 5) * types.pattern("^%d+$") / tonumber
+}) * types.range(1, 1000)):describe("page number")
 local db_nullable
 db_nullable = function(t)
   local db = require("lapis.db")
