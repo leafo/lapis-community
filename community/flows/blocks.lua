@@ -6,8 +6,6 @@ local Blocks
 Blocks = require("community.models").Blocks
 local assert_error
 assert_error = require("lapis.application").assert_error
-local assert_valid
-assert_valid = require("lapis.validate").assert_valid
 local assert_page, require_current_user
 do
   local _obj_0 = require("community.helpers.app")
@@ -15,6 +13,12 @@ do
 end
 local preload
 preload = require("lapis.db.model").preload
+local with_params, assert_valid
+do
+  local _obj_0 = require("lapis.validate")
+  with_params, assert_valid = _obj_0.with_params, _obj_0.assert_valid
+end
+local types = require("lapis.validate.types")
 local BlocksFlow
 do
   local _class_0
@@ -37,13 +41,13 @@ do
       if self.blocked then
         return 
       end
-      assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "blocked_user_id",
-          is_integer = true
+          types.db_id
         }
-      })
-      self.blocked = assert_error(Users:find(self.params.blocked_user_id), "invalid user")
+      }))
+      self.blocked = assert_error(Users:find(params.blocked_user_id), "invalid user")
       return assert_error(self.blocked.id ~= self.current_user.id, "you can not block yourself")
     end,
     block_user = function(self)

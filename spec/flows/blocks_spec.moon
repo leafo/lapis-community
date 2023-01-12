@@ -30,7 +30,7 @@ describe "blocks", ->
       -> block_user { }
       {
         message: {
-          "blocked_user_id must be an integer"
+          "blocked_user_id: expected database ID integer"
         }
       }
     )

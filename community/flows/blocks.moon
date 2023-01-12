@@ -5,10 +5,12 @@ import Users from require "models"
 import Blocks from require "community.models"
 
 import assert_error from require "lapis.application"
-import assert_valid from require "lapis.validate"
 import assert_page, require_current_user from require "community.helpers.app"
 
 import preload from require "lapis.db.model"
+
+import assert_valid from require "lapis.validate"
+types = require "lapis.validate.types"
 
 class BlocksFlow extends Flow
   expose_assigns: true
@@ -36,11 +38,11 @@ class BlocksFlow extends Flow
   load_blocked_user: =>
     return if @blocked
 
-    assert_valid @params, {
-      {"blocked_user_id", is_integer: true}
+    params = assert_valid @params, types.params_shape {
+      {"blocked_user_id", types.db_id }
     }
 
-    @blocked = assert_error Users\find(@params.blocked_user_id), "invalid user"
+    @blocked = assert_error Users\find(params.blocked_user_id), "invalid user"
     assert_error @blocked.id != @current_user.id, "you can not block yourself"
 
   block_user: =>
