@@ -6,8 +6,11 @@ do
   local _obj_0 = require("lapis.application")
   assert_error, yield_error = _obj_0.assert_error, _obj_0.yield_error
 end
-local assert_valid
-assert_valid = require("lapis.validate").assert_valid
+local assert_valid, with_params
+do
+  local _obj_0 = require("lapis.validate")
+  assert_valid, with_params = _obj_0.assert_valid, _obj_0.with_params
+end
 local preload
 preload = require("lapis.db.model").preload
 local filter_update
@@ -29,19 +32,18 @@ do
   local _parent_0 = Flow
   local _base_0 = {
     expose_assigns = true,
-    find_report_for_moderation = function(self)
-      local params = shapes.assert_valid(self.params, {
-        {
-          "report_id",
-          shapes.db_id
-        }
-      })
+    find_report_for_moderation = with_params({
+      {
+        "report_id",
+        shapes.db_id
+      }
+    }, function(self, params)
       local report = assert_error(PostReports:find(self.params.report_id), "invalid report")
       local topic = report:get_post():get_topic()
       assert_error(topic:allowed_to_moderate(self.current_user), "invalid report")
       self.report = report
       return report
-    end,
+    end),
     load_post = function(self)
       local PostsFlow = require("community.flows.posts")
       PostsFlow(self):load_post()
@@ -105,9 +107,6 @@ do
           shapes.empty + shapes.db_enum(PostReports.statuses)
         }
       })
-      local filter = {
-        [db.raw(tostring(db.escape_identifier(PostReports:table_name())) .. ".status")] = params.status
-      }
       local children = self.category:get_flat_children()
       local category_ids
       do
@@ -121,7 +120,25 @@ do
         category_ids = _accum_0
       end
       table.insert(category_ids, self.category.id)
-      self.pager = PostReports:paginated("\n      inner join " .. tostring(db.escape_identifier(Posts:table_name())) .. " as posts\n        on posts.id = post_id\n\n      inner join " .. tostring(db.escape_identifier(Topics:table_name())) .. " as topics\n        on posts.topic_id = topics.id\n\n      where " .. tostring(db.escape_identifier(PostReports:table_name())) .. ".category_id in ? and not posts.deleted and not topics.deleted\n\n      " .. tostring(next(filter) and "and " .. db.encode_clause(filter) or "") .. "\n      order by id desc\n    ", db.list(category_ids), {
+      local where_clause = db.clause({
+        db.clause({
+          category_id = db.list(category_ids),
+          status = params.status
+        }, {
+          table_name = PostReports:table_name()
+        }),
+        db.clause({
+          deleted = false
+        }, {
+          table_name = "topics"
+        }),
+        db.clause({
+          deleted = false
+        }, {
+          table_name = "posts"
+        })
+      })
+      self.pager = PostReports:paginated("\n      inner join " .. tostring(db.escape_identifier(Posts:table_name())) .. " as posts\n        on posts.id = post_id\n\n      inner join " .. tostring(db.escape_identifier(Topics:table_name())) .. " as topics\n        on posts.topic_id = topics.id\n\n      where ? order by id desc\n    ", where_clause, {
         fields = tostring(db.escape_identifier(PostReports:table_name())) .. ".*",
         prepare_results = function(reports)
           preload(reports, "category", "user", "moderating_user", {

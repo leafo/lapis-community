@@ -3,7 +3,7 @@ import Flow from require "lapis.flow"
 
 db = require "lapis.db"
 import assert_error, yield_error from require "lapis.application"
-import assert_valid from require "lapis.validate"
+import assert_valid, with_params from require "lapis.validate"
 import preload from require "lapis.db.model"
 
 import filter_update from require "community.helpers.models"
@@ -23,11 +23,9 @@ class ReportsFlow extends Flow
     super req
     assert @current_user, "missing current user for reports flow"
 
-  find_report_for_moderation: =>
-    params = shapes.assert_valid @params, {
-      {"report_id", shapes.db_id}
-    }
-
+  find_report_for_moderation: with_params {
+    {"report_id", shapes.db_id}
+  }, (params) =>
     report = assert_error PostReports\find(@params.report_id), "invalid report"
 
     topic = report\get_post!\get_topic!
@@ -89,13 +87,24 @@ class ReportsFlow extends Flow
       {"status", shapes.empty + shapes.db_enum PostReports.statuses}
     }
 
-    filter = {
-      [db.raw "#{db.escape_identifier PostReports\table_name!}.status"]: params.status
-    }
-
     children = @category\get_flat_children!
     category_ids = [c.id for c in *children]
     table.insert category_ids, @category.id
+
+    where_clause = db.clause {
+      db.clause {
+        category_id: db.list category_ids
+        status: params.status
+      }, table_name: PostReports\table_name!
+
+      db.clause {
+        deleted: false
+      }, table_name: "topics"
+
+      db.clause {
+        deleted: false
+      }, table_name: "posts"
+    }
 
     @pager = PostReports\paginated "
       inner join #{db.escape_identifier Posts\table_name!} as posts
@@ -104,11 +113,8 @@ class ReportsFlow extends Flow
       inner join #{db.escape_identifier Topics\table_name!} as topics
         on posts.topic_id = topics.id
 
-      where #{db.escape_identifier PostReports\table_name!}.category_id in ? and not posts.deleted and not topics.deleted
-
-      #{next(filter) and "and " .. db.encode_clause(filter) or ""}
-      order by id desc
-    ", db.list(category_ids), {
+      where ? order by id desc
+    ", where_clause, {
       fields: "#{db.escape_identifier PostReports\table_name!}.*"
       prepare_results: (reports) ->
         preload reports, "category", "user", "moderating_user", post: "topic"
