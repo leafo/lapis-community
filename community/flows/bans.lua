@@ -16,32 +16,32 @@ local Users
 Users = require("models").Users
 local limits = require("community.limits")
 local shapes = require("community.helpers.shapes")
-local types
-types = require("tableshape").types
+local types = require("lapis.validate.types")
+local with_params, assert_valid
+do
+  local _obj_0 = require("lapis.validate")
+  with_params, assert_valid = _obj_0.with_params, _obj_0.assert_valid
+end
 local BansFlow
 do
   local _class_0
   local _parent_0 = Flow
   local _base_0 = {
     expose_assigns = true,
-    load_banned_user = function(self)
-      local params = shapes.assert_valid(self.params, {
-        {
-          "banned_user_id",
-          shapes.db_id
-        }
-      })
+    load_banned_user = with_params({
+      {
+        "banned_user_id",
+        shapes.db_id
+      }
+    }, function(self, params)
       self.banned = assert_error(Users:find(params.banned_user_id), "invalid user")
       assert_error(self.banned.id ~= self.current_user.id, "you can not ban yourself")
       assert_error(not self.banned:is_admin(), "you can't ban an admin")
       self:load_object()
       return assert_error(not self.object:allowed_to_moderate(self.banned), "you can't ban a moderator")
-    end,
-    load_object = function(self)
-      if self.object then
-        return 
-      end
-      local params = shapes.assert_valid(self.params, {
+    end),
+    load_object = (function()
+      local object_params = types.params_shape({
         {
           "object_id",
           shapes.db_id
@@ -51,11 +51,17 @@ do
           shapes.db_enum(Bans.object_types)
         }
       })
-      local model = Bans:model_for_object_type(params.object_type)
-      self.object = model:find(params.object_id)
-      assert_error(self.object, "invalid ban object")
-      return assert_error(self.object:allowed_to_moderate(self.current_user), "invalid permissions")
-    end,
+      return function(self)
+        if self.object then
+          return 
+        end
+        local params = assert_valid(self.params, object_params)
+        local model = Bans:model_for_object_type(params.object_type)
+        self.object = model:find(params.object_id)
+        assert_error(self.object, "invalid ban object")
+        return assert_error(self.object:allowed_to_moderate(self.current_user), "invalid permissions")
+      end
+    end)(),
     get_moderatable_categories = function(self)
       self:load_object()
       if not (self.object.__class.__name == "Categories") then
@@ -143,19 +149,18 @@ do
         log_objects = log_objects
       })
     end,
-    create_ban = require_current_user(function(self)
+    create_ban = require_current_user(with_params({
+      {
+        "reason",
+        shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
+      },
+      {
+        "target_category_id",
+        shapes.empty + shapes.db_id
+      }
+    }, function(self, params)
       self:load_banned_user()
       self:load_object()
-      local params = shapes.assert_valid(self.params, {
-        {
-          "reason",
-          shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
-        },
-        {
-          "target_category_id",
-          shapes.empty + shapes.db_id
-        }
-      })
       local object_type_name = Bans.object_types:to_name(Bans:object_type_for_object(self.object))
       local category
       do
@@ -189,7 +194,7 @@ do
         })
       end
       return ban
-    end),
+    end)),
     delete_ban = require_current_user(function(self)
       self:load_ban()
       assert_error(self.ban, "invalid ban")
@@ -201,14 +206,13 @@ do
       end
       return true
     end),
-    show_bans = require_current_user(function(self)
+    show_bans = require_current_user(with_params({
+      {
+        "page",
+        shapes.page_number
+      }
+    }, function(self, params)
       self:load_object()
-      local params = shapes.assert_valid(self.params, {
-        {
-          "page",
-          shapes.page_number
-        }
-      })
       self.pager = Bans:paginated([[      where object_type = ? and object_id = ?
       order by created_at desc
     ]], Bans:object_type_for_object(self.object), self.object.id, {
@@ -220,7 +224,7 @@ do
       })
       self.bans = self.pager:get_page(params.page)
       return self.bans
-    end)
+    end))
   }
   _base_0.__index = _base_0
   setmetatable(_base_0, _parent_0.__base)

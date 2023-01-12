@@ -11,8 +11,9 @@ import Users from require "models"
 
 limits = require "community.limits"
 shapes = require "community.helpers.shapes"
+types = require "lapis.validate.types"
 
-import types from require "tableshape"
+import with_params, assert_valid from require "lapis.validate"
 
 class BansFlow extends Flow
   expose_assigns: true
@@ -22,11 +23,9 @@ class BansFlow extends Flow
     assert @current_user, "missing current user for bans flow"
 
   -- or user to ban
-  load_banned_user: =>
-    params = shapes.assert_valid @params, {
-      {"banned_user_id", shapes.db_id}
-    }
-
+  load_banned_user: with_params {
+    {"banned_user_id", shapes.db_id}
+  }, (params) =>
     @banned = assert_error Users\find(params.banned_user_id), "invalid user"
     assert_error @banned.id != @current_user.id, "you can not ban yourself"
     assert_error not @banned\is_admin!, "you can't ban an admin"
@@ -34,18 +33,20 @@ class BansFlow extends Flow
     @load_object!
     assert_error not @object\allowed_to_moderate(@banned), "you can't ban a moderator"
 
-  load_object: =>
-    return if @object
-    params = shapes.assert_valid @params, {
+  load_object: do
+    object_params = types.params_shape {
       {"object_id", shapes.db_id}
       {"object_type", shapes.db_enum Bans.object_types}
     }
+    =>
+      return if @object
+      params = assert_valid @params, object_params
 
-    model = Bans\model_for_object_type params.object_type
-    @object = model\find params.object_id
+      model = Bans\model_for_object_type params.object_type
+      @object = model\find params.object_id
 
-    assert_error @object, "invalid ban object"
-    assert_error @object\allowed_to_moderate(@current_user), "invalid permissions"
+      assert_error @object, "invalid ban object"
+      assert_error @object\allowed_to_moderate(@current_user), "invalid permissions"
 
   -- get all the categories up the ancestor tree that the moderator has access to
   get_moderatable_categories: =>
@@ -81,7 +82,6 @@ class BansFlow extends Flow
 
   load_ban: =>
     return if @ban != nil
-
     @load_banned_user!
     @load_object!
 
@@ -123,14 +123,12 @@ class BansFlow extends Flow
       :log_objects
     }
 
-  create_ban: require_current_user =>
+  create_ban: require_current_user with_params {
+    {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
+    {"target_category_id", shapes.empty + shapes.db_id}
+  }, (params) =>
     @load_banned_user!
     @load_object!
-
-    params = shapes.assert_valid @params, {
-      {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
-      {"target_category_id", shapes.empty + shapes.db_id}
-    }
 
     object_type_name = Bans.object_types\to_name Bans\object_type_for_object @object
 
@@ -174,12 +172,10 @@ class BansFlow extends Flow
 
     true
 
-  show_bans: require_current_user =>
+  show_bans: require_current_user with_params {
+    {"page", shapes.page_number}
+  }, (params) =>
     @load_object!
-
-    params = shapes.assert_valid @params, {
-      {"page", shapes.page_number}
-    }
 
     @pager = Bans\paginated [[
       where object_type = ? and object_id = ?
