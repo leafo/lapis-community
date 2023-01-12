@@ -13,11 +13,8 @@ do
 end
 local preload
 preload = require("lapis.db.model").preload
-local with_params, assert_valid
-do
-  local _obj_0 = require("lapis.validate")
-  with_params, assert_valid = _obj_0.with_params, _obj_0.assert_valid
-end
+local assert_valid
+assert_valid = require("lapis.validate").assert_valid
 local types = require("lapis.validate.types")
 local BlocksFlow
 do
