@@ -24,12 +24,14 @@ filter_update = function(model, update)
 end
 local soft_delete
 soft_delete = function(self)
-  local primary = self:_primary_cond()
-  primary.deleted = false
-  local res = db.update(self.__class:table_name(), {
+  return self:update({
     deleted = true
-  }, primary)
-  return res.affected_rows and res.affected_rows > 0
+  }, {
+    where = db.clause({
+      deleted = false
+    }),
+    timestamp = false
+  })
 end
 local memoize1
 memoize1 = function(fn)

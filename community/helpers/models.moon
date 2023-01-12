@@ -18,14 +18,14 @@ filter_update = (model, update) ->
 
 -- set deleted to true
 soft_delete = =>
-  primary = @_primary_cond!
-  primary.deleted = false
-
-  res = db.update @@table_name!, {
+  @update {
     deleted: true
-  }, primary
-
-  res.affected_rows and res.affected_rows > 0
+  }, {
+    where: db.clause {
+      deleted: false
+    }
+    timestamp: false
+  }
 
 -- 1 arg
 memoize1 = (fn) ->
