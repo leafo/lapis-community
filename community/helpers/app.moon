@@ -1,12 +1,11 @@
 
-import assert_valid from require "lapis.validate"
+import with_params from require "lapis.validate"
+shapes = require "community.helpers.shapes"
 
-assert_page = =>
-  assert_valid @params, {
-    {"page", optional: true, is_integer: true}
-  }
-
-  @page = math.max 1, tonumber(@params.page) or 1
+assert_page = with_params {
+  {"page", shapes.page_number}
+}, (params) =>
+  @page = params.page
   @page
 
 require_current_user = (fn) ->

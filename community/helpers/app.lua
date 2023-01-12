@@ -1,17 +1,15 @@
-local assert_valid
-assert_valid = require("lapis.validate").assert_valid
-local assert_page
-assert_page = function(self)
-  assert_valid(self.params, {
-    {
-      "page",
-      optional = true,
-      is_integer = true
-    }
-  })
-  self.page = math.max(1, tonumber(self.params.page) or 1)
+local with_params
+with_params = require("lapis.validate").with_params
+local shapes = require("community.helpers.shapes")
+local assert_page = with_params({
+  {
+    "page",
+    shapes.page_number
+  }
+}, function(self, params)
+  self.page = params.page
   return self.page
-end
+end)
 local require_current_user
 require_current_user = function(fn)
   local assert_error
