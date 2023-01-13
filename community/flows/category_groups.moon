@@ -2,17 +2,16 @@ import Flow from require "lapis.flow"
 
 db = require "lapis.db"
 
-import assert_valid from require "lapis.validate"
+import assert_valid, with_params from require "lapis.validate"
 import assert_error from require "lapis.application"
-import require_current_user from require "community.helpers.app"
+import require_current_user, assert_page from require "community.helpers.app"
 import filter_update from require "community.helpers.models"
 
 import CategoryGroups from require "community.models"
 
 limits = require "community.limits"
 shapes = require "community.helpers.shapes"
-
-import types from require "tableshape"
+types = require "lapis.validate.types"
 
 class CategoryGroupsFlow extends Flow
   expose_assigns: true
@@ -25,19 +24,20 @@ class CategoryGroupsFlow extends Flow
   load_category_group: =>
     return if @category_group
 
-    assert_valid @params, {
-      {"category_group_id", is_integer: true}
+    assert_valid @params, types.params_shape {
+      {"category_group_id", types.db_id}
     }
 
     @category_group = CategoryGroups\find @params.category_group_id
     assert_error @category_group, "invalid group"
 
-  validate_params: =>
-    shapes.assert_valid @params.category_group, {
-      {"title", shapes.db_nullable shapes.limited_text limits.MAX_TITLE_LEN }
-      {"description", shapes.db_nullable shapes.limited_text limits.MAX_BODY_LEN }
-      {"rules", shapes.db_nullable shapes.limited_text limits.MAX_BODY_LEN }
-    }
+  validate_params: with_params {
+    {"category_group", types.params_shape {
+      {"title", shapes.db_nullable types.limited_text limits.MAX_TITLE_LEN }
+      {"description", shapes.db_nullable types.limited_text limits.MAX_BODY_LEN }
+      {"rules", shapes.db_nullable types.limited_text limits.MAX_BODY_LEN }
+    }}
+  }, (params) => params.category_group
 
   new_category_group: require_current_user =>
     create_params = @validate_params!
@@ -62,13 +62,10 @@ class CategoryGroupsFlow extends Flow
 
   show_categories: =>
     @load_category_group!
-
-    params = shapes.assert_valid @params, {
-      {"page", shapes.page_number}
-    }
+    assert_page @
 
     @pager = @category_group\get_categories_paginated!
-    @categories = @pager\get_page params.page
+    @categories = @pager\get_page @page
     @categories
 
 

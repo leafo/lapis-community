@@ -1,20 +1,25 @@
 local Flow
 Flow = require("lapis.flow").Flow
 local db = require("lapis.db")
-local assert_valid
-assert_valid = require("lapis.validate").assert_valid
+local assert_valid, with_params
+do
+  local _obj_0 = require("lapis.validate")
+  assert_valid, with_params = _obj_0.assert_valid, _obj_0.with_params
+end
 local assert_error
 assert_error = require("lapis.application").assert_error
-local require_current_user
-require_current_user = require("community.helpers.app").require_current_user
+local require_current_user, assert_page
+do
+  local _obj_0 = require("community.helpers.app")
+  require_current_user, assert_page = _obj_0.require_current_user, _obj_0.assert_page
+end
 local filter_update
 filter_update = require("community.helpers.models").filter_update
 local CategoryGroups
 CategoryGroups = require("community.models").CategoryGroups
 local limits = require("community.limits")
 local shapes = require("community.helpers.shapes")
-local types
-types = require("tableshape").types
+local types = require("lapis.validate.types")
 local CategoryGroupsFlow
 do
   local _class_0
@@ -30,31 +35,36 @@ do
       if self.category_group then
         return 
       end
-      assert_valid(self.params, {
+      assert_valid(self.params, types.params_shape({
         {
           "category_group_id",
-          is_integer = true
+          types.db_id
         }
-      })
+      }))
       self.category_group = CategoryGroups:find(self.params.category_group_id)
       return assert_error(self.category_group, "invalid group")
     end,
-    validate_params = function(self)
-      return shapes.assert_valid(self.params.category_group, {
-        {
-          "title",
-          shapes.db_nullable(shapes.limited_text(limits.MAX_TITLE_LEN))
-        },
-        {
-          "description",
-          shapes.db_nullable(shapes.limited_text(limits.MAX_BODY_LEN))
-        },
-        {
-          "rules",
-          shapes.db_nullable(shapes.limited_text(limits.MAX_BODY_LEN))
-        }
-      })
-    end,
+    validate_params = with_params({
+      {
+        "category_group",
+        types.params_shape({
+          {
+            "title",
+            shapes.db_nullable(types.limited_text(limits.MAX_TITLE_LEN))
+          },
+          {
+            "description",
+            shapes.db_nullable(types.limited_text(limits.MAX_BODY_LEN))
+          },
+          {
+            "rules",
+            shapes.db_nullable(types.limited_text(limits.MAX_BODY_LEN))
+          }
+        })
+      }
+    }, function(self, params)
+      return params.category_group
+    end),
     new_category_group = require_current_user(function(self)
       local create_params = self:validate_params()
       create_params.user_id = self.current_user.id
@@ -76,14 +86,9 @@ do
     end,
     show_categories = function(self)
       self:load_category_group()
-      local params = shapes.assert_valid(self.params, {
-        {
-          "page",
-          shapes.page_number
-        }
-      })
+      assert_page(self)
       self.pager = self.category_group:get_categories_paginated()
-      self.categories = self.pager:get_page(params.page)
+      self.categories = self.pager:get_page(self.page)
       return self.categories
     end
   }

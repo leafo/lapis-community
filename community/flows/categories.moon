@@ -17,7 +17,7 @@ limits = require "community.limits"
 db = require "lapis.db"
 
 shapes = require "community.helpers.shapes"
-import types from require "tableshape"
+types = require "lapis.validate.types"
 
 split_field = (fields, name) ->
   if fields
@@ -34,38 +34,38 @@ nullable_html = (t) ->
 
 class CategoriesFlow extends Flow
   @CATEGORY_VALIDATION: {
-    {"title",                    shapes.limited_text limits.MAX_TITLE_LEN}
-    {"short_description",        shapes.db_nullable shapes.limited_text(limits.MAX_TITLE_LEN)}
-    {"description",              nullable_html shapes.limited_text(limits.MAX_BODY_LEN)}
+    {"title",                    types.limited_text limits.MAX_TITLE_LEN}
+    {"short_description",        shapes.db_nullable types.limited_text(limits.MAX_TITLE_LEN)}
+    {"description",              nullable_html types.limited_text(limits.MAX_BODY_LEN)}
 
     -- these can be nulled out to inherit from parent/default
-    {"membership_type",          shapes.db_nullable shapes.db_enum Categories.membership_types}
-    {"voting_type",              shapes.db_nullable shapes.db_enum Categories.voting_types}
-    {"topic_posting_type",       shapes.db_nullable shapes.db_enum Categories.topic_posting_types}
-    {"approval_type",            shapes.db_nullable shapes.db_enum Categories.approval_types}
+    {"membership_type",          shapes.db_nullable types.db_enum Categories.membership_types}
+    {"voting_type",              shapes.db_nullable types.db_enum Categories.voting_types}
+    {"topic_posting_type",       shapes.db_nullable types.db_enum Categories.topic_posting_types}
+    {"approval_type",            shapes.db_nullable types.db_enum Categories.approval_types}
 
-    {"archived",                 shapes.empty / false + types.any / true}
-    {"hidden",                   shapes.empty / false + types.any / true}
-    {"rules",                    nullable_html shapes.limited_text limits.MAX_BODY_LEN }
+    {"archived",                 types.empty / false + types.any / true}
+    {"hidden",                   types.empty / false + types.any / true}
+    {"rules",                    nullable_html types.limited_text limits.MAX_BODY_LEN }
 
-    {"type",                     shapes.empty + types.one_of { "directory", "post_list" }}
+    {"type",                     types.empty + types.one_of { "directory", "post_list" }}
   }
 
   @TAG_VALIDATION: {
-    {"id",                       shapes.db_id + shapes.empty}
-    {"label",                    shapes.limited_text limits.MAX_TAG_LEN}
-    {"description",              shapes.db_nullable shapes.limited_text(80)}
+    {"id",                       types.db_id + types.empty}
+    {"label",                    types.limited_text limits.MAX_TAG_LEN}
+    {"description",              shapes.db_nullable types.limited_text(80)}
     {"color",                    shapes.db_nullable shapes.color}
   }
 
   @CATEGORY_CHILD_VALIDATION: {
-    {"id",                       shapes.db_id + shapes.empty}
-    {"title",                    shapes.limited_text limits.MAX_TITLE_LEN}
-    {"short_description",        shapes.db_nullable shapes.limited_text(limits.MAX_TITLE_LEN)}
-    {"archived",                 shapes.empty / false + types.any / true}
-    {"hidden",                   shapes.empty / false + types.any / true}
-    {"directory",                shapes.empty / false + types.any / true}
-    {"children",                 shapes.empty + types.table}
+    {"id",                       types.db_id + types.empty}
+    {"title",                    types.limited_text limits.MAX_TITLE_LEN}
+    {"short_description",        shapes.db_nullable types.limited_text(limits.MAX_TITLE_LEN)}
+    {"archived",                 types.empty / false + types.any / true}
+    {"hidden",                   types.empty / false + types.any / true}
+    {"directory",                types.empty / false + types.any / true}
+    {"children",                 types.empty + types.table}
   }
 
   expose_assigns: true
@@ -88,8 +88,8 @@ class CategoriesFlow extends Flow
   load_category: =>
     return if @category
 
-    params = shapes.assert_valid @params, {
-      {"category_id", shapes.db_id}
+    params = assert_valid @params, types.params_shape {
+      {"category_id", types.db_id}
     }
 
     @category = Categories\find params.category_id
@@ -183,17 +183,19 @@ class CategoriesFlow extends Flow
 
     import PendingPosts, Topics, Posts from require "community.models"
 
-    assert_valid @params, {
-      {"status", optional: true, one_of: PendingPosts.statuses}
+    params = assert_valid @params, types.params_shape {
+      {"status", shapes.default("pending") * types.db_enum PendingPosts.statuses }
     }
 
     assert_page @
 
-    status = PendingPosts.statuses\for_db @params.status or "pending"
     @pager = PendingPosts\paginated "
-      where category_id = ? and status = ?
+      where ?
       order by id asc
-    ", @category.id, status, {
+    ", db.clause({
+      category_id: @category.id
+      status: params.status
+    }) , {
       prepare_results: (pending) ->
         preload pending, "category", "user", "topic", "parent_post"
         pending
@@ -202,31 +204,33 @@ class CategoriesFlow extends Flow
     @pending_posts = @pager\get_page @page
     @pending_posts
 
+  -- this is for a moderator eding a pending post in a category
   edit_pending_post: =>
     import PendingPosts from require "community.models"
 
     @load_category!
-    assert_valid @params, {
-      {"pending_post_id", is_integer: true}
-      {"action", one_of: {
+
+    params = assert_valid @params, types.params_shape {
+      {"pending_post_id", types.db_id}
+      {"action", types.one_of {
         "promote"
         "deleted"
         "spam"
       }}
     }
 
-    @pending_post = PendingPosts\find @params.pending_post_id
+    @pending_post = PendingPosts\find params.pending_post_id
     assert_error @pending_post, "invalid pending post"
     category_id = @pending_post.category_id or @pending_post\get_topic!.category_id
     assert_error category_id == @category.id, "invalid pending post for category"
     assert_error @pending_post\allowed_to_moderate(@current_user), "invalid pending post"
 
-    @post = switch @params.action
+    @post = switch params.action
       when "promote"
         @pending_post\promote @
       when "deleted", "spam"
         @pending_post\update {
-          status: PendingPosts.statuses\for_db @params.action
+          status: PendingPosts.statuses\for_db params.action
         }
 
     true, @post
@@ -251,7 +255,7 @@ class CategoriesFlow extends Flow
     else
       @@CATEGORY_VALIDATION
 
-    params = shapes.assert_valid @params.category or {}, validation
+    params = assert_valid @params.category or {}, types.params_shape validation
 
     if params.type
       if @category
@@ -287,13 +291,8 @@ class CategoriesFlow extends Flow
     @load_category!
     assert_error @category\allowed_to_edit(@current_user), "invalid category"
 
-    import convert_arrays from require "community.helpers.app"
-    convert_arrays @params
-
-    @params.category_tags or= {}
-
-    assert_valid @params, {
-      {"category_tags", type: "table"}
+    {:category_tags} = assert_valid @params, types.params_shape {
+      {"category_tags", shapes.default(-> {}) * shapes.convert_array}
     }
 
     existing_tags = @category\get_tags!
@@ -306,8 +305,8 @@ class CategoriesFlow extends Flow
 
     made_change = false
 
-    for position, tag_params in ipairs @params.category_tags
-      tag = shapes.assert_valid tag_params, @@TAG_VALIDATION, {
+    for position, tag_params in ipairs category_tags
+      tag = assert_valid tag_params, types.params_shape @@TAG_VALIDATION, {
         error_prefix: "topic tag #{position}"
       }
       tag.tag_order = position
@@ -354,14 +353,14 @@ class CategoriesFlow extends Flow
     @load_category!
     assert_error @category\allowed_to_edit(@current_user), "invalid category"
 
-    import convert_arrays from require "community.helpers.app"
-    @params.categories or= {}
-
-    assert_valid @params, {
-      {"categories", type: "table"}
+    local convert_children
+    convert_children = types.array_of types.partial {
+      children: types.empty + shapes.convert_array * types.proxy -> convert_children
     }
 
-    convert_arrays @params
+    params = assert_valid @params, types.params_shape {
+      {"categories", shapes.default(-> {}) * shapes.convert_array * convert_children}
+    }
 
     assert_categores_length = (categories) ->
       assert_error #categories <= limits.MAX_CATEGORY_CHILDREN,
@@ -371,7 +370,7 @@ class CategoriesFlow extends Flow
       assert_error depth <= limits.MAX_CATEGORY_DEPTH,
         "category depth must be at most #{limits.MAX_CATEGORY_DEPTH}"
 
-      out = shapes.assert_valid params, @@CATEGORY_CHILD_VALIDATION
+      out = assert_valid params, types.params_shape @@CATEGORY_CHILD_VALIDATION
 
       if out.children
         assert_categores_length out.children
@@ -381,10 +380,10 @@ class CategoriesFlow extends Flow
 
       out
 
-    assert_categores_length @params.categories
+    assert_categores_length params.categories
 
     initial_depth = #@category\get_ancestors! + 1
-    categories = for category in *@params.categories
+    categories = for category in *params.categories
       validate_category_params category, initial_depth
 
     existing = @category\get_flat_children!

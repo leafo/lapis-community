@@ -27,7 +27,7 @@ assert_valid = (params, spec, opts) ->
 
 default = (value) ->
   if type(value) == "table"
-    error "You used table for default value, in order to prevent you from accidentally sharing the same value across many request you must pass a function that returns the table"
+    error "You used table for default value. In order to prevent you from accidentally sharing the same reference across many requests you must pass a function that returns the table"
 
   types.empty / value + types.any
 

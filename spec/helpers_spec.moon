@@ -33,6 +33,48 @@ describe "community.helpers", ->
 
 
   describe "shapes", ->
+    describe "convert_array", ->
+      local convert_array
+
+      before_each ->
+        import convert_array from require "community.helpers.shapes"
+
+      it "converts table", ->
+        input = {
+          "1": "hello"
+          "2": "world"
+          "3": "zone"
+          "999": "zone"
+        }
+
+        assert.same {
+          "hello", "world", "zone"
+        }, convert_array\transform input
+
+      it "empty table", ->
+        assert.same {}, convert_array\transform {}
+
+      it "table with no array", ->
+        input = {
+          hello: "world"
+          thing: { "one", "two" }
+        }
+
+        assert.same {}, convert_array\transform input
+
+      it "converts existing array", ->
+        assert.same {
+          "one", "two"
+        }, convert_array\transform {"one", "two"}
+
+        assert.same {
+          {"first"}, {"second"}
+        }, convert_array\transform {
+          {"first"}, {"second"}
+          picker: "true"
+        }
+
+
     describe "page_number", ->
       local page_number
 

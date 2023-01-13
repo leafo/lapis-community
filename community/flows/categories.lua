@@ -28,8 +28,7 @@ preload = require("lapis.db.model").preload
 local limits = require("community.limits")
 local db = require("lapis.db")
 local shapes = require("community.helpers.shapes")
-local types
-types = require("tableshape").types
+local types = require("lapis.validate.types")
 local split_field
 split_field = function(fields, name)
   if fields then
@@ -83,12 +82,12 @@ do
       if self.category then
         return 
       end
-      local params = shapes.assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "category_id",
-          shapes.db_id
+          types.db_id
         }
-      })
+      }))
       self.category = Categories:find(params.category_id)
       return assert_error(self.category, "invalid category")
     end,
@@ -224,16 +223,17 @@ do
         local _obj_0 = require("community.models")
         PendingPosts, Topics, Posts = _obj_0.PendingPosts, _obj_0.Topics, _obj_0.Posts
       end
-      assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "status",
-          optional = true,
-          one_of = PendingPosts.statuses
+          shapes.default("pending") * types.db_enum(PendingPosts.statuses)
         }
-      })
+      }))
       assert_page(self)
-      local status = PendingPosts.statuses:for_db(self.params.status or "pending")
-      self.pager = PendingPosts:paginated("\n      where category_id = ? and status = ?\n      order by id asc\n    ", self.category.id, status, {
+      self.pager = PendingPosts:paginated("\n      where ?\n      order by id asc\n    ", db.clause({
+        category_id = self.category.id,
+        status = params.status
+      }), {
         prepare_results = function(pending)
           preload(pending, "category", "user", "topic", "parent_post")
           return pending
@@ -246,31 +246,31 @@ do
       local PendingPosts
       PendingPosts = require("community.models").PendingPosts
       self:load_category()
-      assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "pending_post_id",
-          is_integer = true
+          types.db_id
         },
         {
           "action",
-          one_of = {
+          types.one_of({
             "promote",
             "deleted",
             "spam"
-          }
+          })
         }
-      })
-      self.pending_post = PendingPosts:find(self.params.pending_post_id)
+      }))
+      self.pending_post = PendingPosts:find(params.pending_post_id)
       assert_error(self.pending_post, "invalid pending post")
       local category_id = self.pending_post.category_id or self.pending_post:get_topic().category_id
       assert_error(category_id == self.category.id, "invalid pending post for category")
       assert_error(self.pending_post:allowed_to_moderate(self.current_user), "invalid pending post")
-      local _exp_0 = self.params.action
+      local _exp_0 = params.action
       if "promote" == _exp_0 then
         self.post = self.pending_post:promote(self)
       elseif "deleted" == _exp_0 or "spam" == _exp_0 then
         self.post = self.pending_post:update({
-          status = PendingPosts.statuses:for_db(self.params.action)
+          status = PendingPosts.statuses:for_db(params.action)
         })
       end
       return true, self.post
@@ -309,7 +309,7 @@ do
       else
         validation = self.__class.CATEGORY_VALIDATION
       end
-      local params = shapes.assert_valid(self.params.category or { }, validation)
+      local params = assert_valid(self.params.category or { }, types.params_shape(validation))
       if params.type then
         if self.category then
           assert_error(not self.category.parent_category_id, "only root category can have type set")
@@ -336,16 +336,15 @@ do
     set_tags = require_current_user(function(self)
       self:load_category()
       assert_error(self.category:allowed_to_edit(self.current_user), "invalid category")
-      local convert_arrays
-      convert_arrays = require("community.helpers.app").convert_arrays
-      convert_arrays(self.params)
-      self.params.category_tags = self.params.category_tags or { }
-      assert_valid(self.params, {
+      local category_tags
+      category_tags = assert_valid(self.params, types.params_shape({
         {
           "category_tags",
-          type = "table"
+          shapes.default(function()
+            return { }
+          end) * shapes.convert_array
         }
-      })
+      })).category_tags
       local existing_tags = self.category:get_tags()
       local existing_by_id
       do
@@ -361,12 +360,12 @@ do
       local actions = { }
       local used_slugs = { }
       local made_change = false
-      for position, tag_params in ipairs(self.params.category_tags) do
+      for position, tag_params in ipairs(category_tags) do
         local _continue_0 = false
         repeat
-          local tag = shapes.assert_valid(tag_params, self.__class.TAG_VALIDATION, {
+          local tag = assert_valid(tag_params, types.params_shape(self.__class.TAG_VALIDATION, {
             error_prefix = "topic tag " .. tostring(position)
-          })
+          }))
           tag.tag_order = position
           tag.slug = CategoryTags:slugify(tag.label)
           if not (tag.slug) then
@@ -421,16 +420,20 @@ do
     set_children = require_current_user(function(self)
       self:load_category()
       assert_error(self.category:allowed_to_edit(self.current_user), "invalid category")
-      local convert_arrays
-      convert_arrays = require("community.helpers.app").convert_arrays
-      self.params.categories = self.params.categories or { }
-      assert_valid(self.params, {
+      local convert_children
+      convert_children = types.array_of(types.partial({
+        children = types.empty + shapes.convert_array * types.proxy(function()
+          return convert_children
+        end)
+      }))
+      local params = assert_valid(self.params, types.params_shape({
         {
           "categories",
-          type = "table"
+          shapes.default(function()
+            return { }
+          end) * shapes.convert_array * convert_children
         }
-      })
-      convert_arrays(self.params)
+      }))
       local assert_categores_length
       assert_categores_length = function(categories)
         return assert_error(#categories <= limits.MAX_CATEGORY_CHILDREN, "category can have at most " .. tostring(limits.MAX_CATEGORY_CHILDREN) .. " children")
@@ -441,7 +444,7 @@ do
           depth = 1
         end
         assert_error(depth <= limits.MAX_CATEGORY_DEPTH, "category depth must be at most " .. tostring(limits.MAX_CATEGORY_DEPTH))
-        local out = shapes.assert_valid(params, self.__class.CATEGORY_CHILD_VALIDATION)
+        local out = assert_valid(params, types.params_shape(self.__class.CATEGORY_CHILD_VALIDATION))
         if out.children then
           assert_categores_length(out.children)
           do
@@ -458,13 +461,13 @@ do
         end
         return out
       end
-      assert_categores_length(self.params.categories)
+      assert_categores_length(params.categories)
       local initial_depth = #self.category:get_ancestors() + 1
       local categories
       do
         local _accum_0 = { }
         local _len_0 = 1
-        local _list_0 = self.params.categories
+        local _list_0 = params.categories
         for _index_0 = 1, #_list_0 do
           local category = _list_0[_index_0]
           _accum_0[_len_0] = validate_category_params(category, initial_depth)
@@ -663,47 +666,47 @@ do
   self.CATEGORY_VALIDATION = {
     {
       "title",
-      shapes.limited_text(limits.MAX_TITLE_LEN)
+      types.limited_text(limits.MAX_TITLE_LEN)
     },
     {
       "short_description",
-      shapes.db_nullable(shapes.limited_text(limits.MAX_TITLE_LEN))
+      shapes.db_nullable(types.limited_text(limits.MAX_TITLE_LEN))
     },
     {
       "description",
-      nullable_html(shapes.limited_text(limits.MAX_BODY_LEN))
+      nullable_html(types.limited_text(limits.MAX_BODY_LEN))
     },
     {
       "membership_type",
-      shapes.db_nullable(shapes.db_enum(Categories.membership_types))
+      shapes.db_nullable(types.db_enum(Categories.membership_types))
     },
     {
       "voting_type",
-      shapes.db_nullable(shapes.db_enum(Categories.voting_types))
+      shapes.db_nullable(types.db_enum(Categories.voting_types))
     },
     {
       "topic_posting_type",
-      shapes.db_nullable(shapes.db_enum(Categories.topic_posting_types))
+      shapes.db_nullable(types.db_enum(Categories.topic_posting_types))
     },
     {
       "approval_type",
-      shapes.db_nullable(shapes.db_enum(Categories.approval_types))
+      shapes.db_nullable(types.db_enum(Categories.approval_types))
     },
     {
       "archived",
-      shapes.empty / false + types.any / true
+      types.empty / false + types.any / true
     },
     {
       "hidden",
-      shapes.empty / false + types.any / true
+      types.empty / false + types.any / true
     },
     {
       "rules",
-      nullable_html(shapes.limited_text(limits.MAX_BODY_LEN))
+      nullable_html(types.limited_text(limits.MAX_BODY_LEN))
     },
     {
       "type",
-      shapes.empty + types.one_of({
+      types.empty + types.one_of({
         "directory",
         "post_list"
       })
@@ -712,15 +715,15 @@ do
   self.TAG_VALIDATION = {
     {
       "id",
-      shapes.db_id + shapes.empty
+      types.db_id + types.empty
     },
     {
       "label",
-      shapes.limited_text(limits.MAX_TAG_LEN)
+      types.limited_text(limits.MAX_TAG_LEN)
     },
     {
       "description",
-      shapes.db_nullable(shapes.limited_text(80))
+      shapes.db_nullable(types.limited_text(80))
     },
     {
       "color",
@@ -730,31 +733,31 @@ do
   self.CATEGORY_CHILD_VALIDATION = {
     {
       "id",
-      shapes.db_id + shapes.empty
+      types.db_id + types.empty
     },
     {
       "title",
-      shapes.limited_text(limits.MAX_TITLE_LEN)
+      types.limited_text(limits.MAX_TITLE_LEN)
     },
     {
       "short_description",
-      shapes.db_nullable(shapes.limited_text(limits.MAX_TITLE_LEN))
+      shapes.db_nullable(types.limited_text(limits.MAX_TITLE_LEN))
     },
     {
       "archived",
-      shapes.empty / false + types.any / true
+      types.empty / false + types.any / true
     },
     {
       "hidden",
-      shapes.empty / false + types.any / true
+      types.empty / false + types.any / true
     },
     {
       "directory",
-      shapes.empty / false + types.any / true
+      types.empty / false + types.any / true
     },
     {
       "children",
-      shapes.empty + types.table
+      types.empty + types.table
     }
   }
   if _parent_0.__inherited then
