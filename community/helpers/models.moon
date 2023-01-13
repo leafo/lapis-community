@@ -160,5 +160,5 @@ db_json = (v) ->
   else
     db.raw db.escape_literal json.encode v
 
-{ :upsert, :filter_update, :soft_delete, :memoize1,
-  :insert_on_conflict_update, :insert_on_conflict_ignore, :encode_value_list, :db_json }
+{ :filter_update, :soft_delete, :memoize1, :insert_on_conflict_update,
+  :insert_on_conflict_ignore, :encode_value_list, :db_json }

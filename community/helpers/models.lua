@@ -193,7 +193,6 @@ db_json = function(v)
   end
 end
 return {
-  upsert = upsert,
   filter_update = filter_update,
   soft_delete = soft_delete,
   memoize1 = memoize1,

@@ -22,11 +22,10 @@ local uniqify
 uniqify = require("lapis.util").uniqify
 local preload
 preload = require("lapis.db.model").preload
-local types = require("lapis.validate.types")
 local db = require("lapis.db")
+local types = require("lapis.validate.types")
 local date = require("date")
 local limits = require("community.limits")
-local shapes = require("community.helpers.shapes")
 local BrowsingFlow
 do
   local _class_0
@@ -143,7 +142,7 @@ do
         per_page = per_page,
         parent_field = "parent_post_id",
         child_clause = {
-          status = status
+          status = params.status
         },
         sort = function(list)
           return table.sort(list, function(a, b)

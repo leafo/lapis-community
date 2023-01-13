@@ -106,7 +106,7 @@ class BrowsingFlow extends Flow
 
       parent_field: "parent_post_id"
       child_clause: {
-        status: status
+        status: params.status
       }
 
       sort: (list) ->

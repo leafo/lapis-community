@@ -167,7 +167,7 @@ describe "browsing flow", ->
           assert.nil res.next_page, "next_page"
           assert.nil res.prev_page, "prev_page"
 
-        it "should get some nested posts", ->
+        it "gets nested topic posts", ->
           topic = factory.Topics!
 
           expected_nesting = {}
@@ -204,6 +204,34 @@ describe "browsing flow", ->
 
           nesting = flatten res.posts
           assert.same expected_nesting, nesting
+
+        it "gets nested posts respecting status", ->
+          topic = factory.Topics!
+          p = factory.Posts topic_id: topic.id
+          topic\increment_from_post p
+
+          pp1 = factory.Posts topic_id: topic.id, parent_post: p
+          topic\increment_from_post pp1
+
+          pp2 = factory.Posts topic_id: topic.id, parent_post: p
+          topic\increment_from_post pp2
+
+          pp1\update status: Posts.statuses.spam
+
+          res = topic_posts topic_id: topic.id
+
+          assert_posts = types.assert types.shape {
+            types.partial {
+              id: p.id
+              children: types.shape {
+                types.partial {
+                  id: pp2.id
+                }
+              }
+            }
+          }
+
+          assert_posts res.posts
 
         it "increments views", ->
           topic = factory.Topics!
