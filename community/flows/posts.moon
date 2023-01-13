@@ -8,12 +8,9 @@ import assert_valid from require "lapis.validate"
 import slugify from require "lapis.util"
 
 import require_current_user from require "community.helpers.app"
-import is_empty_html from require "community.helpers.html"
 
 limits = require "community.limits"
-
-shapes = require "community.helpers.shapes"
-import types from require "tableshape"
+types = require "lapis.validate.types"
 
 class PostsFlow extends Flow
   expose_assigns: true
@@ -21,8 +18,8 @@ class PostsFlow extends Flow
   load_post: =>
     return if @post
 
-    params = shapes.assert_valid @params, {
-      {"post_id", shapes.db_id}
+    params = assert_valid @params, types.params_shape {
+      {"post_id", types.db_id}
     }
 
     @post = Posts\find params.post_id
@@ -37,14 +34,15 @@ class PostsFlow extends Flow
     can_post, err = CommunityUsers\allowed_to_post @current_user, @topic
     assert_error can_post, err or "your account is not authorized to post"
 
-    params = shapes.assert_valid @params, {
-      {"parent_post_id", shapes.db_id + shapes.empty }
+    params = assert_valid @params, types.params_shape {
+      {"parent_post_id", types.db_id + types.empty }
+      {"post", types.params_shape {
+        {"body", types.limited_text limits.MAX_BODY_LEN }
+        {"body_format", types.db_enum(Posts.body_formats) + types.empty / Posts.body_formats.html}
+      }}
     }
 
-    new_post = shapes.assert_valid @params.post, {
-      {"body", shapes.limited_text limits.MAX_BODY_LEN }
-      {"body_format", shapes.db_enum(Posts.body_formats) + shapes.empty / Posts.body_formats.html}
-    }
+    new_post = params.post
 
     body = assert_error Posts\filter_body new_post.body, new_post.body_format
 
@@ -112,10 +110,10 @@ class PostsFlow extends Flow
 
     @topic = @post\get_topic!
 
-    post_update = shapes.assert_valid @params.post, {
-      {"body", shapes.limited_text limits.MAX_BODY_LEN }
-      {"body_format", shapes.db_enum(Posts.body_formats) + shapes.empty / Posts.body_formats.html}
-      {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
+    post_update = assert_valid @params.post, types.params_shape {
+      {"body", types.limited_text limits.MAX_BODY_LEN }
+      {"body_format", types.db_enum(Posts.body_formats) + types.empty / Posts.body_formats.html}
+      {"reason", types.empty + types.limited_text limits.MAX_BODY_LEN }
     }
 
     body = assert_error Posts\filter_body post_update.body, post_update.body_format
@@ -142,9 +140,9 @@ class PostsFlow extends Flow
 
     edited_title = if @post\is_topic_post! and not @topic.permanent
       category = @topic\get_category!
-      topic_update = shapes.assert_valid @params.post, {
-        {"tags", shapes.empty + shapes.limited_text(240) / (category and category\parse_tags or nil) }
-        {"title", types.nil + shapes.limited_text limits.MAX_TITLE_LEN }
+      topic_update = assert_valid @params.post, types.params_shape {
+        {"tags", types.empty + types.limited_text(240) / (category and category\parse_tags or nil) }
+        {"title", types.nil + types.limited_text limits.MAX_TITLE_LEN }
       }
 
       if topic_update.title
@@ -172,17 +170,6 @@ class PostsFlow extends Flow
         action: "edit"
       }
 
-    true
-
-  delete_pending_post: require_current_user =>
-    -- TODO: needs specs
-    params = shapes.assert_valid @params, {
-      {"post_id", shapes.db_id}
-    }
-
-    @pending_post = assert_error PendingPosts\find params.post_id
-    assert_error @pending_post\allowed_to_edit(@current_user, "delete"), "not allowed to edit"
-    @pending_post\delete!
     true
 
   delete_post: require_current_user =>

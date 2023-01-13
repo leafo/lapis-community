@@ -434,7 +434,19 @@ describe "posting flow", ->
             "post[body]": ""
           }
         {
-          message: {"body: expected text between 1 and 20480 characters"}
+          message: {"post: body: expected text between 1 and 20480 characters"}
+        }
+      )
+
+    it "errors with invalid format", ->
+      assert.has_error(
+        ->
+          new_post {
+            "post[body]": "Hello"
+            "post[body_format]": "theheck"
+          }
+        {
+          message: {"post: body_format: expected enum(html, markdown), or empty"}
         }
       )
 

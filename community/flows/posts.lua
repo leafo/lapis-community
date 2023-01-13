@@ -14,12 +14,8 @@ local slugify
 slugify = require("lapis.util").slugify
 local require_current_user
 require_current_user = require("community.helpers.app").require_current_user
-local is_empty_html
-is_empty_html = require("community.helpers.html").is_empty_html
 local limits = require("community.limits")
-local shapes = require("community.helpers.shapes")
-local types
-types = require("tableshape").types
+local types = require("lapis.validate.types")
 local PostsFlow
 do
   local _class_0
@@ -30,12 +26,12 @@ do
       if self.post then
         return 
       end
-      local params = shapes.assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "post_id",
-          shapes.db_id
+          types.db_id
         }
-      })
+      }))
       self.post = Posts:find(params.post_id)
       return assert_error(self.post, "invalid post")
     end,
@@ -48,22 +44,26 @@ do
       assert_error(self.topic:allowed_to_post(self.current_user, self._req))
       local can_post, err = CommunityUsers:allowed_to_post(self.current_user, self.topic)
       assert_error(can_post, err or "your account is not authorized to post")
-      local params = shapes.assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "parent_post_id",
-          shapes.db_id + shapes.empty
-        }
-      })
-      local new_post = shapes.assert_valid(self.params.post, {
-        {
-          "body",
-          shapes.limited_text(limits.MAX_BODY_LEN)
+          types.db_id + types.empty
         },
         {
-          "body_format",
-          shapes.db_enum(Posts.body_formats) + shapes.empty / Posts.body_formats.html
+          "post",
+          types.params_shape({
+            {
+              "body",
+              types.limited_text(limits.MAX_BODY_LEN)
+            },
+            {
+              "body_format",
+              types.db_enum(Posts.body_formats) + types.empty / Posts.body_formats.html
+            }
+          })
         }
-      })
+      }))
+      local new_post = params.post
       local body = assert_error(Posts:filter_body(new_post.body, new_post.body_format))
       local parent_post
       do
@@ -123,20 +123,20 @@ do
       self:load_post()
       assert_error(self.post:allowed_to_edit(self.current_user, "edit"), "not allowed to edit")
       self.topic = self.post:get_topic()
-      local post_update = shapes.assert_valid(self.params.post, {
+      local post_update = assert_valid(self.params.post, types.params_shape({
         {
           "body",
-          shapes.limited_text(limits.MAX_BODY_LEN)
+          types.limited_text(limits.MAX_BODY_LEN)
         },
         {
           "body_format",
-          shapes.db_enum(Posts.body_formats) + shapes.empty / Posts.body_formats.html
+          types.db_enum(Posts.body_formats) + types.empty / Posts.body_formats.html
         },
         {
           "reason",
-          shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
+          types.empty + types.limited_text(limits.MAX_BODY_LEN)
         }
-      })
+      }))
       local body = assert_error(Posts:filter_body(post_update.body, post_update.body_format))
       local edited
       if self.post.body ~= body then
@@ -158,10 +158,10 @@ do
       local edited_title
       if self.post:is_topic_post() and not self.topic.permanent then
         local category = self.topic:get_category()
-        local topic_update = shapes.assert_valid(self.params.post, {
+        local topic_update = assert_valid(self.params.post, types.params_shape({
           {
             "tags",
-            shapes.empty + shapes.limited_text(240) / (category and (function()
+            types.empty + types.limited_text(240) / (category and (function()
               local _base_1 = category
               local _fn_0 = _base_1.parse_tags
               return function(...)
@@ -171,9 +171,9 @@ do
           },
           {
             "title",
-            types["nil"] + shapes.limited_text(limits.MAX_TITLE_LEN)
+            types["nil"] + types.limited_text(limits.MAX_TITLE_LEN)
           }
-        })
+        }))
         if topic_update.title then
           topic_update.slug = slugify(topic_update.title)
         end
@@ -210,18 +210,6 @@ do
           action = "edit"
         })
       end
-      return true
-    end),
-    delete_pending_post = require_current_user(function(self)
-      local params = shapes.assert_valid(self.params, {
-        {
-          "post_id",
-          shapes.db_id
-        }
-      })
-      self.pending_post = assert_error(PendingPosts:find(params.post_id))
-      assert_error(self.pending_post:allowed_to_edit(self.current_user, "delete"), "not allowed to edit")
-      self.pending_post:delete()
       return true
     end),
     delete_post = require_current_user(function(self)
