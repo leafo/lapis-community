@@ -1,7 +1,5 @@
 local types = require("lapis.validate.types")
-local empty, db_id, db_enum, limited_text, trimmed_text, params_shape
-empty, db_id, db_enum, limited_text, trimmed_text, params_shape = types.empty, types.db_id, types.db_enum, types.limited_text, types.trimmed_text, types.params_shape
-local empty_html = (empty + trimmed_text * types.custom(function(str)
+local empty_html = (types.empty + types.trimmed_text * types.custom(function(str)
   local is_empty_html
   is_empty_html = require("community.helpers.html").is_empty_html
   return is_empty_html(str)
@@ -17,7 +15,7 @@ local page_number = (types.empty / 1) + (types.one_of({
 local db_nullable
 db_nullable = function(t)
   local db = require("lapis.db")
-  return t + empty / db.NULL
+  return t + types.empty / db.NULL
 end
 local default
 default = function(value)
@@ -44,14 +42,9 @@ local convert_array = types.table / function(t)
   return result
 end
 return {
-  empty = empty,
   empty_html = empty_html,
   color = color,
   page_number = page_number,
-  trimmed_text = trimmed_text,
-  limited_text = limited_text,
-  db_id = db_id,
-  db_enum = db_enum,
   db_nullable = db_nullable,
   default = default,
   convert_array = convert_array

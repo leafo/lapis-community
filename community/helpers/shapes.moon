@@ -1,8 +1,6 @@
-
 types = require "lapis.validate.types"
-import empty, db_id, db_enum, limited_text, trimmed_text,  params_shape from types
 
-empty_html = (empty + trimmed_text  * types.custom((str) ->
+empty_html = (types.empty + types.trimmed_text  * types.custom((str) ->
   import is_empty_html from require "community.helpers.html"
   is_empty_html str
 ) / nil)\describe "empty html"
@@ -19,14 +17,13 @@ page_number = (types.empty / 1) + (types.one_of({
 
 db_nullable = (t) ->
   db = require "lapis.db"
-  t + empty / db.NULL
+  t + types.empty / db.NULL
 
 default = (value) ->
   if type(value) == "table"
     error "You used table for default value. In order to prevent you from accidentally sharing the same reference across many requests you must pass a function that returns the table"
 
   types.empty / value + types.any
-
 
 -- this will create a copy of the table with all string sequential integer
 -- fields converted to numbers, essentially extracting the array from the
@@ -48,11 +45,9 @@ convert_array = types.table / (t) ->
 
 
 {
-  :empty, :empty_html
+  :empty_html
   :color
   :page_number
-  :trimmed_text, :limited_text
-  :db_id, :db_enum
   :db_nullable
   :default
   :convert_array
