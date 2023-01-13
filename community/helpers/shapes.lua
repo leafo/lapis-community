@@ -1,6 +1,6 @@
 local types = require("lapis.validate.types")
-local empty, db_id, db_enum, limited_text, trimmed_text, valid_text, params_shape
-empty, db_id, db_enum, limited_text, trimmed_text, valid_text, params_shape = types.empty, types.db_id, types.db_enum, types.limited_text, types.trimmed_text, types.valid_text, types.params_shape
+local empty, db_id, db_enum, limited_text, trimmed_text, params_shape
+empty, db_id, db_enum, limited_text, trimmed_text, params_shape = types.empty, types.db_id, types.db_enum, types.limited_text, types.trimmed_text, types.params_shape
 local empty_html = (empty + trimmed_text * types.custom(function(str)
   local is_empty_html
   is_empty_html = require("community.helpers.html").is_empty_html
@@ -18,11 +18,6 @@ local db_nullable
 db_nullable = function(t)
   local db = require("lapis.db")
   return t + empty / db.NULL
-end
-local assert_valid
-assert_valid = function(params, spec, opts)
-  local t = params_shape(spec, opts):assert_errors()
-  return t:transform(params)
 end
 local default
 default = function(value)
@@ -53,13 +48,11 @@ return {
   empty_html = empty_html,
   color = color,
   page_number = page_number,
-  valid_text = valid_text,
   trimmed_text = trimmed_text,
   limited_text = limited_text,
   db_id = db_id,
   db_enum = db_enum,
   db_nullable = db_nullable,
   default = default,
-  convert_array = convert_array,
-  assert_valid = assert_valid
+  convert_array = convert_array
 }

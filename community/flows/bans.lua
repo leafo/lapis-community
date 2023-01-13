@@ -31,7 +31,7 @@ do
     load_banned_user = with_params({
       {
         "banned_user_id",
-        shapes.db_id
+        types.db_id
       }
     }, function(self, params)
       self.banned = assert_error(Users:find(params.banned_user_id), "invalid user")
@@ -44,11 +44,11 @@ do
       local object_params = types.params_shape({
         {
           "object_id",
-          shapes.db_id
+          types.db_id
         },
         {
           "object_type",
-          shapes.db_enum(Bans.object_types)
+          types.db_enum(Bans.object_types)
         }
       })
       return function(self)
@@ -152,11 +152,11 @@ do
     create_ban = require_current_user(with_params({
       {
         "reason",
-        shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
+        types.empty + types.limited_text(limits.MAX_BODY_LEN)
       },
       {
         "target_category_id",
-        shapes.empty + shapes.db_id
+        types.empty + types.db_id
       }
     }, function(self, params)
       self:load_banned_user()

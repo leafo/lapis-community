@@ -24,7 +24,7 @@ class BansFlow extends Flow
 
   -- or user to ban
   load_banned_user: with_params {
-    {"banned_user_id", shapes.db_id}
+    {"banned_user_id", types.db_id}
   }, (params) =>
     @banned = assert_error Users\find(params.banned_user_id), "invalid user"
     assert_error @banned.id != @current_user.id, "you can not ban yourself"
@@ -35,8 +35,8 @@ class BansFlow extends Flow
 
   load_object: do
     object_params = types.params_shape {
-      {"object_id", shapes.db_id}
-      {"object_type", shapes.db_enum Bans.object_types}
+      {"object_id", types.db_id}
+      {"object_type", types.db_enum Bans.object_types}
     }
     =>
       return if @object
@@ -124,8 +124,8 @@ class BansFlow extends Flow
     }
 
   create_ban: require_current_user with_params {
-    {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
-    {"target_category_id", shapes.empty + shapes.db_id}
+    {"reason", types.empty + types.limited_text limits.MAX_BODY_LEN }
+    {"target_category_id", types.empty + types.db_id}
   }, (params) =>
     @load_banned_user!
     @load_object!

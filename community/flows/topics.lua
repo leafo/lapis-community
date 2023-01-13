@@ -6,6 +6,8 @@ do
   local _obj_0 = require("community.models")
   Topics, Posts, CommunityUsers, ActivityLogs, PendingPosts = _obj_0.Topics, _obj_0.Posts, _obj_0.CommunityUsers, _obj_0.ActivityLogs, _obj_0.PendingPosts
 end
+local assert_valid
+assert_valid = require("lapis.validate").assert_valid
 local assert_error
 assert_error = require("lapis.application").assert_error
 local require_current_user
@@ -14,8 +16,7 @@ local is_empty_html
 is_empty_html = require("community.helpers.html").is_empty_html
 local limits = require("community.limits")
 local shapes = require("community.helpers.shapes")
-local types
-types = require("tableshape").types
+local types = require("lapis.validate.types")
 local TopicsFlow
 do
   local _class_0
@@ -31,12 +32,12 @@ do
       if self.topic then
         return 
       end
-      local params = shapes.assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "topic_id",
-          shapes.db_id
+          types.db_id
         }
-      })
+      }))
       self.topic = Topics:find(params.topic_id)
       return assert_error(self.topic, "invalid topic")
     end,
@@ -74,22 +75,22 @@ do
         local can_post, err = CommunityUsers:allowed_to_post(self.current_user, self.category)
         assert_error(can_post, err or "your account is not authorized to post")
       end
-      local new_topic = shapes.assert_valid(self.params.topic, {
+      local new_topic = assert_valid(self.params.topic, types.params_shape({
         {
           "title",
-          shapes.limited_text(limits.MAX_TITLE_LEN)
+          types.limited_text(limits.MAX_TITLE_LEN)
         },
         {
           "body",
-          shapes.limited_text(limits.MAX_BODY_LEN)
+          types.limited_text(limits.MAX_BODY_LEN)
         },
         {
           "body_format",
-          shapes.db_enum(Posts.body_formats) + shapes.empty / Posts.body_formats.html
+          shapes.default("html") * types.db_enum(Posts.body_formats)
         },
         {
           "tags",
-          shapes.empty + shapes.limited_text(240) / (function()
+          types.empty + types.limited_text(240) / (function()
             local _base_1 = self.category
             local _fn_0 = _base_1.parse_tags
             return function(...)
@@ -99,13 +100,13 @@ do
         },
         {
           "sticky",
-          shapes.empty / false + types.any / true
+          types.empty / false + types.any / true
         },
         {
           "locked",
-          shapes.empty / false + types.any / true
+          types.empty / false + types.any / true
         }
-      })
+      }))
       local body = assert_error(Posts:filter_body(new_topic.body, new_topic.body_format))
       local sticky = false
       local locked = false
@@ -202,12 +203,12 @@ do
           action = "delete"
         })
         if self.topic:allowed_to_moderate(self.current_user) then
-          local params = shapes.assert_valid(self.params, {
+          local params = assert_valid(self.params, types.params_shape({
             {
               "reason",
-              shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
+              types.empty + types.limited_text(limits.MAX_BODY_LEN)
             }
-          })
+          }))
           self:write_moderation_log("topic.delete", params.reason)
         end
         return true
@@ -215,12 +216,12 @@ do
     end),
     lock_topic = require_current_user(function(self)
       self:load_topic_for_moderation()
-      local params = shapes.assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "reason",
-          shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
+          types.empty + types.limited_text(limits.MAX_BODY_LEN)
         }
-      })
+      }))
       assert_error(not self.topic.locked, "topic is already locked")
       self.topic:update({
         locked = true
@@ -240,12 +241,12 @@ do
     stick_topic = function(self)
       self:load_topic_for_moderation()
       assert_error(not self.topic.sticky, "topic is already sticky")
-      local params = shapes.assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "reason",
-          shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
+          types.empty + types.limited_text(limits.MAX_BODY_LEN)
         }
-      })
+      }))
       self.topic:update({
         sticky = true
       })
@@ -265,12 +266,12 @@ do
       self:load_topic_for_moderation()
       assert_error(not self.topic:is_hidden(), "topic is already hidden")
       assert_error(not self.topic:is_archived(), "can't hide archived topic")
-      local params = shapes.assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "reason",
-          shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
+          types.empty + types.limited_text(limits.MAX_BODY_LEN)
         }
-      })
+      }))
       assert_error(self.topic:hide())
       self:write_moderation_log("topic.hide", params.reason)
       return true
@@ -285,12 +286,12 @@ do
     archive_topic = function(self)
       self:load_topic_for_moderation()
       assert_error(not self.topic:is_archived(), "topic is already archived")
-      local params = shapes.assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "reason",
-          shapes.empty + shapes.limited_text(limits.MAX_BODY_LEN)
+          types.empty + types.limited_text(limits.MAX_BODY_LEN)
         }
-      })
+      }))
       self.topic:archive()
       self:write_moderation_log("topic.archive", params.reason)
       return true
@@ -306,12 +307,12 @@ do
       local Categories
       Categories = require("community.models").Categories
       self:load_topic_for_moderation()
-      local params = shapes.assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "target_category_id",
-          shapes.db_id
+          types.db_id
         }
-      })
+      }))
       local old_category_id = self.topic.category_id
       self.target_category = Categories:find(params.target_category_id)
       assert_error(self.target_category:allowed_to_moderate(self.current_user), "invalid category")

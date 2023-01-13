@@ -7,7 +7,7 @@ import assert_valid from require "lapis.validate"
 import assert_error from require "lapis.application"
 import assert_page, require_current_user from require "community.helpers.app"
 
-shapes = require "community.helpers.shapes"
+types = require "lapis.validate.types"
 
 import Users from require "models"
 
@@ -24,14 +24,13 @@ class ModeratorsFlow extends Flow
   load_object: =>
     return if @object
 
-    assert_valid @params, {
-      {"object_id", is_integer: true }
-      {"object_type", one_of: Moderators.object_types}
+    params = assert_valid @params, types.params_shape {
+      {"object_id", types.db_id}
+      {"object_type", types.db_enum Moderators.object_types}
     }
 
-    model = Moderators\model_for_object_type @params.object_type
-    @object = model\find @params.object_id
-
+    model = Moderators\model_for_object_type params.object_type
+    @object = model\find params.object_id
     assert_error @object, "invalid moderator object"
 
   load_user: (allow_self) =>
@@ -40,10 +39,10 @@ class ModeratorsFlow extends Flow
     return if @user
 
     @user = if @params.user_id
-      user_id = assert_error shapes.db_id\describe("user_id")\transform @params.user_id
+      user_id = assert_error types.db_id\describe("user_id")\transform @params.user_id
       Users\find user_id
     elseif @params.username
-      username = assert_error shapes.limited_text(255)\describe("username")\transform @params.username
+      username = assert_error types.limited_text(255)\describe("username")\transform @params.username
       Users\find { :username }
 
     assert_error @user, "invalid user"

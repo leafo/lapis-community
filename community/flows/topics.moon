@@ -4,6 +4,7 @@ db = require "lapis.db"
 import Flow from require "lapis.flow"
 import Topics, Posts, CommunityUsers, ActivityLogs, PendingPosts from require "community.models"
 
+import assert_valid from require "lapis.validate"
 import assert_error from require "lapis.application"
 
 import require_current_user from require "community.helpers.app"
@@ -12,7 +13,7 @@ import is_empty_html from require "community.helpers.html"
 limits = require "community.limits"
 
 shapes = require "community.helpers.shapes"
-import types from require "tableshape"
+types = require "lapis.validate.types"
 
 class TopicsFlow extends Flow
   expose_assigns: true
@@ -25,8 +26,8 @@ class TopicsFlow extends Flow
   load_topic: =>
     return if @topic
 
-    params = shapes.assert_valid @params, {
-      {"topic_id", shapes.db_id}
+    params = assert_valid @params, types.params_shape {
+      {"topic_id", types.db_id}
     }
 
     @topic = Topics\find params.topic_id
@@ -66,13 +67,13 @@ class TopicsFlow extends Flow
       can_post, err = CommunityUsers\allowed_to_post @current_user, @category
       assert_error can_post, err or "your account is not authorized to post"
 
-    new_topic = shapes.assert_valid @params.topic, {
-      {"title", shapes.limited_text limits.MAX_TITLE_LEN }
-      {"body", shapes.limited_text limits.MAX_BODY_LEN }
-      {"body_format", shapes.db_enum(Posts.body_formats) + shapes.empty / Posts.body_formats.html}
-      {"tags", shapes.empty + shapes.limited_text(240) / @category\parse_tags }
-      {"sticky", shapes.empty / false + types.any / true}
-      {"locked", shapes.empty / false + types.any / true}
+    new_topic = assert_valid @params.topic, types.params_shape {
+      {"title", types.limited_text limits.MAX_TITLE_LEN }
+      {"body", types.limited_text limits.MAX_BODY_LEN }
+      {"body_format", shapes.default("html") * types.db_enum(Posts.body_formats)}
+      {"tags", types.empty + types.limited_text(240) / @category\parse_tags }
+      {"sticky", types.empty / false + types.any / true}
+      {"locked", types.empty / false + types.any / true}
     }
 
     body = assert_error Posts\filter_body new_topic.body, new_topic.body_format
@@ -162,8 +163,8 @@ class TopicsFlow extends Flow
 
       -- if we're a moderator then write to moderation log
       if @topic\allowed_to_moderate @current_user
-        params = shapes.assert_valid @params, {
-          {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
+        params = assert_valid @params, types.params_shape {
+          {"reason", types.empty + types.limited_text limits.MAX_BODY_LEN }
         }
 
         @write_moderation_log "topic.delete", params.reason
@@ -173,8 +174,8 @@ class TopicsFlow extends Flow
   lock_topic: require_current_user =>
     @load_topic_for_moderation!
 
-    params = shapes.assert_valid @params, {
-      {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
+    params = assert_valid @params, types.params_shape {
+      {"reason", types.empty + types.limited_text limits.MAX_BODY_LEN }
     }
 
     assert_error not @topic.locked, "topic is already locked"
@@ -196,8 +197,8 @@ class TopicsFlow extends Flow
     @load_topic_for_moderation!
     assert_error not @topic.sticky, "topic is already sticky"
 
-    params = shapes.assert_valid @params, {
-      {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
+    params = assert_valid @params, types.params_shape {
+      {"reason", types.empty + types.limited_text limits.MAX_BODY_LEN }
     }
 
     @topic\update sticky: true
@@ -217,8 +218,8 @@ class TopicsFlow extends Flow
     assert_error not @topic\is_hidden!, "topic is already hidden"
     assert_error not @topic\is_archived!, "can't hide archived topic"
 
-    params = shapes.assert_valid @params, {
-      {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
+    params = assert_valid @params, types.params_shape {
+      {"reason", types.empty + types.limited_text limits.MAX_BODY_LEN }
     }
 
     assert_error @topic\hide!
@@ -237,8 +238,8 @@ class TopicsFlow extends Flow
     @load_topic_for_moderation!
     assert_error not @topic\is_archived!, "topic is already archived"
 
-    params = shapes.assert_valid @params, {
-      {"reason", shapes.empty + shapes.limited_text limits.MAX_BODY_LEN }
+    params = assert_valid @params, types.params_shape {
+      {"reason", types.empty + types.limited_text limits.MAX_BODY_LEN }
     }
 
     @topic\archive!
@@ -257,8 +258,8 @@ class TopicsFlow extends Flow
     import Categories from require "community.models"
     @load_topic_for_moderation!
 
-    params = shapes.assert_valid @params, {
-      {"target_category_id", shapes.db_id}
+    params = assert_valid @params, types.params_shape {
+      {"target_category_id", types.db_id}
     }
 
     old_category_id = @topic.category_id

@@ -1,11 +1,8 @@
 local Flow
 Flow = require("lapis.flow").Flow
 local db = require("lapis.db")
-local assert_error, yield_error
-do
-  local _obj_0 = require("lapis.application")
-  assert_error, yield_error = _obj_0.assert_error, _obj_0.yield_error
-end
+local assert_error
+assert_error = require("lapis.application").assert_error
 local assert_valid, with_params
 do
   local _obj_0 = require("lapis.validate")

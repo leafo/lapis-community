@@ -1,6 +1,6 @@
 
 types = require "lapis.validate.types"
-import empty, db_id, db_enum, limited_text, trimmed_text, valid_text, params_shape from types
+import empty, db_id, db_enum, limited_text, trimmed_text,  params_shape from types
 
 empty_html = (empty + trimmed_text  * types.custom((str) ->
   import is_empty_html from require "community.helpers.html"
@@ -20,10 +20,6 @@ page_number = (types.empty / 1) + (types.one_of({
 db_nullable = (t) ->
   db = require "lapis.db"
   t + empty / db.NULL
-
-assert_valid = (params, spec, opts) ->
-  t = params_shape(spec, opts)\assert_errors!
-  t\transform params
 
 default = (value) ->
   if type(value) == "table"
@@ -55,11 +51,9 @@ convert_array = types.table / (t) ->
   :empty, :empty_html
   :color
   :page_number
-  :valid_text, :trimmed_text, :limited_text
+  :trimmed_text, :limited_text
   :db_id, :db_enum
   :db_nullable
   :default
   :convert_array
-
-  :assert_valid
 }

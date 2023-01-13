@@ -10,7 +10,7 @@ do
   local _obj_0 = require("community.helpers.app")
   assert_page, require_current_user = _obj_0.assert_page, _obj_0.require_current_user
 end
-local shapes = require("community.helpers.shapes")
+local types = require("lapis.validate.types")
 local Users
 Users = require("models").Users
 local Moderators
@@ -27,18 +27,18 @@ do
       if self.object then
         return 
       end
-      assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "object_id",
-          is_integer = true
+          types.db_id
         },
         {
           "object_type",
-          one_of = Moderators.object_types
+          types.db_enum(Moderators.object_types)
         }
-      })
-      local model = Moderators:model_for_object_type(self.params.object_type)
-      self.object = model:find(self.params.object_id)
+      }))
+      local model = Moderators:model_for_object_type(params.object_type)
+      self.object = model:find(params.object_id)
       return assert_error(self.object, "invalid moderator object")
     end,
     load_user = function(self, allow_self)
@@ -47,10 +47,10 @@ do
         return 
       end
       if self.params.user_id then
-        local user_id = assert_error(shapes.db_id:describe("user_id"):transform(self.params.user_id))
+        local user_id = assert_error(types.db_id:describe("user_id"):transform(self.params.user_id))
         self.user = Users:find(user_id)
       elseif self.params.username then
-        local username = assert_error(shapes.limited_text(255):describe("username"):transform(self.params.username))
+        local username = assert_error(types.limited_text(255):describe("username"):transform(self.params.username))
         self.user = Users:find({
           username = username
         })

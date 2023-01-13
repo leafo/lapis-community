@@ -2,7 +2,7 @@
 import Flow from require "lapis.flow"
 
 db = require "lapis.db"
-import assert_error, yield_error from require "lapis.application"
+import assert_error from require "lapis.application"
 import assert_valid, with_params from require "lapis.validate"
 import preload from require "lapis.db.model"
 

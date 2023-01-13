@@ -35,8 +35,8 @@ describe "moderators flow", ->
         -> res = add_moderator!
         {
           message: {
-            "object_id must be an integer"
-            "object_type must be one of category, category_group"
+            'object_id: expected database ID integer'
+            'object_type: expected enum(category, category_group)'
           }
         }
       )
@@ -194,8 +194,8 @@ describe "moderators flow", ->
         -> remove_moderator {}
         {
           message: {
-            "object_id must be an integer",
-            "object_type must be one of category, category_group"
+            'object_id: expected database ID integer'
+            'object_type: expected enum(category, category_group)'
           }
         }
       )
