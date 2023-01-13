@@ -15,8 +15,11 @@ local preload
 preload = require("lapis.db.model").preload
 local filter_update
 filter_update = require("community.helpers.models").filter_update
-local require_current_user
-require_current_user = require("community.helpers.app").require_current_user
+local require_current_user, assert_page
+do
+  local _obj_0 = require("community.helpers.app")
+  require_current_user, assert_page = _obj_0.require_current_user, _obj_0.assert_page
+end
 local PostReports, Posts, Topics
 do
   local _obj_0 = require("community.models")
@@ -24,8 +27,7 @@ do
 end
 local limits = require("community.limits")
 local shapes = require("community.helpers.shapes")
-local types
-types = require("tableshape").types
+local types = require("lapis.validate.types")
 local ReportsFlow
 do
   local _class_0
@@ -35,7 +37,7 @@ do
     find_report_for_moderation = with_params({
       {
         "report_id",
-        shapes.db_id
+        types.db_id
       }
     }, function(self, params)
       local report = assert_error(PostReports:find(self.params.report_id), "invalid report")
@@ -56,16 +58,16 @@ do
     end,
     update_or_create_report = require_current_user(function(self)
       self:load_post()
-      local params = shapes.assert_valid(self.params.report, {
+      local params = assert_valid(self.params.report, types.params_shape({
         {
           "reason",
-          shapes.db_enum(PostReports.reasons)
+          types.db_enum(PostReports.reasons)
         },
         {
           "body",
-          shapes.db_nullable(shapes.limited_text(limits.MAX_BODY_LEN))
+          shapes.db_nullable(types.limited_text(limits.MAX_BODY_LEN))
         }
-      })
+      }))
       params = self:copy_post_params(params)
       if self.report then
         self.report:update(filter_update(self.report, params))
@@ -97,16 +99,13 @@ do
     show_reports = require_current_user(function(self, category)
       assert(category, "missing report object")
       assert_error(category:allowed_to_moderate(self.current_user), "invalid category")
-      local params = shapes.assert_valid(self.params, {
-        {
-          "page",
-          shapes.page_number
-        },
+      assert_page(self)
+      local params = assert_valid(self.params, types.params_shape({
         {
           "status",
-          shapes.empty + shapes.db_enum(PostReports.statuses)
+          types.empty + types.db_enum(PostReports.statuses)
         }
-      })
+      }))
       local children = self.category:get_flat_children()
       local category_ids
       do
@@ -147,31 +146,31 @@ do
           return reports
         end
       })
-      self.reports = self.pager:get_page(params.page)
+      self.reports = self.pager:get_page(self.page)
       return true
     end),
     moderate_report = require_current_user(function(self)
       local report = self:find_report_for_moderation()
       local action
-      action = shapes.assert_valid(self.params, {
+      action = assert_valid(self.params, types.params_shape({
         {
           "action",
-          shapes.empty / "update" + types.one_of({
+          types.empty / "update" + types.one_of({
             "update",
             "purge"
           })
         }
-      }).action
+      })).action
       local _exp_0 = action
       if "purge" == _exp_0 then
         report:delete()
       elseif "update" == _exp_0 then
-        local report_update = shapes.assert_valid(self.params.report, {
+        local report_update = assert_valid(self.params.report, types.params_shape({
           {
             "status",
-            shapes.db_enum(PostReports.statuses)
+            types.db_enum(PostReports.statuses)
           }
-        })
+        }))
         report:update({
           status = report_update.status,
           moderating_user_id = self.current_user.id,

@@ -7,14 +7,14 @@ import assert_valid, with_params from require "lapis.validate"
 import preload from require "lapis.db.model"
 
 import filter_update from require "community.helpers.models"
-import require_current_user from require "community.helpers.app"
+import require_current_user, assert_page from require "community.helpers.app"
 
 import PostReports, Posts, Topics from require "community.models"
 
 limits = require "community.limits"
 
 shapes = require "community.helpers.shapes"
-import types from require "tableshape"
+types = require "lapis.validate.types"
 
 class ReportsFlow extends Flow
   expose_assigns: true
@@ -24,7 +24,7 @@ class ReportsFlow extends Flow
     assert @current_user, "missing current user for reports flow"
 
   find_report_for_moderation: with_params {
-    {"report_id", shapes.db_id}
+    {"report_id", types.db_id}
   }, (params) =>
     report = assert_error PostReports\find(@params.report_id), "invalid report"
 
@@ -51,9 +51,9 @@ class ReportsFlow extends Flow
 
   update_or_create_report: require_current_user =>
     @load_post!
-    params = shapes.assert_valid @params.report, {
-      {"reason", shapes.db_enum PostReports.reasons}
-      {"body", shapes.db_nullable shapes.limited_text limits.MAX_BODY_LEN}
+    params = assert_valid @params.report, types.params_shape {
+      {"reason", types.db_enum PostReports.reasons}
+      {"body", shapes.db_nullable types.limited_text limits.MAX_BODY_LEN}
     }
 
     params = @copy_post_params params
@@ -82,9 +82,10 @@ class ReportsFlow extends Flow
     assert category, "missing report object"
     assert_error category\allowed_to_moderate(@current_user), "invalid category"
 
-    params = shapes.assert_valid @params, {
-      {"page", shapes.page_number}
-      {"status", shapes.empty + shapes.db_enum PostReports.statuses}
+    assert_page @
+
+    params = assert_valid @params, types.params_shape {
+      {"status", types.empty + types.db_enum PostReports.statuses}
     }
 
     children = @category\get_flat_children!
@@ -121,22 +122,22 @@ class ReportsFlow extends Flow
         reports
       }
 
-    @reports = @pager\get_page params.page
+    @reports = @pager\get_page @page
     true
 
   moderate_report: require_current_user =>
     report = @find_report_for_moderation!
 
-    {:action} = shapes.assert_valid @params, {
-      {"action", shapes.empty / "update" + types.one_of {"update", "purge"}}
+    {:action} = assert_valid @params, types.params_shape {
+      {"action", types.empty / "update" + types.one_of {"update", "purge"}}
     }
 
     switch action
       when "purge"
         report\delete!
       when "update"
-        report_update = shapes.assert_valid @params.report, {
-          {"status", shapes.db_enum PostReports.statuses}
+        report_update = assert_valid @params.report, types.params_shape {
+          {"status", types.db_enum PostReports.statuses}
         }
 
         report\update {
