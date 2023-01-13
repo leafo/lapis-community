@@ -2,7 +2,7 @@
 import Flow from require "lapis.flow"
 
 db = require "lapis.db"
-import assert_valid from require "lapis.validate"
+import with_params from require "lapis.validate"
 import assert_error from require "lapis.application"
 import assert_page, require_current_user from require "community.helpers.app"
 
@@ -11,6 +11,8 @@ import CategoryMembers from require "community.models"
 
 import preload from require "lapis.db.model"
 
+types = require "lapis.validate.types"
+
 class MembersFlow extends Flow
   expose_assigns: true
 
@@ -18,19 +20,19 @@ class MembersFlow extends Flow
     super req
     assert @category, "can't create a members flow without a category on the request object"
 
-  load_user: =>
-    assert_valid @params, {
-      {"user_id", optional: true, is_integer: true}
-      {"username", optional: true}
-    }
+  load_user: with_params {
+    {"user_id", types.empty + types.db_id}
+    {"username", types.empty + types.limited_text 256}
+  }, (params) =>
+    user = if params.user_id
+      Users\find params.user_id
+    elseif params.username
+      Users\find username: params.username
 
-    @user = if @params.user_id
-      Users\find @params.user_id
-    elseif @params.username
-      Users\find username: @params.username
+    assert_error user, "invalid user"
+    assert_error @current_user.id != user.id, "can't add self"
 
-    assert_error @user, "invalid user"
-    assert_error @current_user.id != @user.id, "can't add self"
+    @user = user
     @member = @category\find_member @user
 
   show_members: =>

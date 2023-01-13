@@ -16,6 +16,7 @@ do
 end
 local preload
 preload = require("lapis.db.model").preload
+local types = require("lapis.validate.types")
 local BookmarksFlow
 do
   local _class_0
@@ -26,18 +27,18 @@ do
       if self.object then
         return 
       end
-      assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "object_id",
-          is_integer = true
+          types.db_id
         },
         {
           "object_type",
-          one_of = Bookmarks.object_types
+          types.db_enum(Bookmarks.object_types)
         }
-      })
-      local model = Bookmarks:model_for_object_type(self.params.object_type)
-      self.object = model:find(self.params.object_id)
+      }))
+      local model = Bookmarks:model_for_object_type(params.object_type)
+      self.object = model:find(params.object_id)
       assert_error(self.object, "invalid bookmark object")
       self.bookmark = Bookmarks:get(self.object, self.current_user)
     end,

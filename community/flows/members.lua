@@ -1,8 +1,8 @@
 local Flow
 Flow = require("lapis.flow").Flow
 local db = require("lapis.db")
-local assert_valid
-assert_valid = require("lapis.validate").assert_valid
+local with_params
+with_params = require("lapis.validate").with_params
 local assert_error
 assert_error = require("lapis.application").assert_error
 local assert_page, require_current_user
@@ -16,35 +16,36 @@ local CategoryMembers
 CategoryMembers = require("community.models").CategoryMembers
 local preload
 preload = require("lapis.db.model").preload
+local types = require("lapis.validate.types")
 local MembersFlow
 do
   local _class_0
   local _parent_0 = Flow
   local _base_0 = {
     expose_assigns = true,
-    load_user = function(self)
-      assert_valid(self.params, {
-        {
-          "user_id",
-          optional = true,
-          is_integer = true
-        },
-        {
-          "username",
-          optional = true
-        }
-      })
-      if self.params.user_id then
-        self.user = Users:find(self.params.user_id)
-      elseif self.params.username then
-        self.user = Users:find({
-          username = self.params.username
+    load_user = with_params({
+      {
+        "user_id",
+        types.empty + types.db_id
+      },
+      {
+        "username",
+        types.empty + types.limited_text(256)
+      }
+    }, function(self, params)
+      local user
+      if params.user_id then
+        user = Users:find(params.user_id)
+      elseif params.username then
+        user = Users:find({
+          username = params.username
         })
       end
-      assert_error(self.user, "invalid user")
-      assert_error(self.current_user.id ~= self.user.id, "can't add self")
+      assert_error(user, "invalid user")
+      assert_error(self.current_user.id ~= user.id, "can't add self")
+      self.user = user
       self.member = self.category:find_member(self.user)
-    end,
+    end),
     show_members = function(self)
       assert_page(self)
       self.pager = CategoryMembers:paginated([[      where category_id = ?

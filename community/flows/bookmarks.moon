@@ -13,6 +13,8 @@ import require_current_user, assert_page from require "community.helpers.app"
 
 import preload from require "lapis.db.model"
 
+types = require "lapis.validate.types"
+
 class BookmarksFlow extends Flow
   expose_assigns: true
 
@@ -23,13 +25,13 @@ class BookmarksFlow extends Flow
   load_object: =>
     return if @object
 
-    assert_valid @params, {
-      {"object_id", is_integer: true }
-      {"object_type", one_of: Bookmarks.object_types}
+    params = assert_valid @params, types.params_shape {
+      {"object_id", types.db_id}
+      {"object_type", types.db_enum Bookmarks.object_types}
     }
 
-    model = Bookmarks\model_for_object_type @params.object_type
-    @object = model\find @params.object_id
+    model = Bookmarks\model_for_object_type params.object_type
+    @object = model\find params.object_id
 
     assert_error @object, "invalid bookmark object"
 

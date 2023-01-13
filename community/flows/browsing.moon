@@ -6,14 +6,14 @@ import Categories, Topics, Posts, CommunityUsers from require "community.models"
 import OrderedPaginator from require "lapis.db.pagination"
 import NestedOrderedPaginator from require "community.model"
 
-import assert_error, yield_error from require "lapis.application"
-import assert_valid from require "lapis.validate"
+import assert_error from require "lapis.application"
+import assert_valid, with_params from require "lapis.validate"
 import uniqify from require "lapis.util"
 
 import preload from require "lapis.db.model"
 
 db = require "lapis.db"
-
+types = require "lapis.validate.types"
 date = require "date"
 limits = require "community.limits"
 
@@ -27,13 +27,10 @@ class BrowsingFlow extends Flow
   throttle_view_count: (key) =>
     false
 
-  get_before_after: =>
-    assert_valid @params, {
-      {"before", optional: true, is_integer: true}
-      {"after", optional: true, is_integer: true}
-    }
-
-    tonumber(@params.before), tonumber(@params.after)
+  get_before_after: with_params {
+    {"before", types.empty + types.db_id}
+    {"after", types.empty + types.db_id}
+  }, (params) => params.before, params.after
 
   view_counter: =>
     import running_in_test from require "lapis.spec"
@@ -96,15 +93,15 @@ class BrowsingFlow extends Flow
 
     before, after = @get_before_after!
 
-    assert_valid @params, {
-      {"status", optional: true, one_of: {"archived"}}
+    params = assert_valid @params, types.params_shape {
+      {"status", (types.empty / "default" + types.one_of({"archived"})) * types.db_enum Posts.statuses}
     }
 
-    status = Posts.statuses\for_db @params.status or "default"
-
-    pager = NestedOrderedPaginator Posts, "post_number", [[
-      where topic_id = ? and depth = 1 and status = ?
-    ]], @topic.id, status, {
+    pager = NestedOrderedPaginator Posts, "post_number", "where ?", db.clause({
+      topic_id: @topic.id
+      status: params.status
+      depth: 1
+    }), {
       :per_page
 
       parent_field: "parent_post_id"
@@ -306,11 +303,12 @@ class BrowsingFlow extends Flow
     CategoriesFlow(@)\load_category!
     assert_error @allowed_to_view(@category), "not allowed to view"
 
-    assert_valid @params, {
-      {"status", optional: true, one_of: {"archived", "hidden"}}
+    params = assert_valid @params, types.params_shape {
+      {"status", (types.empty / "default" + types.one_of({"archived", "hidden"})) * types.db_enum Topics.statuses}
     }
 
-    @topics_status = opts.status or @params.status or "default"
+    @topics_status = Topics.statuses\to_name params.status
+
     status = Topics.statuses\for_db @topics_status
 
     if opts.increment_views != false
@@ -321,9 +319,12 @@ class BrowsingFlow extends Flow
 
     before, after = @get_before_after!
 
-    pager = OrderedPaginator Topics, "category_order", [[
-      where category_id = ? and status = ? and not deleted and not sticky
-    ]], @category.id, status, {
+    pager = OrderedPaginator Topics, "category_order", "where ?", db.clause({
+      category_id: @category.id
+      status: params.status
+      deleted: false
+      sticky: false
+    }), {
       per_page: opts.per_page or limits.TOPICS_PER_PAGE
       prepare_results: @\preload_topics
     }

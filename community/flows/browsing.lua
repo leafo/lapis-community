@@ -11,20 +11,22 @@ local OrderedPaginator
 OrderedPaginator = require("lapis.db.pagination").OrderedPaginator
 local NestedOrderedPaginator
 NestedOrderedPaginator = require("community.model").NestedOrderedPaginator
-local assert_error, yield_error
+local assert_error
+assert_error = require("lapis.application").assert_error
+local assert_valid, with_params
 do
-  local _obj_0 = require("lapis.application")
-  assert_error, yield_error = _obj_0.assert_error, _obj_0.yield_error
+  local _obj_0 = require("lapis.validate")
+  assert_valid, with_params = _obj_0.assert_valid, _obj_0.with_params
 end
-local assert_valid
-assert_valid = require("lapis.validate").assert_valid
 local uniqify
 uniqify = require("lapis.util").uniqify
 local preload
 preload = require("lapis.db.model").preload
+local types = require("lapis.validate.types")
 local db = require("lapis.db")
 local date = require("date")
 local limits = require("community.limits")
+local shapes = require("community.helpers.shapes")
 local BrowsingFlow
 do
   local _class_0
@@ -37,21 +39,18 @@ do
     throttle_view_count = function(self, key)
       return false
     end,
-    get_before_after = function(self)
-      assert_valid(self.params, {
-        {
-          "before",
-          optional = true,
-          is_integer = true
-        },
-        {
-          "after",
-          optional = true,
-          is_integer = true
-        }
-      })
-      return tonumber(self.params.before), tonumber(self.params.after)
-    end,
+    get_before_after = with_params({
+      {
+        "before",
+        types.empty + types.db_id
+      },
+      {
+        "after",
+        types.empty + types.db_id
+      }
+    }, function(self, params)
+      return params.before, params.after
+    end),
     view_counter = function(self)
       local running_in_test
       running_in_test = require("lapis.spec").running_in_test
@@ -128,18 +127,19 @@ do
         self:increment_topic_view_counter()
       end
       local before, after = self:get_before_after()
-      assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "status",
-          optional = true,
-          one_of = {
+          (types.empty / "default" + types.one_of({
             "archived"
-          }
+          })) * types.db_enum(Posts.statuses)
         }
-      })
-      local status = Posts.statuses:for_db(self.params.status or "default")
-      local pager = NestedOrderedPaginator(Posts, "post_number", [[      where topic_id = ? and depth = 1 and status = ?
-    ]], self.topic.id, status, {
+      }))
+      local pager = NestedOrderedPaginator(Posts, "post_number", "where ?", db.clause({
+        topic_id = self.topic.id,
+        status = params.status,
+        depth = 1
+      }), {
         per_page = per_page,
         parent_field = "parent_post_id",
         child_clause = {
@@ -464,17 +464,16 @@ do
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()
       assert_error(self:allowed_to_view(self.category), "not allowed to view")
-      assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "status",
-          optional = true,
-          one_of = {
+          (types.empty / "default" + types.one_of({
             "archived",
             "hidden"
-          }
+          })) * types.db_enum(Topics.statuses)
         }
-      })
-      self.topics_status = opts.status or self.params.status or "default"
+      }))
+      self.topics_status = Topics.statuses:to_name(params.status)
       local status = Topics.statuses:for_db(self.topics_status)
       if opts.increment_views ~= false then
         do
@@ -488,8 +487,12 @@ do
         end
       end
       local before, after = self:get_before_after()
-      local pager = OrderedPaginator(Topics, "category_order", [[      where category_id = ? and status = ? and not deleted and not sticky
-    ]], self.category.id, status, {
+      local pager = OrderedPaginator(Topics, "category_order", "where ?", db.clause({
+        category_id = self.category.id,
+        status = params.status,
+        deleted = false,
+        sticky = false
+      }), {
         per_page = opts.per_page or limits.TOPICS_PER_PAGE,
         prepare_results = (function()
           local _base_1 = self
