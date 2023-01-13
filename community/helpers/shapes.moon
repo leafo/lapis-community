@@ -25,6 +25,32 @@ assert_valid = (params, spec, opts) ->
   t = params_shape(spec, opts)\assert_errors!
   t\transform params
 
+default = (value) ->
+  if type(value) == "table"
+    error "You used table for default value, in order to prevent you from accidentally sharing the same value across many request you must pass a function that returns the table"
+
+  types.empty / value + types.any
+
+
+-- this will create a copy of the table with all string sequential integer
+-- fields converted to numbers, essentially extracting the array from the
+-- table. Any other fields will be dropped
+convert_array = types.table / (t) ->
+  result = {}
+  i = 1
+
+  while true
+    str_i = "#{i}"
+    if v = t[str_i] or t[i]
+      result[i] = v
+    else
+      break
+
+    i += 1
+
+  result
+
+
 {
   :empty, :empty_html
   :color
@@ -32,6 +58,8 @@ assert_valid = (params, spec, opts) ->
   :valid_text, :trimmed_text, :limited_text
   :db_id, :db_enum
   :db_nullable
+  :default
+  :convert_array
 
   :assert_valid
 }
