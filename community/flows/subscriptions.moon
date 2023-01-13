@@ -4,6 +4,7 @@ db = require "lapis.db"
 import assert_page from require "community.helpers.app"
 import assert_valid from require "lapis.validate"
 import assert_error from require "lapis.application"
+types = require "lapis.validate.types"
 
 import Subscriptions from require "community.models"
 
@@ -27,28 +28,29 @@ class SubscriptionsFlow extends Flow
   find_subscription: =>
     return @subscription if @subscription
 
-    assert_valid @params, {
-      {"object_id", is_integer: true}
-      {"object_type", one_of: Subscriptions.object_types}
+    params = assert_valid @params, types.params_shape {
+      {"object_id", types.db_id}
+      {"object_type", types.db_enum Subscriptions.object_types}
     }
 
     @subscription = Subscriptions\find {
-      object_type: Subscriptions.object_types\for_db @params.object_type
-      object_id: @params.object_id
+      object_type: Subscriptions.object_types\for_db params.object_type
+      object_id: params.object_id
       user_id: @current_user.id
     }
 
     @subscription
 
   show_subscriptions: =>
+    assert_page @
+
     -- TODO: there's no index on order
-    @pager = Subscriptions\paginated "
-      where user_id = ? and subscribed
-      order by created_at desc
-    ", @current_user.id, {
+    @pager = Subscriptions\paginated "where ? order by created_at desc", db.clause({
+      user_id: @current_user.id
+      subscribed: true
+    }), {
       per_page: 50
       prepare_results: (subs) ->
-
         for sub in *subs
           sub.user = @current_user
 
@@ -56,6 +58,5 @@ class SubscriptionsFlow extends Flow
         subs
     }
 
-    assert_page @
     @subscriptions = @pager\get_page @page
   

@@ -7,30 +7,32 @@ import assert_valid from require "lapis.validate"
 
 import require_current_user from require "community.helpers.app"
 
+types = require "lapis.validate.types"
+
 class VotesFlow extends Flow
   expose_assigns: true
 
   load_object: =>
     return if @object
 
-    assert_valid @params, {
-      {"object_id", is_integer: true }
-      {"object_type", one_of: Votes.object_types}
+    params = assert_valid @params, types.params_shape {
+      {"object_id", types.db_id}
+      {"object_type", types.db_enum Votes.object_types}
     }
 
-    model = Votes\model_for_object_type @params.object_type
-    @object = model\find @params.object_id
+    model = Votes\model_for_object_type params.object_type
+    @object = model\find params.object_id
     assert_error @object, "invalid vote object"
 
   vote: require_current_user =>
     @load_object!
 
     if @params.action
-      assert_valid @params, {
-        {"action", one_of: {"remove"}}
+      params = assert_valid @params, types.params_shape {
+        {"action", types.one_of {"remove"}}
       }
 
-      switch @params.action
+      switch params.action
         when "remove"
           assert_error @object\allowed_to_vote(@current_user, "remove"),
             "not allowed to unvote"
@@ -38,8 +40,8 @@ class VotesFlow extends Flow
           Votes\unvote @object, @current_user
 
     else
-      assert_valid @params, {
-        {"direction", one_of: {"up", "down"}}
+      params = assert_valid @params, types.params_shape {
+        {"direction", types.one_of {"up", "down"}}
       }
 
       assert_error @object\allowed_to_vote(@current_user, @params.direction),

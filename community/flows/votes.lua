@@ -12,6 +12,7 @@ local assert_valid
 assert_valid = require("lapis.validate").assert_valid
 local require_current_user
 require_current_user = require("community.helpers.app").require_current_user
+local types = require("lapis.validate.types")
 local VotesFlow
 do
   local _class_0
@@ -22,46 +23,46 @@ do
       if self.object then
         return 
       end
-      assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "object_id",
-          is_integer = true
+          types.db_id
         },
         {
           "object_type",
-          one_of = Votes.object_types
+          types.db_enum(Votes.object_types)
         }
-      })
-      local model = Votes:model_for_object_type(self.params.object_type)
-      self.object = model:find(self.params.object_id)
+      }))
+      local model = Votes:model_for_object_type(params.object_type)
+      self.object = model:find(params.object_id)
       return assert_error(self.object, "invalid vote object")
     end,
     vote = require_current_user(function(self)
       self:load_object()
       if self.params.action then
-        assert_valid(self.params, {
+        local params = assert_valid(self.params, types.params_shape({
           {
             "action",
-            one_of = {
+            types.one_of({
               "remove"
-            }
+            })
           }
-        })
-        local _exp_0 = self.params.action
+        }))
+        local _exp_0 = params.action
         if "remove" == _exp_0 then
           assert_error(self.object:allowed_to_vote(self.current_user, "remove"), "not allowed to unvote")
           Votes:unvote(self.object, self.current_user)
         end
       else
-        assert_valid(self.params, {
+        local params = assert_valid(self.params, types.params_shape({
           {
             "direction",
-            one_of = {
+            types.one_of({
               "up",
               "down"
-            }
+            })
           }
-        })
+        }))
         assert_error(self.object:allowed_to_vote(self.current_user, self.params.direction), "not allowed to vote")
         self.vote = Votes:vote(self.object, self.current_user, self.params.direction == "up")
         assert_error(self.vote, "vote changed in another request")

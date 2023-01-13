@@ -7,6 +7,7 @@ local assert_valid
 assert_valid = require("lapis.validate").assert_valid
 local assert_error
 assert_error = require("lapis.application").assert_error
+local types = require("lapis.validate.types")
 local Subscriptions
 Subscriptions = require("community.models").Subscriptions
 local preload
@@ -29,25 +30,29 @@ do
       if self.subscription then
         return self.subscription
       end
-      assert_valid(self.params, {
+      local params = assert_valid(self.params, types.params_shape({
         {
           "object_id",
-          is_integer = true
+          types.db_id
         },
         {
           "object_type",
-          one_of = Subscriptions.object_types
+          types.db_enum(Subscriptions.object_types)
         }
-      })
+      }))
       self.subscription = Subscriptions:find({
-        object_type = Subscriptions.object_types:for_db(self.params.object_type),
-        object_id = self.params.object_id,
+        object_type = Subscriptions.object_types:for_db(params.object_type),
+        object_id = params.object_id,
         user_id = self.current_user.id
       })
       return self.subscription
     end,
     show_subscriptions = function(self)
-      self.pager = Subscriptions:paginated("\n      where user_id = ? and subscribed\n      order by created_at desc\n    ", self.current_user.id, {
+      assert_page(self)
+      self.pager = Subscriptions:paginated("where ? order by created_at desc", db.clause({
+        user_id = self.current_user.id,
+        subscribed = true
+      }), {
         per_page = 50,
         prepare_results = function(subs)
           for _index_0 = 1, #subs do
@@ -58,7 +63,6 @@ do
           return subs
         end
       })
-      assert_page(self)
       self.subscriptions = self.pager:get_page(self.page)
     end
   }
