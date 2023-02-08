@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.4
--- Dumped by pg_dump version 13.4
+-- Dumped from database version 14.6
+-- Dumped by pg_dump version 14.6
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -135,7 +135,8 @@ CREATE TABLE public.community_categories (
     "position" integer DEFAULT 0 NOT NULL,
     directory boolean DEFAULT false NOT NULL,
     topic_posting_type smallint,
-    category_order_type smallint DEFAULT 1 NOT NULL
+    category_order_type smallint DEFAULT 1 NOT NULL,
+    data jsonb
 );
 
 
@@ -1337,8 +1338,8 @@ CREATE UNIQUE INDEX users_lower_username_idx ON public.users USING btree (lower(
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.4
--- Dumped by pg_dump version 13.4
+-- Dumped from database version 14.6
+-- Dumped by pg_dump version 14.6
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1398,6 +1399,7 @@ community_39
 community_40
 community_41
 community_42
+community_43
 \.
 
 
