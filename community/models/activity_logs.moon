@@ -9,11 +9,11 @@ import to_json from require "lapis.util"
 --   user_id integer NOT NULL,
 --   object_type integer DEFAULT 0 NOT NULL,
 --   object_id integer NOT NULL,
---   publishable boolean DEFAULT false NOT NULL,
 --   action integer DEFAULT 0 NOT NULL,
 --   data jsonb,
 --   created_at timestamp without time zone NOT NULL,
---   updated_at timestamp without time zone NOT NULL
+--   updated_at timestamp without time zone NOT NULL,
+--   ip inet
 -- );
 -- ALTER TABLE ONLY community_activity_logs
 --   ADD CONSTRAINT community_activity_logs_pkey PRIMARY KEY (id);

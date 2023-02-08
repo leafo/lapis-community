@@ -20,7 +20,8 @@ import db_json from require "community.helpers.models"
 --   updated_at timestamp without time zone NOT NULL,
 --   title character varying(255),
 --   body_format smallint DEFAULT 1 NOT NULL,
---   data jsonb
+--   data jsonb,
+--   reason smallint DEFAULT 1 NOT NULL
 -- );
 -- ALTER TABLE ONLY community_pending_posts
 --   ADD CONSTRAINT community_pending_posts_pkey PRIMARY KEY (id);
