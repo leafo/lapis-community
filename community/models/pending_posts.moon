@@ -50,10 +50,12 @@ class PendingPosts extends Model
     pending: 1
     deleted: 2
     spam: 3
+    ignored: 4
   }
 
   @reasons: enum {
-    manual: 1
+    manual: 1 -- community rules placed this post into the queue
+    risky: 2 -- automated scans determined this poster is risky
   }
 
   @create: (opts={}) =>

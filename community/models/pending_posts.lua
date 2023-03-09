@@ -145,10 +145,12 @@ do
   self.statuses = enum({
     pending = 1,
     deleted = 2,
-    spam = 3
+    spam = 3,
+    ignored = 4
   })
   self.reasons = enum({
-    manual = 1
+    manual = 1,
+    risky = 2
   })
   self.create = function(self, opts)
     if opts == nil then
