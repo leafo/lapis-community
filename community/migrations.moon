@@ -682,6 +682,35 @@ import create_table, create_index, drop_table, add_column, drop_column, drop_ind
 
   [43]: =>
     add_column T"categories", "data", "jsonb"
+
+
+  [44]: =>
+    create_table T"warnings", {
+      {"id", serial}
+      {"user_id", foreign_key}
+      {"reason", text null: true}
+      {"data", "jsonb"}
+
+      {"restriction", enum}
+      {"duration", "interval not null"}
+      {"first_seen_at", time null: true}
+      {"expires_at", time null: true}
+
+      -- user who created the report
+      {"moderating_user_id", foreign_key null: true}
+
+      -- related post that causing warning
+      {"post_id", foreign_key null: true}
+      {"post_report_id", foreign_key null: true}
+
+      {"created_at", time}
+      {"updated_at", time}
+
+      "PRIMARY KEY (id)"
+    }
+
+    create_index T"warnings", "user_id"
+
 }
 
 

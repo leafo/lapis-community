@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.6
--- Dumped by pg_dump version 14.6
+-- Dumped from database version 15.2
+-- Dumped by pg_dump version 15.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -15,6 +15,15 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
+
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+-- *not* creating schema, since initdb creates it
+
+
+ALTER SCHEMA public OWNER TO postgres;
 
 SET default_tablespace = '';
 
@@ -718,6 +727,51 @@ CREATE TABLE public.community_votes (
 ALTER TABLE public.community_votes OWNER TO postgres;
 
 --
+-- Name: community_warnings; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.community_warnings (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    reason text,
+    data jsonb,
+    restriction smallint NOT NULL,
+    duration interval NOT NULL,
+    first_seen_at timestamp without time zone,
+    expires_at timestamp without time zone,
+    moderating_user_id integer,
+    post_id integer,
+    post_report_id integer,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.community_warnings OWNER TO postgres;
+
+--
+-- Name: community_warnings_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.community_warnings_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.community_warnings_id_seq OWNER TO postgres;
+
+--
+-- Name: community_warnings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.community_warnings_id_seq OWNED BY public.community_warnings.id;
+
+
+--
 -- Name: lapis_migrations; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -832,6 +886,13 @@ ALTER TABLE ONLY public.community_posts ALTER COLUMN id SET DEFAULT nextval('pub
 --
 
 ALTER TABLE ONLY public.community_topics ALTER COLUMN id SET DEFAULT nextval('public.community_topics_id_seq'::regclass);
+
+
+--
+-- Name: community_warnings id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.community_warnings ALTER COLUMN id SET DEFAULT nextval('public.community_warnings_id_seq'::regclass);
 
 
 --
@@ -1039,6 +1100,14 @@ ALTER TABLE ONLY public.community_users
 
 ALTER TABLE ONLY public.community_votes
     ADD CONSTRAINT community_votes_pkey PRIMARY KEY (user_id, object_type, object_id);
+
+
+--
+-- Name: community_warnings community_warnings_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.community_warnings
+    ADD CONSTRAINT community_warnings_pkey PRIMARY KEY (id);
 
 
 --
@@ -1324,10 +1393,25 @@ CREATE INDEX community_votes_object_type_object_id_idx ON public.community_votes
 
 
 --
+-- Name: community_warnings_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX community_warnings_user_id_idx ON public.community_warnings USING btree (user_id);
+
+
+--
 -- Name: users_lower_username_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE UNIQUE INDEX users_lower_username_idx ON public.users USING btree (lower((username)::text));
+
+
+--
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE USAGE ON SCHEMA public FROM PUBLIC;
+GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
 --
@@ -1338,8 +1422,8 @@ CREATE UNIQUE INDEX users_lower_username_idx ON public.users USING btree (lower(
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.6
--- Dumped by pg_dump version 14.6
+-- Dumped from database version 15.2
+-- Dumped by pg_dump version 15.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1400,6 +1484,7 @@ community_40
 community_41
 community_42
 community_43
+community_44
 \.
 
 

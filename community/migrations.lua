@@ -1265,5 +1265,75 @@ return {
   end,
   [43] = function(self)
     return add_column(T("categories"), "data", "jsonb")
+  end,
+  [44] = function(self)
+    create_table(T("warnings"), {
+      {
+        "id",
+        serial
+      },
+      {
+        "user_id",
+        foreign_key
+      },
+      {
+        "reason",
+        text({
+          null = true
+        })
+      },
+      {
+        "data",
+        "jsonb"
+      },
+      {
+        "restriction",
+        enum
+      },
+      {
+        "duration",
+        "interval not null"
+      },
+      {
+        "first_seen_at",
+        time({
+          null = true
+        })
+      },
+      {
+        "expires_at",
+        time({
+          null = true
+        })
+      },
+      {
+        "moderating_user_id",
+        foreign_key({
+          null = true
+        })
+      },
+      {
+        "post_id",
+        foreign_key({
+          null = true
+        })
+      },
+      {
+        "post_report_id",
+        foreign_key({
+          null = true
+        })
+      },
+      {
+        "created_at",
+        time
+      },
+      {
+        "updated_at",
+        time
+      },
+      "PRIMARY KEY (id)"
+    })
+    return create_index(T("warnings"), "user_id")
   end
 }
