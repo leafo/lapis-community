@@ -150,7 +150,8 @@ do
   })
   self.reasons = enum({
     manual = 1,
-    risky = 2
+    risky = 2,
+    warning = 3
   })
   self.create = function(self, opts)
     if opts == nil then

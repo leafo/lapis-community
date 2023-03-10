@@ -54,8 +54,9 @@ class PendingPosts extends Model
   }
 
   @reasons: enum {
-    manual: 1 -- community rules placed this post into the queue
+    manual: 1 -- community configuration put this post into the queue
     risky: 2 -- automated scans determined this poster is risky
+    warning: 3 -- account has active warning with pending restriction
   }
 
   @create: (opts={}) =>
