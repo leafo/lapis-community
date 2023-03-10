@@ -735,7 +735,7 @@ CREATE TABLE public.community_warnings (
     user_id integer NOT NULL,
     reason text,
     data jsonb,
-    restriction smallint NOT NULL,
+    restriction smallint DEFAULT 1 NOT NULL,
     duration interval NOT NULL,
     first_seen_at timestamp without time zone,
     expires_at timestamp without time zone,

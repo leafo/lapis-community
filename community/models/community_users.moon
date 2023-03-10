@@ -47,6 +47,19 @@ class CommunityUsers extends Model
 
   @relations: {
     {"user", belongs_to: "Users"}
+
+    {"all_warnings", has_many: "warnings"
+      key: "user_id"
+      order: "id asc"
+    }
+
+    {"active_warnings", has_many: "warnings"
+      key: "user_id"
+      order: "id asc"
+      where: db.clause {
+        "expires_at IS NULL or now() at time zone 'utc' < expires_at"
+      }
+    }
   }
 
   @create: (opts={}) =>

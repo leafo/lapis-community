@@ -1288,7 +1288,9 @@ return {
       },
       {
         "restriction",
-        enum
+        enum({
+          default = 1
+        })
       },
       {
         "duration",

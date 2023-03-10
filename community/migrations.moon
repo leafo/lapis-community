@@ -691,7 +691,7 @@ import create_table, create_index, drop_table, add_column, drop_column, drop_ind
       {"reason", text null: true}
       {"data", "jsonb"}
 
-      {"restriction", enum}
+      {"restriction", enum default: 1}
       {"duration", "interval not null"}
       {"first_seen_at", time null: true}
       {"expires_at", time null: true}

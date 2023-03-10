@@ -3,6 +3,8 @@ local enum
 enum = require("lapis.db.model").enum
 local Model
 Model = require("community.model").Model
+local db_json
+db_json = require("community.helpers.models").db_json
 local Warnings
 do
   local _class_0
@@ -10,15 +12,25 @@ do
   local _base_0 = {
     is_active = function(self)
       local date = require("date")
-      return not self.expires_at or date(self.expires_at) < dfate(true)
+      return not self.expires_at or date(true) < date(self.expires_at)
     end,
-    mark_active = function(self)
+    start_warning = function(self)
       return self:update({
-        first_seen_at = db.raw("now() at time zone 'UTC'"),
-        expires_at = db.raw("now() at time zone 'UTC' + interval")
+        first_seen_at = db.raw("date_trunc('second', now() at time zone 'UTC')"),
+        expires_at = db.raw([[date_trunc('second', now() at time zone 'UTC') + duration]])
       }, {
         where = db.clause({
           first_seen_at = db.NULL
+        })
+      })
+    end,
+    end_warning = function(self)
+      return self:update({
+        first_seen_at = db.raw("coalesce(first_seen_at, date_trunc('second', now() at time zone 'UTC'))"),
+        expires_at = db.raw([[date_trunc('second', now() at time zone 'UTC')]])
+      }, {
+        where = db.clause({
+          "expires_at IS NULL or now() at time zone 'utc' < expires_at"
         })
       })
     end
@@ -57,8 +69,34 @@ do
     {
       "user",
       belongs_to = "Users"
+    },
+    {
+      "moderating_user",
+      belongs_to = "Users"
+    },
+    {
+      "post",
+      belongs_to = "Posts"
+    },
+    {
+      "post_report",
+      belongs_to = "PostReports"
     }
   }
+  self.create = function(self, opts, ...)
+    if opts.restriction then
+      opts.restriction = self.restrictions:for_db(opts.restriction)
+    end
+    if opts.data then
+      opts.data = db_json(opts.data)
+    end
+    return _class_0.__parent.create(self, opts, ...)
+  end
+  self.restrictions = enum({
+    notify = 1,
+    block_posting = 2,
+    pending_posting = 3
+  })
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end
