@@ -87,6 +87,7 @@ class TopicsFlow extends Flow
 
     if opts.force_pending or @category\topic_needs_approval @current_user, {
       title: new_topic.title
+      category_id: @category.id
       body_format: new_topic.body_format
       :body
     }

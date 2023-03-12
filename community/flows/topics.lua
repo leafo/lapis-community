@@ -116,6 +116,7 @@ do
       end
       if opts.force_pending or self.category:topic_needs_approval(self.current_user, {
         title = new_topic.title,
+        category_id = self.category.id,
         body_format = new_topic.body_format,
         body = body
       }) then

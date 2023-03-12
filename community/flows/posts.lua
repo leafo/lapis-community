@@ -78,6 +78,7 @@ do
       end
       if opts.force_pending or self.topic:post_needs_approval(self.current_user, {
         body = body,
+        topic_id = self.topic.id,
         body_format = new_post.body_format,
         parent_post_id = parent_post and parent_post.id
       }) then

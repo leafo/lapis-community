@@ -58,6 +58,7 @@ class PostsFlow extends Flow
 
     if opts.force_pending or @topic\post_needs_approval @current_user, {
       :body
+      topic_id: @topic.id
       body_format: new_post.body_format
       parent_post_id: parent_post and parent_post.id
     }
