@@ -8,6 +8,16 @@ do
   local _class_0
   local _parent_0 = Model
   local _base_0 = {
+    need_approval_to_post = function(self)
+      local Warnings
+      Warnings = require("models").Warnings
+      for warning in self:get_active_warnings() do
+        if warning.restriction == Warnings.restrictions.pending_posting then
+          return true
+        end
+      end
+      return false
+    end,
     get_popularity_score = function(self)
       return self.received_up_votes_count - self.received_down_votes_count + self.received_votes_adjustment
     end,
@@ -21,19 +31,23 @@ do
     end,
     allowed_to_post = function(self, object)
       local _exp_0 = self.posting_permission or self.__class.posting_permissions.default
-      if self.__class.posting_permissions.default == _exp_0 then
-        return true
-      elseif self.__class.posting_permissions.blocked == _exp_0 then
+      if self.__class.posting_permissions.blocked == _exp_0 then
         return false
       elseif self.__class.posting_permissions.only_own == _exp_0 then
-        if object.allowed_to_edit then
-          return object:allowed_to_edit(self:get_user())
-        else
+        if not (object.allowed_to_edit and object:allowed_to_edit(self:get_user())) then
           return false
         end
-      else
-        return error("unknown posting permission: " .. tostring(self.posting_permission))
       end
+      local Warnings
+      Warnings = require("community.models").Warnings
+      local _list_0 = self:get_active_warnings()
+      for _index_0 = 1, #_list_0 do
+        local warning = _list_0[_index_0]
+        if warning.restriction == Warning.restrictions.block_posting then
+          return false, "You account has an active warning"
+        end
+      end
+      return true
     end,
     recount = function(self)
       self.__class:recount({

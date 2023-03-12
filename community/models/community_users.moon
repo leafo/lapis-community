@@ -137,6 +137,14 @@ class CommunityUsers extends Model
       [field]: db.raw "#{db.escape_identifier @table_name!}.#{db.escape_identifier field} + excluded.#{db.escape_identifier field}"
     }
 
+  need_approval_to_post: =>
+    import Warnings from require "models"
+    for warning in @get_active_warnings!
+      if warning.restriction == Warnings.restrictions.pending_posting
+        return true
+
+    false
+
   -- how popular are they (function of received votes)
   -- will help sort their replies
   get_popularity_score: =>
@@ -150,17 +158,20 @@ class CommunityUsers extends Model
 
   allowed_to_post: (object) =>
     switch @posting_permission or @@posting_permissions.default
-      when @@posting_permissions.default
-        true
       when @@posting_permissions.blocked
-        false
+        return false
       when @@posting_permissions.only_own
-        if object.allowed_to_edit
-          object\allowed_to_edit @get_user!
-        else
-          false
-      else
-        error "unknown posting permission: #{@posting_permission}"
+        unless object.allowed_to_edit and object\allowed_to_edit @get_user!
+          return false
+
+    import Warnings from require "community.models"
+
+    -- make sure they have no warnings blocking posting
+    for warning in *@get_active_warnings!
+      if warning.restriction == Warning.restrictions.block_posting
+        return false, "You account has an active warning"
+
+    true
 
   recount: =>
     @@recount user_id: @user_id
