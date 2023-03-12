@@ -138,8 +138,8 @@ class CommunityUsers extends Model
     }
 
   need_approval_to_post: =>
-    import Warnings from require "models"
-    for warning in @get_active_warnings!
+    import Warnings from require "community.models"
+    for warning in *@get_active_warnings!
       if warning.restriction == Warnings.restrictions.pending_posting
         return true
 
@@ -168,7 +168,7 @@ class CommunityUsers extends Model
 
     -- make sure they have no warnings blocking posting
     for warning in *@get_active_warnings!
-      if warning.restriction == Warning.restrictions.block_posting
+      if warning.restriction == Warnings.restrictions.block_posting
         return false, "You account has an active warning"
 
     true

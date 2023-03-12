@@ -252,6 +252,9 @@ class Categories extends Model
     if cgc = @get_category_group_category!
       cgc\get_category_group!
 
+
+  -- NOTE: this intentionally does not check if
+  -- community_user\allowed_to_post, as that's a different phase
   allowed_to_post_topic: (user, req) =>
     return false unless user
     return false if @archived

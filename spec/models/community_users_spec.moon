@@ -314,3 +314,86 @@ describe "models.community_users", ->
         topics_count: 0
       }
 
+  describe "allowed_to_post", ->
+    local user, cu
+    before_each ->
+      user = factory.Users!
+      cu = CommunityUsers\for_user user.id
+
+    import Warnings from require "spec.community_models"
+
+    it "checks category", ->
+      topic = factory.Topics!
+      assert.same true, cu\allowed_to_post topic
+
+    it "checks blocked user", ->
+      cu\update {
+        posting_permission: CommunityUsers.posting_permissions.blocked
+      }
+
+      topic = factory.Topics!
+      assert.same false, cu\allowed_to_post topic
+
+    it "checks user with warning", ->
+      topic = factory.Topics!
+
+      -- this warning does not require approval, since it outright
+      -- blocks
+      w = Warnings\create {
+        user_id: user.id
+        restriction: Warnings.restrictions.block_posting
+        duration: '1 day'
+      }
+
+      assert.same false, cu\allowed_to_post topic
+
+      w\end_warning!
+      cu\refresh!
+      assert.same true, cu\allowed_to_post topic
+
+
+      -- pending restriction does not affect allowed_to_post
+      Warnings\create {
+        user_id: user.id
+        restriction: Warnings.restrictions.pending_posting
+        duration: '1 day'
+      }
+
+      cu\refresh!
+      assert.same true, cu\allowed_to_post topic
+
+  describe "warnings", ->
+    import Warnings from require "spec.community_models"
+
+    it "need_approval_to_post", ->
+      user = factory.Users!
+      cu = CommunityUsers\for_user user.id
+
+      assert.same false, cu\need_approval_to_post!
+
+      -- this warning does not require approval, since it outright
+      -- blocks
+      Warnings\create {
+        user_id: user.id
+        restriction: Warnings.restrictions.block_posting
+        duration: '1 day'
+      }
+
+      cu\refresh!
+      assert.same false, cu\need_approval_to_post!
+
+      w = Warnings\create {
+        user_id: user.id
+        restriction: Warnings.restrictions.pending_posting
+        duration: '1 day'
+      }
+
+      cu\refresh!
+      assert.same true, cu\need_approval_to_post!
+
+      w\end_warning!
+
+      cu\refresh!
+      assert.same false, cu\need_approval_to_post!
+
+

@@ -144,6 +144,8 @@ class Topics extends Model
 
     true
 
+  -- NOTE: this intentionally does not check if
+  -- community_user\allowed_to_post, as that's a different phase
   allowed_to_post: (user, req) =>
     return false unless user
     return false if @deleted

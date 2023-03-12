@@ -10,8 +10,10 @@ do
   local _base_0 = {
     need_approval_to_post = function(self)
       local Warnings
-      Warnings = require("models").Warnings
-      for warning in self:get_active_warnings() do
+      Warnings = require("community.models").Warnings
+      local _list_0 = self:get_active_warnings()
+      for _index_0 = 1, #_list_0 do
+        local warning = _list_0[_index_0]
         if warning.restriction == Warnings.restrictions.pending_posting then
           return true
         end
@@ -43,7 +45,7 @@ do
       local _list_0 = self:get_active_warnings()
       for _index_0 = 1, #_list_0 do
         local warning = _list_0[_index_0]
-        if warning.restriction == Warning.restrictions.block_posting then
+        if warning.restriction == Warnings.restrictions.block_posting then
           return false, "You account has an active warning"
         end
       end
