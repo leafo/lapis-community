@@ -4,7 +4,7 @@ factory = require "spec.factory"
 
 import types from require "tableshape"
 
-describe "models.users", ->
+describe "models.community_users", ->
   import Users from require "spec.models"
   import CommunityUsers from require "spec.community_models"
 
