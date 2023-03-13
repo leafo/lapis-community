@@ -1336,6 +1336,7 @@ return {
       },
       "PRIMARY KEY (id)"
     })
-    return create_index(T("warnings"), "user_id")
+    create_index(T("warnings"), "user_id")
+    return db.query("comment on column " .. tostring(T("warnings")) .. ".expires_at is ?", "Is set when the user first sees the warning")
   end
 }

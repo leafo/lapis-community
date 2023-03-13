@@ -21,6 +21,7 @@ import db_json from require "community.helpers.models"
 --   created_at timestamp without time zone NOT NULL,
 --   updated_at timestamp without time zone NOT NULL
 -- );
+-- COMMENT ON COLUMN community_warnings.expires_at IS 'Is set when the user first sees the warning';
 -- ALTER TABLE ONLY community_warnings
 --   ADD CONSTRAINT community_warnings_pkey PRIMARY KEY (id);
 -- CREATE INDEX community_warnings_user_id_idx ON community_warnings USING btree (user_id);
