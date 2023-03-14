@@ -8,8 +8,11 @@ do
 end
 local assert_valid
 assert_valid = require("lapis.validate").assert_valid
-local assert_error
-assert_error = require("lapis.application").assert_error
+local assert_error, yield_error
+do
+  local _obj_0 = require("lapis.application")
+  assert_error, yield_error = _obj_0.assert_error, _obj_0.yield_error
+end
 local require_current_user
 require_current_user = require("community.helpers.app").require_current_user
 local is_empty_html
@@ -69,12 +72,6 @@ do
       end
       local CategoriesFlow = require("community.flows.categories")
       CategoriesFlow(self):load_category()
-      assert_error(self.category:allowed_to_post_topic(self.current_user, self._req))
-      local moderator = self.category:allowed_to_moderate(self.current_user)
-      if not (moderator) then
-        local can_post, err = CommunityUsers:allowed_to_post(self.current_user, self.category)
-        assert_error(can_post, err or "your account is not authorized to post")
-      end
       local new_topic = assert_valid(self.params.topic, types.params_shape({
         {
           "title",
@@ -108,18 +105,33 @@ do
         }
       }))
       local body = assert_error(Posts:filter_body(new_topic.body, new_topic.body_format))
+      local community_user = CommunityUsers:for_user(self.current_user)
+      assert_error(self.category:allowed_to_post_topic(self.current_user, self._req))
+      local can_post, err, warning = community_user:allowed_to_post(self.category)
+      if not (can_post) then
+        self.warning = warning
+        yield_error(err or "your account is not authorized to post")
+      end
       local sticky = false
       local locked = false
+      local moderator = self.category:allowed_to_moderate(self.current_user)
       if moderator then
         sticky = new_topic.sticky
         locked = new_topic.locked
       end
-      if opts.force_pending or self.category:topic_needs_approval(self.current_user, {
-        title = new_topic.title,
-        category_id = self.category.id,
-        body_format = new_topic.body_format,
-        body = body
-      }) then
+      local needs_approval
+      if opts.force_pending then
+        needs_approval, warning = true
+      else
+        needs_approval, warning = self.category:topic_needs_approval(self.current_user, {
+          title = new_topic.title,
+          category_id = self.category.id,
+          body_format = new_topic.body_format,
+          body = body
+        })
+      end
+      if needs_approval then
+        self.warning = warning
         self.pending_post = PendingPosts:create({
           user_id = self.current_user.id,
           category_id = self.category.id,
@@ -152,45 +164,45 @@ do
             category_id = self.category.id
           }
         })
-      else
-        self.topic = Topics:create({
-          user_id = self.current_user.id,
-          category_id = self.category.id,
-          title = new_topic.title,
-          tags = new_topic.tags and db.array((function()
-            local _accum_0 = { }
-            local _len_0 = 1
-            local _list_0 = new_topic.tags
-            for _index_0 = 1, #_list_0 do
-              local t = _list_0[_index_0]
-              _accum_0[_len_0] = t.slug
-              _len_0 = _len_0 + 1
-            end
-            return _accum_0
-          end)()),
-          category_order = self.category:next_topic_category_order(),
-          sticky = sticky,
-          locked = locked
-        })
-        self.post = Posts:create({
-          user_id = self.current_user.id,
-          topic_id = self.topic.id,
-          body_format = new_topic.body_format,
-          body = body
-        })
-        self.topic:increment_from_post(self.post, {
-          update_category_order = false
-        })
-        self.category:increment_from_topic(self.topic)
-        CommunityUsers:for_user(self.current_user):increment_from_post(self.post, true)
-        self.topic:increment_participant(self.current_user)
-        self.post:on_body_updated_callback(self)
-        ActivityLogs:create({
-          user_id = self.current_user.id,
-          object = self.topic,
-          action = "create"
-        })
+        return true
       end
+      self.topic = Topics:create({
+        user_id = self.current_user.id,
+        category_id = self.category.id,
+        title = new_topic.title,
+        tags = new_topic.tags and db.array((function()
+          local _accum_0 = { }
+          local _len_0 = 1
+          local _list_0 = new_topic.tags
+          for _index_0 = 1, #_list_0 do
+            local t = _list_0[_index_0]
+            _accum_0[_len_0] = t.slug
+            _len_0 = _len_0 + 1
+          end
+          return _accum_0
+        end)()),
+        category_order = self.category:next_topic_category_order(),
+        sticky = sticky,
+        locked = locked
+      })
+      self.post = Posts:create({
+        user_id = self.current_user.id,
+        topic_id = self.topic.id,
+        body_format = new_topic.body_format,
+        body = body
+      })
+      self.topic:increment_from_post(self.post, {
+        update_category_order = false
+      })
+      self.category:increment_from_topic(self.topic)
+      community_user:increment_from_post(self.post, true)
+      self.topic:increment_participant(self.current_user)
+      self.post:on_body_updated_callback(self)
+      ActivityLogs:create({
+        user_id = self.current_user.id,
+        object = self.topic,
+        action = "create"
+      })
       return true
     end),
     delete_topic = require_current_user(function(self)

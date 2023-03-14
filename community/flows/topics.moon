@@ -5,7 +5,7 @@ import Flow from require "lapis.flow"
 import Topics, Posts, CommunityUsers, ActivityLogs, PendingPosts from require "community.models"
 
 import assert_valid from require "lapis.validate"
-import assert_error from require "lapis.application"
+import assert_error, yield_error from require "lapis.application"
 
 import require_current_user from require "community.helpers.app"
 import is_empty_html from require "community.helpers.html"
@@ -59,13 +59,6 @@ class TopicsFlow extends Flow
   new_topic: require_current_user (opts={}) =>
     CategoriesFlow = require "community.flows.categories"
     CategoriesFlow(@)\load_category!
-    assert_error @category\allowed_to_post_topic @current_user, @_req
-
-    moderator = @category\allowed_to_moderate @current_user
-
-    unless moderator
-      can_post, err = CommunityUsers\allowed_to_post @current_user, @category
-      assert_error can_post, err or "your account is not authorized to post"
 
     new_topic = assert_valid @params.topic, types.params_shape {
       {"title", types.limited_text limits.MAX_TITLE_LEN }
@@ -78,19 +71,35 @@ class TopicsFlow extends Flow
 
     body = assert_error Posts\filter_body new_topic.body, new_topic.body_format
 
+    community_user = CommunityUsers\for_user @current_user
+
+    assert_error @category\allowed_to_post_topic @current_user, @_req
+
+    can_post, err, warning = community_user\allowed_to_post @category
+    unless can_post
+      @warning = warning
+      yield_error err or "your account is not authorized to post"
+
     sticky = false
     locked = false
 
+    moderator = @category\allowed_to_moderate @current_user
     if moderator
       sticky = new_topic.sticky
       locked = new_topic.locked
 
-    if opts.force_pending or @category\topic_needs_approval @current_user, {
-      title: new_topic.title
-      category_id: @category.id
-      body_format: new_topic.body_format
-      :body
-    }
+    needs_approval, warning = if opts.force_pending
+      true
+    else
+      @category\topic_needs_approval @current_user, {
+        title: new_topic.title
+        category_id: @category.id
+        body_format: new_topic.body_format
+        :body
+      }
+
+    if needs_approval
+      @warning = warning
       @pending_post = PendingPosts\create {
         user_id: @current_user.id
         category_id: @category.id
@@ -98,7 +107,9 @@ class TopicsFlow extends Flow
         body_format: new_topic.body_format
         :body
 
-        -- TODO; sticky and locked should be supported?
+        -- TODO: sticky & locked are not supported here. Generally a moderator
+        -- should not have their post go into pending so it should be a
+        -- non-issue
         data: if new_topic.tags and next new_topic.tags
           {
             topic_tags: [t.slug for t in *new_topic.tags]
@@ -114,37 +125,38 @@ class TopicsFlow extends Flow
         }
       }
 
-    else
-      @topic = Topics\create {
-        user_id: @current_user.id
-        category_id: @category.id
-        title: new_topic.title
-        tags: new_topic.tags and db.array([t.slug for t in *new_topic.tags])
-        category_order: @category\next_topic_category_order!
-        :sticky
-        :locked
-      }
+      return true
 
-      @post = Posts\create {
-        user_id: @current_user.id
-        topic_id: @topic.id
-        body_format: new_topic.body_format
-        :body
-      }
+    @topic = Topics\create {
+      user_id: @current_user.id
+      category_id: @category.id
+      title: new_topic.title
+      tags: new_topic.tags and db.array([t.slug for t in *new_topic.tags])
+      category_order: @category\next_topic_category_order!
+      :sticky
+      :locked
+    }
 
-      @topic\increment_from_post @post, update_category_order: false
-      @category\increment_from_topic @topic
+    @post = Posts\create {
+      user_id: @current_user.id
+      topic_id: @topic.id
+      body_format: new_topic.body_format
+      :body
+    }
 
-      CommunityUsers\for_user(@current_user)\increment_from_post @post, true
-      @topic\increment_participant @current_user
+    @topic\increment_from_post @post, update_category_order: false
+    @category\increment_from_topic @topic
 
-      @post\on_body_updated_callback @
+    community_user\increment_from_post @post, true
+    @topic\increment_participant @current_user
 
-      ActivityLogs\create {
-        user_id: @current_user.id
-        object: @topic
-        action: "create"
-      }
+    @post\on_body_updated_callback @
+
+    ActivityLogs\create {
+      user_id: @current_user.id
+      object: @topic
+      action: "create"
+    }
 
     true
 
