@@ -275,8 +275,7 @@ class Categories extends Model
 
     true
 
-  -- return the virtual CategoryUsers model for that user_id
-  with_user: memoize1 (user_id) =>
+  with_user: VirtualModel\make_loader "category_users", (user_id) =>
     assert user_id, "expecting user id"
     CategoryUsers\load {
       user_id: user_id
