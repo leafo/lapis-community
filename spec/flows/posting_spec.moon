@@ -36,11 +36,14 @@ describe "posting flow", ->
   before_each ->
     current_user = factory.Users!
 
-  new_topic = (post) ->
+  new_topic = (post, set_req) ->
     in_request { :post }, =>
+      if set_req
+        set_req @
+
       @current_user = current_user
       @flow("topics")\new_topic!
-      @pending_post or @topic
+      @
 
   delete_topic = (post, user=current_user) ->
     in_request { :post }, =>
@@ -333,6 +336,67 @@ describe "posting flow", ->
       }
 
       assert.same 1, Topics\count!
+
+    describe "warnings", ->
+      import Warnings, PendingPosts from require "spec.community_models"
+
+      it "blocks topic due to warning", ->
+        category = factory.Categories!
+
+        w = Warnings\create {
+          user_id: current_user.id
+          restriction: Warnings.restrictions.block_posting
+          duration: "1 week"
+        }
+
+        assert.true w\is_active!, "warning should be active"
+
+        local req
+
+        assert.has_error(
+          ->
+            new_topic {
+              category_id: category.id
+              "topic[title]": "Hello world"
+              "topic[body]": "This is the body"
+            }, (r) -> req = r
+          { message: {"your account has an active warning"} }
+        )
+
+        {:topic, :pending_post, :warning} = req
+
+        assert.nil topic, "no topic should be created on request"
+        assert.nil pending_post, "no pending post should be created on request"
+        -- assert.truthy warning, "expect warning to be set on request"
+
+      it "allows user to create topic with blocking warning if they own category", ->
+        category = factory.Categories user_id: current_user.id
+
+        w = Warnings\create {
+          user_id: current_user.id
+          restriction: Warnings.restrictions.block_posting
+          duration: "1 week"
+        }
+
+        assert.true w\is_active!, "warning should be active"
+
+        do return pending "fix me"
+
+        {:topic, :post, :pending_post, :warning} = new_topic {
+          category_id: category.id
+          "topic[title]": "Hello world"
+          "topic[body]": "This is the body"
+        }
+
+        assert.truthy topic, "no topic should be created on request"
+        assert.nil pending_post, "pending post should not be set"
+        assert.nil warning, "warning should not be set"
+
+      it "creates topic as pending if user has warning", ->
+        pending "implement me"
+
+      it "allows user to create topic with pending warning if they own category", ->
+        pending "implement me"
 
     describe "pending topic", ->
       import PendingPosts from require "spec.community_models"
@@ -636,7 +700,7 @@ describe "posting flow", ->
     describe "warnings", ->
       import Warnings, PendingPosts from require "spec.community_models"
 
-      it "blocks posting of new topic due to warning", ->
+      it "blocks posting of new post due to warning", ->
         w = Warnings\create {
           user_id: current_user.id
           restriction: Warnings.restrictions.block_posting
@@ -667,6 +731,28 @@ describe "posting flow", ->
 
         assert.same 0, Posts\count!
         assert.same 0, PendingPosts\count!
+
+      it "doesn't block posting of new post with warning if user owns category", ->
+        category = topic\get_category!
+        -- set them as owner
+        category\update user_id: current_user.id
+
+        w = Warnings\create {
+          user_id: current_user.id
+          restriction: Warnings.restrictions.block_posting
+          duration: "1 week"
+        }
+
+        assert.true w\is_active!, "warning should be active"
+
+        assert.true (topic\allowed_to_edit current_user)
+        do return pending "fix me"
+
+        new_post {
+          "post[body]": "hello world"
+        }
+
+
 
       it "makes pending post due to warning", ->
         w = Warnings\create {
