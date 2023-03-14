@@ -486,11 +486,20 @@ class Topics extends Model
       where posts.id = foo.id and posts.post_number != new_number
     "
 
+  -- returns boolean, and potential warning if warning is issued
   post_needs_approval: (user, post_params) =>
-    category = @get_category!
-    return false unless category
-    import Categories from require "community.models"
-    category\get_approval_type! == Categories.approval_types.pending
+    import Categories, CommunityUsers from require "community.models"
+
+    if category = @get_category!
+      if category\get_approval_type! == Categories.approval_types.pending
+        return true
+
+    if cu = CommunityUsers\for_user user
+      needs_approval, warning = cu\need_approval_to_post!
+      if needs_approval
+        return true, warning
+
+    false
 
   get_root_order_ranges: (status="default") =>
     import Posts from require "community.models"

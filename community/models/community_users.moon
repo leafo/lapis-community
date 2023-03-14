@@ -74,11 +74,9 @@ class CommunityUsers extends Model
     users
 
   @allowed_to_post: (user, object) =>
-    if community_user = @find user_id: user.id
-      community_user.user = user
-      community_user\allowed_to_post object
-    else
-      true -- default is true
+    community_user = @find(user_id: user.id) or @load(user_id: user.id)
+    community_user.user = user -- satisfy relation
+    community_user\allowed_to_post object
 
   @for_user: (user_id) =>
     user_id = user_id.id if type(user_id) == "table"
@@ -141,7 +139,7 @@ class CommunityUsers extends Model
     import Warnings from require "community.models"
     for warning in *@get_active_warnings!
       if warning.restriction == Warnings.restrictions.pending_posting
-        return true
+        return true, warning
 
     false
 
@@ -169,7 +167,7 @@ class CommunityUsers extends Model
     -- make sure they have no warnings blocking posting
     for warning in *@get_active_warnings!
       if warning.restriction == Warnings.restrictions.block_posting
-        return false, "You account has an active warning"
+        return false, "your account has an active warning", warning
 
     true
 

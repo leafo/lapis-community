@@ -3,7 +3,7 @@ import Topics, Posts, PostEdits,
   CommunityUsers, ActivityLogs, PendingPosts from require "community.models"
 
 db = require "lapis.db"
-import assert_error from require "lapis.application"
+import assert_error, yield_error from require "lapis.application"
 import assert_valid from require "lapis.validate"
 import slugify from require "lapis.util"
 
@@ -26,13 +26,18 @@ class PostsFlow extends Flow
     assert_error @post, "invalid post"
 
   -- opts.force_pending -- always crated post as pending post, skip calling approval method
+  -- returns true if post is created, will set either @post or @pending_post
+  -- depending on the action performed, otherwise throws an error
   new_post: require_current_user (opts={}) =>
     TopicsFlow = require "community.flows.topics"
     TopicsFlow(@)\load_topic!
     assert_error @topic\allowed_to_post @current_user, @_req
 
-    can_post, err = CommunityUsers\allowed_to_post @current_user, @topic
-    assert_error can_post, err or "your account is not authorized to post"
+    can_post, posting_err, warning = CommunityUsers\allowed_to_post @current_user, @topic
+
+    unless can_post
+      @warning = warning
+      yield_error posting_err or "your account is not authorized to post"
 
     params = assert_valid @params, types.params_shape {
       {"parent_post_id", types.db_id + types.empty }
@@ -56,12 +61,18 @@ class PostsFlow extends Flow
       assert_error parent_post\allowed_to_reply(@current_user, @_req),
         "can't reply to post"
 
-    if opts.force_pending or @topic\post_needs_approval @current_user, {
-      :body
-      topic_id: @topic.id
-      body_format: new_post.body_format
-      parent_post_id: parent_post and parent_post.id
-    }
+    needs_approval, warning = if opts.force_pending
+      true
+    else
+      @topic\post_needs_approval @current_user, {
+        :body
+        topic_id: @topic.id
+        body_format: new_post.body_format
+        parent_post_id: parent_post and parent_post.id
+      }
+
+    if needs_approval
+      @warning = warning
       @pending_post = PendingPosts\create {
         user_id: @current_user.id
         topic_id: @topic.id
@@ -81,7 +92,6 @@ class PostsFlow extends Flow
           parent_post_id: parent_post and parent_post.id
         }
       }
-
     else
       @post = Posts\create {
         user_id: @current_user.id

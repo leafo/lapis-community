@@ -6,8 +6,11 @@ do
   Topics, Posts, PostEdits, CommunityUsers, ActivityLogs, PendingPosts = _obj_0.Topics, _obj_0.Posts, _obj_0.PostEdits, _obj_0.CommunityUsers, _obj_0.ActivityLogs, _obj_0.PendingPosts
 end
 local db = require("lapis.db")
-local assert_error
-assert_error = require("lapis.application").assert_error
+local assert_error, yield_error
+do
+  local _obj_0 = require("lapis.application")
+  assert_error, yield_error = _obj_0.assert_error, _obj_0.yield_error
+end
 local assert_valid
 assert_valid = require("lapis.validate").assert_valid
 local slugify
@@ -42,8 +45,11 @@ do
       local TopicsFlow = require("community.flows.topics")
       TopicsFlow(self):load_topic()
       assert_error(self.topic:allowed_to_post(self.current_user, self._req))
-      local can_post, err = CommunityUsers:allowed_to_post(self.current_user, self.topic)
-      assert_error(can_post, err or "your account is not authorized to post")
+      local can_post, posting_err, warning = CommunityUsers:allowed_to_post(self.current_user, self.topic)
+      if not (can_post) then
+        self.warning = warning
+        yield_error(posting_err or "your account is not authorized to post")
+      end
       local params = assert_valid(self.params, types.params_shape({
         {
           "parent_post_id",
@@ -76,12 +82,19 @@ do
         assert_error(parent_post.topic_id == self.topic.id, "parent post doesn't belong to same topic")
         assert_error(parent_post:allowed_to_reply(self.current_user, self._req), "can't reply to post")
       end
-      if opts.force_pending or self.topic:post_needs_approval(self.current_user, {
-        body = body,
-        topic_id = self.topic.id,
-        body_format = new_post.body_format,
-        parent_post_id = parent_post and parent_post.id
-      }) then
+      local needs_approval
+      if opts.force_pending then
+        needs_approval, warning = true
+      else
+        needs_approval, warning = self.topic:post_needs_approval(self.current_user, {
+          body = body,
+          topic_id = self.topic.id,
+          body_format = new_post.body_format,
+          parent_post_id = parent_post and parent_post.id
+        })
+      end
+      if needs_approval then
+        self.warning = warning
         self.pending_post = PendingPosts:create({
           user_id = self.current_user.id,
           topic_id = self.topic.id,

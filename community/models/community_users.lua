@@ -15,7 +15,7 @@ do
       for _index_0 = 1, #_list_0 do
         local warning = _list_0[_index_0]
         if warning.restriction == Warnings.restrictions.pending_posting then
-          return true
+          return true, warning
         end
       end
       return false
@@ -46,7 +46,7 @@ do
       for _index_0 = 1, #_list_0 do
         local warning = _list_0[_index_0]
         if warning.restriction == Warnings.restrictions.block_posting then
-          return false, "You account has an active warning"
+          return false, "your account has an active warning", warning
         end
       end
       return true
@@ -257,17 +257,13 @@ do
     return users
   end
   self.allowed_to_post = function(self, user, object)
-    do
-      local community_user = self:find({
-        user_id = user.id
-      })
-      if community_user then
-        community_user.user = user
-        return community_user:allowed_to_post(object)
-      else
-        return true
-      end
-    end
+    local community_user = self:find({
+      user_id = user.id
+    }) or self:load({
+      user_id = user.id
+    })
+    community_user.user = user
+    return community_user:allowed_to_post(object)
   end
   self.for_user = function(self, user_id)
     if type(user_id) == "table" then

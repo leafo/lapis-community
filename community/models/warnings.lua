@@ -83,6 +83,11 @@ do
       belongs_to = "PostReports"
     }
   }
+  self.restrictions = enum({
+    notify = 1,
+    block_posting = 2,
+    pending_posting = 3
+  })
   self.create = function(self, opts, ...)
     if opts.restriction then
       opts.restriction = self.restrictions:for_db(opts.restriction)
@@ -92,11 +97,6 @@ do
     end
     return _class_0.__parent.create(self, opts, ...)
   end
-  self.restrictions = enum({
-    notify = 1,
-    block_posting = 2,
-    pending_posting = 3
-  })
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end

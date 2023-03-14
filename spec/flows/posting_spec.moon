@@ -13,6 +13,7 @@ PostsFlow = require "community.flows.posts"
 import Users from require "models"
 
 import types from require "tableshape"
+import instance_of from require "tableshape.moonscript"
 
 describe "posting flow", ->
   local current_user
@@ -420,12 +421,15 @@ describe "posting flow", ->
       -- note this isn't a full topic, it has no first post
       topic = factory.Topics!
 
-    new_post = (post={}) ->
+    new_post = (post={}, set_req) ->
       in_request { :post }, =>
+        if set_req
+          set_req @
+
         @topic = topic
         @current_user = current_user
         @flow("posts")\new_post!
-        @post or @pending_post
+        @
 
     it "errors with empty body", ->
       assert.has_error(
@@ -629,6 +633,61 @@ describe "posting flow", ->
         "post[body]": "hello world"
       }
 
+    describe "warnings", ->
+      import Warnings, PendingPosts from require "spec.community_models"
+
+      it "blocks posting of new topic due to warning", ->
+        w = Warnings\create {
+          user_id: current_user.id
+          restriction: Warnings.restrictions.block_posting
+          duration: "1 week"
+        }
+
+        assert.true w\is_active!, "warning should be active"
+
+        local req
+
+        assert.has_error(
+          ->
+            new_post {
+              "post[body]": "hello world"
+            }, (r) -> req = r
+          { message: { "your account has an active warning" } }
+        )
+
+        -- ensure that the warning is placed on the request object
+        -- and that no post or pending post is there
+        assert_request = types.assert types.partial {
+          warning: instance_of(Warnings)
+          post: types.nil
+          pending_post: types.nil
+        }
+
+        assert_request req
+
+        assert.same 0, Posts\count!
+        assert.same 0, PendingPosts\count!
+
+      it "makes pending post due to warning", ->
+        w = Warnings\create {
+          user_id: current_user.id
+          restriction: Warnings.restrictions.pending_posting
+          duration: "1 week"
+        }
+
+        assert.true w\is_active!, "warning should be active"
+
+        {:pending_post, :post, :warning} = new_post {
+          "post[body]": "hello world"
+        }
+
+        assert.nil post
+        assert instance_of(PendingPosts) pending_post
+        assert instance_of(Warnings) warning
+
+        assert.same 0, Posts\count!
+        assert.same 1, PendingPosts\count!
+
     describe "parent_post_id", ->
       it "fails with invalid parent_post_id value", ->
         post = factory.Posts topic_id: topic.id
@@ -690,7 +749,7 @@ describe "posting flow", ->
       it "posts a threaded post", ->
         post = factory.Posts topic_id: topic.id
 
-        child_post = new_post {
+        {post: child_post} = new_post {
           topic_id: topic.id
           parent_post_id: post.id
           "post[body]": "This is a sub message"
@@ -712,8 +771,8 @@ describe "posting flow", ->
         }
 
       new_pending_post = (opts) ->
-        pending_post = new_post opts
-        assert pending_post.__class == PendingPosts
+        {:pending_post} = new_post opts
+        assert instance_of(PendingPosts) pending_post
         pending_post
 
       it "creates pending post instead of new post", ->
@@ -762,7 +821,6 @@ describe "posting flow", ->
 
         assert pending_post\get_activity_log_create!
 
-
       it "creates pending post body_format", ->
         pending_post = new_pending_post {
           topic_id: topic.id
@@ -786,6 +844,24 @@ describe "posting flow", ->
         assert types.partial({
           parent_post_id: post.id
         }) pending_post
+
+      it "force_pending", ->
+        other_topic = factory.Topics!
+
+        {:post, :pending_post} = in_request {
+          post: {
+            "post[body]": "Hello world"
+          }
+        }, =>
+          @topic = other_topic
+          @current_user = current_user
+          @flow("posts")\new_post {
+            force_pending: true
+          }
+          @
+
+        assert.nil post, "Post should be set"
+        assert.truthy pending_post, "pending_post should not be set"
 
   describe "delete topic", ->
     local topic
@@ -1189,7 +1265,7 @@ describe "posting flow", ->
       topic\refresh!
       assert.falsy topic.deleted
       assert.same 0, topic.posts_count
-    
+
     it "should not delete unrelated post", ->
       other_user = factory.Users!
       post = factory.Posts user_id: other_user.id

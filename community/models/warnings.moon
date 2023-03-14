@@ -35,6 +35,12 @@ class Warnings extends Model
     {"post_report", belongs_to: "PostReports"}
   }
 
+  @restrictions: enum {
+    notify: 1 -- user is displayd warning but they can function normally
+    block_posting: 2
+    pending_posting: 3
+  }
+
   @create: (opts, ...) =>
     if opts.restriction
       opts.restriction = @restrictions\for_db opts.restriction
@@ -43,12 +49,6 @@ class Warnings extends Model
       opts.data = db_json opts.data
 
     super opts, ...
-
-  @restrictions: enum {
-    notify: 1 -- user is displayd warning but they can function normally
-    block_posting: 2
-    pending_posting: 3
-  }
 
   is_active: =>
     date = require "date"

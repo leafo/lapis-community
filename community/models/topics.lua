@@ -422,13 +422,29 @@ do
       return db.query("\n      update " .. tostring(tbl) .. " as posts set post_number = new_number from (\n        select id, row_number() over (" .. tostring(order) .. ") as new_number\n        from " .. tostring(tbl) .. "\n        where " .. tostring(db.encode_clause(cond)) .. "\n        " .. tostring(order) .. "\n      ) foo\n      where posts.id = foo.id and posts.post_number != new_number\n    ")
     end,
     post_needs_approval = function(self, user, post_params)
-      local category = self:get_category()
-      if not (category) then
-        return false
+      local Categories, CommunityUsers
+      do
+        local _obj_0 = require("community.models")
+        Categories, CommunityUsers = _obj_0.Categories, _obj_0.CommunityUsers
       end
-      local Categories
-      Categories = require("community.models").Categories
-      return category:get_approval_type() == Categories.approval_types.pending
+      do
+        local category = self:get_category()
+        if category then
+          if category:get_approval_type() == Categories.approval_types.pending then
+            return true
+          end
+        end
+      end
+      do
+        local cu = CommunityUsers:for_user(user)
+        if cu then
+          local needs_approval, warning = cu:need_approval_to_post()
+          if needs_approval then
+            return true, warning
+          end
+        end
+      end
+      return false
     end,
     get_root_order_ranges = function(self, status)
       if status == nil then
