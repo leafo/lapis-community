@@ -54,6 +54,9 @@ class Warnings extends Model
     date = require "date"
     not @expires_at or date(true) < date(@expires_at)
 
+  has_started: =>
+    @first_seen_at != nil
+
   -- this should be called the first time the user views the warning to start
   -- the restriction for the warning duration
   start_warning: =>

@@ -14,6 +14,9 @@ do
       local date = require("date")
       return not self.expires_at or date(true) < date(self.expires_at)
     end,
+    has_started = function(self)
+      return self.first_seen_at ~= nil
+    end,
     start_warning = function(self)
       return self:update({
         first_seen_at = db.raw("date_trunc('second', now() at time zone 'UTC')"),
