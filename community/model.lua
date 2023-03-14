@@ -72,6 +72,48 @@ do
   end
   CommunityModel = _class_0
 end
+local VirtualModel
+do
+  local _class_0
+  local _parent_0 = CommunityModel
+  local _base_0 = { }
+  _base_0.__index = _base_0
+  setmetatable(_base_0, _parent_0.__base)
+  _class_0 = setmetatable({
+    __init = function(self, ...)
+      return _class_0.__parent.__init(self, ...)
+    end,
+    __base = _base_0,
+    __name = "VirtualModel",
+    __parent = _parent_0
+  }, {
+    __index = function(cls, name)
+      local val = rawget(_base_0, name)
+      if val == nil then
+        local parent = rawget(cls, "__parent")
+        if parent then
+          return parent[name]
+        end
+      else
+        return val
+      end
+    end,
+    __call = function(cls, ...)
+      local _self_0 = setmetatable({}, _base_0)
+      cls.__init(_self_0, ...)
+      return _self_0
+    end
+  })
+  _base_0.__class = _class_0
+  local self = _class_0
+  self.table_name = function(self)
+    return error("Attempted to get table name for a VirtualModel: these types of models are not backed by a table and have no table name. Please check your relation definition, and avoid calling methods like find/select/create/update")
+  end
+  if _parent_0.__inherited then
+    _parent_0.__inherited(_parent_0, _class_0)
+  end
+  VirtualModel = _class_0
+end
 local NestedOrderedPaginator
 do
   local _class_0
@@ -202,6 +244,7 @@ prefix_table = function(table_name)
 end
 return {
   Model = CommunityModel,
+  VirtualModel = VirtualModel,
   NestedOrderedPaginator = NestedOrderedPaginator,
   prefix_table = prefix_table
 }

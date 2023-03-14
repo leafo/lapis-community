@@ -28,6 +28,9 @@ class CommunityModel extends Model
     @singular_name = -> name
     name
 
+class VirtualModel extends CommunityModel
+  @table_name: => error "Attempted to get table name for a VirtualModel: these types of models are not backed by a table and have no table name. Please check your relation definition, and avoid calling methods like find/select/create/update"
+
 class NestedOrderedPaginator extends OrderedPaginator
   prepare_results: (items) =>
     items = super items
@@ -96,4 +99,4 @@ class NestedOrderedPaginator extends OrderedPaginator
 prefix_table = (table_name) ->
   prefix .. table_name
 
-{ Model: CommunityModel, :NestedOrderedPaginator, :prefix_table }
+{ Model: CommunityModel, :VirtualModel, :NestedOrderedPaginator, :prefix_table }
