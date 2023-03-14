@@ -76,7 +76,19 @@ local VirtualModel
 do
   local _class_0
   local _parent_0 = CommunityModel
-  local _base_0 = { }
+  local _base_0 = {
+    refresh = function(self)
+      local relations = require("lapis.db.model.relations")
+      do
+        local loaded_relations = self[relations.LOADED_KEY]
+        if loaded_relations then
+          for name in pairs(loaded_relations) do
+            relations.clear_loaded_relation(self, name)
+          end
+        end
+      end
+    end
+  }
   _base_0.__index = _base_0
   setmetatable(_base_0, _parent_0.__base)
   _class_0 = setmetatable({
@@ -108,6 +120,18 @@ do
   local self = _class_0
   self.table_name = function(self)
     return error("Attempted to get table name for a VirtualModel: these types of models are not backed by a table and have no table name. Please check your relation definition, and avoid calling methods like find/select/create/update")
+  end
+  self.make_loader = function(self, name, fn)
+    return function(self, key, ...)
+      local relations = require("lapis.db.model.relations")
+      local _update_0 = relations.LOADED_KEY
+      self[_update_0] = self[_update_0] or { }
+      local _update_1, _update_2 = relations.LOADED_KEY, name
+      self[_update_1][_update_2] = self[_update_1][_update_2] or { }
+      local _update_3, _update_4, _update_5 = relations.LOADED_KEY, name, key
+      self[_update_3][_update_4][_update_5] = self[_update_3][_update_4][_update_5] or fn(self, key, ...)
+      return self[relations.LOADED_KEY][name][key]
+    end
   end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)

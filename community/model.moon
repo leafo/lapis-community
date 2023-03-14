@@ -31,6 +31,25 @@ class CommunityModel extends Model
 class VirtualModel extends CommunityModel
   @table_name: => error "Attempted to get table name for a VirtualModel: these types of models are not backed by a table and have no table name. Please check your relation definition, and avoid calling methods like find/select/create/update"
 
+  -- this makes the method to load fetch or create the virual model instance
+  @make_loader: (name, fn) =>
+    (key, ...) =>
+      relations = require "lapis.db.model.relations"
+      -- TODO: setting a relation's cached value should be an interface in lapis
+      @[relations.LOADED_KEY] or={}
+      @[relations.LOADED_KEY][name] or= {}
+      @[relations.LOADED_KEY][name][key] or= fn @, key, ...
+      @[relations.LOADED_KEY][name][key]
+
+  -- only clear the relations, don't try to fetch any data
+  refresh: =>
+    relations = require "lapis.db.model.relations"
+
+    if loaded_relations = @[relations.LOADED_KEY]
+      for name in pairs loaded_relations
+        relations.clear_loaded_relation @, name
+
+
 class NestedOrderedPaginator extends OrderedPaginator
   prepare_results: (items) =>
     items = super items
