@@ -1,6 +1,8 @@
 db = require "lapis.db"
 factory = require "spec.factory"
 
+import types from require "tableshape"
+
 describe "models.categories", ->
   import Users from require "spec.models"
   import Categories, Moderators, CategoryMembers, Bans,
@@ -291,6 +293,8 @@ describe "models.categories", ->
           user = factory.Users!
           mod = deep\find_moderator user, accepted: true, admin: true
           assert.same nil, mod
+
+          deep\refresh!
 
           mod = factory.Moderators {
             object: mid
@@ -676,3 +680,127 @@ describe "models.categories", ->
 
       order = [t.category_order for t in *topics]
       assert.same { 1,2,3,4 }, order
+
+  describe "find_moderator", ->
+    local categories, other_category
+    before_each ->
+      other_category = factory.Categories!
+      categories = { factory.Categories! }
+      -- created nested set
+      for i=1,2
+        table.insert categories, factory.Categories parent_category_id: categories[#categories].id
+
+    it "finds no moderator", ->
+      -- quickly confirm ancestor chain
+      assert.same {categories[2].id, categories[1].id, categories[3].id}, categories[3]\get_category_ids!
+
+      user = factory.Users!
+      other_user = factory.Users!
+
+      -- create some moderator objects we should ignore
+      Moderators\create {
+        object_type: "category"
+        object_id: other_category.id
+        user_id: user.id
+        accepted: true
+        admin: true
+      }
+
+      Moderators\create {
+        object_type: "category"
+        object_id: categories[2].id
+        user_id: other_user.id
+        accepted: true
+        admin: true
+      }
+
+
+      assert.nil categories[1]\find_moderator(user), "expecting no moderator"
+      assert.nil categories[2]\find_moderator(user), "expecting no moderator"
+      assert.nil categories[3]\find_moderator(user), "expecting no moderator"
+
+    -- the moderator object nearest to category requested should be returned
+    it "finds moderator with precedence", ->
+      user = factory.Users!
+
+      m1 = Moderators\create {
+        object_type: "category"
+        object_id: categories[1].id
+        user_id: user.id
+        accepted: true
+        admin: true
+      }
+
+      m2 = Moderators\create {
+        object_type: "category"
+        object_id: categories[2].id
+        user_id: user.id
+        accepted: true
+        admin: true
+      }
+
+      do
+        found_mod = categories[3]\find_moderator(user)
+        assert.same m2\_primary_cond!, found_mod\_primary_cond!
+
+      do
+        found_mod = categories[2]\find_moderator(user)
+        assert.same m2\_primary_cond!, found_mod\_primary_cond!
+
+      do
+        found_mod = categories[1]\find_moderator(user)
+        assert.same m1\_primary_cond!, found_mod\_primary_cond!
+
+
+    it "finds moderator with filtering", ->
+      user = factory.Users!
+
+      s = (m) -> {m.object_type, m.object_id, m.user_id}
+
+      m1 = Moderators\create {
+        object_type: "category"
+        object_id: categories[1].id
+        user_id: user.id
+        accepted: true
+        admin: true
+      }
+
+      m2 = Moderators\create {
+        object_type: "category"
+        object_id: categories[2].id
+        user_id: user.id
+        accepted: true
+        admin: false
+      }
+
+      m3 = Moderators\create {
+        object_type: "category"
+        object_id: categories[3].id
+        user_id: user.id
+        accepted: false
+        admin: false
+      }
+
+      deep = categories[3]
+
+      do
+        found_mod = deep\find_moderator user, accepted: true
+        assert.same s(m2), s(found_mod)
+
+      do
+        found_mod = deep\find_moderator user, accepted: true, admin:false
+        assert.same s(m2), s(found_mod)
+
+      do
+        found_mod = deep\find_moderator user, accepted: false
+        assert.same s(m3), s(found_mod)
+
+      do
+        found_mod = deep\find_moderator user, admin: true, accepted: true
+        assert.same s(m1), s(found_mod)
+
+      do
+        found_mod = deep\find_moderator user, accepted: false, admin: true
+        assert.nil found_mod
+
+

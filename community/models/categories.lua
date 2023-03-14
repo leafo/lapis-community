@@ -1,10 +1,15 @@
 local db = require("lapis.db")
 local enum
 enum = require("lapis.db.model").enum
-local Model
-Model = require("community.model").Model
+local Model, VirtualModel
+do
+  local _obj_0 = require("community.model")
+  Model, VirtualModel = _obj_0.Model, _obj_0.VirtualModel
+end
 local memoize1
 memoize1 = require("community.helpers.models").memoize1
+local relation_is_loaded
+relation_is_loaded = require("lapis.db.model.relations").relation_is_loaded
 local slugify
 slugify = require("lapis.util").slugify
 local preload
@@ -41,8 +46,16 @@ end
 local Categories
 do
   local _class_0
+  local CategoryUsers
   local _parent_0 = Model
   local _base_0 = {
+    with_user = VirtualModel:make_loader("category_users", function(self, user_id)
+      assert(user_id, "expecting user id")
+      return CategoryUsers:load({
+        user_id = user_id,
+        category_id = self.id
+      })
+    end),
     get_category_group = function(self)
       if not (self.category_groups_count and self.category_groups_count > 0) then
         return 
@@ -205,23 +218,71 @@ do
       end
       return false
     end,
-    find_moderator = function(self, user, clause)
+    find_moderator = function(self, user, filter)
       if not (user) then
         return nil
       end
-      local Moderators
-      Moderators = require("community.models").Moderators
-      local opts = {
-        object_type = Moderators.object_types.category,
-        object_id = self.parent_category_id and db.list(self:get_category_ids()) or self.id,
-        user_id = user.id
+      local category_chain = {
+        self,
+        unpack(self:get_ancestors())
       }
-      if clause then
-        for k, v in pairs(clause) do
-          opts[k] = v
+      local to_preload
+      do
+        local _accum_0 = { }
+        local _len_0 = 1
+        for _index_0 = 1, #category_chain do
+          local _continue_0 = false
+          repeat
+            local c = category_chain[_index_0]
+            local v = c:with_user(user.id)
+            if relation_is_loaded(v, "moderator") then
+              _continue_0 = true
+              break
+            end
+            local _value_0 = v
+            _accum_0[_len_0] = _value_0
+            _len_0 = _len_0 + 1
+            _continue_0 = true
+          until true
+          if not _continue_0 then
+            break
+          end
+        end
+        to_preload = _accum_0
+      end
+      preload(to_preload, "moderator")
+      for _index_0 = 1, #category_chain do
+        local _continue_0 = false
+        repeat
+          do
+            local category = category_chain[_index_0]
+            local moderator = category:with_user(user.id):get_moderator()
+            if not (moderator) then
+              _continue_0 = true
+              break
+            end
+            if filter then
+              local pass = true
+              for k, v in pairs(filter) do
+                if moderator[k] ~= v then
+                  pass = false
+                  break
+                end
+              end
+              if not (pass) then
+                _continue_0 = true
+                break
+              end
+            end
+            return moderator
+          end
+          _continue_0 = true
+        until true
+        if not _continue_0 then
+          break
         end
       end
-      return Moderators:find(opts)
+      return nil
     end,
     is_member = function(self, user)
       return self:find_member(user, {
@@ -725,6 +786,91 @@ do
   local self = _class_0
   self.timestamp = true
   self.score_starting_date = 1134028003
+  do
+    local _class_1
+    local _parent_1 = VirtualModel
+    local _base_1 = { }
+    _base_1.__index = _base_1
+    setmetatable(_base_1, _parent_1.__base)
+    _class_1 = setmetatable({
+      __init = function(self, ...)
+        return _class_1.__parent.__init(self, ...)
+      end,
+      __base = _base_1,
+      __name = "CategoryUsers",
+      __parent = _parent_1
+    }, {
+      __index = function(cls, name)
+        local val = rawget(_base_1, name)
+        if val == nil then
+          local parent = rawget(cls, "__parent")
+          if parent then
+            return parent[name]
+          end
+        else
+          return val
+        end
+      end,
+      __call = function(cls, ...)
+        local _self_0 = setmetatable({}, _base_1)
+        cls.__init(_self_0, ...)
+        return _self_0
+      end
+    })
+    _base_1.__class = _class_1
+    local self = _class_1
+    self.primary_key = {
+      "categroy_id",
+      "user_id"
+    }
+    self.relations = {
+      {
+        "moderator",
+        has_one = "Moderators",
+        key = {
+          user_id = "user_id",
+          object_id = "category_id"
+        },
+        where = {
+          object_type = 1
+        }
+      },
+      {
+        "ban",
+        has_one = "Bans",
+        key = {
+          banned_user_id = "user_id",
+          object_id = "category_id"
+        },
+        where = {
+          object_type = 1
+        }
+      },
+      {
+        "subscription",
+        has_one = "Subscriptions",
+        key = {
+          user_id = "user_id",
+          object_id = "category_id"
+        },
+        where = {
+          object_type = 2
+        }
+      },
+      {
+        "member",
+        has_one = "CategoryMembers",
+        key = {
+          "user_id",
+          "category_id"
+        }
+      }
+    }
+    if _parent_1.__inherited then
+      _parent_1.__inherited(_parent_1, _class_1)
+    end
+    CategoryUsers = _class_1
+  end
   parent_enum(self, "membership_type", "public", {
     membership_types = enum({
       public = 1,

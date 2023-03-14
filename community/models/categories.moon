@@ -3,6 +3,8 @@ import enum from require "lapis.db.model"
 import Model, VirtualModel from require "community.model"
 import memoize1 from require "community.helpers.models"
 
+import relation_is_loaded from require "lapis.db.model.relations"
+
 import slugify from require "lapis.util"
 
 import preload from require "lapis.db.model"
@@ -375,23 +377,37 @@ class Categories extends Model
 
     false
 
-  -- TODO: this has undefined behavior when user is moderator on multiple levels
-  find_moderator: (user, clause) =>
+  -- search up the ancestor chain for the closest moderator that matches the filter
+  find_moderator: (user, filter) =>
     return nil unless user
 
-    import Moderators from require "community.models"
+    category_chain = { @, unpack @get_ancestors! }
 
-    opts = {
-      object_type: Moderators.object_types.category
-      object_id: @parent_category_id and db.list(@get_category_ids!) or @id
-      user_id: user.id
-    }
+    to_preload = for c in *category_chain
+      v = c\with_user user.id
+      continue if relation_is_loaded v, "moderator"
+      v
 
-    if clause
-      for k,v in pairs clause
-        opts[k] = v
+    preload to_preload, "moderator"
 
-    Moderators\find opts
+    for category in *category_chain
+      moderator = category\with_user(user.id)\get_moderator!
+      continue unless moderator
+
+      if filter
+        pass = true
+
+        for k, v in pairs filter
+          if moderator[k] != v
+            pass = false
+            break
+
+        continue unless pass
+
+      return moderator
+
+
+    nil
 
   is_member: (user) =>
     @find_member user, accepted: true
