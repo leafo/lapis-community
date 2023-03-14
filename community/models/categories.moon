@@ -1,6 +1,6 @@
 db = require "lapis.db"
 import enum from require "lapis.db.model"
-import Model from require "community.model"
+import Model, VirtualModel from require "community.model"
 import memoize1 from require "community.helpers.models"
 
 import slugify from require "lapis.util"
@@ -65,6 +65,35 @@ parent_enum = (property_name, default, opts) =>
 class Categories extends Model
   @timestamp: true
   @score_starting_date: 1134028003
+
+  class CategoryUsers extends VirtualModel
+    @primary_key: {"categroy_id", "user_id"}
+
+    @relations: {
+      {"moderator", has_one: "Moderators", key: {
+        user_id: "user_id"
+        object_id: "category_id"
+      }, where: {
+        object_type: 1
+      }}
+
+
+      {"ban", has_one: "Bans", key: {
+        banned_user_id: "user_id"
+        object_id: "category_id"
+      }, where: {
+        object_type: 1
+      }}
+
+      {"subscription", has_one: "Subscriptions", key: {
+        user_id: "user_id"
+        object_id: "category_id"
+      }, where: {
+        object_type: 2
+      }}
+
+      {"member", has_one: "CategoryMembers", key: {"user_id", "category_id"}}
+    }
 
   parent_enum @, "membership_type", "public", {
     membership_types: enum {
@@ -245,6 +274,14 @@ class Categories extends Model
       category.user_bans[user.id] = bans_by_category_id[category.id] or false
 
     true
+
+  -- return the virtual CategoryUsers model for that user_id
+  with_user: memoize1 (user_id) =>
+    assert user_id, "expecting user id"
+    CategoryUsers\load {
+      user_id: user_id
+      category_id: @id
+    }
 
   get_category_group: =>
     return unless @category_groups_count and @category_groups_count > 0
