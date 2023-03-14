@@ -44,36 +44,40 @@ do
       end
       local TopicsFlow = require("community.flows.topics")
       TopicsFlow(self):load_topic()
+      local community_user = CommunityUsers:for_user(self.current_user)
       assert_error(self.topic:allowed_to_post(self.current_user, self._req))
-      local can_post, posting_err, warning = CommunityUsers:allowed_to_post(self.current_user, self.topic)
+      local can_post, posting_err, warning = community_user:allowed_to_post(self.topic)
       if not (can_post) then
         self.warning = warning
         yield_error(posting_err or "your account is not authorized to post")
       end
-      local params = assert_valid(self.params, types.params_shape({
-        {
-          "parent_post_id",
-          types.db_id + types.empty
-        },
-        {
-          "post",
-          types.params_shape({
-            {
-              "body",
-              types.limited_text(limits.MAX_BODY_LEN)
-            },
-            {
-              "body_format",
-              types.db_enum(Posts.body_formats) + types.empty / Posts.body_formats.html
-            }
-          })
-        }
-      }))
-      local new_post = params.post
+      local new_post, parent_post_id
+      do
+        local _obj_0 = assert_valid(self.params, types.params_shape({
+          {
+            "parent_post_id",
+            types.db_id + types.empty
+          },
+          {
+            "post",
+            types.params_shape({
+              {
+                "body",
+                types.limited_text(limits.MAX_BODY_LEN)
+              },
+              {
+                "body_format",
+                types.db_enum(Posts.body_formats) + types.empty / Posts.body_formats.html
+              }
+            })
+          }
+        }))
+        new_post, parent_post_id = _obj_0.post, _obj_0.parent_post_id
+      end
       local body = assert_error(Posts:filter_body(new_post.body, new_post.body_format))
       local parent_post
       do
-        local pid = params.parent_post_id
+        local pid = parent_post_id
         if pid then
           parent_post = assert_error(Posts:find(pid), "invalid parent post")
         end
@@ -113,24 +117,24 @@ do
             parent_post_id = parent_post and parent_post.id
           }
         })
-      else
-        self.post = Posts:create({
-          user_id = self.current_user.id,
-          topic_id = self.topic.id,
-          body = body,
-          body_format = new_post.body_format,
-          parent_post = parent_post
-        })
-        self.topic:increment_from_post(self.post)
-        CommunityUsers:for_user(self.current_user):increment_from_post(self.post)
-        self.topic:increment_participant(self.current_user)
-        ActivityLogs:create({
-          user_id = self.current_user.id,
-          object = self.post,
-          action = "create"
-        })
-        self.post:on_body_updated_callback(self)
+        return true
       end
+      self.post = Posts:create({
+        user_id = self.current_user.id,
+        topic_id = self.topic.id,
+        body = body,
+        body_format = new_post.body_format,
+        parent_post = parent_post
+      })
+      self.topic:increment_from_post(self.post)
+      community_user:increment_from_post(self.post)
+      self.topic:increment_participant(self.current_user)
+      ActivityLogs:create({
+        user_id = self.current_user.id,
+        object = self.post,
+        action = "create"
+      })
+      self.post:on_body_updated_callback(self)
       return true
     end),
     edit_post = require_current_user(function(self)

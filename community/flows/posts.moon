@@ -31,15 +31,17 @@ class PostsFlow extends Flow
   new_post: require_current_user (opts={}) =>
     TopicsFlow = require "community.flows.topics"
     TopicsFlow(@)\load_topic!
+
+    community_user = CommunityUsers\for_user @current_user
+
     assert_error @topic\allowed_to_post @current_user, @_req
 
-    can_post, posting_err, warning = CommunityUsers\allowed_to_post @current_user, @topic
-
+    can_post, posting_err, warning = community_user\allowed_to_post @topic
     unless can_post
       @warning = warning
       yield_error posting_err or "your account is not authorized to post"
 
-    params = assert_valid @params, types.params_shape {
+    {post: new_post, :parent_post_id} = assert_valid @params, types.params_shape {
       {"parent_post_id", types.db_id + types.empty }
       {"post", types.params_shape {
         {"body", types.limited_text limits.MAX_BODY_LEN }
@@ -47,11 +49,9 @@ class PostsFlow extends Flow
       }}
     }
 
-    new_post = params.post
-
     body = assert_error Posts\filter_body new_post.body, new_post.body_format
 
-    parent_post = if pid = params.parent_post_id
+    parent_post = if pid = parent_post_id
       assert_error Posts\find(pid), "invalid parent post"
 
     if parent_post
@@ -92,26 +92,28 @@ class PostsFlow extends Flow
           parent_post_id: parent_post and parent_post.id
         }
       }
-    else
-      @post = Posts\create {
-        user_id: @current_user.id
-        topic_id: @topic.id
-        :body
-        body_format: new_post.body_format
-        :parent_post
-      }
 
-      @topic\increment_from_post @post
-      CommunityUsers\for_user(@current_user)\increment_from_post @post
-      @topic\increment_participant @current_user
+      return true
 
-      ActivityLogs\create {
-        user_id: @current_user.id
-        object: @post
-        action: "create"
-      }
+    @post = Posts\create {
+      user_id: @current_user.id
+      topic_id: @topic.id
+      :body
+      body_format: new_post.body_format
+      :parent_post
+    }
 
-      @post\on_body_updated_callback @
+    @topic\increment_from_post @post
+    community_user\increment_from_post @post
+    @topic\increment_participant @current_user
+
+    ActivityLogs\create {
+      user_id: @current_user.id
+      object: @post
+      action: "create"
+    }
+
+    @post\on_body_updated_callback @
 
     true
 
