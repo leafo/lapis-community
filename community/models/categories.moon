@@ -418,22 +418,22 @@ class Categories extends Model
   is_member: (user) =>
     @find_member user, accepted: true
 
-  find_member: (user, clause) =>
+  find_member: (user, filter) =>
     return nil unless user
-    import CategoryMembers from require "community.models"
+    for v in *@preloaded_category_user_chain user, "member"
+      member = v\get_member!
+      continue unless member
 
-    opts = {
-      category_id: @parent_category_id and db.list(@get_category_ids!) or @id
-      user_id: user.id
-    }
+      if filter
+        pass = true
+        for k,v in pairs filter
+          unless member[k] == v
+            pass = false
+            break
 
-    if clause
-      for k,v in pairs clause
-        opts[k] = v
+        continue unless pass
 
-    -- TODO: this returns a random category object, might want to make it
-    -- return the closest category in tree
-    CategoryMembers\find opts
+      return member
 
   -- search up ancestor chain for the closest ban
   find_ban: (user) =>

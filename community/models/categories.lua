@@ -302,22 +302,42 @@ do
         accepted = true
       })
     end,
-    find_member = function(self, user, clause)
+    find_member = function(self, user, filter)
       if not (user) then
         return nil
       end
-      local CategoryMembers
-      CategoryMembers = require("community.models").CategoryMembers
-      local opts = {
-        category_id = self.parent_category_id and db.list(self:get_category_ids()) or self.id,
-        user_id = user.id
-      }
-      if clause then
-        for k, v in pairs(clause) do
-          opts[k] = v
+      local _list_0 = self:preloaded_category_user_chain(user, "member")
+      for _index_0 = 1, #_list_0 do
+        local _continue_0 = false
+        repeat
+          do
+            local v = _list_0[_index_0]
+            local member = v:get_member()
+            if not (member) then
+              _continue_0 = true
+              break
+            end
+            if filter then
+              local pass = true
+              for k, v in pairs(filter) do
+                if not (member[k] == v) then
+                  pass = false
+                  break
+                end
+              end
+              if not (pass) then
+                _continue_0 = true
+                break
+              end
+            end
+            return member
+          end
+          _continue_0 = true
+        until true
+        if not _continue_0 then
+          break
         end
       end
-      return CategoryMembers:find(opts)
     end,
     find_ban = function(self, user)
       if not (user) then

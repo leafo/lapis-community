@@ -327,7 +327,11 @@ describe "models.categories", ->
 
         it "searches ancestors for members", ->
           user = factory.Users!
+          other_user = factory.Users!
+
           assert.same nil, (deep\find_member user)
+
+          s = (m) -> {m.user_id, m.category_id}
 
           member = factory.CategoryMembers {
             category_id: category.id
@@ -335,8 +339,26 @@ describe "models.categories", ->
             accepted: true
           }
 
-          found = deep\find_member user, accepted: true
-          assert.same found.user_id, user.id
+          -- random other records
+          factory.CategoryMembers {
+            category_id: category.id
+            user_id: other_user.id
+            accepted: false
+          }
+
+          deep\refresh!
+
+          do
+            found = deep\find_member user, accepted: true
+            assert.same s(member), s(found)
+
+          do
+            found = deep\find_member user, accepted: false
+            assert.nil found
+
+          do
+            found = deep\find_member user
+            assert.same s(member), s(found)
 
         it "gets default voting type", ->
           assert.same Categories.voting_types.up_down, category\get_voting_type!
