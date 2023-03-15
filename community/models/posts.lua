@@ -1,14 +1,25 @@
 local db = require("lapis.db")
-local Model
-Model = require("community.model").Model
+local Model, VirtualModel
+do
+  local _obj_0 = require("community.model")
+  Model, VirtualModel = _obj_0.Model, _obj_0.VirtualModel
+end
 local enum
 enum = require("lapis.db.model").enum
 local date = require("date")
 local Posts
 do
   local _class_0
+  local PostViewers
   local _parent_0 = Model
   local _base_0 = {
+    with_viewing_user = VirtualModel:make_loader("viewing_users", function(self, user_id)
+      return PostViewers:load({
+        post_id = self.id,
+        author_id = self.user_id,
+        viewer_id = user_id
+      })
+    end),
     get_mentioned_users = function(self)
       if not (self.mentioned_users) then
         local usernames = self.__class:_parse_usernames(self.body)
@@ -597,6 +608,70 @@ do
   _base_0.__class = _class_0
   local self = _class_0
   self.timestamp = true
+  do
+    local _class_1
+    local _parent_1 = VirtualModel
+    local _base_1 = { }
+    _base_1.__index = _base_1
+    setmetatable(_base_1, _parent_1.__base)
+    _class_1 = setmetatable({
+      __init = function(self, ...)
+        return _class_1.__parent.__init(self, ...)
+      end,
+      __base = _base_1,
+      __name = "PostViewers",
+      __parent = _parent_1
+    }, {
+      __index = function(cls, name)
+        local val = rawget(_base_1, name)
+        if val == nil then
+          local parent = rawget(cls, "__parent")
+          if parent then
+            return parent[name]
+          end
+        else
+          return val
+        end
+      end,
+      __call = function(cls, ...)
+        local _self_0 = setmetatable({}, _base_1)
+        cls.__init(_self_0, ...)
+        return _self_0
+      end
+    })
+    _base_1.__class = _class_1
+    local self = _class_1
+    self.primary_key = {
+      "post_id",
+      "author_id",
+      "viewer_id"
+    }
+    self.relations = {
+      {
+        "block",
+        has_one = "Blocks",
+        key = {
+          blocking_user_id = "viewer_id",
+          blocked_user_id = "author_id"
+        }
+      },
+      {
+        "vote",
+        has_one = "Votes",
+        key = {
+          object_id = "post_id",
+          user_id = "viewer_id"
+        },
+        where = {
+          object_type = 1
+        }
+      }
+    }
+    if _parent_1.__inherited then
+      _parent_1.__inherited(_parent_1, _class_1)
+    end
+    PostViewers = _class_1
+  end
   self.relations = {
     {
       "topic",

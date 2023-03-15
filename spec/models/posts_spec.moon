@@ -842,3 +842,28 @@ describe "models.posts", ->
       }
 
       assert.same "<p><strong>hello world</strong></p>\n", post\get_body_html!
+
+  describe "viewing user", ->
+    import Blocks, Votes from require "spec.community_models"
+
+    it "fetches models for viewing user", ->
+      post = factory.Posts!
+      user = factory.Users!
+
+      Blocks\create {
+        blocking_user_id: user.id
+        blocked_user_id: post.user_id
+      }
+
+      Votes\create {
+        object_type: Votes.object_types.post
+        object_id: post.id
+        user_id: user.id
+      }
+
+      viewer = post\with_viewing_user(user.id)
+      assert.truthy viewer\get_block!, "should find block"
+      assert.truthy viewer\get_vote!, "should find vote"
+
+
+

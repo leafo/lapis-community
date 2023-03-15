@@ -1,5 +1,5 @@
 db = require "lapis.db"
-import Model from require "community.model"
+import Model, VirtualModel from require "community.model"
 import enum from require "lapis.db.model"
 
 date = require "date"
@@ -42,6 +42,23 @@ date = require "date"
 --
 class Posts extends Model
   @timestamp: true
+
+  class PostViewers extends VirtualModel
+    @primary_key: {"post_id", "author_id", "viewer_id"}
+
+    @relations: {
+      {"block", has_one: "Blocks", key: {
+        blocking_user_id: "viewer_id"
+        blocked_user_id: "author_id"
+      }}
+      {"vote", has_one: "Votes", key: {
+        object_id: "post_id"
+        user_id: "viewer_id"
+      }, where: {
+        object_type: 1
+      }}
+    }
+
 
   @relations: {
     {"topic", belongs_to: "Topics"}
@@ -231,6 +248,13 @@ class Posts extends Model
 
   @_parse_usernames: (body) =>
     [username for username in body\gmatch "@([%w-_]+)"]
+
+  with_viewing_user: VirtualModel\make_loader "viewing_users", (user_id) =>
+    PostViewers\load {
+      post_id: @id
+      author_id: @user_id
+      viewer_id: user_id
+    }
 
   get_mentioned_users: =>
     unless @mentioned_users
