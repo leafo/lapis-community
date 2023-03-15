@@ -249,33 +249,19 @@ class Categories extends Model
 
     true
 
-  -- TODO: replace this with virtual models
   @preload_bans: (categories, user) =>
     return unless user
     return unless next categories
 
-    -- preload anecestors where necessary
     @preload_ancestors [c for c in *categories when not c.ancestors]
 
-    categories_by_id = {}
-    for c in *categories
-      categories_by_id[c.id] = c
-      for ancestor in *c\get_ancestors!
-        categories_by_id[ancestor.id] or= ancestor
+    all_category_users = {}
+    for category in *categories
+      table.insert all_category_users, category\with_user(user.id)
+      for parent_category in *category\get_ancestors!
+        table.insert all_category_users, parent_category\with_user(user.id)
 
-    category_ids = [id for id in pairs categories_by_id]
-
-    import Bans from require "community.models"
-    bans = Bans\select "
-      where banned_user_id = ? and object_type = ? and object_id in ?
-    ", user.id, Bans.object_types.category, db.list category_ids
-
-    bans_by_category_id = {b.object_id, b for b in *bans}
-
-    for _, category in pairs categories_by_id
-      category.user_bans or= {}
-      category.user_bans[user.id] = bans_by_category_id[category.id] or false
-
+    preload all_category_users, "ban"
     true
 
   with_user: VirtualModel\make_loader "category_users", (user_id) =>
