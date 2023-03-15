@@ -132,6 +132,9 @@ describe "models.categories", ->
 
       assert.falsy category\find_ban banned_user
       factory.Bans object: category, banned_user_id: banned_user.id
+      category\refresh! -- clear loaded relations
+
+
       assert.truthy category\find_ban banned_user
 
       assert.falsy category\allowed_to_view banned_user
@@ -315,9 +318,12 @@ describe "models.categories", ->
             banned_user_id: user.id
           }
 
+          deep\refresh!
+
           found = deep\find_ban user
           assert.same {ban.object_type, ban.object_id},
             {found.object_type, found.object_id}
+
 
         it "searches ancestors for members", ->
           user = factory.Users!
