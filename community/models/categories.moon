@@ -321,7 +321,7 @@ class Categories extends Model
         return true if @allowed_to_moderate user
         return false unless @is_member user
 
-    return false if @get_ban user
+    return false if @find_ban user
 
     if category_group = @get_category_group!
       return false unless category_group\allowed_to_view user, req
@@ -377,21 +377,27 @@ class Categories extends Model
 
     false
 
+  -- return category_user virtual models for the category hierarchy
+  preloaded_category_user_chain: (user, relation) =>
+    category_chain = { @, unpack @get_ancestors! }
+
+    if relation
+      to_preload = for c in *category_chain
+        v = c\with_user user.id
+        continue if relation_is_loaded v, relation
+        v
+
+      preload to_preload, relation
+
+    [c\with_user user.id for c in *category_chain]
+
+
   -- search up the ancestor chain for the closest moderator that matches the filter
   find_moderator: (user, filter) =>
     return nil unless user
 
-    category_chain = { @, unpack @get_ancestors! }
-
-    to_preload = for c in *category_chain
-      v = c\with_user user.id
-      continue if relation_is_loaded v, "moderator"
-      v
-
-    preload to_preload, "moderator"
-
-    for category in *category_chain
-      moderator = category\with_user(user.id)\get_moderator!
+    for v in *@preloaded_category_user_chain user, "moderator"
+      moderator = v\get_moderator!
       continue unless moderator
 
       if filter
@@ -429,27 +435,14 @@ class Categories extends Model
     -- return the closest category in tree
     CategoryMembers\find opts
 
+  -- search up ancestor chain for the closest ban
   find_ban: (user) =>
     return nil unless user
-    import Bans from require "community.models"
+    for v in *@preloaded_category_user_chain user, "ban"
+      if ban = v\get_ban!
+        return ban
 
-    Bans\find {
-      object_type: Bans.object_types.category
-      object_id: @parent_category_id and db.list(@get_category_ids!) or @id
-      banned_user_id: user.id
-    }
-
-  get_ban: (user) =>
-    return nil unless user
-
-    @user_bans or= {}
-    ban = @user_bans[user.id]
-
-    if ban != nil
-      return ban
-
-    @user_bans[user.id] = @find_ban(user) or false
-    @user_bans[user.id]
+    nil
 
   get_order_ranges: (status="default") =>
     import Topics from require "community.models"

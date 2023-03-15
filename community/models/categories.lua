@@ -112,7 +112,7 @@ do
           return false
         end
       end
-      if self:get_ban(user) then
+      if self:find_ban(user) then
         return false
       end
       do
@@ -218,45 +218,58 @@ do
       end
       return false
     end,
-    find_moderator = function(self, user, filter)
-      if not (user) then
-        return nil
-      end
+    preloaded_category_user_chain = function(self, user, relation)
       local category_chain = {
         self,
         unpack(self:get_ancestors())
       }
-      local to_preload
-      do
-        local _accum_0 = { }
-        local _len_0 = 1
-        for _index_0 = 1, #category_chain do
-          local _continue_0 = false
-          repeat
-            local c = category_chain[_index_0]
-            local v = c:with_user(user.id)
-            if relation_is_loaded(v, "moderator") then
+      if relation then
+        local to_preload
+        do
+          local _accum_0 = { }
+          local _len_0 = 1
+          for _index_0 = 1, #category_chain do
+            local _continue_0 = false
+            repeat
+              local c = category_chain[_index_0]
+              local v = c:with_user(user.id)
+              if relation_is_loaded(v, relation) then
+                _continue_0 = true
+                break
+              end
+              local _value_0 = v
+              _accum_0[_len_0] = _value_0
+              _len_0 = _len_0 + 1
               _continue_0 = true
+            until true
+            if not _continue_0 then
               break
             end
-            local _value_0 = v
-            _accum_0[_len_0] = _value_0
-            _len_0 = _len_0 + 1
-            _continue_0 = true
-          until true
-          if not _continue_0 then
-            break
           end
+          to_preload = _accum_0
         end
-        to_preload = _accum_0
+        preload(to_preload, relation)
       end
-      preload(to_preload, "moderator")
+      local _accum_0 = { }
+      local _len_0 = 1
       for _index_0 = 1, #category_chain do
+        local c = category_chain[_index_0]
+        _accum_0[_len_0] = c:with_user(user.id)
+        _len_0 = _len_0 + 1
+      end
+      return _accum_0
+    end,
+    find_moderator = function(self, user, filter)
+      if not (user) then
+        return nil
+      end
+      local _list_0 = self:preloaded_category_user_chain(user, "moderator")
+      for _index_0 = 1, #_list_0 do
         local _continue_0 = false
         repeat
           do
-            local category = category_chain[_index_0]
-            local moderator = category:with_user(user.id):get_moderator()
+            local v = _list_0[_index_0]
+            local moderator = v:get_moderator()
             if not (moderator) then
               _continue_0 = true
               break
@@ -310,25 +323,17 @@ do
       if not (user) then
         return nil
       end
-      local Bans
-      Bans = require("community.models").Bans
-      return Bans:find({
-        object_type = Bans.object_types.category,
-        object_id = self.parent_category_id and db.list(self:get_category_ids()) or self.id,
-        banned_user_id = user.id
-      })
-    end,
-    get_ban = function(self, user)
-      if not (user) then
-        return nil
+      local _list_0 = self:preloaded_category_user_chain(user, "ban")
+      for _index_0 = 1, #_list_0 do
+        local v = _list_0[_index_0]
+        do
+          local ban = v:get_ban()
+          if ban then
+            return ban
+          end
+        end
       end
-      self.user_bans = self.user_bans or { }
-      local ban = self.user_bans[user.id]
-      if ban ~= nil then
-        return ban
-      end
-      self.user_bans[user.id] = self:find_ban(user) or false
-      return self.user_bans[user.id]
+      return nil
     end,
     get_order_ranges = function(self, status)
       if status == nil then
