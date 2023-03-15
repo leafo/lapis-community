@@ -43,7 +43,7 @@ VOTE_TYPES_DEFAULT = { down: true, up: true }
 class Topics extends Model
   @timestamp: true
 
-  class TopicUsers extends VirtualModel
+  class TopicViewers extends VirtualModel
     @primary_key: {"topic_id", "user_id"}
 
     @relations: {
@@ -162,9 +162,9 @@ class Topics extends Model
     preload [t\with_user(user.id) for t in *topics], "ban"
     true
 
-  with_user: VirtualModel\make_loader "topic_users", (user_id) =>
+  with_user: VirtualModel\make_loader "topic_viewers", (user_id) =>
     assert user_id, "expecting user id"
-    TopicUsers\load {
+    TopicViewers\load {
       user_id: user_id
       topic_id: @id
     }

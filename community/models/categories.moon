@@ -67,7 +67,7 @@ class Categories extends Model
   @timestamp: true
   @score_starting_date: 1134028003
 
-  class CategoryUsers extends VirtualModel
+  class CategoryViewers extends VirtualModel
     @primary_key: {"categroy_id", "user_id"}
 
     @relations: {
@@ -255,18 +255,18 @@ class Categories extends Model
 
     @preload_ancestors [c for c in *categories when not c.ancestors]
 
-    all_category_users = {}
+    all_viewers = {}
     for category in *categories
-      table.insert all_category_users, category\with_user(user.id)
+      table.insert all_viewers, category\with_user(user.id)
       for parent_category in *category\get_ancestors!
-        table.insert all_category_users, parent_category\with_user(user.id)
+        table.insert all_viewers, parent_category\with_user(user.id)
 
-    preload all_category_users, "ban"
+    preload all_viewers, "ban"
     true
 
-  with_user: VirtualModel\make_loader "category_users", (user_id) =>
+  with_user: VirtualModel\make_loader "category_viewers", (user_id) =>
     assert user_id, "expecting user id"
-    CategoryUsers\load {
+    CategoryViewers\load {
       user_id: user_id
       category_id: @id
     }

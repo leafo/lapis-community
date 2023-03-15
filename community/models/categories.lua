@@ -44,12 +44,12 @@ end
 local Categories
 do
   local _class_0
-  local CategoryUsers
+  local CategoryViewers
   local _parent_0 = Model
   local _base_0 = {
-    with_user = VirtualModel:make_loader("category_users", function(self, user_id)
+    with_user = VirtualModel:make_loader("category_viewers", function(self, user_id)
       assert(user_id, "expecting user id")
-      return CategoryUsers:load({
+      return CategoryViewers:load({
         user_id = user_id,
         category_id = self.id
       })
@@ -834,7 +834,7 @@ do
         return _class_1.__parent.__init(self, ...)
       end,
       __base = _base_1,
-      __name = "CategoryUsers",
+      __name = "CategoryViewers",
       __parent = _parent_1
     }, {
       __index = function(cls, name)
@@ -914,7 +914,7 @@ do
     if _parent_1.__inherited then
       _parent_1.__inherited(_parent_1, _class_1)
     end
-    CategoryUsers = _class_1
+    CategoryViewers = _class_1
   end
   parent_enum(self, "membership_type", "public", {
     membership_types = enum({
@@ -1140,17 +1140,17 @@ do
       end
       return _accum_0
     end)())
-    local all_category_users = { }
+    local all_viewers = { }
     for _index_0 = 1, #categories do
       local category = categories[_index_0]
-      table.insert(all_category_users, category:with_user(user.id))
+      table.insert(all_viewers, category:with_user(user.id))
       local _list_0 = category:get_ancestors()
       for _index_1 = 1, #_list_0 do
         local parent_category = _list_0[_index_1]
-        table.insert(all_category_users, parent_category:with_user(user.id))
+        table.insert(all_viewers, parent_category:with_user(user.id))
       end
     end
-    preload(all_category_users, "ban")
+    preload(all_viewers, "ban")
     return true
   end
   if _parent_0.__inherited then

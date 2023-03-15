@@ -17,12 +17,12 @@ local VOTE_TYPES_DEFAULT = {
 local Topics
 do
   local _class_0
-  local TopicUsers
+  local TopicViewers
   local _parent_0 = Model
   local _base_0 = {
-    with_user = VirtualModel:make_loader("topic_users", function(self, user_id)
+    with_user = VirtualModel:make_loader("topic_viewers", function(self, user_id)
       assert(user_id, "expecting user id")
-      return TopicUsers:load({
+      return TopicViewers:load({
         user_id = user_id,
         topic_id = self.id
       })
@@ -740,7 +740,7 @@ do
         return _class_1.__parent.__init(self, ...)
       end,
       __base = _base_1,
-      __name = "TopicUsers",
+      __name = "TopicViewers",
       __parent = _parent_1
     }, {
       __index = function(cls, name)
@@ -812,7 +812,7 @@ do
     if _parent_1.__inherited then
       _parent_1.__inherited(_parent_1, _class_1)
     end
-    TopicUsers = _class_1
+    TopicViewers = _class_1
   end
   self.relations = {
     {
