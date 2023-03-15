@@ -37,6 +37,7 @@ class BookmarksFlow extends Flow
 
     @bookmark = Bookmarks\get @object, @current_user
   
+  -- shows the current user's bookmarks across the entire community
   show_topic_bookmarks: require_current_user =>
     BrowsingFlow = require "community.flows.browsing"
 
