@@ -670,10 +670,12 @@ class Posts extends Model
     nil
 
   get_block: (user) =>
-    @with_viewing_user(user.id)\get_block!
+    if user
+      @with_viewing_user(user.id)\get_block!
 
   -- this tries to avoid querying for blank data by checking if post even has
   -- any votes
   get_vote: (user) =>
-    if @down_votes_count > 0 or @up_votes_count > 0 or @user_id == user.id
-      @with_viewing_user(user.id)\get_vote!
+    if user
+      if @down_votes_count > 0 or @up_votes_count > 0 or @user_id == user.id
+        @with_viewing_user(user.id)\get_vote!

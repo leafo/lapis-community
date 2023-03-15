@@ -578,11 +578,15 @@ do
       return nil
     end,
     get_block = function(self, user)
-      return self:with_viewing_user(user.id):get_block()
+      if user then
+        return self:with_viewing_user(user.id):get_block()
+      end
     end,
     get_vote = function(self, user)
-      if self.down_votes_count > 0 or self.up_votes_count > 0 or self.user_id == user.id then
-        return self:with_viewing_user(user.id):get_vote()
+      if user then
+        if self.down_votes_count > 0 or self.up_votes_count > 0 or self.user_id == user.id then
+          return self:with_viewing_user(user.id):get_vote()
+        end
       end
     end
   }
