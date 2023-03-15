@@ -369,14 +369,19 @@ do
           local _obj_0 = require("community.models")
           Blocks, Votes = _obj_0.Blocks, _obj_0.Votes
         end
+        local viewers
+        do
+          local _accum_0 = { }
+          local _len_0 = 1
+          for _index_0 = 1, #posts do
+            local post = posts[_index_0]
+            _accum_0[_len_0] = post:with_viewing_user(self.current_user.id)
+            _len_0 = _len_0 + 1
+          end
+          viewers = _accum_0
+        end
+        preload(viewers, "block")
         Votes:preload_post_votes(posts, self.current_user.id)
-        Blocks:include_in(posts, "blocked_user_id", {
-          flip = true,
-          local_key = "user_id",
-          where = {
-            blocking_user_id = self.current_user.id
-          }
-        })
       end
       return posts
     end,

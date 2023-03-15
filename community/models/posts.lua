@@ -576,6 +576,14 @@ do
         return false
       end
       return nil
+    end,
+    get_block = function(self, user)
+      return self:with_viewing_user(user.id):get_block()
+    end,
+    get_vote = function(self, user)
+      if self.down_votes_count > 0 or self.up_votes_count > 0 or self.user_id == user.id then
+        return self:with_viewing_user(user.id):get_vote()
+      end
     end
   }
   _base_0.__index = _base_0

@@ -1,6 +1,8 @@
 db = require "lapis.db"
 import Model from require "community.model"
 
+import preload from require "lapis.db.model"
+
 -- Generated schema dump: (do not edit)
 --
 -- CREATE TABLE community_votes (
@@ -30,17 +32,13 @@ class Votes extends Model
     }}
   }
 
+  -- this function tries to avoid fecthing for empty data by filtering to
+  -- posts we know have a vote. This will not work if the vote counter cache
+  -- is out of sync
   @preload_post_votes: (posts, user_id) =>
     return unless user_id
-    posts_with_votes = [p for p in *posts when p.down_votes_count > 0 or p.up_votes_count > 0 or p.user_id == user_id]
-
-    @include_in posts_with_votes, "object_id", {
-      flip: true
-      where: {
-        object_type: Votes.object_types.post
-        :user_id
-      }
-    }
+    with_votes = [p\with_viewing_user(user_id) for p in *posts when p.down_votes_count > 0 or p.up_votes_count > 0 or p.user_id == user_id]
+    preload with_votes, "vote"
 
   -- NOTE: vote and unvote are the public interface
   @create: (opts={}) =>

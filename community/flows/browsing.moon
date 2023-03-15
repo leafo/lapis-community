@@ -225,15 +225,10 @@ class BrowsingFlow extends Flow
 
     if @current_user
       import Blocks, Votes from require "community.models"
-      Votes\preload_post_votes posts, @current_user.id
 
-      Blocks\include_in posts, "blocked_user_id", {
-        flip: true
-        local_key: "user_id"
-        where: {
-          blocking_user_id: @current_user.id
-        }
-      }
+      viewers = [post\with_viewing_user(@current_user.id) for post in *posts]
+      preload viewers, "block"
+      Votes\preload_post_votes posts, @current_user.id
 
     posts
 

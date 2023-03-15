@@ -1,6 +1,8 @@
 local db = require("lapis.db")
 local Model
 Model = require("community.model").Model
+local preload
+preload = require("lapis.db.model").preload
 local Votes
 do
   local _class_0
@@ -141,26 +143,20 @@ do
     if not (user_id) then
       return 
     end
-    local posts_with_votes
+    local with_votes
     do
       local _accum_0 = { }
       local _len_0 = 1
       for _index_0 = 1, #posts do
         local p = posts[_index_0]
         if p.down_votes_count > 0 or p.up_votes_count > 0 or p.user_id == user_id then
-          _accum_0[_len_0] = p
+          _accum_0[_len_0] = p:with_viewing_user(user_id)
           _len_0 = _len_0 + 1
         end
       end
-      posts_with_votes = _accum_0
+      with_votes = _accum_0
     end
-    return self:include_in(posts_with_votes, "object_id", {
-      flip = true,
-      where = {
-        object_type = Votes.object_types.post,
-        user_id = user_id
-      }
-    })
+    return preload(with_votes, "vote")
   end
   self.create = function(self, opts)
     if opts == nil then
