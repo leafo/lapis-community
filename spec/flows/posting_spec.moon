@@ -431,12 +431,34 @@ describe "posting flow", ->
     describe "pending topic", ->
       import PendingPosts from require "spec.community_models"
 
-      it "creates a pending topic post", ->
+      local category
+
+      before_each ->
         category = factory.Categories!
         category\update {
           approval_type: Categories.approval_types.pending
         }
 
+      it "force_pending", ->
+        some_category = factory.Categories!
+
+        {:topic, :pending_post} = in_request {
+          post: {
+            category_id: some_category.id
+            "topic[title]": "Hello world"
+            "topic[body]": "This is the body"
+          }
+        }, =>
+          @current_user = current_user
+          @flow("topics")\new_topic {
+            force_pending: true
+          }
+          @
+
+        assert.nil topic, "no topic should be created"
+        assert.truthy pending_post, "pending post should be created"
+
+      it "creates a pending topic post", ->
         CategoryTags\create {
           slug: "hello-world"
           category_id: category.id
@@ -507,6 +529,21 @@ describe "posting flow", ->
             user_id: current_user.id
           }
         }) Posts\select!
+
+      it "skips pending restriction if user is moderator", ->
+        category\update user_id: current_user.id
+
+        {:pending_post, :topic} = new_topic {
+          category_id: category.id
+          "topic[title]": "Hello world"
+          "topic[body]": "This is the body"
+          "topic[body_format]": "markdown"
+        }
+
+        assert.same nil, pending_post, "pending post should not be created"
+        assert.truthy topic, "topic should be created"
+
+        assert.same 0, PendingPosts\count!, "no pending posts should exist"
 
   describe "new post", ->
     local topic
@@ -924,6 +961,7 @@ describe "posting flow", ->
 
     describe "pending post", ->
       import PendingPosts from require "spec.community_models"
+      local category
 
       before_each ->
         category = topic\get_category!
@@ -1023,6 +1061,17 @@ describe "posting flow", ->
 
         assert.nil post, "Post should be set"
         assert.truthy pending_post, "pending_post should not be set"
+
+      it "skips pending restriction if user is moderator", ->
+        category\update user_id: current_user.id
+
+        {:post, :pending_post} = new_post {
+          topic_id: topic.id
+          "post[body]": "  Hello from my pending post  "
+        }
+
+        assert.truthy post, "expected post to be created"
+        assert.nil pending_post, "pending post should not be created"
 
   describe "delete topic", ->
     local topic
