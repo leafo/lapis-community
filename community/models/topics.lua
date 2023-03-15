@@ -50,7 +50,7 @@ do
       end
       return can_view
     end,
-    allowed_to_edit = memoize1(function(self, user)
+    allowed_to_edit = function(self, user)
       if self.deleted then
         return false
       end
@@ -73,8 +73,8 @@ do
         return true
       end
       return false
-    end),
-    allowed_to_moderate = memoize1(function(self, user)
+    end,
+    allowed_to_moderate = function(self, user)
       if self.deleted then
         return false
       end
@@ -90,7 +90,7 @@ do
       local Categories
       Categories = require("community.models").Categories
       return self:get_category():allowed_to_moderate(user)
-    end),
+    end,
     increment_participant = function(self, user)
       if not (user) then
         return 

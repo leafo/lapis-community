@@ -167,7 +167,7 @@ class Topics extends Model
 
     can_view
 
-  allowed_to_edit: memoize1 (user) =>
+  allowed_to_edit: (user) =>
     return false if @deleted
     return false unless user
     return true if user\is_admin!
@@ -178,7 +178,7 @@ class Topics extends Model
 
     false
 
-  allowed_to_moderate: memoize1 (user) =>
+  allowed_to_moderate: (user) =>
     return false if @deleted
     return false unless user
     return true if user\is_admin!
@@ -488,6 +488,9 @@ class Topics extends Model
 
   -- returns boolean, and potential warning if warning is issued
   post_needs_approval: (user, post_params) =>
+    -- probably need allowed to moderate check here to ensure community owner
+    -- isn't blocked from posting
+
     import Categories, CommunityUsers from require "community.models"
 
     if category = @get_category!
