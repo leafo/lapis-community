@@ -96,3 +96,6 @@ class Subscriptions extends Model
         sub\delete!
         return true
 
+
+  is_subscribed: =>
+    @subscribed
