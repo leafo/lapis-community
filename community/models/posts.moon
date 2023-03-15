@@ -677,5 +677,5 @@ class Posts extends Model
   -- any votes
   get_vote: (user) =>
     if user
-      if @down_votes_count > 0 or @up_votes_count > 0 or @user_id == user.id
+      if (@down_votes_count or 0) > 0 or (@up_votes_count or 0) > 0 or @user_id == user.id
         @with_viewing_user(user.id)\get_vote!

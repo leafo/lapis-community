@@ -584,7 +584,7 @@ do
     end,
     get_vote = function(self, user)
       if user then
-        if self.down_votes_count > 0 or self.up_votes_count > 0 or self.user_id == user.id then
+        if (self.down_votes_count or 0) > 0 or (self.up_votes_count or 0) > 0 or self.user_id == user.id then
           return self:with_viewing_user(user.id):get_vote()
         end
       end
