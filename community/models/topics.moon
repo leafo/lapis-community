@@ -488,8 +488,7 @@ class Topics extends Model
 
   -- returns boolean, and potential warning if warning is issued
   post_needs_approval: (user, post_params) =>
-    -- probably need allowed to moderate check here to ensure community owner
-    -- isn't blocked from posting
+    return false if @allowed_to_moderate user
 
     import Categories, CommunityUsers from require "community.models"
 

@@ -422,6 +422,9 @@ do
       return db.query("\n      update " .. tostring(tbl) .. " as posts set post_number = new_number from (\n        select id, row_number() over (" .. tostring(order) .. ") as new_number\n        from " .. tostring(tbl) .. "\n        where " .. tostring(db.encode_clause(cond)) .. "\n        " .. tostring(order) .. "\n      ) foo\n      where posts.id = foo.id and posts.post_number != new_number\n    ")
     end,
     post_needs_approval = function(self, user, post_params)
+      if self:allowed_to_moderate(user) then
+        return false
+      end
       local Categories, CommunityUsers
       do
         local _obj_0 = require("community.models")

@@ -409,7 +409,7 @@ describe "posting flow", ->
         assert.truthy pending_post, "expected pending post to be created"
         assert.truthy warning, "expecting warning to be set"
 
-      it "user with pending warning can still create topic if they own category #fff", ->
+      it "user with pending warning can still create topic if they own category", ->
         category = factory.Categories user_id: current_user.id
 
         w = Warnings\create {
@@ -802,13 +802,10 @@ describe "posting flow", ->
         assert.true w\is_active!, "warning should be active"
 
         assert.true (topic\allowed_to_edit current_user)
-        do return pending "fix me"
 
         new_post {
           "post[body]": "hello world"
         }
-
-
 
       it "makes pending post due to warning", ->
         w = Warnings\create {
@@ -829,6 +826,28 @@ describe "posting flow", ->
 
         assert.same 0, Posts\count!
         assert.same 1, PendingPosts\count!
+
+      it "warning doesn't block pending post if the user owns category", ->
+        category = topic\get_category!
+        -- set them as owner
+        category\update user_id: current_user.id
+
+
+        w = Warnings\create {
+          user_id: current_user.id
+          restriction: Warnings.restrictions.pending_posting
+          duration: "1 week"
+        }
+
+        assert.true w\is_active!, "warning should be active"
+
+        {:pending_post, :post, :warning} = new_post {
+          "post[body]": "hello world"
+        }
+
+        assert instance_of(Posts) post
+        assert.nil pending_post
+        assert.nil warning
 
     describe "parent_post_id", ->
       it "fails with invalid parent_post_id value", ->
