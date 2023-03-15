@@ -731,7 +731,7 @@ do
     end,
     is_subscribed = function(self, user)
       do
-        local sub = self:with_user(user):get_subscription()
+        local sub = self:with_user(user.id):get_subscription()
         if sub then
           return sub:is_subscribed()
         else

@@ -728,7 +728,7 @@ class Categories extends Model
     Subscriptions\find_subscription @, user
 
   is_subscribed: (user) =>
-    if sub = @with_user(user)\get_subscription!
+    if sub = @with_user(user.id)\get_subscription!
       sub\is_subscribed!
     else
       false

@@ -540,15 +540,22 @@ describe "models.categories", ->
       }
 
     it "gets subscriptions", ->
+      user = factory.Users!
+      other_user = factory.Users!
+
       assert.same {}, category\get_subscriptions!
       category\refresh!
       Subscriptions\create {
         object_type: Subscriptions.object_types.category
         object_id: category.id
-        user_id: -1
+        user_id: user.id
       }
 
       assert.same 1, #category\get_subscriptions!
+
+      assert.true category\is_subscribed user
+      assert.false category\is_subscribed other_user
+
 
     it "subscribes user to topic", ->
       user = factory.Users!
