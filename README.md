@@ -31,7 +31,7 @@ The *minor* version number is incremented for bug fixes/minor changes that will
 continue to operate on the same schema. No significant changes to code
 interfaces are made.
 
-The *major* vesrion will only be incremented if the project is rewritten or
+The *major* version will only be incremented if the project is rewritten or
 there are substantial breaking changes such that require to concurrent versions
 of the library.
 
@@ -51,11 +51,10 @@ The following features are included:
 * Topics
   * Sticky, Locked, and Archived topics
   * Threaded replies
-  * Replies can be HTML or markdown
+  * Post content can be HTML or markdown
   * Moderation events (e.g. *Moderator locked this topic*)
-  * Mentioning other members with `@`
+  * Mentioning other accounts with `@`
   * Efficient pagination of very large topics
-  * Pending replies -- allow moderator review before allowing a post to be submitted
   * Soft deletion of replies allows for nested replies to be be lost when post is deleted
   * Voting options for replies: up & down, up only, no voting
   * Reply edit history
@@ -67,11 +66,22 @@ The following features are included:
   * Categories can individually have title, description, rules along with enforced restrictions for posts
   * Category options can be inherited from their parents when nested
   * Topic sorting rules per category (by votes, by date, etc.)
+  * Categories can be configured to be "members-only"
+    * Membership status is inherited by the category hierarchy, so nested categories automatically will grant access to a user if they are a member of a higher up category
+* Pending Posts
+  * New topics or posts can be marked as pending, and will need to be approved by a moderator before they are published
+  * Moderators can set global rules on categories to force every post to go into pending
+  * Implementing community can define own rules around what posts are put into pending queue, eg. from spam detector
 * Category groups
   * A way to apply moderation rules across many categories that aren't related in a tree hierarchy
 * Moderators
-  * Special user permissions granted to moderators
+  * A category can define a list of special user accounts that have extended permissions over the posts & topics in that category
+  * Moderators will have control over the entire category hierarchy below where their role is defined, and a moderator can be created at any level of the hierarchy
+  * Moderators can not add new moderators unless they are marked as "admin" moderator
+  * Moderator must approve the request to become moderator, to prevent random user from adding others as moderators indiscriminately
 * Post Reporting
+  * Any user can create a report on a post if they feel it violates the community rules in some way
+  * The report will make a copy of the post, in case the post is deleted, so admins & moderators can still review that account for violation
 * Community stats aggregated per user, per topic, per category
 * Visibility tracking
   * Tracks if individual user has yet to see a topic, or topic has unseen replies
@@ -88,6 +98,10 @@ The following features are included:
   * An account can block another account to not see their posts
 * Bans
   * Moderators can ban accounts from posting or seeing their category
+* Warnings
+  * A warning can be created on an account to either block or force all posts to go into pending for some duration
+  * The warning contains a message about what rule was violated
+  * The warning duration only starts after it has been viewed for the first time
 
 The database schema is managed by the Lapis migration system, using a scoped
 set of migrations. Upgrading the database for a new version of
