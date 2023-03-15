@@ -271,8 +271,8 @@ do
     return _class_0.__parent.create(self, opts)
   end
   self.preload_users = function(self, users)
-    self:include_in(users, "user_id", {
-      flip = true
+    self:include_in(users, {
+      user_id = "id"
     })
     return users
   end

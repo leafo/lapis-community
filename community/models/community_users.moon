@@ -78,7 +78,7 @@ class CommunityUsers extends Model
     super opts
 
   @preload_users: (users) =>
-    @include_in users, "user_id", flip: true
+    @include_in users, user_id: "id"
     users
 
   @allowed_to_post: (user, object) =>
