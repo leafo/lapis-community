@@ -1,6 +1,6 @@
 db = require "lapis.db"
 import enum from require "lapis.db.model"
-import Model from require "community.model"
+import Model, VirtualModel from require "community.model"
 
 -- Generated schema dump: (do not edit)
 --
@@ -25,6 +25,14 @@ import Model from require "community.model"
 class CommunityUsers extends Model
   @timestamp: true
   @primary_key: "user_id"
+
+  with_user: VirtualModel\make_loader "user_users", (user_id) =>
+    assert user_id, "expecting user id"
+    UserUsers = require "community.models.virtual.user_users"
+    UserUsers\load {
+      source_user_id: @user_id
+      dest_user_id: user_id
+    }
 
   -- this method is used by any model that wants to know the current IP.
   @current_ip_address: =>
@@ -134,6 +142,12 @@ class CommunityUsers extends Model
     }, {
       [field]: db.raw "#{db.escape_identifier @table_name!}.#{db.escape_identifier field} + excluded.#{db.escape_identifier field}"
     }
+
+  get_block_recieved: (user) =>
+    @with_user(user.id or user.user_id)\get_block_recieved!
+
+  get_block_given: (user) =>
+    @with_user(user.id or user.user_id)\get_block_given!
 
   need_approval_to_post: =>
     import Warnings from require "community.models"

@@ -397,3 +397,26 @@ describe "models.community_users", ->
       assert.same false, cu\need_approval_to_post!
 
 
+  describe "blocks", ->
+    import Blocks from require "community.models"
+
+    -- serialize block
+    s = (block) ->
+      if block
+        {
+          blocking_user_id: block.blocking_user_id
+          blocked_user_id: block.blocked_user_id
+        }
+
+    it "gets block", ->
+      block = factory.Blocks!
+      source_user = CommunityUsers\for_user block\get_blocking_user!
+      dest_user = CommunityUsers\for_user block\get_blocked_user!
+
+      assert.same s(block), s(source_user\get_block_given dest_user)
+      assert.nil source_user\get_block_recieved dest_user
+
+      assert.nil dest_user\get_block_given source_user
+      assert.same s(block), s(dest_user\get_block_recieved source_user)
+
+

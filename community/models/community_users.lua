@@ -1,13 +1,30 @@
 local db = require("lapis.db")
 local enum
 enum = require("lapis.db.model").enum
-local Model
-Model = require("community.model").Model
+local Model, VirtualModel
+do
+  local _obj_0 = require("community.model")
+  Model, VirtualModel = _obj_0.Model, _obj_0.VirtualModel
+end
 local CommunityUsers
 do
   local _class_0
   local _parent_0 = Model
   local _base_0 = {
+    with_user = VirtualModel:make_loader("user_users", function(self, user_id)
+      assert(user_id, "expecting user id")
+      local UserUsers = require("community.models.virtual.user_users")
+      return UserUsers:load({
+        source_user_id = self.user_id,
+        dest_user_id = user_id
+      })
+    end),
+    get_block_recieved = function(self, user)
+      return self:with_user(user.id or user.user_id):get_block_recieved()
+    end,
+    get_block_given = function(self, user)
+      return self:with_user(user.id or user.user_id):get_block_given()
+    end,
     need_approval_to_post = function(self)
       local Warnings
       Warnings = require("community.models").Warnings
