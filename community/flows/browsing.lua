@@ -310,7 +310,7 @@ do
       Topics:preload_relation(topics, "last_post", {
         fields = "id, user_id, created_at, updated_at"
       })
-      local with_users
+      local all_topics
       do
         local _accum_0 = { }
         local _len_0 = 1
@@ -319,17 +319,15 @@ do
           _accum_0[_len_0] = t
           _len_0 = _len_0 + 1
         end
-        with_users = _accum_0
+        all_topics = _accum_0
       end
       for _index_0 = 1, #topics do
         local t = topics[_index_0]
         if t.last_post then
-          table.insert(with_users, t.last_post)
+          table.insert(all_topics, t.last_post)
         end
       end
-      Users:include_in(with_users, "user_id", {
-        for_relation = "user"
-      })
+      preload(all_topics, "user")
       if last_seens and self.current_user then
         preload((function()
           local _accum_0 = { }

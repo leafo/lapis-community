@@ -202,12 +202,12 @@ class BrowsingFlow extends Flow
       fields: "id, user_id, created_at, updated_at"
     }
 
-    with_users = [t for t in *topics]
+    all_topics = [t for t in *topics]
     for t in *topics
       if t.last_post
-        table.insert with_users, t.last_post
+        table.insert all_topics, t.last_post
 
-    Users\include_in with_users, "user_id", for_relation: "user"
+    preload all_topics, "user"
 
     if last_seens and @current_user
       preload [t\with_user(@current_user.id) for t in *topics], "last_seen"
