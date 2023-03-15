@@ -154,12 +154,16 @@ class CommunityUsers extends Model
       received_down_votes_count: db.raw db.interpolate_query "coalesce((select sum(down_votes_count) from posts where not deleted and user_id = ?), 0)", @user_id
     }, timestamp: false
 
+  -- object must be either a category (for new topic) or topic (for new
+  -- post/reply)
+  -- This post is only responsible for checking the user's own permissions, and
+  -- not the permissions of categories or topics
   allowed_to_post: (object) =>
     switch @posting_permission or @@posting_permissions.default
       when @@posting_permissions.blocked
         return false
       when @@posting_permissions.only_own
-        unless object.allowed_to_edit and object\allowed_to_edit @get_user!
+        unless object\allowed_to_moderate @get_user!
           return false
 
     import Warnings from require "community.models"
@@ -167,6 +171,10 @@ class CommunityUsers extends Model
     -- make sure they have no warnings blocking posting
     for warning in *@get_active_warnings!
       if warning.restriction == Warnings.restrictions.block_posting
+        -- see if they are allowed to moderate, then break the warning
+        if object\allowed_to_moderate @get_user!
+          break
+
         return false, "your account has an active warning", warning
 
     true

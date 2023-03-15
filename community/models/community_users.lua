@@ -36,7 +36,7 @@ do
       if self.__class.posting_permissions.blocked == _exp_0 then
         return false
       elseif self.__class.posting_permissions.only_own == _exp_0 then
-        if not (object.allowed_to_edit and object:allowed_to_edit(self:get_user())) then
+        if not (object:allowed_to_moderate(self:get_user())) then
           return false
         end
       end
@@ -46,6 +46,9 @@ do
       for _index_0 = 1, #_list_0 do
         local warning = _list_0[_index_0]
         if warning.restriction == Warnings.restrictions.block_posting then
+          if object:allowed_to_moderate(self:get_user()) then
+            break
+          end
           return false, "your account has an active warning", warning
         end
       end
