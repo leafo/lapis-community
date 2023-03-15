@@ -3,6 +3,23 @@ factory = require "spec.factory"
 
 import types from require "tableshape"
 
+assert_no_queries = (fn) ->
+  snapshot = assert\snapshot!
+
+  logger = require "lapis.logging"
+
+  query_log = {}
+  original = logger.query
+  stub(logger, "query").invokes (query, ...) ->
+    table.insert query_log, query
+    original query, ...
+
+  fn!
+
+  snapshot\revert!
+
+  assert.same {}, query_log, "expected no queries"
+
 describe "models.categories", ->
   import Users from require "spec.models"
   import Categories, Moderators, CategoryMembers, Bans,
@@ -500,6 +517,8 @@ describe "models.categories", ->
       assert.same 2, b.position
 
   describe "bans", ->
+    relations = require "lapis.db.model.relations"
+
     local parent_category
     local categories
 
@@ -513,8 +532,11 @@ describe "models.categories", ->
     it "preloads bans on many topics when user is not banned", ->
       user = factory.Users!
       Categories\preload_bans categories, user
-      for c in *categories
-        assert.same {[user.id]: false}, c.user_bans
+
+      assert_no_queries ->
+        for c in *categories
+          c\with_user(user.id)\get_ban!
+          assert.same {ban: true}, c\with_user(user.id)[relations.LOADED_KEY]
 
     it "preloads bans user", ->
       other_user = factory.Users!
@@ -527,10 +549,22 @@ describe "models.categories", ->
 
       Categories\preload_bans categories, user
 
-      assert.same {[user.id]: false}, categories[1].user_bans
-      assert.same {[user.id]: false}, categories[2].user_bans
-      assert.same {[user.id]: b2}, categories[3].user_bans
-      assert.same {[user.id]: b3}, categories[2]\get_parent_category!.user_bans
+
+      assert_no_queries ->
+        for c in *categories
+          assert.same { ban: true }, c\with_user(user.id)[relations.LOADED_KEY]
+          c\with_user(user.id)\get_ban!
+
+          for parent in *c\get_ancestors!
+            assert.same { ban: true }, parent\with_user(user.id)[relations.LOADED_KEY]
+            parent\with_user(user.id)\get_ban!
+
+
+        assert.same nil, categories[1]\with_user(user.id).ban
+        assert.same nil, categories[2]\with_user(user.id).ban
+        assert.same b2, categories[3]\with_user(user.id).ban
+
+        assert.same b3, categories[2]\get_parent_category!\with_user(user.id).ban
 
   describe "subscriptions", ->
     import Subscriptions from require "spec.community_models"
