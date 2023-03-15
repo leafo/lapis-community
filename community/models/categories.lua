@@ -161,7 +161,9 @@ do
           admin = true
         })
         if mod then
-          return true
+          if mod:can_moderate() then
+            return true
+          end
         end
       end
       return false
@@ -176,7 +178,9 @@ do
           admin = true
         })
         if mod then
-          return true
+          if mod:can_moderate() then
+            return true
+          end
         end
       end
       return false
@@ -205,7 +209,9 @@ do
           accepted = true
         })
         if mod then
-          return true
+          if mod:can_moderate() then
+            return true
+          end
         end
       end
       do

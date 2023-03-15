@@ -56,3 +56,8 @@ class Moderators extends Model
       object_id: object.id
       user_id: user.id
     }
+
+  can_moderate: =>
+    @accepted
+
+

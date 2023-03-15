@@ -351,14 +351,16 @@ class Categories extends Model
     return true if user.id == @user_id
 
     if mod = @find_moderator user, accepted: true, admin: true
-      return true
+      if mod\can_moderate!
+        return true
 
     false
 
   allowed_to_edit_moderators: (user) =>
     return true if @allowed_to_edit user
     if mod = @find_moderator user, accepted: true, admin: true
-      return true
+      if mod\can_moderate!
+        return true
 
     false
 
@@ -372,7 +374,8 @@ class Categories extends Model
     return true if user.id == @user_id
 
     if mod = @find_moderator user, accepted: true
-      return true
+      if mod\can_moderate!
+        return true
 
     if group = @get_category_group!
       return true if group\allowed_to_moderate user

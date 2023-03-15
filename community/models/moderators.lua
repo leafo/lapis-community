@@ -6,7 +6,11 @@ local Moderators
 do
   local _class_0
   local _parent_0 = Model
-  local _base_0 = { }
+  local _base_0 = {
+    can_moderate = function(self)
+      return self.accepted
+    end
+  }
   _base_0.__index = _base_0
   setmetatable(_base_0, _parent_0.__base)
   _class_0 = setmetatable({
