@@ -391,10 +391,42 @@ describe "posting flow", ->
         assert.nil warning, "warning should not be set"
 
       it "creates topic as pending if user has warning", ->
-        pending "implement me"
+        category = factory.Categories!
 
-      it "allows user to create topic with pending warning if they own category", ->
-        pending "implement me"
+        w = Warnings\create {
+          user_id: current_user.id
+          restriction: Warnings.restrictions.pending_posting
+          duration: "1 week"
+        }
+
+        {:topic, :pending_post, :warning} = new_topic {
+          category_id: category.id
+          "topic[title]": "Hello world"
+          "topic[body]": "This is the body"
+        }
+
+        assert.nil topic, "no topic should be created"
+        assert.truthy pending_post, "expected pending post to be created"
+        assert.truthy warning, "expecting warning to be set"
+
+      it "user with pending warning can still create topic if they own category #fff", ->
+        category = factory.Categories user_id: current_user.id
+
+        w = Warnings\create {
+          user_id: current_user.id
+          restriction: Warnings.restrictions.pending_posting
+          duration: "1 week"
+        }
+
+        {:topic, :pending_post, :warning} = new_topic {
+          category_id: category.id
+          "topic[title]": "Hello world"
+          "topic[body]": "This is the body"
+        }
+
+        assert.truthy topic, "expecting topic to be created"
+        assert.nil pending_post, "expecting pending post to not be set"
+        assert.nil warning, "expecting warning to not be set"
 
     describe "pending topic", ->
       import PendingPosts from require "spec.community_models"

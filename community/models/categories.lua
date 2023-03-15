@@ -6,8 +6,6 @@ do
   local _obj_0 = require("community.model")
   Model, VirtualModel = _obj_0.Model, _obj_0.VirtualModel
 end
-local memoize1
-memoize1 = require("community.helpers.models").memoize1
 local relation_is_loaded
 relation_is_loaded = require("lapis.db.model.relations").relation_is_loaded
 local slugify
@@ -777,7 +775,21 @@ do
       if self:allowed_to_moderate(user) then
         return false
       end
-      return self:get_approval_type() == Categories.approval_types.pending
+      if self:get_approval_type() == Categories.approval_types.pending then
+        return true
+      end
+      local CommunityUsers
+      CommunityUsers = require("community.models").CommunityUsers
+      do
+        local cu = CommunityUsers:for_user(user)
+        if cu then
+          local needs_approval, warning = cu:need_approval_to_post()
+          if needs_approval then
+            return true, warning
+          end
+        end
+      end
+      return false
     end
   }
   _base_0.__index = _base_0

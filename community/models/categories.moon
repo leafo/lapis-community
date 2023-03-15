@@ -1,7 +1,6 @@
 db = require "lapis.db"
 import enum from require "lapis.db.model"
 import Model, VirtualModel from require "community.model"
-import memoize1 from require "community.helpers.models"
 
 import relation_is_loaded from require "lapis.db.model.relations"
 
@@ -292,9 +291,8 @@ class Categories extends Model
     if cgc = @get_category_group_category!
       cgc\get_category_group!
 
-
-  -- NOTE: this intentionally does not check if
-  -- community_user\allowed_to_post, as that's a different phase
+  -- NOTE: there are different stanges of posting permission checks. This one
+  -- is focused on global check and the posting type of the category
   allowed_to_post_topic: (user, req) =>
     return false unless user
     return false if @archived
@@ -766,7 +764,19 @@ class Categories extends Model
 
     @refresh_topic_category_order!
 
+  -- returns boolean, and potential warning if warning is issued
   topic_needs_approval: (user, topic_params) =>
     return false if @allowed_to_moderate user
-    @get_approval_type! == Categories.approval_types.pending
+
+    if @get_approval_type! == Categories.approval_types.pending
+      return true
+
+    import CommunityUsers from require "community.models"
+
+    if cu = CommunityUsers\for_user user
+      needs_approval, warning = cu\need_approval_to_post!
+      if needs_approval
+        return true, warning
+
+    false
 
