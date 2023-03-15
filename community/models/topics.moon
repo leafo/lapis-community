@@ -1,8 +1,7 @@
 db = require "lapis.db"
 
-import Model from require "community.model"
+import Model, VirtualModel from require "community.model"
 import slugify from require "lapis.util"
-import memoize1 from require "community.helpers.models"
 import enum from require "lapis.db.model"
 import preload from require "lapis.db.model"
 
@@ -43,6 +42,27 @@ VOTE_TYPES_DEFAULT = { down: true, up: true }
 --
 class Topics extends Model
   @timestamp: true
+
+  class TopicUsers extends VirtualModel
+    @primary_key: {"topic_id", "user_id"}
+
+    @relations: {
+      {"subscription", has_one: "Subscriptions", key: {
+        user_id: "user_id"
+        object_id: "topic_id"
+      }, where: {
+        object_type: 1
+      }}
+
+      {"bookmark", has_one: "Bookmarks", key: {
+        user_id: "user_id"
+        object_id: "topic_id"
+      }, where: {
+        object_type: 2
+      }}
+
+      {"last_seen", has_one: "UserTopicLastSeens", key: {"user_id", "topic_id"}}
+    }
 
   @relations: {
     {"category", belongs_to: "Categories"}
@@ -144,7 +164,15 @@ class Topics extends Model
 
     true
 
+  with_user: VirtualModel\make_loader "topic_users", (user_id) =>
+    assert user_id, "expecting user id"
+    TopicUsers\load {
+      user_id: user_id
+      topic_id: @id
+    }
+
   -- NOTE: this intentionally does not check if
+  -- NOTE: this doesn't check ban??
   -- community_user\allowed_to_post, as that's a different phase
   allowed_to_post: (user, req) =>
     return false unless user
@@ -393,15 +421,17 @@ class Topics extends Model
       post_id: @last_post_id
     }
 
-  -- this assumes UserTopicLastSeens has been preloaded
   has_unread: (user) =>
-    return unless user
-    return unless @user_topic_last_seen
-    return unless @last_post_id
+    return false unless user
+    -- never any unread if topic has no posts
+    return false unless @last_post_id
 
-    assert @user_topic_last_seen.user_id == user.id, "unexpected user for last seen"
-    @user_topic_last_seen.post_id < @last_post_id
+    if last_seen = @with_user(user.id)\get_last_seen!
+      last_seen.post_id < @last_post_id
+    else
+      false
 
+  -- TODO: should this use pagination?
   notification_target_users: =>
     import Subscriptions from require "community.models"
     subs = @get_subscriptions!
@@ -568,18 +598,18 @@ class Topics extends Model
     tags_by_slug = {t.slug, t for t in *category\get_tags!}
     [tags_by_slug[t] for t in *@tags]
 
-  get_bookmark: memoize1 (user) =>
-    import Bookmarks from require "community.models"
-    Bookmarks\get @, user
+  get_bookmark: (user) =>
+    @with_user(user.id)\get_bookmark!
 
   find_subscription: (user) =>
-    import Subscriptions from require "community.models"
-    Subscriptions\find_subscription @, user
+    @with_user(user.id)\get_subscription!
 
-  is_subscribed: memoize1 (user) =>
-    import Subscriptions from require "community.models"
-    return unless user
-    Subscriptions\is_subscribed @, user, user.id == @user_id
+  is_subscribed: (user) =>
+    default_subscribed = user.id == @user_id
+    if sub = @find_subscription user
+      sub\is_subscribed!
+    else
+      default_subscribed
 
   subscribe: (user, req) =>
     import Subscriptions from require "community.models"

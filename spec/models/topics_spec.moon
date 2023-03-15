@@ -8,7 +8,7 @@ describe "models.topics", ->
   import Users from require "spec.models"
 
   import Categories, Moderators, CategoryMembers, Topics,
-    Posts, Bans, UserTopicLastSeens, CategoryTags from require "spec.community_models"
+    Posts, Bans, CategoryTags from require "spec.community_models"
 
   it "should create a topic", ->
     factory.Topics!
@@ -29,6 +29,152 @@ describe "models.topics", ->
     tags = topic\get_tags!
     assert.same 1, #tags
     assert.same tag.label,tags[1].label
+
+  describe "user_topic_last_seens", ->
+    import UserTopicLastSeens from require "spec.community_models"
+
+    it "has_unread", ->
+      user = factory.Users!
+      -- empty topic
+      topic = factory.Topics!
+
+      assert.false topic\has_unread user
+
+      topic\update last_post_id: 10
+
+      seen = UserTopicLastSeens\create {
+        user_id: user.id
+        topic_id: topic.id
+        post_id: 10
+      }
+
+      topic\refresh!
+      assert.false topic\has_unread user
+
+      seen\update post_id: 9
+
+      topic\refresh!
+      assert.true topic\has_unread user
+
+    describe "set_seen", ->
+      it "should not mark for no last post", ->
+        user = factory.Users!
+        topic = factory.Topics!
+        topic\set_seen user
+        assert.same 0, UserTopicLastSeens\count!
+
+      it "should mark topic last seen", ->
+        user = factory.Users!
+        topic = factory.Topics!
+        post = factory.Posts topic_id: topic.id
+        topic\increment_from_post post
+
+        topic\set_seen user
+        last_seen = unpack UserTopicLastSeens\select!
+        assert.same user.id, last_seen.user_id
+        assert.same topic.id, last_seen.topic_id
+        assert.same post.id, last_seen.post_id
+
+        -- noop
+        topic\set_seen user
+
+        -- update
+
+        post2 = factory.Posts topic_id: topic.id
+        topic\increment_from_post post2
+
+        topic\set_seen user
+
+        assert.same 1, UserTopicLastSeens\count!
+        last_seen = unpack UserTopicLastSeens\select!
+
+        assert.same user.id, last_seen.user_id
+        assert.same topic.id, last_seen.topic_id
+        assert.same post2.id, last_seen.post_id
+
+
+  describe "subscriptions", ->
+    import Subscriptions from require "spec.community_models"
+
+    it "is_subscribed", ->
+      -- owner is subscribed by default
+      user = factory.Users!
+      other_user = factory.Users!
+
+      topic = factory.Topics user_id: user.id
+
+      assert.true topic\is_subscribed user
+      assert.false topic\is_subscribed other_user
+
+      Subscriptions\create {
+        object_type: "topic"
+        object_id: topic.id
+        user_id: user.id
+        subscribed: false
+      }
+
+      Subscriptions\create {
+        object_type: "topic"
+        object_id: topic.id
+        user_id: other_user.id
+        subscribed: true
+      }
+
+      topic\refresh!
+
+      assert.false topic\is_subscribed user
+      assert.true topic\is_subscribed other_user
+
+    it "gets subscription for topic", ->
+      topic = factory.Topics!
+      user = factory.Users!
+      other_user = factory.Users!
+
+      sub = Subscriptions\create {
+        object_type: "topic"
+        object_id: topic.id
+        user_id: user.id
+      }
+
+      do -- unrealted subscriptions
+        other_topic = factory.Topics!
+        Subscriptions\create {
+          object_type: "category"
+          object_id: topic.id
+          user_id: user.id
+        }
+
+        Subscriptions\create {
+          object_type: "topic"
+          object_id: other_topic.id
+          user_id: user.id
+        }
+
+      assert.same sub, topic\find_subscription(user)
+      assert.same sub, topic\with_user(user.id)\get_subscription!
+
+      assert.nil topic\find_subscription(other_user)
+
+  describe "bookmarks", ->
+    import Bookmarks from require "spec.community_models"
+
+    it "gets user's bookmark for topic", ->
+      user = factory.Users!
+      other_user = factory.Users!
+
+      topic = factory.Topics!
+      bookmark = factory.Bookmarks user_id: user.id, object_type: "topic", object_id: topic.id
+
+      do -- unrelated bookmarks
+        factory.Bookmarks user_id: user.id
+        factory.Bookmarks user_id: other_user.id
+        factory.Bookmarks object_type: "topic", object_id: topic.id
+
+      -- both of these lines do the same thing
+      assert.same bookmark, topic\with_user(user.id)\get_bookmark!
+      assert.same bookmark, topic\get_bookmark(user)
+
+      assert.nil topic\get_bookmark(other_user)
 
   describe "permissions with category", ->
     local category, topic, category_user, topic_user, some_user, mod_user
@@ -325,41 +471,6 @@ describe "models.topics", ->
     topic\refresh_last_post!
     assert.nil topic.last_post_id
 
-  describe "set_seen", ->
-    it "should not mark for no last post", ->
-      user = factory.Users!
-      topic = factory.Topics!
-      topic\set_seen user
-      assert.same 0, UserTopicLastSeens\count!
-
-    it "should mark topic last seen", ->
-      user = factory.Users!
-      topic = factory.Topics!
-      post = factory.Posts topic_id: topic.id
-      topic\increment_from_post post
-
-      topic\set_seen user
-      last_seen = unpack UserTopicLastSeens\select!
-      assert.same user.id, last_seen.user_id
-      assert.same topic.id, last_seen.topic_id
-      assert.same post.id, last_seen.post_id
-
-      -- noop
-      topic\set_seen user
-
-      -- update
-
-      post2 = factory.Posts topic_id: topic.id
-      topic\increment_from_post post2
-
-      topic\set_seen user
-
-      assert.same 1, UserTopicLastSeens\count!
-      last_seen = unpack UserTopicLastSeens\select!
-
-      assert.same user.id, last_seen.user_id
-      assert.same topic.id, last_seen.topic_id
-      assert.same post2.id, last_seen.post_id
 
   describe "delete", ->
     import PendingPosts, TopicParticipants, CommunityUsers from require "spec.community_models"

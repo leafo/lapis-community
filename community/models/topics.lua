@@ -1,10 +1,11 @@
 local db = require("lapis.db")
-local Model
-Model = require("community.model").Model
+local Model, VirtualModel
+do
+  local _obj_0 = require("community.model")
+  Model, VirtualModel = _obj_0.Model, _obj_0.VirtualModel
+end
 local slugify
 slugify = require("lapis.util").slugify
-local memoize1
-memoize1 = require("community.helpers.models").memoize1
 local enum
 enum = require("lapis.db.model").enum
 local preload
@@ -16,8 +17,16 @@ local VOTE_TYPES_DEFAULT = {
 local Topics
 do
   local _class_0
+  local TopicUsers
   local _parent_0 = Model
   local _base_0 = {
+    with_user = VirtualModel:make_loader("topic_users", function(self, user_id)
+      assert(user_id, "expecting user id")
+      return TopicUsers:load({
+        user_id = user_id,
+        topic_id = self.id
+      })
+    end),
     allowed_to_post = function(self, user, req)
       if not (user) then
         return false
@@ -326,16 +335,19 @@ do
     end,
     has_unread = function(self, user)
       if not (user) then
-        return 
-      end
-      if not (self.user_topic_last_seen) then
-        return 
+        return false
       end
       if not (self.last_post_id) then
-        return 
+        return false
       end
-      assert(self.user_topic_last_seen.user_id == user.id, "unexpected user for last seen")
-      return self.user_topic_last_seen.post_id < self.last_post_id
+      do
+        local last_seen = self:with_user(user.id):get_last_seen()
+        if last_seen then
+          return last_seen.post_id < self.last_post_id
+        else
+          return false
+        end
+      end
     end,
     notification_target_users = function(self)
       local Subscriptions
@@ -544,24 +556,23 @@ do
       end
       return _accum_0
     end,
-    get_bookmark = memoize1(function(self, user)
-      local Bookmarks
-      Bookmarks = require("community.models").Bookmarks
-      return Bookmarks:get(self, user)
-    end),
-    find_subscription = function(self, user)
-      local Subscriptions
-      Subscriptions = require("community.models").Subscriptions
-      return Subscriptions:find_subscription(self, user)
+    get_bookmark = function(self, user)
+      return self:with_user(user.id):get_bookmark()
     end,
-    is_subscribed = memoize1(function(self, user)
-      local Subscriptions
-      Subscriptions = require("community.models").Subscriptions
-      if not (user) then
-        return 
+    find_subscription = function(self, user)
+      return self:with_user(user.id):get_subscription()
+    end,
+    is_subscribed = function(self, user)
+      local default_subscribed = user.id == self.user_id
+      do
+        local sub = self:find_subscription(user)
+        if sub then
+          return sub:is_subscribed()
+        else
+          return default_subscribed
+        end
       end
-      return Subscriptions:is_subscribed(self, user, user.id == self.user_id)
-    end),
+    end,
     subscribe = function(self, user, req)
       local Subscriptions
       Subscriptions = require("community.models").Subscriptions
@@ -735,6 +746,80 @@ do
   _base_0.__class = _class_0
   local self = _class_0
   self.timestamp = true
+  do
+    local _class_1
+    local _parent_1 = VirtualModel
+    local _base_1 = { }
+    _base_1.__index = _base_1
+    setmetatable(_base_1, _parent_1.__base)
+    _class_1 = setmetatable({
+      __init = function(self, ...)
+        return _class_1.__parent.__init(self, ...)
+      end,
+      __base = _base_1,
+      __name = "TopicUsers",
+      __parent = _parent_1
+    }, {
+      __index = function(cls, name)
+        local val = rawget(_base_1, name)
+        if val == nil then
+          local parent = rawget(cls, "__parent")
+          if parent then
+            return parent[name]
+          end
+        else
+          return val
+        end
+      end,
+      __call = function(cls, ...)
+        local _self_0 = setmetatable({}, _base_1)
+        cls.__init(_self_0, ...)
+        return _self_0
+      end
+    })
+    _base_1.__class = _class_1
+    local self = _class_1
+    self.primary_key = {
+      "topic_id",
+      "user_id"
+    }
+    self.relations = {
+      {
+        "subscription",
+        has_one = "Subscriptions",
+        key = {
+          user_id = "user_id",
+          object_id = "topic_id"
+        },
+        where = {
+          object_type = 1
+        }
+      },
+      {
+        "bookmark",
+        has_one = "Bookmarks",
+        key = {
+          user_id = "user_id",
+          object_id = "topic_id"
+        },
+        where = {
+          object_type = 2
+        }
+      },
+      {
+        "last_seen",
+        has_one = "UserTopicLastSeens",
+        key = {
+          "user_id",
+          "topic_id"
+        }
+      }
+    }
+    if _parent_1.__inherited then
+      _parent_1.__inherited(_parent_1, _class_1)
+    end
+    TopicUsers = _class_1
+  end
   self.relations = {
     {
       "category",

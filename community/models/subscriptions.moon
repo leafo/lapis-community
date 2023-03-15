@@ -30,7 +30,11 @@ class Subscriptions extends Model
     }}
   }
 
-  @create: insert_on_conflict_ignore
+  @create: (opts={}) =>
+    if opts.object_type
+      opts.object_type = @object_types\for_db opts.object_type
+
+    insert_on_conflict_ignore @, opts
 
   @find_subscription: (object, user) =>
     return nil unless user

@@ -331,14 +331,16 @@ do
         for_relation = "user"
       })
       if last_seens and self.current_user then
-        local UserTopicLastSeens
-        UserTopicLastSeens = require("community.models").UserTopicLastSeens
-        UserTopicLastSeens:include_in(topics, "topic_id", {
-          flip = true,
-          where = {
-            user_id = self.current_user.id
-          }
-        })
+        preload((function()
+          local _accum_0 = { }
+          local _len_0 = 1
+          for _index_0 = 1, #topics do
+            local t = topics[_index_0]
+            _accum_0[_len_0] = t:with_user(self.current_user.id)
+            _len_0 = _len_0 + 1
+          end
+          return _accum_0
+        end)(), "last_seen")
       end
       return topics
     end,

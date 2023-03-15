@@ -210,13 +210,7 @@ class BrowsingFlow extends Flow
     Users\include_in with_users, "user_id", for_relation: "user"
 
     if last_seens and @current_user
-      import UserTopicLastSeens from require "community.models"
-      UserTopicLastSeens\include_in topics, "topic_id", {
-        flip: true
-        where: {
-          user_id: @current_user.id
-        }
-      }
+      preload [t\with_user(@current_user.id) for t in *topics], "last_seen"
 
     topics
 

@@ -78,7 +78,6 @@ class Categories extends Model
         object_type: 1
       }}
 
-
       {"ban", has_one: "Bans", key: {
         banned_user_id: "user_id"
         object_id: "category_id"
@@ -250,6 +249,7 @@ class Categories extends Model
 
     true
 
+  -- TODO: replace this with virtual models
   @preload_bans: (categories, user) =>
     return unless user
     return unless next categories

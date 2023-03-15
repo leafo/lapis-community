@@ -66,7 +66,15 @@ do
       }
     }
   }
-  self.create = insert_on_conflict_ignore
+  self.create = function(self, opts)
+    if opts == nil then
+      opts = { }
+    end
+    if opts.object_type then
+      opts.object_type = self.object_types:for_db(opts.object_type)
+    end
+    return insert_on_conflict_ignore(self, opts)
+  end
   self.find_subscription = function(self, object, user)
     if not (user) then
       return nil
