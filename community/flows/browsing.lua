@@ -290,14 +290,16 @@ do
       end
       self:preload_topics(topics)
       if last_seens and self.current_user then
-        local UserCategoryLastSeens
-        UserCategoryLastSeens = require("community.models").UserCategoryLastSeens
-        UserCategoryLastSeens:include_in(categories, "category_id", {
-          flip = true,
-          where = {
-            user_id = self.current_user.id
-          }
-        })
+        preload((function()
+          local _accum_0 = { }
+          local _len_0 = 1
+          for _index_0 = 1, #categories do
+            local c = categories[_index_0]
+            _accum_0[_len_0] = c:with_user(self.current_user.id)
+            _len_0 = _len_0 + 1
+          end
+          return _accum_0
+        end)(), "last_seen")
       end
       return categories
     end,

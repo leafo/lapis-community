@@ -214,6 +214,7 @@ describe "models.categories", ->
           assert.true l\should_update!
 
         category\set_seen current_user
+        category\refresh!
 
         assert.same 1, UserCategoryLastSeens\count!
 
@@ -235,12 +236,14 @@ describe "models.categories", ->
 
         -- this is nil
         last_seen = category\find_last_seen_for_user current_user
-        assert not last_seen, "expected no last_seen"
+        assert.nil last_seen, "expected no last_seen"
 
         -- never seen category before, so nothing is unread
         assert.falsy (category\has_unread current_user)
 
         category\set_seen current_user
+        category\refresh!
+
         last_seen = category\find_last_seen_for_user current_user
         assert last_seen, "expected last_seen"
         category.user_category_last_seen = last_seen

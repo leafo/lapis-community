@@ -95,6 +95,8 @@ class Categories extends Model
       }}
 
       {"member", has_one: "CategoryMembers", key: {"user_id", "category_id"}}
+
+      {"last_seen", has_one: "UserCategoryLastSeens", key: {"user_id", "category_id"} }
     }
 
   parent_enum @, "membership_type", "public", {
@@ -661,15 +663,14 @@ class Categories extends Model
     flat
 
   find_last_seen_for_user: (user) =>
-    return unless user
-    return unless @last_topic_id
+    return nil unless user
 
-    import UserCategoryLastSeens from require "community.models"
-    last_seen = UserCategoryLastSeens\find {
-      user_id: user.id
-      category_id: @id
-    }
+    -- if it's an empty category then we can just assume they have seen nothing
+    return nil unless @last_topic_id
 
+    last_seen = @with_user(user.id)\get_last_seen!
+
+    -- just to avoid any addditional queries
     if last_seen
       last_seen.category = @
       last_seen.user = user
@@ -678,15 +679,10 @@ class Categories extends Model
 
   -- this assumes UserCategoryLastSeens and last topic has been preloaded
   has_unread: (user) =>
-    return unless user
-
-    return unless @user_category_last_seen
-    return unless @last_topic_id
-
-    assert @user_category_last_seen.user_id == user.id,
-      "unexpected user for last seen"
-
-    @user_category_last_seen.category_order < @get_last_topic!.category_order
+    if last_seen = @find_last_seen_for_user user
+      last_seen.category_order < @get_last_topic!.category_order
+    else
+      false
 
   set_seen: (user) =>
     return unless user

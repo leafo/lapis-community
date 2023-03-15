@@ -612,17 +612,12 @@ do
     end,
     find_last_seen_for_user = function(self, user)
       if not (user) then
-        return 
+        return nil
       end
       if not (self.last_topic_id) then
-        return 
+        return nil
       end
-      local UserCategoryLastSeens
-      UserCategoryLastSeens = require("community.models").UserCategoryLastSeens
-      local last_seen = UserCategoryLastSeens:find({
-        user_id = user.id,
-        category_id = self.id
-      })
+      local last_seen = self:with_user(user.id):get_last_seen()
       if last_seen then
         last_seen.category = self
         last_seen.user = user
@@ -630,17 +625,14 @@ do
       return last_seen
     end,
     has_unread = function(self, user)
-      if not (user) then
-        return 
+      do
+        local last_seen = self:find_last_seen_for_user(user)
+        if last_seen then
+          return last_seen.category_order < self:get_last_topic().category_order
+        else
+          return false
+        end
       end
-      if not (self.user_category_last_seen) then
-        return 
-      end
-      if not (self.last_topic_id) then
-        return 
-      end
-      assert(self.user_category_last_seen.user_id == user.id, "unexpected user for last seen")
-      return self.user_category_last_seen.category_order < self:get_last_topic().category_order
     end,
     set_seen = function(self, user)
       if not (user) then
@@ -887,6 +879,14 @@ do
       {
         "member",
         has_one = "CategoryMembers",
+        key = {
+          "user_id",
+          "category_id"
+        }
+      },
+      {
+        "last_seen",
+        has_one = "UserCategoryLastSeens",
         key = {
           "user_id",
           "category_id"

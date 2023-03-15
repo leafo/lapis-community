@@ -193,10 +193,7 @@ class BrowsingFlow extends Flow
     @preload_topics topics
 
     if last_seens and @current_user
-      import UserCategoryLastSeens from require "community.models"
-      UserCategoryLastSeens\include_in categories, "category_id", flip: true, where: {
-        user_id: @current_user.id
-      }
+      preload [c\with_user(@current_user.id) for c in *categories], "last_seen"
 
     categories
 
