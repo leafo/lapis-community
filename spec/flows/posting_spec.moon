@@ -380,8 +380,6 @@ describe "posting flow", ->
 
         assert.true w\is_active!, "warning should be active"
 
-        do return pending "fix me"
-
         {:topic, :post, :pending_post, :warning} = new_topic {
           category_id: category.id
           "topic[title]": "Hello world"
@@ -670,6 +668,9 @@ describe "posting flow", ->
         posting_permission: CommunityUsers.posting_permissions.only_own
       }
 
+      assert.false topic\allowed_to_moderate(current_user),
+        "current user should not be moderator"
+
       assert.has_error(
         ->
           new_post {
@@ -684,18 +685,41 @@ describe "posting flow", ->
 
       assert.same 0, Posts\count!
 
-      -- doesn't let them post in own topic
-      topic\update {
-        user_id: current_user.id
-      }
+      -- even if they have created the topic, if they aren't a moderator then
+      -- they can't post in it
+      do
+        topic\update {
+          user_id: current_user.id
+        }
 
-      -- clear the memo cache
-      topic = Topics\find topic.id
+        -- clear all caches
+        topic = Topics\find topic.id
 
-      new_post {
-        topic_id: topic.id
-        "post[body]": "hello world"
-      }
+        assert.has_error(
+          ->
+            new_post {
+              topic_id: topic.id
+              "post[body]": "hello world"
+            }
+
+          {
+            message: {"your account is not authorized to post"}
+          }
+        )
+
+      -- category owner is a moderator, can post!
+      do
+        category = topic\get_category!
+        category\update user_id: current_user.id
+
+        -- clear all caches
+        topic = Topics\find topic.id
+
+        new_post {
+          topic_id: topic.id
+          "post[body]": "hello world"
+        }
+
 
     describe "warnings", ->
       import Warnings, PendingPosts from require "spec.community_models"
