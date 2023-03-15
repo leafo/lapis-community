@@ -729,14 +729,16 @@ do
       Subscriptions = require("community.models").Subscriptions
       return Subscriptions:find_subscription(self, user)
     end,
-    is_subscribed = memoize1(function(self, user)
-      local Subscriptions
-      Subscriptions = require("community.models").Subscriptions
-      if not (user) then
-        return 
+    is_subscribed = function(self, user)
+      do
+        local sub = self:with_user(user):get_subscription()
+        if sub then
+          return sub:is_subscribed()
+        else
+          return false
+        end
       end
-      return Subscriptions:is_subscribed(self, user, user.id == self.user_id)
-    end),
+    end,
     subscribe = function(self, user, req)
       local Subscriptions
       Subscriptions = require("community.models").Subscriptions

@@ -727,10 +727,11 @@ class Categories extends Model
     import Subscriptions from require "community.models"
     Subscriptions\find_subscription @, user
 
-  is_subscribed: memoize1 (user) =>
-    import Subscriptions from require "community.models"
-    return unless user
-    Subscriptions\is_subscribed @, user, user.id == @user_id
+  is_subscribed: (user) =>
+    if sub = @with_user(user)\get_subscription!
+      sub\is_subscribed!
+    else
+      false
 
   subscribe: (user, req) =>
     import Subscriptions from require "community.models"
