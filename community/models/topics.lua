@@ -46,18 +46,15 @@ do
       if self.deleted then
         return false
       end
-      local can_view
       if self.category_id then
-        can_view = self:get_category():allowed_to_view(user, req)
-      else
-        can_view = true
-      end
-      if can_view then
-        if self:get_ban(user) then
+        if not (self:get_category():allowed_to_view(user, req)) then
           return false
         end
       end
-      return can_view
+      if self:get_ban(user) then
+        return false
+      end
+      return true
     end,
     allowed_to_edit = function(self, user)
       if self.deleted then
@@ -264,21 +261,7 @@ do
       if not (user) then
         return nil
       end
-      self.user_bans = self.user_bans or { }
-      local ban = self.user_bans[user.id]
-      if ban ~= nil then
-        return ban
-      end
-      self.user_bans[user.id] = self:find_ban(user) or false
-      return self.user_bans[user.id]
-    end,
-    find_ban = function(self, user)
-      if not (user) then
-        return nil
-      end
-      local Bans
-      Bans = require("community.models").Bans
-      return Bans:find_for_object(self, user)
+      return self:with_user(user.id):get_ban()
     end,
     find_recent_log = function(self, action)
       local ModerationLogs
@@ -813,6 +796,17 @@ do
           "user_id",
           "topic_id"
         }
+      },
+      {
+        "ban",
+        has_one = "Bans",
+        key = {
+          banned_user_id = "user_id",
+          object_id = "topic_id"
+        },
+        where = {
+          object_type = 2
+        }
       }
     }
     if _parent_1.__inherited then
@@ -926,32 +920,16 @@ do
     if not (next(topics)) then
       return 
     end
-    local Bans
-    Bans = require("community.models").Bans
-    local bans = Bans:select("\n      where banned_user_id = ? and object_type = ? and object_id in ?\n    ", user.id, Bans.object_types.topic, db.list((function()
+    preload((function()
       local _accum_0 = { }
       local _len_0 = 1
       for _index_0 = 1, #topics do
         local t = topics[_index_0]
-        _accum_0[_len_0] = t.id
+        _accum_0[_len_0] = t:with_user(user.id)
         _len_0 = _len_0 + 1
       end
       return _accum_0
-    end)()))
-    local bans_by_topic_id
-    do
-      local _tbl_0 = { }
-      for _index_0 = 1, #bans do
-        local b = bans[_index_0]
-        _tbl_0[b.object_id] = b
-      end
-      bans_by_topic_id = _tbl_0
-    end
-    for _index_0 = 1, #topics do
-      local t = topics[_index_0]
-      t.user_bans = t.user_bans or { }
-      t.user_bans[user.id] = bans_by_topic_id[t.id] or false
-    end
+    end)(), "ban")
     return true
   end
   if _parent_0.__inherited then

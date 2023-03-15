@@ -426,9 +426,11 @@ describe "models.topics", ->
     topic = factory.Topics!
     banned_user = factory.Users!
 
-    assert.falsy topic\find_ban banned_user
+    assert.falsy topic\get_ban banned_user
     factory.Bans object: topic, banned_user_id: banned_user.id
-    assert.truthy topic\find_ban banned_user
+    topic\refresh!
+
+    assert.truthy topic\get_ban banned_user
 
     assert.falsy topic\allowed_to_view banned_user
     assert.falsy topic\allowed_to_post banned_user
@@ -473,7 +475,7 @@ describe "models.topics", ->
 
 
   describe "delete", ->
-    import PendingPosts, TopicParticipants, CommunityUsers from require "spec.community_models"
+    import PendingPosts, TopicParticipants, CommunityUsers, UserTopicLastSeens from require "spec.community_models"
 
     it "deletes a topic (soft by default)", ->
       topic = factory.Topics!
@@ -675,16 +677,19 @@ describe "models.topics", ->
       assert.same 3, max
 
   describe "bans", ->
+    relations = require "lapis.db.model.relations"
+
     it "preloads bans on many topics when user is not banned", ->
       user = factory.Users!
       topics = for i=1,3
         factory.Topics!
 
       Topics\preload_bans topics, user
-      for t in *topics
-        assert.same {[user.id]: false}, t.user_bans
 
-    it "preloads bans user", ->
+      for t in *topics
+        assert.same {ban: true}, t\with_user(user.id)[relations.LOADED_KEY]
+
+    it "preloads bans", ->
       user = factory.Users!
       other_user = factory.Users!
       topics = for i=1,3
@@ -695,10 +700,12 @@ describe "models.topics", ->
 
       Topics\preload_bans topics, user
 
-      assert.same {[user.id]: b1}, topics[1].user_bans
-      assert.same {[user.id]: false}, topics[2].user_bans
-      assert.same {[user.id]: false}, topics[3].user_bans
+      for t in *topics
+        assert.same {ban: true}, t\with_user(user.id)[relations.LOADED_KEY]
 
+      assert.same b1, topics[1]\with_user(user.id).ban
+      assert.same nil, topics[2]\with_user(user.id).ban
+      assert.same nil, topics[3]\with_user(user.id).ban
 
   describe "subscribe", ->
     import Subscriptions from require "spec.community_models"

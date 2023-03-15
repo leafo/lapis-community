@@ -62,6 +62,13 @@ class Topics extends Model
       }}
 
       {"last_seen", has_one: "UserTopicLastSeens", key: {"user_id", "topic_id"}}
+
+      {"ban", has_one: "Bans", key: {
+        banned_user_id: "user_id"
+        object_id: "topic_id"
+      }, where: {
+        object_type: 2
+      }}
     }
 
   @relations: {
@@ -152,16 +159,7 @@ class Topics extends Model
     return unless user
     return unless next topics
 
-    import Bans from require "community.models"
-    bans = Bans\select "
-      where banned_user_id = ? and object_type = ? and object_id in ?
-    ", user.id, Bans.object_types.topic, db.list [t.id for t in *topics]
-
-    bans_by_topic_id = {b.object_id, b for b in *bans}
-    for t in *topics
-      t.user_bans or= {}
-      t.user_bans[user.id] = bans_by_topic_id[t.id] or false
-
+    preload [t\with_user(user.id) for t in *topics], "ban"
     true
 
   with_user: VirtualModel\make_loader "topic_users", (user_id) =>
@@ -185,15 +183,14 @@ class Topics extends Model
   allowed_to_view: (user, req) =>
     return false if @deleted
 
-    can_view = if @category_id
-      @get_category!\allowed_to_view user, req
-    else
-      true
+    if @category_id
+      unless @get_category!\allowed_to_view user, req
+        return false
 
-    if can_view
-      return false if @get_ban user
+    if @get_ban user
+      return false
 
-    can_view
+    true
 
   allowed_to_edit: (user) =>
     return false if @deleted
@@ -359,20 +356,7 @@ class Topics extends Model
 
   get_ban: (user) =>
     return nil unless user
-
-    @user_bans or= {}
-    ban = @user_bans[user.id]
-
-    if ban != nil
-      return ban
-
-    @user_bans[user.id] = @find_ban(user) or false
-    @user_bans[user.id]
-
-  find_ban: (user) =>
-    return nil unless user
-    import Bans from require "community.models"
-    Bans\find_for_object @, user
+    @with_user(user.id)\get_ban!
 
   find_recent_log: (action) =>
     import ModerationLogs from require "community.models"
