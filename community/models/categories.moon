@@ -68,7 +68,7 @@ class Categories extends Model
   @score_starting_date: 1134028003
 
   class CategoryViewers extends VirtualModel
-    @primary_key: {"categroy_id", "user_id"}
+    @primary_key: {"category_id", "user_id"}
 
     @relations: {
       {"moderator", has_one: "Moderators", key: {
@@ -145,7 +145,7 @@ class Categories extends Model
     {"topics", has_many: "Topics", order: "category_order desc"}
 
     -- this includes all moderators in the hierarchy
-    -- TODO: this should also included all moderators from categroy groups
+    -- TODO: this should also included all moderators from category groups
     {"active_moderators", fetch: =>
       import Moderators from require "community.models"
       import encode_clause from require "lapis.db"

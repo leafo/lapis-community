@@ -857,7 +857,7 @@ do
     _base_1.__class = _class_1
     local self = _class_1
     self.primary_key = {
-      "categroy_id",
+      "category_id",
       "user_id"
     }
     self.relations = {

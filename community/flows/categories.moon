@@ -465,7 +465,7 @@ class CategoriesFlow extends Flow
 
     if update_tags
       if @set_tags!
-        table.insert updated_fields, "categroy_tags"
+        table.insert updated_fields, "category_tags"
         category_updated = true
 
     if category_updated

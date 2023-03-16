@@ -616,7 +616,7 @@ do
       end
       if update_tags then
         if self:set_tags() then
-          table.insert(updated_fields, "categroy_tags")
+          table.insert(updated_fields, "category_tags")
           category_updated = true
         end
       end
