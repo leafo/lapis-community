@@ -750,6 +750,13 @@ CREATE TABLE public.community_warnings (
 ALTER TABLE public.community_warnings OWNER TO postgres;
 
 --
+-- Name: COLUMN community_warnings.expires_at; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.community_warnings.expires_at IS 'Is set when the user first sees the warning';
+
+
+--
 -- Name: community_warnings_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
