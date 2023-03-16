@@ -81,11 +81,6 @@ class CommunityUsers extends Model
     @include_in users, user_id: "id"
     users
 
-  @allowed_to_post: (user, object) =>
-    community_user = @find(user_id: user.id) or @load(user_id: user.id)
-    community_user.user = user -- satisfy relation
-    community_user\allowed_to_post object
-
   @for_user: (user_id) =>
     user_id = user_id.id if type(user_id) == "table"
     community_user = @find(:user_id)
@@ -124,6 +119,7 @@ class CommunityUsers extends Model
       "
     }, ...
 
+  -- overridable method for username based mentions
   @find_users_by_name: (names) =>
     import Users from require "models"
     Users\find_all names, key: "username"
@@ -307,7 +303,4 @@ class CommunityUsers extends Model
     )
 
     #logs / minutes
-
-
-
 

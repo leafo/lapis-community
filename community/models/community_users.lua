@@ -276,15 +276,6 @@ do
     })
     return users
   end
-  self.allowed_to_post = function(self, user, object)
-    local community_user = self:find({
-      user_id = user.id
-    }) or self:load({
-      user_id = user.id
-    })
-    community_user.user = user
-    return community_user:allowed_to_post(object)
-  end
   self.for_user = function(self, user_id)
     if type(user_id) == "table" then
       user_id = user_id.id
