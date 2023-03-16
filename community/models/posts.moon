@@ -47,9 +47,13 @@ class Posts extends Model
     @primary_key: {"post_id", "author_id", "viewer_id"}
 
     @relations: {
-      {"block", has_one: "Blocks", key: {
+      {"block_given", has_one: "Blocks", key: {
         blocking_user_id: "viewer_id"
         blocked_user_id: "author_id"
+      }}
+      {"block_received", has_one: "Blocks", key: {
+        blocking_user_id: "author_id"
+        blocked_user_id: "viewer_id"
       }}
       {"vote", has_one: "Votes", key: {
         object_id: "post_id"
@@ -314,6 +318,7 @@ class Posts extends Model
     return false if @is_moderation_event!
     return false unless user
     return false unless @is_default!
+
     topic = @get_topic!
     topic\allowed_to_post user, req
 
@@ -671,7 +676,7 @@ class Posts extends Model
 
   get_block: (user) =>
     if user
-      @with_viewing_user(user.id)\get_block!
+      @with_viewing_user(user.id)\get_block_given!
 
   -- this tries to avoid querying for blank data by checking if post even has
   -- any votes

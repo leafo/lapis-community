@@ -85,6 +85,14 @@ do
       if parent_post then
         assert_error(parent_post.topic_id == self.topic.id, "parent post doesn't belong to same topic")
         assert_error(parent_post:allowed_to_reply(self.current_user, self._req), "can't reply to post")
+        local viewer = parent_post:with_viewing_user(self.current_user.id)
+        do
+          local block = viewer:get_block_received()
+          if block then
+            self.block = block
+            yield_error("can't reply to post")
+          end
+        end
       end
       local needs_approval
       if opts.force_pending then

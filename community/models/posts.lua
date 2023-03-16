@@ -579,7 +579,7 @@ do
     end,
     get_block = function(self, user)
       if user then
-        return self:with_viewing_user(user.id):get_block()
+        return self:with_viewing_user(user.id):get_block_given()
       end
     end,
     get_vote = function(self, user)
@@ -660,11 +660,19 @@ do
     }
     self.relations = {
       {
-        "block",
+        "block_given",
         has_one = "Blocks",
         key = {
           blocking_user_id = "viewer_id",
           blocked_user_id = "author_id"
+        }
+      },
+      {
+        "block_received",
+        has_one = "Blocks",
+        key = {
+          blocking_user_id = "author_id",
+          blocked_user_id = "viewer_id"
         }
       },
       {

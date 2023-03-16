@@ -862,7 +862,8 @@ describe "models.posts", ->
       }
 
       viewer = post\with_viewing_user(user.id)
-      assert.truthy viewer\get_block!, "should find block"
+      assert.truthy viewer\get_block_given!, "should find block"
+      assert.nil viewer\get_block_received!, "no block received"
       assert.truthy viewer\get_vote!, "should find vote"
 
 

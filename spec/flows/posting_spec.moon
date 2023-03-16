@@ -887,6 +887,8 @@ describe "posting flow", ->
         assert.nil warning
 
     describe "parent_post_id", ->
+      import Blocks from require "spec.community_models"
+
       it "fails with invalid parent_post_id value", ->
         post = factory.Posts topic_id: topic.id
 
@@ -943,6 +945,31 @@ describe "posting flow", ->
 
           { message: {"can't reply to post"} }
         )
+
+      it "fails if parent poster has blocked user", ->
+        post = factory.Posts topic_id: topic.id
+        Blocks\create {
+          blocking_user_id: post.user_id
+          blocked_user_id: current_user.id
+        }
+
+        local req
+
+        assert.has_error(
+          ->
+            new_post {
+              topic_id: topic.id
+              parent_post_id: post.id
+              "post[body]": "This is a sub message"
+            }, (r) -> req = r
+
+          { message: {"can't reply to post"} }
+        )
+
+
+        {:block, :post} = req
+        assert.truthy block
+        assert.nil post
 
       it "posts a threaded post", ->
         post = factory.Posts topic_id: topic.id

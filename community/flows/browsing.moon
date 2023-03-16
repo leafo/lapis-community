@@ -227,7 +227,7 @@ class BrowsingFlow extends Flow
       import Blocks, Votes from require "community.models"
 
       viewers = [post\with_viewing_user(@current_user.id) for post in *posts]
-      preload viewers, "block"
+      preload viewers, "block_given"
       Votes\preload_post_votes posts, @current_user.id
 
     posts

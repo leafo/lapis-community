@@ -378,7 +378,7 @@ do
           end
           viewers = _accum_0
         end
-        preload(viewers, "block")
+        preload(viewers, "block_given")
         Votes:preload_post_votes(posts, self.current_user.id)
       end
       return posts
