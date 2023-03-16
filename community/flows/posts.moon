@@ -39,7 +39,7 @@ class PostsFlow extends Flow
     can_post, posting_err, warning = community_user\allowed_to_post @topic
     unless can_post
       @warning = warning
-      yield_error posting_err or "your account is not authorized to post"
+      yield_error posting_err or "your account is not able to post at this time"
 
     {post: new_post, :parent_post_id} = assert_valid @params, types.params_shape {
       {"parent_post_id", types.db_id + types.empty }

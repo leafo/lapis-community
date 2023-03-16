@@ -78,7 +78,7 @@ class TopicsFlow extends Flow
     can_post, err, warning = community_user\allowed_to_post @category
     unless can_post
       @warning = warning
-      yield_error err or "your account is not authorized to post"
+      yield_error err or "your account is not able to post at this time"
 
     sticky = false
     locked = false

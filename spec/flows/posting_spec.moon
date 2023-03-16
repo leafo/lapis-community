@@ -297,7 +297,7 @@ describe "posting flow", ->
           }
 
         {
-          message: {"your account is not authorized to post"}
+          message: {"your account is not able to post at this time"}
         }
       )
 
@@ -318,7 +318,7 @@ describe "posting flow", ->
           }
 
         {
-          message: {"your account is not authorized to post"}
+          message: {"your account is not able to post at this time"}
         }
       )
 
@@ -708,7 +708,7 @@ describe "posting flow", ->
           }
 
         {
-          message: {"your account is not authorized to post"}
+          message: {"your account is not able to post at this time"}
         }
       )
 
@@ -727,7 +727,7 @@ describe "posting flow", ->
           }
 
         {
-          message: {"your account is not authorized to post"}
+          message: {"your account is not able to post at this time"}
         }
       )
 
@@ -748,7 +748,7 @@ describe "posting flow", ->
           }
 
         {
-          message: {"your account is not authorized to post"}
+          message: {"your account is not able to post at this time"}
         }
       )
 
@@ -772,7 +772,7 @@ describe "posting flow", ->
             }
 
           {
-            message: {"your account is not authorized to post"}
+            message: {"your account is not able to post at this time"}
           }
         )
 

@@ -110,7 +110,7 @@ do
       local can_post, err, warning = community_user:allowed_to_post(self.category)
       if not (can_post) then
         self.warning = warning
-        yield_error(err or "your account is not authorized to post")
+        yield_error(err or "your account is not able to post at this time")
       end
       local sticky = false
       local locked = false

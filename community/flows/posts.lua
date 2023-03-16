@@ -49,7 +49,7 @@ do
       local can_post, posting_err, warning = community_user:allowed_to_post(self.topic)
       if not (can_post) then
         self.warning = warning
-        yield_error(posting_err or "your account is not authorized to post")
+        yield_error(posting_err or "your account is not able to post at this time")
       end
       local new_post, parent_post_id
       do
