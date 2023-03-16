@@ -170,7 +170,6 @@ class Topics extends Model
     }
 
   -- NOTE: this intentionally does not check if
-  -- NOTE: this doesn't check ban??
   -- community_user\allowed_to_post, as that's a different phase
   allowed_to_post: (user, req) =>
     return false unless user
