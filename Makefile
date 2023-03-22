@@ -35,7 +35,7 @@ local: build
 	luarocks --lua-version=5.1 make --local lapis-community-dev-1.rockspec
 
 annotate_models: clean_dev
-	lapis annotate $$(find community/models -type f | grep moon$$)
+	lapis annotate $$(find community/models -type f | grep -v /virtual/ | grep moon$$)
 
 # update the schema.sql from schema in dev db
 schema.sql:
