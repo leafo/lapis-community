@@ -5,6 +5,82 @@ describe "models.posts", ->
   import Users from require "spec.models"
   import Categories, Topics, Posts, Moderators, CommunityUsers from require "spec.community_models"
 
+  describe "create", ->
+    it "creates posts hierarchy", ->
+      user = factory.Users!
+      topic = factory.Topics!
+
+      make_post = (t={}) ->
+        t.user_id = user.id
+        t.topic_id = topic.id
+        factory.Posts t
+
+      -- it should set post_number and depth correctly based on the use of parent post"
+      p1 = make_post!
+      p2 = make_post parent_post_id: p1.id
+      p3 = make_post parent_post_id: p1.id
+
+      p4 = make_post parent_post_id: p2.id
+      p5 = make_post parent_post_id: p2.id
+
+      p6 = make_post parent_post_id: p1.id -- back on original
+
+      p7 = make_post parent_post_id: p3.id
+
+      p8 = factory.Posts! -- some other topic
+
+      res = Posts\select "order by id asc", fields: "id, depth, post_number, parent_post_id"
+
+      assert.same res, {
+        {
+          id: p1.id
+          depth: 1
+          post_number: 1
+        }
+        {
+          id: p2.id
+          parent_post_id: p1.id
+          depth: 2
+          post_number: 1
+        }
+        {
+          id: p3.id
+          parent_post_id: p1.id
+          depth: 2
+          post_number: 2
+        }
+        {
+          id: p4.id
+          parent_post_id: p2.id
+          depth: 3
+          post_number: 1
+        }
+        {
+          id: p5.id
+          parent_post_id: p2.id
+          depth: 3
+          post_number: 2
+        }
+        {
+          id: p6.id
+          parent_post_id: p1.id
+          depth: 2
+          post_number: 3
+        }
+        {
+          id: p7.id
+          parent_post_id: p3.id
+          depth: 3
+          post_number: 1
+        }
+        {
+          id: p8.id
+          depth: 1
+          post_number: 1
+        }
+      }
+
+
   describe "permissions", ->
     local post, post_user, category_user, topic_user, some_user, mod_user, admin_user
 

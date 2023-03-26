@@ -905,7 +905,7 @@ do
       depth = opts.depth,
       parent_post_id = opts.parent_post_id or db.NULL
     }
-    local post_number = db.interpolate_query("\n     (select coalesce(max(post_number), 0) from " .. tostring(db.escape_identifier(self:table_name())) .. "\n       where " .. tostring(db.encode_clause(number_cond)) .. ") + 1\n    ")
+    local post_number = db.interpolate_query("\n     (select coalesce(max(post_number), 0) from " .. tostring(db.escape_identifier(self:table_name())) .. "\n       where " .. tostring(db.encode_clause(number_cond)) .. ") + 1")
     opts.status = opts.status and self.statuses:for_db(opts.status)
     opts.post_number = db.raw(post_number)
     if opts.body_format then
