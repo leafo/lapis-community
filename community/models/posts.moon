@@ -196,16 +196,13 @@ class Posts extends Model
     assert opts.user_id, "missing user id"
     assert opts.body, "missing body"
 
-    parent = if id = opts.parent_post_id
-      @find id
-    else
-      with opts.parent_post
-        opts.parent_post = nil
-
-    if parent
+    if parent = opts.parent_post
       assert parent.topic_id == opts.topic_id, "invalid parent (#{parent.topic_id } != #{opts.topic_id})"
-      opts.depth = parent.depth + 1
       opts.parent_post_id = parent.id
+      opts.parent_post = nil
+
+    if opts.parent_post_id
+      opts.depth = db.raw db.interpolate_query "(select depth + 1 from #{db.escape_identifier @table_name!} where id = ?)", opts.parent_post_id
     else
       opts.depth = 1
 

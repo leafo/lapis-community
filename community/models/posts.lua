@@ -887,23 +887,16 @@ do
     assert(opts.topic_id, "missing topic id")
     assert(opts.user_id, "missing user id")
     assert(opts.body, "missing body")
-    local parent
     do
-      local id = opts.parent_post_id
-      if id then
-        parent = self:find(id)
-      else
-        do
-          local _with_0 = opts.parent_post
-          opts.parent_post = nil
-          parent = _with_0
-        end
+      local parent = opts.parent_post
+      if parent then
+        assert(parent.topic_id == opts.topic_id, "invalid parent (" .. tostring(parent.topic_id) .. " != " .. tostring(opts.topic_id) .. ")")
+        opts.parent_post_id = parent.id
+        opts.parent_post = nil
       end
     end
-    if parent then
-      assert(parent.topic_id == opts.topic_id, "invalid parent (" .. tostring(parent.topic_id) .. " != " .. tostring(opts.topic_id) .. ")")
-      opts.depth = parent.depth + 1
-      opts.parent_post_id = parent.id
+    if opts.parent_post_id then
+      opts.depth = db.raw(db.interpolate_query("(select depth + 1 from " .. tostring(db.escape_identifier(self:table_name())) .. " where id = ?)", opts.parent_post_id))
     else
       opts.depth = 1
     end
