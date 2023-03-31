@@ -68,6 +68,7 @@ class PostsFlow extends Flow
         @block = block
         yield_error "can't reply to post"
 
+
     needs_approval, warning = if opts.force_pending
       true
     else
@@ -78,15 +79,26 @@ class PostsFlow extends Flow
         parent_post_id: parent_post and parent_post.id
       }
 
+    create_params = {
+      :needs_approval
+      :body
+      body_format: new_post.body_format
+      parent_post_id: parent_post and parent_post.id
+    }
+
+    if opts.before_create_callback
+      opts.before_create_callback create_params
+
     if needs_approval
       @warning = warning
       @pending_post = PendingPosts\create {
         user_id: @current_user.id
         topic_id: @topic.id
         category_id: @topic.category_id
-        :body
-        body_format: new_post.body_format
-        parent_post_id: parent_post and parent_post.id
+
+        body: create_params.body
+        body_format: create_params.body_format
+        parent_post_id: create_params.parent_post_id
       }
 
       ActivityLogs\create {
@@ -96,7 +108,7 @@ class PostsFlow extends Flow
         data: {
           topic_id: @topic.id
           category_id: @topic.category_id
-          parent_post_id: parent_post and parent_post.id
+          parent_post_id: @pending_post.parent_post_id
         }
       }
 

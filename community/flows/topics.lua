@@ -130,14 +130,25 @@ do
           body = body
         })
       end
+      local create_params = {
+        needs_approval = needs_approval,
+        title = new_topic.title,
+        body_format = new_topic.body_format,
+        body = body,
+        sticky = sticky,
+        locked = locked
+      }
+      if opts.before_create_callback then
+        opts.before_create_callback(create_params)
+      end
       if needs_approval then
         self.warning = warning
         self.pending_post = PendingPosts:create({
           user_id = self.current_user.id,
           category_id = self.category.id,
-          title = new_topic.title,
-          body_format = new_topic.body_format,
-          body = body,
+          title = create_params.title,
+          body_format = create_params.body_format,
+          body = create_params.body,
           data = (function()
             if new_topic.tags and next(new_topic.tags) then
               return {
@@ -169,7 +180,7 @@ do
       self.topic = Topics:create({
         user_id = self.current_user.id,
         category_id = self.category.id,
-        title = new_topic.title,
+        title = create_params.title,
         tags = new_topic.tags and db.array((function()
           local _accum_0 = { }
           local _len_0 = 1
@@ -188,8 +199,8 @@ do
       self.post = Posts:create({
         user_id = self.current_user.id,
         topic_id = self.topic.id,
-        body_format = new_topic.body_format,
-        body = body
+        body_format = create_params.body_format,
+        body = create_params.body
       })
       self.topic:increment_from_post(self.post, {
         update_category_order = false

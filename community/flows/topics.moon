@@ -98,14 +98,26 @@ class TopicsFlow extends Flow
         :body
       }
 
+    create_params = {
+      :needs_approval
+      title: new_topic.title
+      body_format: new_topic.body_format
+      :body
+      :sticky
+      :locked
+    }
+
+    if opts.before_create_callback
+      opts.before_create_callback create_params
+
     if needs_approval
       @warning = warning
       @pending_post = PendingPosts\create {
         user_id: @current_user.id
         category_id: @category.id
-        title: new_topic.title
-        body_format: new_topic.body_format
-        :body
+        title: create_params.title
+        body_format: create_params.body_format
+        body: create_params.body
 
         -- TODO: sticky & locked are not supported here. Generally a moderator
         -- should not have their post go into pending so it should be a
@@ -130,7 +142,7 @@ class TopicsFlow extends Flow
     @topic = Topics\create {
       user_id: @current_user.id
       category_id: @category.id
-      title: new_topic.title
+      title: create_params.title
       tags: new_topic.tags and db.array([t.slug for t in *new_topic.tags])
       category_order: @category\next_topic_category_order!
       :sticky
@@ -140,8 +152,8 @@ class TopicsFlow extends Flow
     @post = Posts\create {
       user_id: @current_user.id
       topic_id: @topic.id
-      body_format: new_topic.body_format
-      :body
+      body_format: create_params.body_format
+      body: create_params.body
     }
 
     @topic\increment_from_post @post, update_category_order: false

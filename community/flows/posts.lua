@@ -105,15 +105,24 @@ do
           parent_post_id = parent_post and parent_post.id
         })
       end
+      local create_params = {
+        needs_approval = needs_approval,
+        body = body,
+        body_format = new_post.body_format,
+        parent_post_id = parent_post and parent_post.id
+      }
+      if opts.before_create_callback then
+        opts.before_create_callback(create_params)
+      end
       if needs_approval then
         self.warning = warning
         self.pending_post = PendingPosts:create({
           user_id = self.current_user.id,
           topic_id = self.topic.id,
           category_id = self.topic.category_id,
-          body = body,
-          body_format = new_post.body_format,
-          parent_post_id = parent_post and parent_post.id
+          body = create_params.body,
+          body_format = create_params.body_format,
+          parent_post_id = create_params.parent_post_id
         })
         ActivityLogs:create({
           user_id = self.current_user.id,
@@ -122,7 +131,7 @@ do
           data = {
             topic_id = self.topic.id,
             category_id = self.topic.category_id,
-            parent_post_id = parent_post and parent_post.id
+            parent_post_id = self.pending_post.parent_post_id
           }
         })
         return true
