@@ -117,9 +117,10 @@ class PostsFlow extends Flow
     @post = Posts\create {
       user_id: @current_user.id
       topic_id: @topic.id
-      :body
-      body_format: new_post.body_format
-      :parent_post
+
+      body: create_params.body
+      body_format: create_params.body_format
+      parent_post_id: create_params.parent_post_id
     }
 
     @topic\increment_from_post @post

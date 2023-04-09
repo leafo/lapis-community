@@ -694,6 +694,41 @@ describe "posting flow", ->
 
       assert.spy(s, "on_body_updated_callback").was.called!
 
+    it "creates post with before_create_callback", ->
+      called = false
+
+      {:post, :pending_post} = in_request {
+        post: {
+          "topic_id": topic.id
+          "post[body]": "Hello world"
+        }
+      }, =>
+        @current_user = current_user
+        @flow("posts")\new_post {
+          before_create_callback: (obj) ->
+            called = true
+            assert.same {
+              needs_approval: false
+              body_format: Posts.body_formats.html
+              body: "Hello world"
+            }, obj
+
+
+            obj.body = "What the heck?"
+            obj.body_format = "markdown"
+        }
+        @
+
+      assert.true called
+
+      assert (types.partial {
+        body_format: Posts.body_formats.markdown
+        body: "What the heck?"
+        topic_id: topic.id
+      }) post
+
+      assert.nil pending_post
+
     it "blocks new post when posting permission is blocked", ->
       cu = CommunityUsers\for_user current_user
       cu\update {

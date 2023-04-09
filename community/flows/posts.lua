@@ -139,9 +139,9 @@ do
       self.post = Posts:create({
         user_id = self.current_user.id,
         topic_id = self.topic.id,
-        body = body,
-        body_format = new_post.body_format,
-        parent_post = parent_post
+        body = create_params.body,
+        body_format = create_params.body_format,
+        parent_post_id = create_params.parent_post_id
       })
       self.topic:increment_from_post(self.post)
       community_user:increment_from_post(self.post)
