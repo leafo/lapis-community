@@ -105,6 +105,8 @@ class TopicsFlow extends Flow
       :body
       :sticky
       :locked
+      tags: if new_topic.tags and next new_topic.tags
+        [t.slug for t in *new_topic.tags]
     }
 
     if opts.before_create_callback
@@ -112,20 +114,22 @@ class TopicsFlow extends Flow
 
     if needs_approval
       @warning = warning
+
+      metadata = {
+        locked: if create_params.locked then create_params.locked
+        sticky: if create_params.sticky then create_params.sticky
+        topic_tags: create_params.tags
+      }
+
+      metadata = nil unless next metadata
+
       @pending_post = PendingPosts\create {
         user_id: @current_user.id
         category_id: @category.id
         title: create_params.title
         body_format: create_params.body_format
         body: create_params.body
-
-        -- TODO: sticky & locked are not supported here. Generally a moderator
-        -- should not have their post go into pending so it should be a
-        -- non-issue
-        data: if new_topic.tags and next new_topic.tags
-          {
-            topic_tags: [t.slug for t in *new_topic.tags]
-          }
+        data: metadata
       }
 
       ActivityLogs\create {
@@ -143,10 +147,10 @@ class TopicsFlow extends Flow
       user_id: @current_user.id
       category_id: @category.id
       title: create_params.title
-      tags: new_topic.tags and db.array([t.slug for t in *new_topic.tags])
+      tags: create_params.tags and db.array(create_params.tags)
       category_order: @category\next_topic_category_order!
-      :sticky
-      :locked
+      sticky: create_params.sticky
+      locked: create_params.locked
     }
 
     @post = Posts\create {

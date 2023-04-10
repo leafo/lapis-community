@@ -136,36 +136,49 @@ do
         body_format = new_topic.body_format,
         body = body,
         sticky = sticky,
-        locked = locked
+        locked = locked,
+        tags = (function()
+          if new_topic.tags and next(new_topic.tags) then
+            local _accum_0 = { }
+            local _len_0 = 1
+            local _list_0 = new_topic.tags
+            for _index_0 = 1, #_list_0 do
+              local t = _list_0[_index_0]
+              _accum_0[_len_0] = t.slug
+              _len_0 = _len_0 + 1
+            end
+            return _accum_0
+          end
+        end)()
       }
       if opts.before_create_callback then
         opts.before_create_callback(create_params)
       end
       if needs_approval then
         self.warning = warning
+        local metadata = {
+          locked = (function()
+            if create_params.locked then
+              return create_params.locked
+            end
+          end)(),
+          sticky = (function()
+            if create_params.sticky then
+              return create_params.sticky
+            end
+          end)(),
+          topic_tags = create_params.tags
+        }
+        if not (next(metadata)) then
+          metadata = nil
+        end
         self.pending_post = PendingPosts:create({
           user_id = self.current_user.id,
           category_id = self.category.id,
           title = create_params.title,
           body_format = create_params.body_format,
           body = create_params.body,
-          data = (function()
-            if new_topic.tags and next(new_topic.tags) then
-              return {
-                topic_tags = (function()
-                  local _accum_0 = { }
-                  local _len_0 = 1
-                  local _list_0 = new_topic.tags
-                  for _index_0 = 1, #_list_0 do
-                    local t = _list_0[_index_0]
-                    _accum_0[_len_0] = t.slug
-                    _len_0 = _len_0 + 1
-                  end
-                  return _accum_0
-                end)()
-              }
-            end
-          end)()
+          data = metadata
         })
         ActivityLogs:create({
           user_id = self.current_user.id,
@@ -181,20 +194,10 @@ do
         user_id = self.current_user.id,
         category_id = self.category.id,
         title = create_params.title,
-        tags = new_topic.tags and db.array((function()
-          local _accum_0 = { }
-          local _len_0 = 1
-          local _list_0 = new_topic.tags
-          for _index_0 = 1, #_list_0 do
-            local t = _list_0[_index_0]
-            _accum_0[_len_0] = t.slug
-            _len_0 = _len_0 + 1
-          end
-          return _accum_0
-        end)()),
+        tags = create_params.tags and db.array(create_params.tags),
         category_order = self.category:next_topic_category_order(),
-        sticky = sticky,
-        locked = locked
+        sticky = create_params.sticky,
+        locked = create_params.locked
       })
       self.post = Posts:create({
         user_id = self.current_user.id,
