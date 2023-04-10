@@ -1329,7 +1329,39 @@ describe "posting flow", ->
         }, open: true
       }) logs
 
+    it "edits post with before_edit_callback", ->
+      topic = factory.Topics permanent: true
+      post = factory.Posts user_id: current_user.id, topic_id: topic.id
 
+      called = false
+
+      in_request {
+        post: {
+          "post_id": post.id
+          "post[body]": "some new body"
+        }
+      }, =>
+        @current_user = current_user
+        PostsFlow(@)\edit_post {
+          before_edit_callback: (obj) ->
+            called = true
+            assert.same {
+              body: "some new body"
+              body_format: Posts.body_formats.html
+            }, obj
+
+            obj.body = "altered body"
+            obj.body_format = Posts.body_formats.markdown
+        }
+        @
+
+      post\refresh!
+      assert.true called, "before_edit_callback should be called"
+
+      assert types.partial({
+        body: "altered body"
+        body_format: Posts.body_formats.markdown
+      }) post
 
     it "edit post and topic title", ->
       post = factory.Posts user_id: current_user.id
@@ -1355,6 +1387,43 @@ describe "posting flow", ->
 
       assert.same 1, post.edits_count
       assert.truthy post.last_edited_at
+
+
+    it "edits topic post with before_edit_callback", ->
+      post = factory.Posts user_id: current_user.id
+
+      called = false
+
+      in_request {
+        post: {
+          "post_id": post.id
+          "post[body]": "some new body"
+          "post[title]": "some new title"
+        }
+      }, =>
+        @current_user = current_user
+        PostsFlow(@)\edit_post {
+          before_edit_callback: (obj) ->
+            called = true
+            assert.same {
+              body: "some new body"
+              body_format: Posts.body_formats.html
+              title: "some new title"
+            }, obj
+
+            obj.body = "altered body"
+            obj.body_format = Posts.body_formats.markdown
+        }
+        @
+
+      post\refresh!
+      assert.true called, "before_edit_callback should be called"
+
+      assert types.partial({
+        body: "altered body"
+        body_format: Posts.body_formats.markdown
+      }) post
+
 
     it "edits tags", ->
       post = factory.Posts user_id: current_user.id

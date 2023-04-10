@@ -161,11 +161,12 @@ do
       self.post:on_body_updated_callback(self)
       return true
     end),
-    edit_post = require_current_user(function(self)
+    edit_post = require_current_user(function(self, opts)
       self:load_post()
       assert_error(self.post:allowed_to_edit(self.current_user, "edit"), "not allowed to edit")
       self.topic = self.post:get_topic()
-      local post_update = assert_valid(self.params.post, types.params_shape({
+      local is_topic_post = self.post:is_topic_post() and not self.topic.permanent
+      local v = {
         {
           "body",
           types.limited_text(limits.MAX_BODY_LEN)
@@ -178,10 +179,33 @@ do
           "reason",
           types.empty + types.limited_text(limits.MAX_BODY_LEN)
         }
-      }))
-      local body = assert_error(Posts:filter_body(post_update.body, post_update.body_format))
-      local edited
-      if self.post.body ~= body then
+      }
+      if is_topic_post then
+        local category = self.topic:get_category()
+        table.insert(v, {
+          "title",
+          types["nil"] + types.limited_text(limits.MAX_TITLE_LEN)
+        })
+        table.insert(v, {
+          "tags",
+          types["nil"] + types.empty / (function()
+            return { }
+          end) + types.limited_text(240) / (category and (function()
+            local _base_1 = category
+            local _fn_0 = _base_1.parse_tags
+            return function(...)
+              return _fn_0(_base_1, ...)
+            end
+          end)() or nil)
+        })
+      end
+      local post_update = assert_valid(self.params.post, types.params_shape(v))
+      post_update.body = assert_error(Posts:filter_body(post_update.body, post_update.body_format))
+      if opts and opts.before_edit_callback then
+        opts.before_edit_callback(post_update)
+      end
+      local edited_body
+      if self.post.body ~= post_update.body then
         PostEdits:create({
           user_id = self.current_user.id,
           body_before = self.post.body,
@@ -190,50 +214,38 @@ do
           post_id = self.post.id
         })
         self.post:update({
-          body = body,
+          body = post_update.body,
+          body_format = post_update.body_format,
           edits_count = db.raw("edits_count + 1"),
-          last_edited_at = db.format_date(),
-          body_format = post_update.body_format
+          last_edited_at = db.format_date()
         })
-        edited = true
+        edited_body = true
       end
       local edited_title
-      if self.post:is_topic_post() and not self.topic.permanent then
-        local category = self.topic:get_category()
-        local topic_update = assert_valid(self.params.post, types.params_shape({
-          {
-            "tags",
-            types.empty + types.limited_text(240) / (category and (function()
-              local _base_1 = category
-              local _fn_0 = _base_1.parse_tags
-              return function(...)
-                return _fn_0(_base_1, ...)
-              end
-            end)() or nil)
-          },
-          {
-            "title",
-            types["nil"] + types.limited_text(limits.MAX_TITLE_LEN)
-          }
-        }))
+      if is_topic_post then
+        local topic_update = {
+          title = post_update.title
+        }
         if topic_update.title then
           topic_update.slug = slugify(topic_update.title)
         end
-        if self.params.post.tags then
-          if topic_update.tags and next(topic_update.tags) then
-            topic_update.tags = db.array((function()
-              local _accum_0 = { }
-              local _len_0 = 1
-              local _list_0 = topic_update.tags
-              for _index_0 = 1, #_list_0 do
-                local t = _list_0[_index_0]
-                _accum_0[_len_0] = t.slug
-                _len_0 = _len_0 + 1
-              end
-              return _accum_0
-            end)())
-          else
-            topic_update.tags = db.NULL
+        do
+          local new_tags = post_update.tags
+          if new_tags then
+            if next(new_tags) then
+              topic_update.tags = db.array((function()
+                local _accum_0 = { }
+                local _len_0 = 1
+                for _index_0 = 1, #new_tags do
+                  local t = new_tags[_index_0]
+                  _accum_0[_len_0] = t.slug
+                  _len_0 = _len_0 + 1
+                end
+                return _accum_0
+              end)())
+            else
+              topic_update.tags = db.NULL
+            end
           end
         end
         local filter_update
@@ -242,10 +254,10 @@ do
         self.topic:update(topic_update)
         edited_title = topic_update.title and true
       end
-      if edited or edited_title then
+      if edited_body or edited_title then
         self.post:on_body_updated_callback(self)
       end
-      if edited then
+      if edited_body then
         ActivityLogs:create({
           user_id = self.current_user.id,
           object = self.post,

@@ -146,22 +146,35 @@ class PostsFlow extends Flow
 
     true
 
-  edit_post: require_current_user =>
+  edit_post: require_current_user (opts) =>
     @load_post!
     assert_error @post\allowed_to_edit(@current_user, "edit"), "not allowed to edit"
 
     @topic = @post\get_topic!
 
-    post_update = assert_valid @params.post, types.params_shape {
+    is_topic_post = @post\is_topic_post! and not @topic.permanent
+
+    v = {
       {"body", types.limited_text limits.MAX_BODY_LEN }
       {"body_format", types.db_enum(Posts.body_formats) + types.empty / Posts.body_formats.html}
       {"reason", types.empty + types.limited_text limits.MAX_BODY_LEN }
     }
 
-    body = assert_error Posts\filter_body post_update.body, post_update.body_format
+    if is_topic_post
+      category = @topic\get_category!
+      table.insert v, {"title", types.nil + types.limited_text limits.MAX_TITLE_LEN }
+
+      -- this treats nil and not provided and does not action
+      table.insert v, {"tags", types.nil + types.empty / (-> {}) + types.limited_text(240) / (category and category\parse_tags or nil) }
+
+    post_update = assert_valid @params.post, types.params_shape v
+    post_update.body = assert_error Posts\filter_body post_update.body, post_update.body_format
+
+    if opts and opts.before_edit_callback
+      opts.before_edit_callback post_update
 
     -- only if the body is different
-    edited = if @post.body != body
+    edited_body = if @post.body != post_update.body
       PostEdits\create {
         user_id: @current_user.id
         body_before: @post.body
@@ -172,27 +185,26 @@ class PostsFlow extends Flow
 
 
       @post\update {
-        :body
+        body: post_update.body
+        body_format: post_update.body_format
         edits_count: db.raw "edits_count + 1"
         last_edited_at: db.format_date!
-        body_format: post_update.body_format
       }
 
       true
 
-    edited_title = if @post\is_topic_post! and not @topic.permanent
-      category = @topic\get_category!
-      topic_update = assert_valid @params.post, types.params_shape {
-        {"tags", types.empty + types.limited_text(240) / (category and category\parse_tags or nil) }
-        {"title", types.nil + types.limited_text limits.MAX_TITLE_LEN }
+    -- update the topic
+    edited_title = if is_topic_post
+      topic_update = {
+        title: post_update.title
       }
 
       if topic_update.title
         topic_update.slug = slugify topic_update.title
 
-      if @params.post.tags -- only update tags if they were provided
-        topic_update.tags = if topic_update.tags and next topic_update.tags
-          db.array [t.slug for t in *topic_update.tags]
+      if new_tags = post_update.tags
+        topic_update.tags = if next new_tags
+          db.array [t.slug for t in *new_tags]
         else
           db.NULL
 
@@ -202,10 +214,10 @@ class PostsFlow extends Flow
       @topic\update topic_update
       topic_update.title and true
 
-    if edited or edited_title
+    if edited_body or edited_title
       @post\on_body_updated_callback @
 
-    if edited
+    if edited_body
       ActivityLogs\create {
         user_id: @current_user.id
         object: @post
