@@ -89,8 +89,15 @@ class PostsFlow extends Flow
     if opts.before_create_callback
       opts.before_create_callback create_params
 
-    if needs_approval
+    if create_params.needs_approval
       @warning = warning
+
+      metadata = {
+        note: create_params.approval_note
+      }
+
+      metadata = nil unless next metadata
+
       @pending_post = PendingPosts\create {
         user_id: @current_user.id
         topic_id: @topic.id
@@ -99,6 +106,8 @@ class PostsFlow extends Flow
         body: create_params.body
         body_format: create_params.body_format
         parent_post_id: create_params.parent_post_id
+
+        data: metadata
       }
 
       ActivityLogs\create {

@@ -112,13 +112,14 @@ class TopicsFlow extends Flow
     if opts.before_create_callback
       opts.before_create_callback create_params
 
-    if needs_approval
+    if create_params.needs_approval
       @warning = warning
 
       metadata = {
         locked: if create_params.locked then create_params.locked
         sticky: if create_params.sticky then create_params.sticky
         topic_tags: create_params.tags
+        note: create_params.approval_note
       }
 
       metadata = nil unless next metadata

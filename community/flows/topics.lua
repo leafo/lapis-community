@@ -154,7 +154,7 @@ do
       if opts.before_create_callback then
         opts.before_create_callback(create_params)
       end
-      if needs_approval then
+      if create_params.needs_approval then
         self.warning = warning
         local metadata = {
           locked = (function()
@@ -167,7 +167,8 @@ do
               return create_params.sticky
             end
           end)(),
-          topic_tags = create_params.tags
+          topic_tags = create_params.tags,
+          note = create_params.approval_note
         }
         if not (next(metadata)) then
           metadata = nil

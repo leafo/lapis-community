@@ -188,6 +188,56 @@ describe "posting flow", ->
         body_format: Posts.body_formats.markdown
       }) post
 
+
+    it "creates new topic modified with before_create_callback", ->
+      called = false
+
+      {:topic, :post, :pending_post} = in_request {
+        post: {
+          category_id: factory.Categories!.id
+          "topic[title]": "Hello world"
+          "topic[body]": "This is the body"
+        }
+      }, =>
+        @current_user = current_user
+        @flow("topics")\new_topic {
+          before_create_callback: (obj) ->
+            called = true
+            assert.same {
+              body: "This is the body",
+              body_format: Posts.body_formats.html
+              locked: false
+              needs_approval: false
+              sticky: false
+              title: "Hello world"
+            }, obj
+
+
+            obj.title = "New Title"
+            obj.body = "New Body"
+            obj.body_format = Posts.body_formats.markdown
+            obj.locked = true
+            obj.sticky = true
+        }
+
+        @
+
+      assert.true called
+
+      assert (types.partial {
+        body_format: Posts.body_formats.markdown
+        body: "New Body"
+      }) post
+
+      assert (types.partial {
+        locked: true
+        sticky: true
+        title: "New Title"
+      }) topic
+
+      assert.nil pending_post
+
+
     it "creates new topic with tags", ->
       category = factory.Categories!
       factory.CategoryTags slug: "hello", category_id: category.id
@@ -201,6 +251,29 @@ describe "posting flow", ->
 
       topic = unpack Topics\select!
       assert.same {"hello"}, [t.slug for t in *topic\get_tags!]
+
+    it "creates new topic with tags filtered by before_create_callback", ->
+      category = factory.Categories!
+      factory.CategoryTags slug: "first", category_id: category.id
+      factory.CategoryTags slug: "second", category_id: category.id
+
+      {:topic, :post } = in_request {
+        post: {
+          category_id: category.id
+          "topic[title]": "Hello world  "
+          "topic[body]": "This is the body\t"
+          "topic[tags]": "first,second,third"
+        }
+      }, =>
+        @current_user = current_user
+        @flow("topics")\new_topic {
+          before_create_callback: (obj) ->
+            assert.same {"first", "second"}, obj.tags
+            obj.tags = {"second"}
+        }
+        @
+
+      assert.same {"second"}, [t.slug for t in *topic\get_tags!]
 
     it "lets moderator create sticky topic", ->
       category = factory.Categories!
@@ -458,6 +531,30 @@ describe "posting flow", ->
         assert.nil topic, "no topic should be created"
         assert.truthy pending_post, "pending post should be created"
 
+      it "forces pending via before_create_callback", ->
+        category = factory.Categories!
+
+        {:topic, :pending_post} = in_request {
+          post: {
+            category_id: category.id
+            "topic[title]": "one"
+            "topic[body]": "two"
+          }
+        }, =>
+          @current_user = current_user
+          @flow("topics")\new_topic {
+            before_create_callback: (obj) ->
+              assert.same false, obj.needs_approval, "post should not need approval going in"
+              obj.needs_approval = true
+              obj.approval_note = "This is test note"
+          }
+          @
+
+        assert.nil topic, "no topic should be created"
+        assert.truthy pending_post, "pending post should be created"
+
+        assert.same {note: "This is test note"}, pending_post.data
+
       it "creates a pending topic post", ->
         CategoryTags\create {
           slug: "hello-world"
@@ -712,7 +809,6 @@ describe "posting flow", ->
               body_format: Posts.body_formats.html
               body: "Hello world"
             }, obj
-
 
             obj.body = "What the heck?"
             obj.body_format = "markdown"
@@ -1134,6 +1230,30 @@ describe "posting flow", ->
 
         assert.truthy post, "expected post to be created"
         assert.nil pending_post, "pending post should not be created"
+
+      it "creates pending post due to before_create_callback", ->
+        other_topic = factory.Topics!
+
+        {:post, :pending_post} = in_request {
+          post: {
+            "post[body]": "Hello world"
+          }
+        }, =>
+          @topic = other_topic
+          @current_user = current_user
+          @flow("posts")\new_post {
+            before_create_callback: (obj) ->
+              assert.same false, obj.needs_approval, "post should not need approval going in"
+              obj.needs_approval = true
+              obj.approval_note = "This is test note"
+          }
+          @
+
+        assert.nil post, "post should not be set"
+        assert pending_post, "pending_post should be set"
+        assert.same {
+          note: "This is test note"
+        }, pending_post.data
 
   describe "delete topic", ->
     local topic

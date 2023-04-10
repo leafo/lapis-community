@@ -114,15 +114,22 @@ do
       if opts.before_create_callback then
         opts.before_create_callback(create_params)
       end
-      if needs_approval then
+      if create_params.needs_approval then
         self.warning = warning
+        local metadata = {
+          note = create_params.approval_note
+        }
+        if not (next(metadata)) then
+          metadata = nil
+        end
         self.pending_post = PendingPosts:create({
           user_id = self.current_user.id,
           topic_id = self.topic.id,
           category_id = self.topic.category_id,
           body = create_params.body,
           body_format = create_params.body_format,
-          parent_post_id = create_params.parent_post_id
+          parent_post_id = create_params.parent_post_id,
+          data = metadata
         })
         ActivityLogs:create({
           user_id = self.current_user.id,
