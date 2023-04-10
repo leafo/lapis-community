@@ -473,9 +473,9 @@ class Categories extends Model
   refresh_topic_category_order: =>
     switch @category_order_type
       when @@category_order_types.post_date
-        @refresh_topic_category_order_by_post_date()
+        @refresh_topic_category_order_by_post_date!
       when @@category_order_types.topic_score
-        @refresh_topic_category_order_by_topic_score()
+        @refresh_topic_category_order_by_topic_score!
       else
         error "unknown category order type"
 

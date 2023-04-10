@@ -737,6 +737,9 @@ describe "models.categories", ->
         post = factory.Posts {
           topic_id: topic.id
           up_votes_count: i
+          -- posts are dated in ascending order to ensure they are sorted in
+          -- the order they are created when sorting the topic
+          created_at: "2022-1-#{i} 00:00:00"
         }
 
         category\increment_from_topic topic
