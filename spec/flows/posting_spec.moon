@@ -96,6 +96,7 @@ describe "posting flow", ->
       )
 
     it "creates new topic", ->
+      s = spy.on(Posts, "filter_body")
       category = factory.Categories!
 
       new_topic {
@@ -170,6 +171,8 @@ describe "posting flow", ->
           action: ActivityLogs.actions.topic.create
         }, open: true
       }) logs
+
+      assert.spy(s, "filter_body").was.called!
 
 
     it "creates new topic with body format", ->
@@ -694,6 +697,8 @@ describe "posting flow", ->
       )
 
     it "creates new post", ->
+      s = spy.on(Posts, "filter_body")
+
       new_post {
         topic_id: topic.id
         "post[body]": "This is post body    "
@@ -755,6 +760,8 @@ describe "posting flow", ->
           action: ActivityLogs.actions.post.create
         }
       }) logs
+
+      assert.spy(s, "filter_body").was.called!
 
     it "creates two posts", ->
       for i=1,2
