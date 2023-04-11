@@ -146,6 +146,7 @@ class PostsFlow extends Flow
 
     true
 
+  -- opts.before_edit_callback -- called before post is edited, receives object of the suggested changes that can be mutated
   edit_post: require_current_user (opts) =>
     @load_post!
     assert_error @post\allowed_to_edit(@current_user, "edit"), "not allowed to edit"

@@ -1303,12 +1303,13 @@ describe "posting flow", ->
         PostsFlow(@)\edit_post!
 
     it "edits post", ->
+      s = spy.on(Posts, "filter_body")
+
       post = factory.Posts user_id: current_user.id
 
       edit_post {
         post_id: post.id
-        -- TODO: test trimming  "post[body]": "the new body   \0"
-        "post[body]": "the new body"
+        "post[body]": "the new body   "
       }
 
       post\refresh!
@@ -1328,6 +1329,23 @@ describe "posting flow", ->
           action: ActivityLogs.actions.post.edit
         }, open: true
       }) logs
+
+      assert.spy(s, "filter_body").was.called!
+
+    it "edit post fails with empty html", ->
+      post = factory.Posts user_id: current_user.id
+
+      assert.has_error(
+        ->
+          edit_post {
+            post_id: post.id
+            "post[body]": "<div> </div>"
+          }
+
+        {
+          message: {"body must be provided"}
+        }
+      )
 
     it "edits post with before_edit_callback", ->
       topic = factory.Topics permanent: true
