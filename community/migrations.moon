@@ -713,6 +713,3 @@ import create_table, create_index, drop_table, add_column, drop_column, drop_ind
 
     db.query "comment on column #{T"warnings"}.expires_at is ?", "Is set when the user first sees the warning"
 }
-
-
-

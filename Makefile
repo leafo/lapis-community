@@ -41,3 +41,6 @@ annotate_models: clean_dev
 schema.sql:
 	pg_dump -s -U postgres community_test > schema.sql
 	pg_dump -a -t lapis_migrations -U postgres community_test >> schema.sql
+
+new_migration::
+	lapis generate migration --migrations-module community.migrations --counter increment
