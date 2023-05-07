@@ -40,8 +40,9 @@ class CommunityUsers extends Model
 
   @posting_permissions: enum {
     default: 1
-    only_own: 2
-    blocked: 3
+    only_own: 2 -- User blocked from posting except on places they moderate
+    blocked: 3 -- User blocked from posting anywhere
+    needs_approval: 4 -- User's post will be forced into pending unles they can moderate the destination
   }
 
   @recent_threshold: "10 minutes"
@@ -145,7 +146,14 @@ class CommunityUsers extends Model
   get_block_given: (user) =>
     @with_user(user.id or user.user_id)\get_block_given!
 
-  need_approval_to_post: =>
+  -- object: where the user is posting to, must be either category for new topic, or topic for new post/reply
+  -- returns bool, a warning object if one is applied or nil
+  needs_approval_to_post: (object) =>
+    switch @posting_permission or @@posting_permissions.default
+      when @@posting_permissions.needs_approval
+        unless object\allowed_to_moderate @get_user!
+          return true
+
     import Warnings from require "community.models"
     for warning in *@get_active_warnings!
       if warning.restriction == Warnings.restrictions.pending_posting
@@ -164,10 +172,9 @@ class CommunityUsers extends Model
       received_down_votes_count: db.raw db.interpolate_query "coalesce((select sum(down_votes_count) from posts where not deleted and user_id = ?), 0)", @user_id
     }, timestamp: false
 
-  -- object must be either a category (for new topic) or topic (for new
-  -- post/reply)
-  -- This post is only responsible for checking the user's own permissions, and
-  -- not the permissions of categories or topics
+  -- This function is only responsible for checking the user's own permissions,
+  -- and not the permissions of categories or topics
+  -- object: where the user is posting to, must be either category for new topic, or topic for new post/reply
   allowed_to_post: (object) =>
     switch @posting_permission or @@posting_permissions.default
       when @@posting_permissions.blocked

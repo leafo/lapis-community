@@ -436,7 +436,7 @@ do
       do
         local cu = CommunityUsers:for_user(user)
         if cu then
-          local needs_approval, warning = cu:need_approval_to_post()
+          local needs_approval, warning = cu:needs_approval_to_post()
           if needs_approval then
             return true, warning
           end

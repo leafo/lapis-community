@@ -510,7 +510,7 @@ class Topics extends Model
         return true
 
     if cu = CommunityUsers\for_user user
-      needs_approval, warning = cu\need_approval_to_post!
+      needs_approval, warning = cu\needs_approval_to_post!
       if needs_approval
         return true, warning
 

@@ -365,11 +365,11 @@ describe "models.community_users", ->
   describe "warnings", ->
     import Warnings from require "spec.community_models"
 
-    it "need_approval_to_post", ->
+    it "needs_approval_to_post", ->
       user = factory.Users!
       cu = CommunityUsers\for_user user.id
 
-      assert.same false, cu\need_approval_to_post!
+      assert.same false, cu\needs_approval_to_post!
 
       -- this warning does not require approval, since it outright
       -- blocks
@@ -380,7 +380,7 @@ describe "models.community_users", ->
       }
 
       cu\refresh!
-      assert.same false, cu\need_approval_to_post!
+      assert.same false, cu\needs_approval_to_post!
 
       w = Warnings\create {
         user_id: user.id
@@ -389,12 +389,12 @@ describe "models.community_users", ->
       }
 
       cu\refresh!
-      assert.same true, cu\need_approval_to_post!
+      assert.same true, cu\needs_approval_to_post!
 
       w\end_warning!
 
       cu\refresh!
-      assert.same false, cu\need_approval_to_post!
+      assert.same false, cu\needs_approval_to_post!
 
 
   describe "blocks", ->

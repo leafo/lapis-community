@@ -25,7 +25,13 @@ do
     get_block_given = function(self, user)
       return self:with_user(user.id or user.user_id):get_block_given()
     end,
-    need_approval_to_post = function(self)
+    needs_approval_to_post = function(self, object)
+      local _exp_0 = self.posting_permission or self.__class.posting_permissions.default
+      if self.__class.posting_permissions.needs_approval == _exp_0 then
+        if not (object:allowed_to_moderate(self:get_user())) then
+          return true
+        end
+      end
       local Warnings
       Warnings = require("community.models").Warnings
       local _list_0 = self:get_active_warnings()
@@ -227,7 +233,8 @@ do
   self.posting_permissions = enum({
     default = 1,
     only_own = 2,
-    blocked = 3
+    blocked = 3,
+    needs_approval = 4
   })
   self.recent_threshold = "10 minutes"
   self.table_name = function(self)
