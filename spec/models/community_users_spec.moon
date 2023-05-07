@@ -362,14 +362,19 @@ describe "models.community_users", ->
       cu\refresh!
       assert.same true, cu\allowed_to_post topic
 
-  describe "warnings", ->
-    import Warnings from require "spec.community_models"
+  describe "needs_approval_to_post", ->
+    import Warnings, Categories from require "spec.community_models"
 
-    it "needs_approval_to_post", ->
+    local category
+
+    before_each ->
+      category = factory.Categories!
+
+    it "with warning", ->
       user = factory.Users!
       cu = CommunityUsers\for_user user.id
 
-      assert.same false, cu\needs_approval_to_post!
+      assert.same false, cu\needs_approval_to_post category
 
       -- this warning does not require approval, since it outright
       -- blocks
@@ -380,7 +385,7 @@ describe "models.community_users", ->
       }
 
       cu\refresh!
-      assert.same false, cu\needs_approval_to_post!
+      assert.same false, cu\needs_approval_to_post category
 
       w = Warnings\create {
         user_id: user.id
@@ -389,13 +394,28 @@ describe "models.community_users", ->
       }
 
       cu\refresh!
-      assert.same true, cu\needs_approval_to_post!
+      assert.same true, cu\needs_approval_to_post category
 
       w\end_warning!
 
       cu\refresh!
-      assert.same false, cu\needs_approval_to_post!
+      assert.same false, cu\needs_approval_to_post category
 
+    it "with posting restriction", ->
+      user = factory.Users!
+      cu = CommunityUsers\for_user user.id
+
+      assert.same false, cu\needs_approval_to_post category
+
+      cu\update {
+        posting_permission: CommunityUsers.posting_permissions.needs_approval
+      }
+
+      assert.same {true, nil}, {cu\needs_approval_to_post category}
+
+      -- if usr can moderate object then they don't need approval
+      own_category = factory.Categories user_id: cu.user_id
+      assert.same {false}, {cu\needs_approval_to_post own_category}
 
   describe "blocks", ->
     import Blocks from require "community.models"
