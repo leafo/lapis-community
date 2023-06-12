@@ -173,7 +173,7 @@ class extends lapis.Application
       @parent_post = @post
       @post = nil
 
-      assert_error @parent_post\allowed_to_reply(@user), "invalid post"
+      assert_error @parent_post\allowed_to_reply(@current_user), "invalid post: not allowed to reply"
 
     GET: =>
       render: true
