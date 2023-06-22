@@ -1,10 +1,10 @@
 local db = require("lapis.db")
 local Flow
 Flow = require("lapis.flow").Flow
-local PendingPosts, ActivityLogs
+local PendingPosts, ActivityLogs, ModerationLogs
 do
   local _obj_0 = require("community.models")
-  PendingPosts, ActivityLogs = _obj_0.PendingPosts, _obj_0.ActivityLogs
+  PendingPosts, ActivityLogs, ModerationLogs = _obj_0.PendingPosts, _obj_0.ActivityLogs, _obj_0.ModerationLogs
 end
 do
   local _class_0
@@ -32,7 +32,7 @@ do
               post_id = post.id
             }
           })
-          return true
+          return post
         end
       end
     end
