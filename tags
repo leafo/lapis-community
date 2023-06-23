@@ -1,0 +1,413 @@
+!_TAG_FILE_FORMAT	2	/extended format/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	leaf corcoran	/leafot@gmail.com/
+!_TAG_PROGRAM_NAME	MoonTags	//
+!_TAG_PROGRAM_URL	https://github.com/leafo/moonscript	/GitHub repository/
+!_TAG_PROGRAM_VERSION	0.0.1	//
+
+ActivityLogs	community/models/activity_logs.moon	/^class ActivityLogs extends Model$/;"	c	language:moon
+AsyncCounter	community/helpers/counters.moon	/^class AsyncCounter$/;"	c	language:moon
+Bans	community/models/bans.moon	/^class Bans extends Model$/;"	c	language:moon
+BansFlow	community/flows/bans.moon	/^class BansFlow extends Flow$/;"	c	language:moon
+Blocks	community/models/blocks.moon	/^class Blocks extends Model$/;"	c	language:moon
+BlocksFlow	community/flows/blocks.moon	/^class BlocksFlow extends Flow$/;"	c	language:moon
+Bookmarks	community/models/bookmarks.moon	/^class Bookmarks extends Model$/;"	c	language:moon
+BookmarksFlow	community/flows/bookmarks.moon	/^class BookmarksFlow extends Flow$/;"	c	language:moon
+BrowsingFlow	community/flows/browsing.moon	/^class BrowsingFlow extends Flow$/;"	c	language:moon
+Categories	community/models/categories.moon	/^class Categories extends Model$/;"	c	language:moon
+CategoriesFlow	community/flows/categories.moon	/^class CategoriesFlow extends Flow$/;"	c	language:moon
+CategoryGroupCategories	community/models/category_group_categories.moon	/^class CategoryGroupCategories extends Model$/;"	c	language:moon
+CategoryGroups	community/models/category_groups.moon	/^class CategoryGroups extends Model$/;"	c	language:moon
+CategoryGroupsFlow	community/flows/category_groups.moon	/^class CategoryGroupsFlow extends Flow$/;"	c	language:moon
+CategoryMembers	community/models/category_members.moon	/^class CategoryMembers extends Model$/;"	c	language:moon
+CategoryPostLogs	community/models/category_post_logs.moon	/^class CategoryPostLogs extends Model$/;"	c	language:moon
+CategoryTags	community/models/category_tags.moon	/^class CategoryTags extends Model$/;"	c	language:moon
+CategoryViewers	community/models/categories.moon	/^  class CategoryViewers extends VirtualModel$/;"	c	language:moon
+CommunityModel	community/model.moon	/^class CommunityModel extends Model$/;"	c	language:moon
+CommunityUsers	community/models/community_users.moon	/^class CommunityUsers extends Model$/;"	c	language:moon
+MembersFlow	community/flows/members.moon	/^class MembersFlow extends Flow$/;"	c	language:moon
+ModerationLogObjects	community/models/moderation_log_objects.moon	/^class ModerationLogObjects extends Model$/;"	c	language:moon
+ModerationLogs	community/models/moderation_logs.moon	/^class ModerationLogs extends Model$/;"	c	language:moon
+Moderators	community/models/moderators.moon	/^class Moderators extends Model$/;"	c	language:moon
+ModeratorsFlow	community/flows/moderators.moon	/^class ModeratorsFlow extends Flow$/;"	c	language:moon
+NestedOrderedPaginator	community/model.moon	/^class NestedOrderedPaginator extends OrderedPaginator$/;"	c	language:moon
+PendingPosts	community/flows/pending_posts.moon	/^class PendingPosts extends Flow$/;"	c	language:moon
+PendingPosts	community/models/pending_posts.moon	/^class PendingPosts extends Model$/;"	c	language:moon
+PostEdits	community/models/post_edits.moon	/^class PostEdits extends Model$/;"	c	language:moon
+PostReports	community/models/post_reports.moon	/^class PostReports extends Model$/;"	c	language:moon
+PostViewers	community/models/posts.moon	/^  class PostViewers extends VirtualModel$/;"	c	language:moon
+Posts	community/models/posts.moon	/^class Posts extends Model$/;"	c	language:moon
+PostsFlow	community/flows/posts.moon	/^class PostsFlow extends Flow$/;"	c	language:moon
+PostsSearch	community/models/posts_search.moon	/^class PostsSearch extends Model$/;"	c	language:moon
+ReportsFlow	community/flows/reports.moon	/^class ReportsFlow extends Flow$/;"	c	language:moon
+Subscriptions	community/models/subscriptions.moon	/^class Subscriptions extends Model$/;"	c	language:moon
+SubscriptionsFlow	community/flows/subscriptions.moon	/^class SubscriptionsFlow extends Flow$/;"	c	language:moon
+TopicParticipants	community/models/topic_participants.moon	/^class TopicParticipants extends Model$/;"	c	language:moon
+TopicViewers	community/models/topics.moon	/^  class TopicViewers extends VirtualModel$/;"	c	language:moon
+Topics	community/models/topics.moon	/^class Topics extends Model$/;"	c	language:moon
+TopicsFlow	community/flows/topics.moon	/^class TopicsFlow extends Flow$/;"	c	language:moon
+UserCategoryLastSeens	community/models/user_category_last_seens.moon	/^class UserCategoryLastSeens extends Model$/;"	c	language:moon
+UserTopicLastSeens	community/models/user_topic_last_seens.moon	/^class UserTopicLastSeens extends Model$/;"	c	language:moon
+UserUsers	community/models/virtual/user_users.moon	/^class UserUsers extends VirtualModel$/;"	c	language:moon
+VirtualModel	community/model.moon	/^class VirtualModel extends CommunityModel$/;"	c	language:moon
+Votes	community/models/votes.moon	/^class Votes extends Model$/;"	c	language:moon
+VotesFlow	community/flows/votes.moon	/^class VotesFlow extends Flow$/;"	c	language:moon
+Warnings	community/models/warnings.moon	/^class Warnings extends Model$/;"	c	language:moon
+_parse_usernames	community/models/posts.moon	/^  @_parse_usernames: (body) =>/;"	f	language:moon class:Posts
+accept_member	community/flows/members.moon	/^  accept_member: require_current_user =>/;"	f	language:moon class:MembersFlow
+accept_moderator_position	community/flows/moderators.moon	/^  accept_moderator_position: require_current_user =>/;"	f	language:moon class:ModeratorsFlow
+action_name	community/models/activity_logs.moon	/^  action_name: =>/;"	f	language:moon class:ActivityLogs
+add_category	community/models/category_groups.moon	/^  add_category: (category) =>/;"	f	language:moon class:CategoryGroups
+add_member	community/flows/members.moon	/^  add_member: require_current_user =>/;"	f	language:moon class:MembersFlow
+add_moderator	community/flows/moderators.moon	/^  add_moderator: require_current_user =>/;"	f	language:moon class:ModeratorsFlow
+allowed_to_edit	community/models/categories.moon	/^  allowed_to_edit: (user) =>/;"	f	language:moon class:Categories
+allowed_to_edit	community/models/category_groups.moon	/^  allowed_to_edit: (user) =>/;"	f	language:moon class:CategoryGroups
+allowed_to_edit	community/models/posts.moon	/^  allowed_to_edit: (user, action="edit") =>/;"	f	language:moon class:Posts
+allowed_to_edit	community/models/topics.moon	/^  allowed_to_edit: (user) =>/;"	f	language:moon class:Topics
+allowed_to_edit_members	community/models/categories.moon	/^  allowed_to_edit_members: (user) =>/;"	f	language:moon class:Categories
+allowed_to_edit_moderators	community/models/categories.moon	/^  allowed_to_edit_moderators: (user) =>/;"	f	language:moon class:Categories
+allowed_to_moderate	community/models/categories.moon	/^  allowed_to_moderate: (user, ignore_admin=false) =>/;"	f	language:moon class:Categories
+allowed_to_moderate	community/models/category_groups.moon	/^  allowed_to_moderate: (user, ignore_admin=false) =>/;"	f	language:moon class:CategoryGroups
+allowed_to_moderate	community/models/pending_posts.moon	/^  allowed_to_moderate: (user) =>/;"	f	language:moon class:PendingPosts
+allowed_to_moderate	community/models/topics.moon	/^  allowed_to_moderate: (user) =>/;"	f	language:moon class:Topics
+allowed_to_post	community/models/community_users.moon	/^  allowed_to_post: (object) =>/;"	f	language:moon class:CommunityUsers
+allowed_to_post	community/models/topics.moon	/^  allowed_to_post: (user, req) =>/;"	f	language:moon class:Topics
+allowed_to_post_topic	community/models/categories.moon	/^  allowed_to_post_topic: (user, req) =>/;"	f	language:moon class:Categories
+allowed_to_reply	community/models/posts.moon	/^  allowed_to_reply: (user, req) =>/;"	f	language:moon class:Posts
+allowed_to_report	community/models/posts.moon	/^  allowed_to_report: (user, req) =>/;"	f	language:moon class:Posts
+allowed_to_view	community/flows/browsing.moon	/^  allowed_to_view: (obj) =>/;"	f	language:moon class:BrowsingFlow
+allowed_to_view	community/models/categories.moon	/^  allowed_to_view: (user, req) =>/;"	f	language:moon class:Categories
+allowed_to_view	community/models/category_groups.moon	/^  allowed_to_view: (user, req) =>/;"	f	language:moon class:CategoryGroups
+allowed_to_view	community/models/posts.moon	/^  allowed_to_view: (user, req) =>/;"	f	language:moon class:Posts
+allowed_to_view	community/models/topics.moon	/^  allowed_to_view: (user, req) =>/;"	f	language:moon class:Topics
+allowed_to_vote	community/models/categories.moon	/^  allowed_to_vote: (user, direction, post) =>/;"	f	language:moon class:Categories
+allowed_to_vote	community/models/posts.moon	/^  allowed_to_vote: (user, direction) =>/;"	f	language:moon class:Posts
+archive	community/models/posts.moon	/^  archive: =>/;"	f	language:moon class:Posts
+archive	community/models/topics.moon	/^  archive: =>/;"	f	language:moon class:Topics
+archive_topic	community/flows/topics.moon	/^  archive_topic: =>/;"	f	language:moon class:TopicsFlow
+available_vote_types	community/models/categories.moon	/^  available_vote_types: (post) =>/;"	f	language:moon class:Categories
+available_vote_types	community/models/topics.moon	/^  available_vote_types: (post) =>/;"	f	language:moon class:Topics
+bans_flow	community/flows/categories.moon	/^  bans_flow: =>/;"	f	language:moon class:CategoriesFlow
+bans_flow	community/flows/category_groups.moon	/^  bans_flow: =>/;"	f	language:moon class:CategoryGroupsFlow
+bans_flow	community/flows/topics.moon	/^  bans_flow: =>/;"	f	language:moon class:TopicsFlow
+base_and_adjustment	community/models/votes.moon	/^  base_and_adjustment: (object=@get_object!) =>/;"	f	language:moon class:Votes
+block_user	community/flows/blocks.moon	/^  block_user: =>/;"	f	language:moon class:BlocksFlow
+bulk_increment	community/helpers/counters.moon	/^bulk_increment = (model, column, tuples)->/;"	f	language:moon
+calculate_score_category_order	community/models/topics.moon	/^  @calculate_score_category_order: (score, created_at, time_bucket) =>/;"	f	language:moon class:Topics
+calculate_score_category_order	community/models/topics.moon	/^  calculate_score_category_order: =>/;"	f	language:moon class:Topics
+can_moderate	community/models/moderators.moon	/^  can_moderate: =>/;"	f	language:moon class:Moderators
+can_move_to	community/models/topics.moon	/^  can_move_to: (user, target_category) =>/;"	f	language:moon class:Topics
+categories_to_log	community/models/category_post_logs.moon	/^  @categories_to_log: (category) =>/;"	f	language:moon class:CategoryPostLogs
+category_single	community/flows/browsing.moon	/^  category_single: =>/;"	f	language:moon class:BrowsingFlow
+category_topics	community/flows/browsing.moon	/^  category_topics: (opts={}) =>/;"	f	language:moon class:BrowsingFlow
+clear_post	community/models/category_post_logs.moon	/^  @clear_post: (post) =>/;"	f	language:moon class:CategoryPostLogs
+clear_posts_for_topic	community/models/category_post_logs.moon	/^  @clear_posts_for_topic: (topic) =>/;"	f	language:moon class:CategoryPostLogs
+convert_array	community/helpers/shapes.moon	/^convert_array = types\.table \/ (t) ->/;"	f	language:moon
+copy_post_params	community/flows/reports.moon	/^  copy_post_params: (params) =>/;"	f	language:moon class:ReportsFlow
+count_vote_for	community/models/community_users.moon	/^  count_vote_for: (object) =>/;"	f	language:moon class:CommunityUsers
+create	community/models/activity_logs.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:ActivityLogs
+create	community/models/bans.moon	/^  @create: (opts) =>/;"	f	language:moon class:Bans
+create	community/models/bookmarks.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:Bookmarks
+create	community/models/categories.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:Categories
+create	community/models/category_members.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:CategoryMembers
+create	community/models/category_tags.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:CategoryTags
+create	community/models/community_users.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:CommunityUsers
+create	community/models/moderation_logs.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:ModerationLogs
+create	community/models/moderators.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:Moderators
+create	community/models/pending_posts.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:PendingPosts
+create	community/models/post_edits.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:PostEdits
+create	community/models/post_reports.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:PostReports
+create	community/models/posts.moon	/^  @create: (opts={}, \.\.\.) =>/;"	f	language:moon class:Posts
+create	community/models/subscriptions.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:Subscriptions
+create	community/models/topics.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:Topics
+create	community/models/votes.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:Votes
+create	community/models/warnings.moon	/^  @create: (opts, \.\.\.) =>/;"	f	language:moon class:Warnings
+create_backing_post	community/models/moderation_logs.moon	/^  create_backing_post: =>/;"	f	language:moon class:ModerationLogs
+current_ip_address	community/models/community_users.moon	/^  @current_ip_address: =>/;"	f	language:moon class:CommunityUsers
+db_json	community/helpers/models.moon	/^db_json = (v) ->/;"	f	language:moon
+db_nullable	community/helpers/shapes.moon	/^db_nullable = (t) ->/;"	f	language:moon
+decrement	community/models/topic_participants.moon	/^  @decrement: (topic_id, user_id) =>/;"	f	language:moon class:TopicParticipants
+decrement	community/models/votes.moon	/^  decrement: =>/;"	f	language:moon class:Votes
+decrement_participant	community/models/topics.moon	/^  decrement_participant: (user) =>/;"	f	language:moon class:Topics
+default	community/helpers/shapes.moon	/^default = (value) ->/;"	f	language:moon
+delete	community/models/post_reports.moon	/^  delete: (\.\.\.) =>/;"	f	language:moon class:PostReports
+delete	community/models/posts.moon	/^  delete: (force) =>/;"	f	language:moon class:Posts
+delete	community/models/topics.moon	/^  delete: (force) =>/;"	f	language:moon class:Topics
+delete	community/models/votes.moon	/^  delete: =>/;"	f	language:moon class:Votes
+delete_ban	community/flows/bans.moon	/^  delete_ban: require_current_user =>/;"	f	language:moon class:BansFlow
+delete_pending_post	community/flows/pending_posts.moon	/^  delete_pending_post: (pending_post) =>/;"	f	language:moon class:PendingPosts
+delete_post	community/flows/posts.moon	/^  delete_post: require_current_user =>/;"	f	language:moon class:PostsFlow
+delete_topic	community/flows/topics.moon	/^  delete_topic: require_current_user =>/;"	f	language:moon class:TopicsFlow
+edit_category	community/flows/categories.moon	/^  edit_category: require_current_user (fields_list) =>/;"	f	language:moon class:CategoriesFlow
+edit_category_group	community/flows/category_groups.moon	/^  edit_category_group: require_current_user =>/;"	f	language:moon class:CategoryGroupsFlow
+edit_pending_post	community/flows/categories.moon	/^  edit_pending_post: =>/;"	f	language:moon class:CategoriesFlow
+edit_post	community/flows/posts.moon	/^  edit_post: require_current_user (opts) =>/;"	f	language:moon class:PostsFlow
+empty_html	community/helpers/shapes.moon	/^empty_html = (types\.empty + types\.trimmed_text  * types\.custom((str) ->/;"	f	language:moon
+encode_value_list	community/helpers/models.moon	/^encode_value_list = (tuples) ->/;"	f	language:moon
+end_warning	community/models/warnings.moon	/^  end_warning: =>/;"	f	language:moon class:Warnings
+filled_body	community/models/posts.moon	/^  filled_body: (r) =>/;"	f	language:moon class:Posts
+filter_body	community/models/posts.moon	/^  @filter_body: (body, format=@body_formats\.html) =>/;"	f	language:moon class:Posts
+filter_update	community/helpers/models.moon	/^filter_update = (model, update) ->/;"	f	language:moon
+find_ban	community/models/categories.moon	/^  find_ban: (user) =>/;"	f	language:moon class:Categories
+find_ban	community/models/category_groups.moon	/^  find_ban: (user) =>/;"	f	language:moon class:CategoryGroups
+find_for_object	community/models/bans.moon	/^  @find_for_object: (object, user) =>/;"	f	language:moon class:Bans
+find_for_object_user	community/models/moderators.moon	/^  @find_for_object_user: (object, user) =>/;"	f	language:moon class:Moderators
+find_last_seen_for_user	community/models/categories.moon	/^  find_last_seen_for_user: (user) =>/;"	f	language:moon class:Categories
+find_latest_root_post	community/models/topics.moon	/^  find_latest_root_post: =>/;"	f	language:moon class:Topics
+find_member	community/models/categories.moon	/^  find_member: (user, filter) =>/;"	f	language:moon class:Categories
+find_moderator	community/models/categories.moon	/^  find_moderator: (user, filter) =>/;"	f	language:moon class:Categories
+find_moderator	community/models/category_groups.moon	/^  find_moderator: (user) =>/;"	f	language:moon class:CategoryGroups
+find_recent_log	community/models/topics.moon	/^  find_recent_log: (action) =>/;"	f	language:moon class:Topics
+find_subscription	community/flows/subscriptions.moon	/^  find_subscription: =>/;"	f	language:moon class:SubscriptionsFlow
+find_subscription	community/models/categories.moon	/^  find_subscription: (user) =>/;"	f	language:moon class:Categories
+find_subscription	community/models/subscriptions.moon	/^  @find_subscription: (object, user) =>/;"	f	language:moon class:Subscriptions
+find_subscription	community/models/topics.moon	/^  find_subscription: (user) =>/;"	f	language:moon class:Topics
+find_users_by_name	community/models/community_users.moon	/^  @find_users_by_name: (names) =>/;"	f	language:moon class:CommunityUsers
+for_user	community/models/community_users.moon	/^  @for_user: (user_id) =>/;"	f	language:moon class:CommunityUsers
+get	community/models/bookmarks.moon	/^  @get: (object, user) =>/;"	f	language:moon class:Bookmarks
+get_action_target	community/models/moderation_logs.moon	/^  get_action_target: =>/;"	f	language:moon class:ModerationLogs
+get_action_text	community/models/moderation_logs.moon	/^  get_action_text: =>/;"	f	language:moon class:ModerationLogs
+get_ancestors	community/models/categories.moon	/^  get_ancestors: =>/;"	f	language:moon class:Categories
+get_ancestors	community/models/posts.moon	/^  get_ancestors: =>/;"	f	language:moon class:Posts
+get_ban	community/models/topics.moon	/^  get_ban: (user) =>/;"	f	language:moon class:Topics
+get_block	community/models/posts.moon	/^  get_block: (user) =>/;"	f	language:moon class:Posts
+get_block_given	community/models/community_users.moon	/^  get_block_given: (user) =>/;"	f	language:moon class:CommunityUsers
+get_block_recieved	community/models/community_users.moon	/^  get_block_recieved: (user) =>/;"	f	language:moon class:CommunityUsers
+get_bookmark	community/models/topics.moon	/^  get_bookmark: (user) =>/;"	f	language:moon class:Topics
+get_categories_paginated	community/models/category_groups.moon	/^  get_categories_paginated: (opts={}) =>/;"	f	language:moon class:CategoryGroups
+get_category_group	community/models/categories.moon	/^  get_category_group: =>/;"	f	language:moon class:Categories
+get_category_ids	community/models/categories.moon	/^  get_category_ids: =>/;"	f	language:moon class:Categories
+get_children	community/models/categories.moon	/^  get_children: (opts) =>/;"	f	language:moon class:Categories
+get_flat_children	community/models/categories.moon	/^  get_flat_children: (\.\.\.) =>/;"	f	language:moon class:Categories
+get_lock_log	community/models/topics.moon	/^  get_lock_log: =>/;"	f	language:moon class:Topics
+get_mentioned_users	community/models/posts.moon	/^  get_mentioned_users: =>/;"	f	language:moon class:Posts
+get_moderatable_categories	community/flows/bans.moon	/^  get_moderatable_categories: =>/;"	f	language:moon class:BansFlow
+get_order_ranges	community/models/categories.moon	/^  get_order_ranges: (status="default") =>/;"	f	language:moon class:Categories
+get_parent_category	community/models/categories.moon	/^  get_parent_category: =>/;"	f	language:moon class:Categories
+get_pending_moderator	community/flows/moderators.moon	/^  get_pending_moderator: =>/;"	f	language:moon class:ModeratorsFlow
+get_popularity_score	community/models/community_users.moon	/^  get_popularity_score: =>/;"	f	language:moon class:CommunityUsers
+get_relation_model	community/model.moon	/^  @get_relation_model: (name) =>/;"	f	language:moon class:CommunityModel
+get_root_ancestor	community/models/posts.moon	/^  get_root_ancestor: =>/;"	f	language:moon class:Posts
+get_root_order_ranges	community/models/topics.moon	/^  get_root_order_ranges: (status="default") =>/;"	f	language:moon class:Topics
+get_score	community/models/topics.moon	/^  get_score: =>/;"	f	language:moon class:Topics
+get_sticky_log	community/models/topics.moon	/^  get_sticky_log: =>/;"	f	language:moon class:Topics
+get_tags	community/models/topics.moon	/^  get_tags: =>/;"	f	language:moon class:Topics
+get_target_category	community/models/moderation_logs.moon	/^  get_target_category: =>/;"	f	language:moon class:ModerationLogs
+get_vote	community/models/posts.moon	/^  get_vote: (user) =>/;"	f	language:moon class:Posts
+get_vote_score	community/models/community_users.moon	/^  get_vote_score: (object, positive) =>/;"	f	language:moon class:CommunityUsers
+hard_delete	community/models/posts.moon	/^  hard_delete: (deleted_topic) =>/;"	f	language:moon class:Posts
+hard_delete	community/models/topics.moon	/^  hard_delete: =>/;"	f	language:moon class:Topics
+has_replies	community/models/posts.moon	/^  has_replies: =>/;"	f	language:moon class:Posts
+has_started	community/models/warnings.moon	/^  has_started: =>/;"	f	language:moon class:Warnings
+has_unread	community/models/categories.moon	/^  has_unread: (user) =>/;"	f	language:moon class:Categories
+has_unread	community/models/topics.moon	/^  has_unread: (user) =>/;"	f	language:moon class:Topics
+hide	community/models/topics.moon	/^  hide: =>/;"	f	language:moon class:Topics
+hide_topic	community/flows/topics.moon	/^  hide_topic: =>/;"	f	language:moon class:TopicsFlow
+increment	community/helpers/counters.moon	/^  increment: (key, amount=1) =>/;"	f	language:moon class:AsyncCounter
+increment	community/models/community_users.moon	/^  @increment: (user_id, field, amount) =>/;"	f	language:moon class:CommunityUsers
+increment	community/models/community_users.moon	/^  increment: (field, amount=1) =>/;"	f	language:moon class:CommunityUsers
+increment	community/models/topic_participants.moon	/^  @increment: (topic_id, user_id) =>/;"	f	language:moon class:TopicParticipants
+increment	community/models/votes.moon	/^  increment: =>/;"	f	language:moon class:Votes
+increment_counter	community/models/topics.moon	/^  increment_counter: (field, amount) =>/;"	f	language:moon class:Topics
+increment_from_post	community/models/categories.moon	/^  increment_from_post: (post) =>/;"	f	language:moon class:Categories
+increment_from_post	community/models/community_users.moon	/^  increment_from_post: (post, created_topic=false) =>/;"	f	language:moon class:CommunityUsers
+increment_from_post	community/models/topics.moon	/^  increment_from_post: (post, opts) =>/;"	f	language:moon class:Topics
+increment_from_topic	community/models/categories.moon	/^  increment_from_topic: (topic) =>/;"	f	language:moon class:Categories
+increment_participant	community/models/topics.moon	/^  increment_participant: (user) =>/;"	f	language:moon class:Topics
+increment_topic_view_counter	community/flows/browsing.moon	/^  increment_topic_view_counter: (topic=@topic)=>/;"	f	language:moon class:BrowsingFlow
+index_post	community/models/posts_search.moon	/^  @index_post: (post) =>/;"	f	language:moon class:PostsSearch
+insert_on_conflict_ignore	community/helpers/models.moon	/^insert_on_conflict_ignore = (model, opts) ->/;"	f	language:moon
+insert_on_conflict_update	community/helpers/models.moon	/^insert_on_conflict_update = (model, primary, create, update, opts) ->/;"	f	language:moon
+is_active	community/models/warnings.moon	/^  is_active: =>/;"	f	language:moon class:Warnings
+is_archived	community/models/posts.moon	/^  is_archived: =>/;"	f	language:moon class:Posts
+is_archived	community/models/topics.moon	/^  is_archived: =>/;"	f	language:moon class:Topics
+is_default	community/models/posts.moon	/^  is_default: =>/;"	f	language:moon class:Posts
+is_default	community/models/topics.moon	/^  is_default: =>/;"	f	language:moon class:Topics
+is_empty_html	community/helpers/html.moon	/^is_empty_html = (str) ->/;"	f	language:moon
+is_hidden	community/models/topics.moon	/^  is_hidden: =>/;"	f	language:moon class:Topics
+is_ignored	community/models/post_reports.moon	/^  is_ignored: =>/;"	f	language:moon class:PostReports
+is_member	community/models/categories.moon	/^  is_member: (user) =>/;"	f	language:moon class:Categories
+is_moderation_event	community/models/posts.moon	/^  is_moderation_event: =>/;"	f	language:moon class:Posts
+is_pending	community/models/post_reports.moon	/^  is_pending: =>/;"	f	language:moon class:PostReports
+is_pinned	community/models/posts.moon	/^  is_pinned: =>/;"	f	language:moon class:Posts
+is_protected	community/models/posts.moon	/^  is_protected: =>/;"	f	language:moon class:Posts
+is_protected	community/models/topics.moon	/^  is_protected: =>/;"	f	language:moon class:Topics
+is_resolved	community/models/post_reports.moon	/^  is_resolved: =>/;"	f	language:moon class:PostReports
+is_subscribed	community/models/categories.moon	/^  is_subscribed: (user) =>/;"	f	language:moon class:Categories
+is_subscribed	community/models/subscriptions.moon	/^  @is_subscribed: (object, user, subscribed_by_default=false) =>/;"	f	language:moon class:Subscriptions
+is_subscribed	community/models/subscriptions.moon	/^  is_subscribed: =>/;"	f	language:moon class:Subscriptions
+is_subscribed	community/models/topics.moon	/^  is_subscribed: (user) =>/;"	f	language:moon class:Topics
+is_topic	community/models/pending_posts.moon	/^  is_topic: =>/;"	f	language:moon class:PendingPosts
+is_topic_post	community/models/posts.moon	/^  is_topic_post: =>/;"	f	language:moon class:Posts
+load_ban	community/flows/bans.moon	/^  load_ban: =>/;"	f	language:moon class:BansFlow
+load_blocked_user	community/flows/blocks.moon	/^  load_blocked_user: =>/;"	f	language:moon class:BlocksFlow
+load_category	community/flows/categories.moon	/^  load_category: =>/;"	f	language:moon class:CategoriesFlow
+load_category_group	community/flows/category_groups.moon	/^  load_category_group: =>/;"	f	language:moon class:CategoryGroupsFlow
+load_object	community/flows/bookmarks.moon	/^  load_object: =>/;"	f	language:moon class:BookmarksFlow
+load_object	community/flows/moderators.moon	/^  load_object: =>/;"	f	language:moon class:ModeratorsFlow
+load_object	community/flows/votes.moon	/^  load_object: =>/;"	f	language:moon class:VotesFlow
+load_post	community/flows/posts.moon	/^  load_post: =>/;"	f	language:moon class:PostsFlow
+load_post	community/flows/reports.moon	/^  load_post: =>/;"	f	language:moon class:ReportsFlow
+load_topic	community/flows/topics.moon	/^  load_topic: =>/;"	f	language:moon class:TopicsFlow
+load_topic_for_moderation	community/flows/topics.moon	/^  load_topic_for_moderation: =>/;"	f	language:moon class:TopicsFlow
+load_user	community/flows/moderators.moon	/^  load_user: (allow_self) =>/;"	f	language:moon class:ModeratorsFlow
+lock_topic	community/flows/topics.moon	/^  lock_topic: require_current_user =>/;"	f	language:moon class:TopicsFlow
+log_post	community/models/category_post_logs.moon	/^  @log_post: (post) =>/;"	f	language:moon class:CategoryPostLogs
+log_topic_posts	community/models/category_post_logs.moon	/^  @log_topic_posts: (topic) =>/;"	f	language:moon class:CategoryPostLogs
+make_loader	community/model.moon	/^  @make_loader: (name, fn) =>/;"	f	language:moon class:VirtualModel
+members_flow	community/flows/categories.moon	/^  members_flow: =>/;"	f	language:moon class:CategoriesFlow
+memoize1	community/helpers/models.moon	/^memoize1 = (fn) ->/;"	f	language:moon
+moderate_report	community/flows/reports.moon	/^  moderate_report: require_current_user =>/;"	f	language:moon class:ReportsFlow
+moderation_logs	community/flows/categories.moon	/^  moderation_logs: =>/;"	f	language:moon class:CategoriesFlow
+moderators_flow	community/flows/categories.moon	/^  moderators_flow: =>/;"	f	language:moon class:CategoriesFlow
+moderators_flow	community/flows/category_groups.moon	/^  moderators_flow: =>/;"	f	language:moon class:CategoryGroupsFlow
+movable_parent_category	community/models/topics.moon	/^  movable_parent_category: (user) =>/;"	f	language:moon class:Topics
+move_to_category	community/models/topics.moon	/^  move_to_category: (new_category) =>/;"	f	language:moon class:Topics
+move_topic	community/flows/topics.moon	/^  move_topic: =>/;"	f	language:moon class:TopicsFlow
+name	community/models/votes.moon	/^  name: =>/;"	f	language:moon class:Votes
+name_for_display	community/models/category_tags.moon	/^  name_for_display: =>/;"	f	language:moon class:CategoryTags
+needs_approval_to_post	community/models/community_users.moon	/^  needs_approval_to_post: (object) =>/;"	f	language:moon class:CommunityUsers
+new	community/flows/bans.moon	/^  new: (req, @object) =>/;"	f	language:moon class:BansFlow
+new	community/flows/blocks.moon	/^  new: (req) =>/;"	f	language:moon class:BlocksFlow
+new	community/flows/bookmarks.moon	/^  new: (req) =>/;"	f	language:moon class:BookmarksFlow
+new	community/flows/members.moon	/^  new: (req) =>/;"	f	language:moon class:MembersFlow
+new	community/flows/moderators.moon	/^  new: (req, @object) =>/;"	f	language:moon class:ModeratorsFlow
+new	community/flows/reports.moon	/^  new: (req) =>/;"	f	language:moon class:ReportsFlow
+new	community/flows/subscriptions.moon	/^  new: (req) =>/;"	f	language:moon class:SubscriptionsFlow
+new	community/helpers/counters.moon	/^  new: (@dict_name, @opts={}) =>/;"	f	language:moon class:AsyncCounter
+new_category	community/flows/categories.moon	/^  new_category: require_current_user (\.\.\.) =>/;"	f	language:moon class:CategoriesFlow
+new_category_group	community/flows/category_groups.moon	/^  new_category_group: require_current_user =>/;"	f	language:moon class:CategoryGroupsFlow
+new_post	community/flows/posts.moon	/^  new_post: require_current_user (opts={}) =>/;"	f	language:moon class:PostsFlow
+new_topic	community/flows/topics.moon	/^  new_topic: require_current_user (opts={}) =>/;"	f	language:moon class:TopicsFlow
+next_position	community/models/categories.moon	/^  @next_position: (parent_id) =>/;"	f	language:moon class:Categories
+next_topic_category_order	community/models/categories.moon	/^  next_topic_category_order: =>/;"	f	language:moon class:Categories
+notification_target_users	community/models/categories.moon	/^  notification_target_users: =>/;"	f	language:moon class:Categories
+notification_target_users	community/models/category_groups.moon	/^  notification_target_users: =>/;"	f	language:moon class:CategoryGroups
+notification_target_users	community/models/topics.moon	/^  notification_target_users: =>/;"	f	language:moon class:Topics
+notification_targets	community/models/posts.moon	/^  notification_targets: (extra_targets) =>/;"	f	language:moon class:Posts
+on_body_updated_callback	community/models/posts.moon	/^  on_body_updated_callback: (req_or_flow) =>/;"	f	language:moon class:Posts
+on_increment_callback	community/models/topics.moon	/^  on_increment_callback: (field, amount) =>/;"	f	language:moon class:Topics
+on_vote_callback	community/models/posts.moon	/^  on_vote_callback: (kind, vote) =>/;"	f	language:moon class:Posts
+order_by_date	community/models/categories.moon	/^  order_by_date: =>/;"	f	language:moon class:Categories
+order_by_score	community/models/categories.moon	/^  order_by_score: =>/;"	f	language:moon class:Categories
+parse_tags	community/models/categories.moon	/^  parse_tags: (str="") =>/;"	f	language:moon class:Categories
+pending_posts	community/flows/categories.moon	/^  pending_posts: =>/;"	f	language:moon class:CategoriesFlow
+pin_to	community/models/posts.moon	/^  pin_to: (position) =>/;"	f	language:moon class:Posts
+post_needs_approval	community/models/topics.moon	/^  post_needs_approval: (user, post_params) =>/;"	f	language:moon class:Topics
+post_single	community/flows/browsing.moon	/^  post_single: (post) =>/;"	f	language:moon class:BrowsingFlow
+posting_rate	community/models/community_users.moon	/^  posting_rate: (minutes) =>/;"	f	language:moon class:CommunityUsers
+prefix_table	community/model.moon	/^prefix_table = (table_name) ->/;"	f	language:moon
+preload_ancestors	community/models/categories.moon	/^  @preload_ancestors: (categories) =>/;"	f	language:moon class:Categories
+preload_bans	community/models/categories.moon	/^  @preload_bans: (categories, user) =>/;"	f	language:moon class:Categories
+preload_bans	community/models/topics.moon	/^  @preload_bans: (topics, user) =>/;"	f	language:moon class:Topics
+preload_categories	community/flows/browsing.moon	/^  preload_categories: (categories, last_seens=true) =>/;"	f	language:moon class:BrowsingFlow
+preload_mentioned_users	community/models/posts.moon	/^  @preload_mentioned_users: (posts) =>/;"	f	language:moon class:Posts
+preload_post_log	community/flows/categories.moon	/^  preload_post_log: (posts) =>/;"	f	language:moon class:CategoriesFlow
+preload_post_votes	community/models/votes.moon	/^  @preload_post_votes: (posts, user_id) =>/;"	f	language:moon class:Votes
+preload_posts	community/flows/browsing.moon	/^  preload_posts: (posts) =>/;"	f	language:moon class:BrowsingFlow
+preload_topics	community/flows/browsing.moon	/^  preload_topics: (topics, last_seens=true) =>/;"	f	language:moon class:BrowsingFlow
+preload_users	community/models/community_users.moon	/^  @preload_users: (users) =>/;"	f	language:moon class:CommunityUsers
+preloaded_category_user_chain	community/models/categories.moon	/^  preloaded_category_user_chain: (user, relation) =>/;"	f	language:moon class:Categories
+prepare_results	community/model.moon	/^  prepare_results: (items) =>/;"	f	language:moon class:NestedOrderedPaginator
+preview_category_topics	community/flows/browsing.moon	/^  preview_category_topics: (@category, limit=5) =>/;"	f	language:moon class:BrowsingFlow
+promote	community/models/pending_posts.moon	/^  promote: (req_or_flow=nil) =>/;"	f	language:moon class:PendingPosts
+promote_pending_post	community/flows/pending_posts.moon	/^  promote_pending_post: (pending_post) =>/;"	f	language:moon class:PendingPosts
+purge_posts	community/models/community_users.moon	/^  purge_posts: =>/;"	f	language:moon class:CommunityUsers
+purge_reports	community/models/community_users.moon	/^  purge_reports: =>/;"	f	language:moon class:CommunityUsers
+purge_votes	community/models/community_users.moon	/^  purge_votes: =>/;"	f	language:moon class:CommunityUsers
+recent_posts	community/flows/categories.moon	/^  recent_posts: (opts) =>/;"	f	language:moon class:CategoriesFlow
+recount	community/models/categories.moon	/^  @recount: (\.\.\.) =>/;"	f	language:moon class:Categories
+recount	community/models/community_users.moon	/^  @recount: (\.\.\.) =>/;"	f	language:moon class:CommunityUsers
+recount	community/models/community_users.moon	/^  recount: =>/;"	f	language:moon class:CommunityUsers
+recount	community/models/topics.moon	/^  @recount: (\.\.\.) =>/;"	f	language:moon class:Topics
+refresh	community/model.moon	/^  refresh: =>/;"	f	language:moon class:VirtualModel
+refresh_last_post	community/models/topics.moon	/^  refresh_last_post: =>/;"	f	language:moon class:Topics
+refresh_last_topic	community/models/categories.moon	/^  refresh_last_topic: =>/;"	f	language:moon class:Categories
+refresh_received_votes	community/models/community_users.moon	/^  refresh_received_votes: =>/;"	f	language:moon class:CommunityUsers
+refresh_search_index	community/models/posts.moon	/^  refresh_search_index: =>/;"	f	language:moon class:Posts
+refresh_topic_category_order	community/models/categories.moon	/^  refresh_topic_category_order: =>/;"	f	language:moon class:Categories
+refresh_topic_category_order_by_post_date	community/models/categories.moon	/^  refresh_topic_category_order_by_post_date: =>/;"	f	language:moon class:Categories
+refresh_topic_category_order_by_topic_score	community/models/categories.moon	/^  refresh_topic_category_order_by_topic_score: =>/;"	f	language:moon class:Categories
+remove	community/models/bookmarks.moon	/^  @remove: (object, user) =>/;"	f	language:moon class:Bookmarks
+remove_bookmark	community/flows/bookmarks.moon	/^  remove_bookmark: =>/;"	f	language:moon class:BookmarksFlow
+remove_category	community/models/category_groups.moon	/^  remove_category: (category) =>/;"	f	language:moon class:CategoryGroups
+remove_member	community/flows/members.moon	/^  remove_member: require_current_user =>/;"	f	language:moon class:MembersFlow
+remove_moderator	community/flows/moderators.moon	/^  remove_moderator: require_current_user =>/;"	f	language:moon class:ModeratorsFlow
+renumber_posts	community/models/topics.moon	/^  renumber_posts: (parent_post, field="post_number") =>/;"	f	language:moon class:Topics
+reports	community/flows/categories.moon	/^  reports: =>/;"	f	language:moon class:CategoriesFlow
+reposition_post	community/models/topics.moon	/^  reposition_post: (post, position) =>/;"	f	language:moon class:Topics
+require_current_user	community/helpers/app.moon	/^require_current_user = (fn) ->/;"	f	language:moon
+run_migrations	community/schema.moon	/^run_migrations = (version) ->/;"	f	language:moon
+save	community/models/bookmarks.moon	/^  @save: (object, user) =>/;"	f	language:moon class:Bookmarks
+save_bookmark	community/flows/bookmarks.moon	/^  save_bookmark: =>/;"	f	language:moon class:BookmarksFlow
+score_adjustment	community/models/votes.moon	/^  score_adjustment: =>/;"	f	language:moon class:Votes
+select	community/model.moon	/^  select: (q, opts) =>/;"	f	language:moon class:NestedOrderedPaginator
+set_categories	community/models/category_groups.moon	/^  set_categories: (categories) =>/;"	f	language:moon class:CategoryGroups
+set_children	community/flows/categories.moon	/^  set_children: require_current_user =>/;"	f	language:moon class:CategoriesFlow
+set_log_objects	community/models/moderation_logs.moon	/^  set_log_objects: (objects) =>/;"	f	language:moon class:ModerationLogs
+set_seen	community/models/categories.moon	/^  set_seen: (user) =>/;"	f	language:moon class:Categories
+set_seen	community/models/topics.moon	/^  set_seen: (user) =>/;"	f	language:moon class:Topics
+set_status	community/models/posts.moon	/^  set_status: (status) =>/;"	f	language:moon class:Posts
+set_status	community/models/topics.moon	/^  set_status: (status) =>/;"	f	language:moon class:Topics
+set_tags	community/flows/categories.moon	/^  set_tags: require_current_user =>/;"	f	language:moon class:CategoriesFlow
+should_index_for_search	community/models/posts.moon	/^  should_index_for_search: =>/;"	f	language:moon class:Posts
+should_log_posts	community/models/categories.moon	/^  should_log_posts: =>/;"	f	language:moon class:Categories
+should_soft_delete	community/models/posts.moon	/^  should_soft_delete: =>/;"	f	language:moon class:Posts
+should_update	community/models/user_category_last_seens.moon	/^  should_update: =>/;"	f	language:moon class:UserCategoryLastSeens
+show_blocks	community/flows/blocks.moon	/^  show_blocks: =>/;"	f	language:moon class:BlocksFlow
+show_categories	community/flows/category_groups.moon	/^  show_categories: =>/;"	f	language:moon class:CategoryGroupsFlow
+show_members	community/flows/members.moon	/^  show_members: =>/;"	f	language:moon class:MembersFlow
+show_moderators	community/flows/moderators.moon	/^  show_moderators: =>/;"	f	language:moon class:ModeratorsFlow
+show_reports	community/flows/reports.moon	/^  show_reports: require_current_user (category) =>/;"	f	language:moon class:ReportsFlow
+show_subscriptions	community/flows/subscriptions.moon	/^  show_subscriptions: =>/;"	f	language:moon class:SubscriptionsFlow
+show_topic_bookmarks	community/flows/bookmarks.moon	/^  show_topic_bookmarks: require_current_user =>/;"	f	language:moon class:BookmarksFlow
+singular_name	community/model.moon	/^  @singular_name: =>/;"	f	language:moon class:CommunityModel
+slugify	community/models/category_tags.moon	/^  @slugify: (str) =>/;"	f	language:moon class:CategoryTags
+soft_delete	community/helpers/models.moon	/^soft_delete = =>/;"	f	language:moon
+soft_delete	community/models/posts.moon	/^  soft_delete: =>/;"	f	language:moon class:Posts
+soft_delete	community/models/topics.moon	/^  soft_delete: =>/;"	f	language:moon class:Topics
+start_warning	community/models/warnings.moon	/^  start_warning: =>/;"	f	language:moon class:Warnings
+stick_topic	community/flows/topics.moon	/^  stick_topic: =>/;"	f	language:moon class:TopicsFlow
+sticky_category_topics	community/flows/browsing.moon	/^  sticky_category_topics: (opts={}) =>/;"	f	language:moon class:BrowsingFlow
+subscribe	community/models/categories.moon	/^  subscribe: (user, req) =>/;"	f	language:moon class:Categories
+subscribe	community/models/subscriptions.moon	/^  @subscribe: (object, user, subscribed_by_default=false) =>/;"	f	language:moon class:Subscriptions
+subscribe	community/models/topics.moon	/^  subscribe: (user, req) =>/;"	f	language:moon class:Topics
+subscribe_to_category	community/flows/subscriptions.moon	/^  subscribe_to_category: (category) =>/;"	f	language:moon class:SubscriptionsFlow
+subscribe_to_topic	community/flows/subscriptions.moon	/^  subscribe_to_topic: (topic) =>/;"	f	language:moon class:SubscriptionsFlow
+sync	community/helpers/counters.moon	/^  sync: =>/;"	f	language:moon class:AsyncCounter
+table_name	community/model.moon	/^  @table_name: =>/;"	f	language:moon class:CommunityModel
+table_name	community/model.moon	/^  @table_name: =>/;"	f	language:moon class:VirtualModel
+table_name	community/models/community_users.moon	/^  @table_name: =>/;"	f	language:moon class:CommunityUsers
+throttle_view_count	community/flows/browsing.moon	/^  throttle_view_count: (key) =>/;"	f	language:moon class:BrowsingFlow
+topic_needs_approval	community/models/categories.moon	/^  topic_needs_approval: (user, topic_params) =>/;"	f	language:moon class:Categories
+topic_pending_posts	community/flows/browsing.moon	/^  topic_pending_posts: =>/;"	f	language:moon class:BrowsingFlow
+topic_posts	community/flows/browsing.moon	/^  topic_posts: (opts={}) =>/;"	f	language:moon class:BrowsingFlow
+topic_score_bucket_size	community/models/categories.moon	/^  topic_score_bucket_size: =>/;"	f	language:moon class:Categories
+trigger_vote_callback	community/models/votes.moon	/^  trigger_vote_callback: (kind) =>/;"	f	language:moon class:Votes
+unarchive_topic	community/flows/topics.moon	/^  unarchive_topic: =>/;"	f	language:moon class:TopicsFlow
+unblock_user	community/flows/blocks.moon	/^  unblock_user: =>/;"	f	language:moon class:BlocksFlow
+unhide_topic	community/flows/topics.moon	/^  unhide_topic: =>/;"	f	language:moon class:TopicsFlow
+unlock_topic	community/flows/topics.moon	/^  unlock_topic: =>/;"	f	language:moon class:TopicsFlow
+unpin	community/models/posts.moon	/^  unpin: =>/;"	f	language:moon class:Posts
+unstick_topic	community/flows/topics.moon	/^  unstick_topic: =>/;"	f	language:moon class:TopicsFlow
+unsubscribe	community/models/categories.moon	/^  unsubscribe: (user) =>/;"	f	language:moon class:Categories
+unsubscribe	community/models/subscriptions.moon	/^  @unsubscribe: (object, user, subscribed_by_default=false) =>/;"	f	language:moon class:Subscriptions
+unsubscribe	community/models/topics.moon	/^  unsubscribe: (user) =>/;"	f	language:moon class:Topics
+unvote	community/models/votes.moon	/^  @unvote: (object, user) =>/;"	f	language:moon class:Votes
+update_category_order_sql	community/models/topics.moon	/^  @update_category_order_sql: (category_id) =>/;"	f	language:moon class:Topics
+update_category_order_type	community/models/categories.moon	/^  update_category_order_type: (category_order) =>/;"	f	language:moon class:Categories
+update_counted	community/models/votes.moon	/^  update_counted: (counted) =>/;"	f	language:moon class:Votes
+update_or_create_report	community/flows/reports.moon	/^  update_or_create_report: require_current_user =>/;"	f	language:moon class:ReportsFlow
+update_rank_adjustment	community/models/topics.moon	/^  update_rank_adjustment: (amount) =>/;"	f	language:moon class:Topics
+validate_params	community/flows/categories.moon	/^  validate_params: (fields_list) =>/;"	f	language:moon class:CategoriesFlow
+view_counter	community/flows/browsing.moon	/^  view_counter: =>/;"	f	language:moon class:BrowsingFlow
+vote	community/flows/votes.moon	/^  vote: require_current_user =>/;"	f	language:moon class:VotesFlow
+vote	community/models/votes.moon	/^  @vote: (object, user, positive=true, opts) =>/;"	f	language:moon class:Votes
+vote_score	community/models/posts.moon	/^  vote_score: =>/;"	f	language:moon class:Posts
+with_lock	community/helpers/counters.moon	/^  with_lock: (fn) =>/;"	f	language:moon class:AsyncCounter
+with_user	community/models/categories.moon	/^  with_user: VirtualModel\\make_loader "category_viewers", (user_id) =>/;"	f	language:moon class:Categories
+with_user	community/models/community_users.moon	/^  with_user: VirtualModel\\make_loader "user_users", (user_id) =>/;"	f	language:moon class:CommunityUsers
+with_user	community/models/topics.moon	/^  with_user: VirtualModel\\make_loader "topic_viewers", (user_id) =>/;"	f	language:moon class:Topics
+with_viewing_user	community/models/posts.moon	/^  with_viewing_user: VirtualModel\\make_loader "viewing_users", (user_id) =>/;"	f	language:moon class:Posts
+write_moderation_log	community/flows/bans.moon	/^  write_moderation_log: (action, reason, log_objects) =>/;"	f	language:moon class:BansFlow
+write_moderation_log	community/flows/topics.moon	/^  write_moderation_log: (action, reason, extra_params) =>/;"	f	language:moon class:TopicsFlow

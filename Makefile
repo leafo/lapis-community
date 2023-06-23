@@ -7,6 +7,9 @@ clean_test: build
 	LAPIS_SHOW_QUERIES=1 LAPIS_ENVIRONMENT=test lua5.1 -e 'require("schema").make_schema()'
 	make schema.sql
 
+tags::
+	moon-tags $$(git ls-files community/ | grep -v '/spec/' | grep '\.moon$$') > $@
+
 clean_dev:
 	-dropdb -U postgres community
 	createdb -U postgres community
