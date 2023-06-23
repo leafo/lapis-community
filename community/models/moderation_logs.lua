@@ -132,6 +132,10 @@ do
         [4] = {
           "category_group",
           "CategoryGroups"
+        },
+        [5] = {
+          "post",
+          "Posts"
         }
       }
     }
