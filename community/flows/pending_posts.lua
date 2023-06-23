@@ -21,20 +21,19 @@ do
       end
     end,
     promote_pending_post = function(self, pending_post)
-      do
-        local post = pending_post:promote()
-        if post then
-          ActivityLogs:create({
-            user_id = self.current_user.id,
-            object = pending_post,
-            action = "promote",
-            data = {
-              post_id = post.id
-            }
-          })
-          return post
-        end
+      local post, err = pending_post:promote()
+      if not (post) then
+        return nil, err
       end
+      ActivityLogs:create({
+        user_id = self.current_user.id,
+        object = pending_post,
+        action = "promote",
+        data = {
+          post_id = post.id
+        }
+      })
+      return post
     end
   }
   _base_0.__index = _base_0

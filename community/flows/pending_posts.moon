@@ -1,4 +1,3 @@
-
 db = require "lapis.db"
 
 import Flow from require "lapis.flow"
@@ -17,16 +16,18 @@ class PendingPosts extends Flow
 
   -- this is for when a moderator promotes the post
   promote_pending_post: (pending_post) =>
-    if post = pending_post\promote!
+    post, err = pending_post\promote!
+    unless post
+      return nil, err
 
-
-      ActivityLogs\create {
-        user_id: @current_user.id
-        object: pending_post
-        action: "promote"
-        data: {
-          post_id: post.id
-        }
+    ActivityLogs\create {
+      user_id: @current_user.id
+      object: pending_post
+      action: "promote"
+      data: {
+        post_id: post.id
       }
-      post
+    }
+
+    post
 
