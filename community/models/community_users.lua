@@ -265,6 +265,12 @@ do
       where = db.clause({
         "expires_at IS NULL or now() at time zone 'utc' < expires_at"
       })
+    },
+    {
+      "pending_posts",
+      has_many = "PendingPosts",
+      key = "user_id",
+      order = "id asc"
     }
   }
   self.create = function(self, opts)

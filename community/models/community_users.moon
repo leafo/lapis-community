@@ -69,6 +69,11 @@ class CommunityUsers extends Model
         "expires_at IS NULL or now() at time zone 'utc' < expires_at"
       }
     }
+
+    {"pending_posts", has_many: "PendingPosts"
+      key: "user_id"
+      order: "id asc"
+    }
   }
 
   @create: (opts={}) =>
