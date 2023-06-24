@@ -10,6 +10,10 @@ describe "models.pending_posts", ->
   it "creates a pending post", ->
     factory.PendingPosts!
 
+  it "hard deletes pending post", ->
+    pp = factory.PendingPosts!
+    pp\delete!
+
   it "promotes pending post", ->
     pending = factory.PendingPosts!
     post = pending\promote!

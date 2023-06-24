@@ -10,6 +10,17 @@ do
   local _class_0
   local _parent_0 = Model
   local _base_0 = {
+    delete = function(self)
+      local ActivityLogs
+      ActivityLogs = require("community.models").ActivityLogs
+      if _class_0.__parent.__base.delete(self) then
+        db.delete(ActivityLogs:table_name(), {
+          object_type = assert(ActivityLogs.object_types.pending_post),
+          object_id = self.id
+        })
+        return true
+      end
+    end,
     allowed_to_moderate = function(self, user)
       do
         local parent = self:get_topic() or self:get_category()

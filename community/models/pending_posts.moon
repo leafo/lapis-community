@@ -71,6 +71,15 @@ class PendingPosts extends Model
 
     super opts
 
+  delete: =>
+    import ActivityLogs from require "community.models"
+    if super!
+      db.delete ActivityLogs\table_name!, {
+        object_type: assert ActivityLogs.object_types.pending_post
+        object_id: @id
+      }
+      true
+
   allowed_to_moderate: (user) =>
     if parent = @get_topic! or @get_category!
       if parent\allowed_to_moderate user
