@@ -567,34 +567,28 @@ do
       end
       local to_delete = { }
       local archived = { }
-      do
-        local _accum_0 = { }
-        local _len_0 = 1
-        for _index_0 = 1, #orphans do
-          local _continue_0 = false
-          repeat
-            local o = orphans[_index_0]
-            if o.topics_count > 0 then
-              table.insert(archived, o)
-              _accum_0[_len_0] = o:update(filter_update(o, {
-                archived = true,
-                hidden = true,
-                parent_category_id = self.category.id,
-                position = Categories:next_position(self.category.id)
-              }))
-            else
-              table.insert(to_delete, o)
-              _continue_0 = true
-              break
-            end
-            _len_0 = _len_0 + 1
+      for _index_0 = 1, #orphans do
+        local _continue_0 = false
+        repeat
+          local o = orphans[_index_0]
+          if o.topics_count > 0 then
+            table.insert(archived, o)
+            o:update(filter_update(o, {
+              archived = true,
+              hidden = true,
+              parent_category_id = self.category.id,
+              position = Categories:next_position(self.category.id)
+            }))
+          else
+            table.insert(to_delete, o)
             _continue_0 = true
-          until true
-          if not _continue_0 then
             break
           end
+          _continue_0 = true
+        until true
+        if not _continue_0 then
+          break
         end
-        archived = _accum_0
       end
       for _index_0 = 1, #to_delete do
         local cat = to_delete[_index_0]

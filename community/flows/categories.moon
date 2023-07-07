@@ -435,7 +435,7 @@ class CategoriesFlow extends Flow
     -- Note: we do this in two phases to move deeply nested categories to the
     -- top before deleting empty ones, as deleting a cascades to all current children
 
-    archived = for o in *orphans
+    for o in *orphans
       if o.topics_count > 0
         table.insert archived, o
         o\update filter_update o, {
