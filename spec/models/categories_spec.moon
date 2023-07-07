@@ -1,24 +1,7 @@
 db = require "lapis.db"
 factory = require "spec.factory"
 
-import types from require "tableshape"
-
-assert_no_queries = (fn) ->
-  snapshot = assert\snapshot!
-
-  logger = require "lapis.logging"
-
-  query_log = {}
-  original = logger.query
-  stub(logger, "query").invokes (query, ...) ->
-    table.insert query_log, query
-    original query, ...
-
-  fn!
-
-  snapshot\revert!
-
-  assert.same {}, query_log, "expected no queries"
+import assert_no_queries from require "spec.helpers"
 
 describe "models.categories", ->
   import Users from require "spec.models"
