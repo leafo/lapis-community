@@ -499,6 +499,7 @@ describe "models.topics", ->
       user = factory.Users!
       topic = factory.Topics category_id: category.id, user_id: user.id
       post = factory.Posts topic_id: topic.id, user_id: user.id
+      ban = factory.Bans object: topic
 
       topic\increment_from_post post
       category\increment_from_topic topic
@@ -525,6 +526,8 @@ describe "models.topics", ->
       assert.same 0, PendingPosts\count!, "pending posts count after delete"
       assert.same 0, TopicParticipants\count!, "topic participants count after delete"
       assert.same 0, UserTopicLastSeens\count!, "user topic last seens after delete"
+
+      assert.same 0, Bans\count!, "bans after delete"
 
       cu\refresh!
       assert.same 0, cu.posts_count, "user posts_count after hard"

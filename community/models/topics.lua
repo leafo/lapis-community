@@ -171,8 +171,8 @@ do
       end
     end,
     hard_delete = function(self)
-      local res = db.query("delete from " .. tostring(db.escape_identifier(self.__class:table_name())) .. " where " .. tostring(db.encode_clause(self:_primary_cond())) .. " returning *")
-      if not (res and res.affected_rows and res.affected_rows > 0) then
+      local deleted, res = Model.delete(self, db.raw("*"))
+      if not (deleted) then
         return false
       end
       local deleted_topic = unpack(res)
@@ -182,10 +182,10 @@ do
         local post = _list_0[_index_0]
         post:hard_delete(deleted_topic)
       end
-      local PendingPosts, TopicParticipants, UserTopicLastSeens, CategoryPostLogs, CommunityUsers
+      local PendingPosts, TopicParticipants, UserTopicLastSeens, CategoryPostLogs, CommunityUsers, Bans, Subscriptions, Bookmarks
       do
         local _obj_0 = require("community.models")
-        PendingPosts, TopicParticipants, UserTopicLastSeens, CategoryPostLogs, CommunityUsers = _obj_0.PendingPosts, _obj_0.TopicParticipants, _obj_0.UserTopicLastSeens, _obj_0.CategoryPostLogs, _obj_0.CommunityUsers
+        PendingPosts, TopicParticipants, UserTopicLastSeens, CategoryPostLogs, CommunityUsers, Bans, Subscriptions, Bookmarks = _obj_0.PendingPosts, _obj_0.TopicParticipants, _obj_0.UserTopicLastSeens, _obj_0.CategoryPostLogs, _obj_0.CommunityUsers, _obj_0.Bans, _obj_0.Subscriptions, _obj_0.Bookmarks
       end
       CategoryPostLogs:clear_posts_for_topic(self)
       if not was_soft_deleted and self.user_id then
@@ -219,6 +219,18 @@ do
         db.delete(model:table_name(), {
           topic_id = assert(self.id)
         })
+      end
+      local _list_2 = {
+        Bans,
+        Subscriptions,
+        Bookmarks
+      }
+      for _index_0 = 1, #_list_2 do
+        local model = _list_2[_index_0]
+        db.delete(model:table_name(), db.clause({
+          object_type = assert(model:object_type_for_object(self)),
+          object_id = assert(self.id)
+        }))
       end
       return true
     end,

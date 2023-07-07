@@ -281,10 +281,8 @@ class Topics extends Model
       @soft_delete!
 
   hard_delete: =>
-    res = db.query "delete from #{db.escape_identifier @@table_name!} where #{db.encode_clause @_primary_cond!} returning *"
-
-    unless res and res.affected_rows and res.affected_rows > 0
-      return false
+    deleted, res = Model.delete @, db.raw "*"
+    return false unless deleted
 
     deleted_topic = unpack res
 
@@ -299,6 +297,9 @@ class Topics extends Model
       UserTopicLastSeens
       CategoryPostLogs
       CommunityUsers
+      Bans
+      Subscriptions
+      Bookmarks
       from require "community.models"
 
     CategoryPostLogs\clear_posts_for_topic @
@@ -318,12 +319,27 @@ class Topics extends Model
       if category.last_topic_id == @id
         category\refresh_last_topic!
 
+
+    -- WARNING: these delete the rows directly, any logic in overridden delete
+    -- method will not be called
+
     for model in *{
       PendingPosts
       TopicParticipants
       UserTopicLastSeens
     }
       db.delete model\table_name!, topic_id: assert @id
+
+    -- related models with polymorphic association
+    for model in *{
+      Bans
+      Subscriptions
+      Bookmarks
+    }
+      db.delete model\table_name!, db.clause {
+        object_type: assert model\object_type_for_object @
+        object_id: assert @id
+      }
 
     true
 
