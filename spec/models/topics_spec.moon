@@ -4,7 +4,11 @@ factory = require "spec.factory"
 
 import Model from require "lapis.db.model"
 
+import assert_has_queries, sorted_pairs from require "spec.helpers"
+
 describe "models.topics", ->
+  sorted_pairs!
+
   import Users from require "spec.models"
 
   import Categories, Moderators, CategoryMembers, Topics,
@@ -536,6 +540,20 @@ describe "models.topics", ->
       category\refresh!
       assert.same 0, category.topics_count, "category topics count after hard"
       assert.same 0, category.deleted_topics_count, "category deleted_topics_count after hard"
+
+    it "hard deletes empty topic, verifying queries", ->
+      topic = factory.Topics!
+      i = db.interpolate_query
+      assert_has_queries {
+        i [[DELETE FROM "community_topics" WHERE "id" = ? RETURNING *]], topic.id
+        i [[DELETE FROM "community_pending_posts" WHERE "topic_id" = ?]], topic.id
+        i [[DELETE FROM "community_topic_participants" WHERE "topic_id" = ?]], topic.id
+        i [[DELETE FROM "community_user_topic_last_seens" WHERE "topic_id" = ?]], topic.id
+        i [[DELETE FROM "community_bans" WHERE "object_id" = ? AND "object_type" = 2]], topic.id
+        i [[DELETE FROM "community_subscriptions" WHERE "object_id" = ? AND "object_type" = 1]], topic.id
+        i [[DELETE FROM "community_bookmarks" WHERE "object_id" = ? AND "object_type" = 2]], topic.id
+      }, ->
+        topic\hard_delete!
 
     it "soft deletes, then hard deletes a topic", ->
       category = factory.Categories!
