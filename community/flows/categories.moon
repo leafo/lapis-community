@@ -428,18 +428,28 @@ class CategoriesFlow extends Flow
       continue if existing_assigned[c.id]
       c
 
+    to_delete = {}
+    archived = {}
+
+    -- archive the orphans that have topics, delete the empty ones
+    -- Note: we do this in two phases to move deeply nested categories to the
+    -- top before deleting empty ones, as deleting a cascades to all current children
+
     archived = for o in *orphans
       if o.topics_count > 0
+        table.insert archived, o
         o\update filter_update o, {
           archived: true
           hidden: true
           parent_category_id: @category.id
           position: Categories\next_position @category.id
         }
-        o
       else
-        o\delete!
+        table.insert to_delete, o
         continue
+
+    for cat in *to_delete
+      cat\delete "hard"
 
     true, archived
 

@@ -790,6 +790,56 @@ do
         end
       end
       return false
+    end,
+    delete = function(self, force)
+      assert(force == "hard", "pass `hard` to delete category")
+      if not (_class_0.__parent.__base.delete(self)) then
+        return 
+      end
+      local OrderedPaginator
+      OrderedPaginator = require("lapis.db.pagination").OrderedPaginator
+      local Topics, Subscriptions, Bans, Moderators, ActivityLogs, CategoryTags, CategoryPostLogs, CategoryGroupCategories
+      do
+        local _obj_0 = require("community.models")
+        Topics, Subscriptions, Bans, Moderators, ActivityLogs, CategoryTags, CategoryPostLogs, CategoryGroupCategories = _obj_0.Topics, _obj_0.Subscriptions, _obj_0.Bans, _obj_0.Moderators, _obj_0.ActivityLogs, _obj_0.CategoryTags, _obj_0.CategoryPostLogs, _obj_0.CategoryGroupCategories
+      end
+      local _list_0 = {
+        CategoryTags,
+        CategoryPostLogs,
+        CategoryGroupCategories
+      }
+      for _index_0 = 1, #_list_0 do
+        local model = _list_0[_index_0]
+        db.delete(model:table_name(), "category_id = ?", self.id)
+      end
+      local _list_1 = {
+        Moderators,
+        Subscriptions,
+        Bans,
+        ActivityLogs
+      }
+      for _index_0 = 1, #_list_1 do
+        local model = _list_1[_index_0]
+        db.delete(model:table_name(), db.clause({
+          object_type = assert(model:object_type_for_object(self)),
+          object_id = assert(self.id)
+        }))
+      end
+      local topics_pager = OrderedPaginator(Topics, {
+        "id"
+      }, db.clause({
+        category_id = self.id
+      }), {
+        per_page = 100
+      })
+      for topic in topics_pager:each_item() do
+        topic:delete("hard")
+      end
+      local _list_2 = Categories:select("where parent_category_id = ?", self.id)
+      for _index_0 = 1, #_list_2 do
+        local child = _list_2[_index_0]
+        child:delete("hard")
+      end
     end
   }
   _base_0.__index = _base_0

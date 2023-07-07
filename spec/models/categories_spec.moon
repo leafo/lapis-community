@@ -1,12 +1,14 @@
 db = require "lapis.db"
 factory = require "spec.factory"
 
-import assert_no_queries from require "spec.helpers"
+import assert_no_queries, assert_has_queries, sorted_pairs from require "spec.helpers"
 
 describe "models.categories", ->
+  sorted_pairs!
+
   import Users from require "spec.models"
   import Categories, Moderators, CategoryMembers, Bans,
-    CategoryGroups, CategoryGroupCategories, UserCategoryLastSeens, Topics
+    CategoryGroups, CategoryGroupCategories, UserCategoryLastSeens, Topics, Posts
     from require "spec.community_models"
 
   it "should create a category", ->
@@ -35,6 +37,61 @@ describe "models.categories", ->
       assert.same {
         "hello"
       }, [t.slug for t in *category\parse_tags "hello,zone,hello,butt"]
+
+  describe "delete", ->
+    i = db.interpolate_query
+
+    it "does nothing without `hard`", ->
+      category = factory.Categories!
+      assert.has_error(
+        -> category\delete!
+        "pass `hard` to delete category"
+      )
+
+    it "deletes an empty category", ->
+      category = factory.Categories!
+      assert_has_queries {
+        i [[DELETE FROM "community_categories" WHERE "id" = ?]], category.id
+        i [[DELETE FROM "community_category_tags" WHERE category_id = ?]], category.id
+        i [[DELETE FROM "community_category_post_logs" WHERE category_id = ?]], category.id
+        i [[DELETE FROM "community_category_group_categories" WHERE category_id = ?]], category.id
+        i [[DELETE FROM "community_moderators" WHERE "object_id" = ? AND "object_type" = 1]], category.id
+        i [[DELETE FROM "community_subscriptions" WHERE "object_id" = ? AND "object_type" = 2]], category.id
+        i [[DELETE FROM "community_bans" WHERE "object_id" = ? AND "object_type" = 1]], category.id
+        i [[DELETE FROM "community_activity_logs" WHERE "object_id" = ? AND "object_type" = 3]], category.id
+      }, ->
+        category\delete "hard"
+
+    it "deletes category with topics", ->
+      category = factory.Categories!
+      topic = factory.Topics category_id: category.id
+
+      other_topic = factory.Topics!
+
+      assert_has_queries {
+        i [[DELETE FROM "community_categories" WHERE "id" = ?]], category.id
+        i [[DELETE FROM "community_topics" WHERE "id" = ? RETURNING *]], topic.id
+      }, ->
+        category\delete "hard"
+
+      assert.same 1, Topics\count!
+      assert.same 1, Categories\count!
+
+    it "deletes category with children", ->
+      category = factory.Categories!
+      child = factory.Categories parent_category_id: category.id
+      topic = factory.Topics category_id: child.id
+
+      assert_has_queries {
+        i [[DELETE FROM "community_categories" WHERE "id" = ?]], category.id
+        i [[DELETE FROM "community_categories" WHERE "id" = ?]], child.id
+        i [[DELETE FROM "community_topics" WHERE "id" = ? RETURNING *]], topic.id
+      }, ->
+        category\delete "hard"
+
+      assert.same 0, Topics\count!
+      assert.same 0, Posts\count!
+      assert.same 0, Categories\count!
 
   describe "with category", ->
     local category, category_user

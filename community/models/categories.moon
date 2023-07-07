@@ -766,3 +766,45 @@ class Categories extends Model
 
     false
 
+
+  -- this cascades to all children
+  delete: (force) =>
+    assert force == "hard", "pass `hard` to delete category"
+
+    return unless super!
+
+    import OrderedPaginator from require "lapis.db.pagination"
+    import Topics, Subscriptions, Bans, Moderators, ActivityLogs, CategoryTags,
+      CategoryPostLogs, CategoryGroupCategories from require "community.models"
+
+    -- TODO: UserCategoryLastSeens -- does not have index on category_id
+
+    for model in *{
+      CategoryTags
+      CategoryPostLogs
+      CategoryGroupCategories
+    }
+      db.delete model\table_name!, "category_id = ?", @id
+
+    -- polymorphic references
+    for model in *{
+      Moderators
+      Subscriptions
+      Bans
+      ActivityLogs
+    }
+      db.delete model\table_name!, db.clause {
+        object_type: assert model\object_type_for_object @
+        object_id: assert @id
+      }
+
+    topics_pager = OrderedPaginator Topics, {"id"}, db.clause({
+      category_id: @id
+    }), per_page: 100
+
+    for topic in topics_pager\each_item!
+      topic\delete "hard"
+
+    for child in *Categories\select "where parent_category_id = ?", @id
+      child\delete "hard"
+
