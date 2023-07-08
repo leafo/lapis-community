@@ -553,7 +553,7 @@ describe "categories", ->
         category_id: factory.Categories!.id
         accepted: true
       }
-      
+
       assert.has_error(
         ->
           in_request {
@@ -1034,4 +1034,34 @@ describe "categories", ->
 
       assert.false child.hidden
       assert.true child.archived
+
+
+    it "handles non-empty child in empty category", ->
+      parent = factory.Categories parent_category_id: category.id, title: "parent"
+      child = factory.Categories parent_category_id: parent.id, title: "child"
+      topic = factory.Topics category_id: child.id
+      child\increment_from_topic topic
+
+      _, archived = assert set_children {
+        category_id: category.id
+        "categories[1][title]": "new category"
+      }
+
+      assert types.shape({
+        types.partial { id: child.id }
+      }) archived
+
+      -- parent is deleted since it's empty
+      assert.falsy Categories\find id: parent.id
+
+      -- the child is preserved since it's non-empty, it becomes archived and hidden
+      child\refresh!
+      assert.true child.archived
+      assert.true child.hidden
+      assert.same 2, child.position
+
+      assert_children {
+        { title: "new category", archived: false, hidden: false }
+        { title: "child", archived: true, hidden: true }
+      }, category, {"archived", "hidden"}
 
