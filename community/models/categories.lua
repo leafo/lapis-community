@@ -1036,6 +1036,14 @@ do
       }
     },
     {
+      "bans",
+      has_many = "Bans",
+      key = "object_id",
+      where = {
+        object_type = 1
+      }
+    },
+    {
       "topics",
       has_many = "Topics",
       order = "category_order desc"
