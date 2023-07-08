@@ -130,6 +130,8 @@ decrement	community/models/topic_participants.moon	/^  @decrement: (topic_id, us
 decrement	community/models/votes.moon	/^  decrement: =>/;"	f	language:moon class:Votes
 decrement_participant	community/models/topics.moon	/^  decrement_participant: (user) =>/;"	f	language:moon class:Topics
 default	community/helpers/shapes.moon	/^default = (value) ->/;"	f	language:moon
+delete	community/models/categories.moon	/^  delete: (force) =>/;"	f	language:moon class:Categories
+delete	community/models/pending_posts.moon	/^  delete: =>/;"	f	language:moon class:PendingPosts
 delete	community/models/post_reports.moon	/^  delete: (\.\.\.) =>/;"	f	language:moon class:PostReports
 delete	community/models/posts.moon	/^  delete: (force) =>/;"	f	language:moon class:Posts
 delete	community/models/topics.moon	/^  delete: (force) =>/;"	f	language:moon class:Topics
