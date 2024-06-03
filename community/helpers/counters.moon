@@ -84,12 +84,15 @@ class AsyncCounter
           run_after_dispatch! -- manually release resources since we are in new context
 
   sync: =>
+    counters_synced = 0
+
     bulk_updates = {}
     @with_lock ->
       @dict\delete @flush_key
       for key in *@dict\get_keys!
         t, id = key\match "(%w+):(%d+)"
         if t
+          counters_synced += 1
           bulk_updates[t] or= {}
           incr = @dict\get key
           table.insert bulk_updates[t], {tonumber(id), incr}
@@ -98,5 +101,7 @@ class AsyncCounter
     for t, updates in pairs bulk_updates
       if sync = @sync_types[t]
         sync updates
+
+    counters_synced
 
 { :AsyncCounter, :bulk_increment }

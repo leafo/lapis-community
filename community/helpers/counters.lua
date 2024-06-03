@@ -83,6 +83,7 @@ do
       end)
     end,
     sync = function(self)
+      local counters_synced = 0
       local bulk_updates = { }
       self:with_lock(function()
         self.dict:delete(self.flush_key)
@@ -91,6 +92,7 @@ do
           local key = _list_0[_index_0]
           local t, id = key:match("(%w+):(%d+)")
           if t then
+            counters_synced = counters_synced + 1
             local _update_0 = t
             bulk_updates[_update_0] = bulk_updates[_update_0] or { }
             local incr = self.dict:get(key)
@@ -110,6 +112,7 @@ do
           end
         end
       end
+      return counters_synced
     end
   }
   _base_0.__index = _base_0
