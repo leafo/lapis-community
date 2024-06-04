@@ -706,6 +706,13 @@ describe "models.categories", ->
         [user2.id]: true
       }, users
 
+      -- paginated
+      print "Hello"
+      pager = two\notification_targets_paginated!
+      for user in pager\each_item!
+        print user.id
+
+
   describe "refresh_topic_category_order", ->
     local category
 

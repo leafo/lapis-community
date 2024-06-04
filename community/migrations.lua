@@ -1455,7 +1455,8 @@ return {
       },
       "PRIMARY KEY (id)"
     })
-    create_index(T("poll_votes"), "poll_choice_id")
-    return create_index(T("poll_votes"), "user_id")
+    return create_index(T("poll_votes"), "poll_choice_id", "user_id", {
+      unique = true
+    })
   end
 }

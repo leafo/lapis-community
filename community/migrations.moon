@@ -756,8 +756,6 @@ import create_table, create_index, drop_table, add_column, drop_column, drop_ind
       "PRIMARY KEY (id)"
     }
 
-    create_index T"poll_votes", "poll_choice_id"
-    create_index T"poll_votes", "user_id"
- 
+    create_index T"poll_votes", "poll_choice_id", "user_id", unique: true
 
 }

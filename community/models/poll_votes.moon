@@ -34,6 +34,9 @@ class PollVotes extends Model
       returning: "*"
     }
 
+    unless res
+      return nil, "vote already exists"
+
     if res.counted
       -- increment the vote count on the poll choice
       import PollChoices from require "community.models"
