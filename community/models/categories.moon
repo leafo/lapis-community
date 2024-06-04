@@ -367,6 +367,9 @@ class Categories extends Model
 
     false
 
+  allowed_to_create_poll: (user) =>
+    true
+
   -- return category_user virtual models for the category hierarchy
   preloaded_category_user_chain: (user, relation) =>
     category_chain = { @, unpack @get_ancestors! }

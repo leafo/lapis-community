@@ -68,6 +68,35 @@ class TopicPollsFlow extends Flow
         else
           nil, "invalid vote"
 
+
+  -- creates new poll for topic from previously validated params. Will set
+  -- choices on the poll from params.choices
+  set_poll: (topic, params) =>
+    import TopicPolls from require "community.models"
+
+    poll_params = {
+      poll_question: params.poll_question
+      description: params.description
+      anonymous: params.anonymous
+      hide_results: params.hide_results
+      vote_type: params.vote_type
+
+      -- TODO: allow this to be specified, look into how we set date with timezone
+      end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )"
+    }
+
+    poll = if existing_poll = topic\get_poll!
+      import filter_update from require "community.helpers.models"
+      existing_poll\update filter_update existing_poll, poll_params
+      existing_poll
+    else
+      poll_params.topic_id = topic.id
+      TopicPolls\create poll_params
+
+    if poll
+      @set_choices poll, params.choices
+      poll
+
   -- this merges the parsed choice params with the existing choices in the database
   -- choices with ids should be updated, and new choices should be created
   -- and choices with ids that are not in the params should be deleted

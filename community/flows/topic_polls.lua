@@ -70,6 +70,34 @@ do
         end
       end
     end)),
+    set_poll = function(self, topic, params)
+      TopicPolls = require("community.models").TopicPolls
+      local poll_params = {
+        poll_question = params.poll_question,
+        description = params.description,
+        anonymous = params.anonymous,
+        hide_results = params.hide_results,
+        vote_type = params.vote_type,
+        end_date = db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )")
+      }
+      local poll
+      do
+        local existing_poll = topic:get_poll()
+        if existing_poll then
+          local filter_update
+          filter_update = require("community.helpers.models").filter_update
+          existing_poll:update(filter_update(existing_poll, poll_params))
+          poll = existing_poll
+        else
+          poll_params.topic_id = topic.id
+          poll = TopicPolls:create(poll_params)
+        end
+      end
+      if poll then
+        self:set_choices(poll, params.choices)
+        return poll
+      end
+    end,
     set_choices = function(self, poll, choices)
       assert(poll, "missing poll id")
       local PollChoices

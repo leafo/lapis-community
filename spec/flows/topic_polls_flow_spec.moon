@@ -328,6 +328,113 @@ describe "TopicPollsFlow", ->
       assert.same #inserts, 1
       assert.truthy inserts[1]\match "^INSERT INTO \"community_poll_choices\" %(\"choice_text\", \"created_at\", \"poll_id\", \"position\", \"updated_at\"%) VALUES %('New Option C', '.-', #{poll.id}, 3, '.-'%) RETURNING \"id\""
 
-      
+  describe "set_poll", ->
+    local topic
+    before_each ->
+      topic = factory.Topics!
+
+    it "creates a poll for topic without poll", ->
+      poll_params = {
+        poll_question: "What is your favorite color?"
+        description: "Choose one of the options below."
+        anonymous: true
+        hide_results: false
+        vote_type: TopicPolls.vote_types.single
+        choices: {
+          { choice_text: "Red", position: 1 }
+          { choice_text: "Blue", position: 2 }
+        }
+      }
+
+      poll = in_request {}, =>
+        @flow("topic_polls")\set_poll topic, poll_params
+
+      assert.truthy poll
+      assert.equal poll.poll_question, poll_params.poll_question
+      assert.equal poll.description, poll_params.description
+      assert.equal poll.anonymous, poll_params.anonymous
+      assert.equal poll.hide_results, poll_params.hide_results
+      assert.equal poll.vote_type, poll_params.vote_type
+
+      poll_choices = PollChoices\select "where ? order by position asc", db.clause {
+        poll_id: poll.id
+      }
+
+      test_choices = types.assert types.shape {
+        types.partial {
+          poll_id: poll.id,
+          choice_text: "Red",
+          position: 1
+        }
+        types.partial {
+          poll_id: poll.id,
+          choice_text: "Blue",
+          position: 2
+        }
+      }
+
+      test_choices poll_choices
 
 
+    it "updates poll for topic with existing poll", ->
+      topic = factory.Topics!
+
+      poll = TopicPolls\create {
+        topic_id: topic.id
+        poll_question: "Initial question"
+        description: "Initial description"
+        anonymous: false
+        hide_results: true
+        vote_type: TopicPolls.vote_types.single
+        end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )")
+      }
+
+      existing_choice = PollChoices\create {
+        poll_id: poll.id
+        choice_text: "Initial Option A"
+        position: 1
+      }
+
+
+      poll_params = {
+        poll_question: "Updated question"
+        description: "Updated description"
+        anonymous: true
+        hide_results: false
+        vote_type: TopicPolls.vote_types.multiple
+        choices: {
+          { id: existing_choice.id, choice_text: "Updated Option A", position: 1 }
+          { choice_text: "New Option B", position: 2 }
+        }
+      }
+
+      in_request {}, =>
+        @flow("topic_polls")\set_poll topic, poll_params
+
+      poll\refresh!
+
+      assert.equal poll.poll_question, poll_params.poll_question
+      assert.equal poll.description, poll_params.description
+      assert.equal poll.anonymous, poll_params.anonymous
+      assert.equal poll.hide_results, poll_params.hide_results
+      assert.equal poll.vote_type, poll_params.vote_type
+
+      poll_choices = PollChoices\select "where ? order by position asc", db.clause {
+        poll_id: poll.id
+      }
+
+      test_choices = types.assert types.shape {
+        types.partial {
+          id: existing_choice.id
+          poll_id: poll.id,
+          choice_text: "Updated Option A",
+          position: 1
+        }
+        types.partial {
+          poll_id: poll.id,
+          choice_text: "New Option B",
+          position: 2
+        }
+      }
+
+      test_choices poll_choices

@@ -222,6 +222,9 @@ do
       end
       return false
     end,
+    allowed_to_create_poll = function(self, user)
+      return true
+    end,
     preloaded_category_user_chain = function(self, user, relation)
       local category_chain = {
         self,
