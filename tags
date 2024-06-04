@@ -33,6 +33,8 @@ ModeratorsFlow	community/flows/moderators.moon	/^class ModeratorsFlow extends Fl
 NestedOrderedPaginator	community/model.moon	/^class NestedOrderedPaginator extends OrderedPaginator$/;"	c	language:moon
 PendingPosts	community/flows/pending_posts.moon	/^class PendingPosts extends Flow$/;"	c	language:moon
 PendingPosts	community/models/pending_posts.moon	/^class PendingPosts extends Model$/;"	c	language:moon
+PollChoices	community/models/poll_choices.moon	/^class PollChoices extends Model$/;"	c	language:moon
+PollVotes	community/models/poll_votes.moon	/^class PollVotes extends Model$/;"	c	language:moon
 PostEdits	community/models/post_edits.moon	/^class PostEdits extends Model$/;"	c	language:moon
 PostReports	community/models/post_reports.moon	/^class PostReports extends Model$/;"	c	language:moon
 PostViewers	community/models/posts.moon	/^  class PostViewers extends VirtualModel$/;"	c	language:moon
@@ -43,6 +45,8 @@ ReportsFlow	community/flows/reports.moon	/^class ReportsFlow extends Flow$/;"	c	
 Subscriptions	community/models/subscriptions.moon	/^class Subscriptions extends Model$/;"	c	language:moon
 SubscriptionsFlow	community/flows/subscriptions.moon	/^class SubscriptionsFlow extends Flow$/;"	c	language:moon
 TopicParticipants	community/models/topic_participants.moon	/^class TopicParticipants extends Model$/;"	c	language:moon
+TopicPolls	community/models/topic_polls.moon	/^class TopicPolls extends Model$/;"	c	language:moon
+TopicPollsFlow	community/flows/topic_polls.moon	/^class TopicPollsFlow extends Flow$/;"	c	language:moon
 TopicViewers	community/models/topics.moon	/^  class TopicViewers extends VirtualModel$/;"	c	language:moon
 Topics	community/models/topics.moon	/^class Topics extends Model$/;"	c	language:moon
 TopicsFlow	community/flows/topics.moon	/^class TopicsFlow extends Flow$/;"	c	language:moon
@@ -115,10 +119,12 @@ create	community/models/community_users.moon	/^  @create: (opts={}) =>/;"	f	lang
 create	community/models/moderation_logs.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:ModerationLogs
 create	community/models/moderators.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:Moderators
 create	community/models/pending_posts.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:PendingPosts
+create	community/models/poll_votes.moon	/^  create: (opts={}) =>/;"	f	language:moon class:PollVotes
 create	community/models/post_edits.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:PostEdits
 create	community/models/post_reports.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:PostReports
 create	community/models/posts.moon	/^  @create: (opts={}, \.\.\.) =>/;"	f	language:moon class:Posts
 create	community/models/subscriptions.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:Subscriptions
+create	community/models/topic_polls.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:TopicPolls
 create	community/models/topics.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:Topics
 create	community/models/votes.moon	/^  @create: (opts={}) =>/;"	f	language:moon class:Votes
 create	community/models/warnings.moon	/^  @create: (opts, \.\.\.) =>/;"	f	language:moon class:Warnings
@@ -132,6 +138,8 @@ decrement_participant	community/models/topics.moon	/^  decrement_participant: (u
 default	community/helpers/shapes.moon	/^default = (value) ->/;"	f	language:moon
 delete	community/models/categories.moon	/^  delete: (force) =>/;"	f	language:moon class:Categories
 delete	community/models/pending_posts.moon	/^  delete: =>/;"	f	language:moon class:PendingPosts
+delete	community/models/poll_choices.moon	/^  delete: =>/;"	f	language:moon class:PollChoices
+delete	community/models/poll_votes.moon	/^  delete: =>/;"	f	language:moon class:PollVotes
 delete	community/models/post_reports.moon	/^  delete: (\.\.\.) =>/;"	f	language:moon class:PostReports
 delete	community/models/posts.moon	/^  delete: (force) =>/;"	f	language:moon class:Posts
 delete	community/models/topics.moon	/^  delete: (force) =>/;"	f	language:moon class:Topics
@@ -230,6 +238,7 @@ is_hidden	community/models/topics.moon	/^  is_hidden: =>/;"	f	language:moon clas
 is_ignored	community/models/post_reports.moon	/^  is_ignored: =>/;"	f	language:moon class:PostReports
 is_member	community/models/categories.moon	/^  is_member: (user) =>/;"	f	language:moon class:Categories
 is_moderation_event	community/models/posts.moon	/^  is_moderation_event: =>/;"	f	language:moon class:Posts
+is_open	community/models/topic_polls.moon	/^  is_open: =>/;"	f	language:moon class:TopicPolls
 is_pending	community/models/post_reports.moon	/^  is_pending: =>/;"	f	language:moon class:PostReports
 is_pinned	community/models/posts.moon	/^  is_pinned: =>/;"	f	language:moon class:Posts
 is_protected	community/models/posts.moon	/^  is_protected: =>/;"	f	language:moon class:Posts
@@ -268,6 +277,8 @@ move_to_category	community/models/topics.moon	/^  move_to_category: (new_categor
 move_topic	community/flows/topics.moon	/^  move_topic: =>/;"	f	language:moon class:TopicsFlow
 name	community/models/votes.moon	/^  name: =>/;"	f	language:moon class:Votes
 name_for_display	community/models/category_tags.moon	/^  name_for_display: =>/;"	f	language:moon class:CategoryTags
+name_for_display	community/models/poll_choices.moon	/^  name_for_display: =>/;"	f	language:moon class:PollChoices
+name_for_display	community/models/topic_polls.moon	/^  name_for_display: =>/;"	f	language:moon class:TopicPolls
 needs_approval_to_post	community/models/community_users.moon	/^  needs_approval_to_post: (object) =>/;"	f	language:moon class:CommunityUsers
 new	community/flows/bans.moon	/^  new: (req, @object) =>/;"	f	language:moon class:BansFlow
 new	community/flows/blocks.moon	/^  new: (req) =>/;"	f	language:moon class:BlocksFlow
@@ -287,6 +298,7 @@ notification_target_users	community/models/categories.moon	/^  notification_targ
 notification_target_users	community/models/category_groups.moon	/^  notification_target_users: =>/;"	f	language:moon class:CategoryGroups
 notification_target_users	community/models/topics.moon	/^  notification_target_users: =>/;"	f	language:moon class:Topics
 notification_targets	community/models/posts.moon	/^  notification_targets: (extra_targets) =>/;"	f	language:moon class:Posts
+notification_targets_paginated	community/models/categories.moon	/^  notification_targets_paginated: =>/;"	f	language:moon class:Categories
 on_body_updated_callback	community/models/posts.moon	/^  on_body_updated_callback: (req_or_flow) =>/;"	f	language:moon class:Posts
 on_increment_callback	community/models/topics.moon	/^  on_increment_callback: (field, amount) =>/;"	f	language:moon class:Topics
 on_vote_callback	community/models/posts.moon	/^  on_vote_callback: (kind, vote) =>/;"	f	language:moon class:Posts
@@ -321,6 +333,7 @@ recent_posts	community/flows/categories.moon	/^  recent_posts: (opts) =>/;"	f	la
 recount	community/models/categories.moon	/^  @recount: (\.\.\.) =>/;"	f	language:moon class:Categories
 recount	community/models/community_users.moon	/^  @recount: (\.\.\.) =>/;"	f	language:moon class:CommunityUsers
 recount	community/models/community_users.moon	/^  recount: =>/;"	f	language:moon class:CommunityUsers
+recount	community/models/poll_choices.moon	/^  recount: =>/;"	f	language:moon class:PollChoices
 recount	community/models/topics.moon	/^  @recount: (\.\.\.) =>/;"	f	language:moon class:Topics
 refresh	community/model.moon	/^  refresh: =>/;"	f	language:moon class:VirtualModel
 refresh_last_post	community/models/topics.moon	/^  refresh_last_post: =>/;"	f	language:moon class:Topics
@@ -346,6 +359,8 @@ score_adjustment	community/models/votes.moon	/^  score_adjustment: =>/;"	f	langu
 select	community/model.moon	/^  select: (q, opts) =>/;"	f	language:moon class:NestedOrderedPaginator
 set_categories	community/models/category_groups.moon	/^  set_categories: (categories) =>/;"	f	language:moon class:CategoryGroups
 set_children	community/flows/categories.moon	/^  set_children: require_current_user =>/;"	f	language:moon class:CategoriesFlow
+set_choices	community/flows/topic_polls.moon	/^  set_choices: (poll, choices) =>/;"	f	language:moon class:TopicPollsFlow
+set_counted	community/models/poll_votes.moon	/^  set_counted: (counted) =>/;"	f	language:moon class:PollVotes
 set_log_objects	community/models/moderation_logs.moon	/^  set_log_objects: (objects) =>/;"	f	language:moon class:ModerationLogs
 set_seen	community/models/categories.moon	/^  set_seen: (user) =>/;"	f	language:moon class:Categories
 set_seen	community/models/topics.moon	/^  set_seen: (user) =>/;"	f	language:moon class:Topics
@@ -385,6 +400,7 @@ topic_needs_approval	community/models/categories.moon	/^  topic_needs_approval: 
 topic_pending_posts	community/flows/browsing.moon	/^  topic_pending_posts: =>/;"	f	language:moon class:BrowsingFlow
 topic_posts	community/flows/browsing.moon	/^  topic_posts: (opts={}) =>/;"	f	language:moon class:BrowsingFlow
 topic_score_bucket_size	community/models/categories.moon	/^  topic_score_bucket_size: =>/;"	f	language:moon class:Categories
+total_vote_count	community/models/topic_polls.moon	/^  total_vote_count: =>/;"	f	language:moon class:TopicPolls
 trigger_vote_callback	community/models/votes.moon	/^  trigger_vote_callback: (kind) =>/;"	f	language:moon class:Votes
 unarchive_topic	community/flows/topics.moon	/^  unarchive_topic: =>/;"	f	language:moon class:TopicsFlow
 unblock_user	community/flows/blocks.moon	/^  unblock_user: =>/;"	f	language:moon class:BlocksFlow
@@ -402,8 +418,10 @@ update_counted	community/models/votes.moon	/^  update_counted: (counted) =>/;"	f
 update_or_create_report	community/flows/reports.moon	/^  update_or_create_report: require_current_user =>/;"	f	language:moon class:ReportsFlow
 update_rank_adjustment	community/models/topics.moon	/^  update_rank_adjustment: (amount) =>/;"	f	language:moon class:Topics
 validate_params	community/flows/categories.moon	/^  validate_params: (fields_list) =>/;"	f	language:moon class:CategoriesFlow
+validate_params	community/flows/topic_polls.moon	/^  validate_params: =>/;"	f	language:moon class:TopicPollsFlow
 view_counter	community/flows/browsing.moon	/^  view_counter: =>/;"	f	language:moon class:BrowsingFlow
 vote	community/flows/votes.moon	/^  vote: require_current_user =>/;"	f	language:moon class:VotesFlow
+vote	community/models/poll_choices.moon	/^  vote: (user, counted=true) =>/;"	f	language:moon class:PollChoices
 vote	community/models/votes.moon	/^  @vote: (object, user, positive=true, opts) =>/;"	f	language:moon class:Votes
 vote_score	community/models/posts.moon	/^  vote_score: =>/;"	f	language:moon class:Posts
 with_lock	community/helpers/counters.moon	/^  with_lock: (fn) =>/;"	f	language:moon class:AsyncCounter
