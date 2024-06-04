@@ -33,6 +33,7 @@ ModeratorsFlow	community/flows/moderators.moon	/^class ModeratorsFlow extends Fl
 NestedOrderedPaginator	community/model.moon	/^class NestedOrderedPaginator extends OrderedPaginator$/;"	c	language:moon
 PendingPosts	community/flows/pending_posts.moon	/^class PendingPosts extends Flow$/;"	c	language:moon
 PendingPosts	community/models/pending_posts.moon	/^class PendingPosts extends Model$/;"	c	language:moon
+PollChoiceVoters	community/models/poll_choices.moon	/^  class PollChoiceVoters extends VirtualModel$/;"	c	language:moon
 PollChoices	community/models/poll_choices.moon	/^class PollChoices extends Model$/;"	c	language:moon
 PollVotes	community/models/poll_votes.moon	/^class PollVotes extends Model$/;"	c	language:moon
 PostEdits	community/models/post_edits.moon	/^class PostEdits extends Model$/;"	c	language:moon
@@ -67,6 +68,7 @@ add_moderator	community/flows/moderators.moon	/^  add_moderator: require_current
 allowed_to_edit	community/models/categories.moon	/^  allowed_to_edit: (user) =>/;"	f	language:moon class:Categories
 allowed_to_edit	community/models/category_groups.moon	/^  allowed_to_edit: (user) =>/;"	f	language:moon class:CategoryGroups
 allowed_to_edit	community/models/posts.moon	/^  allowed_to_edit: (user, action="edit") =>/;"	f	language:moon class:Posts
+allowed_to_edit	community/models/topic_polls.moon	/^  allowed_to_edit: (user) =>/;"	f	language:moon class:TopicPolls
 allowed_to_edit	community/models/topics.moon	/^  allowed_to_edit: (user) =>/;"	f	language:moon class:Topics
 allowed_to_edit_members	community/models/categories.moon	/^  allowed_to_edit_members: (user) =>/;"	f	language:moon class:Categories
 allowed_to_edit_moderators	community/models/categories.moon	/^  allowed_to_edit_moderators: (user) =>/;"	f	language:moon class:Categories
@@ -86,6 +88,7 @@ allowed_to_view	community/models/posts.moon	/^  allowed_to_view: (user, req) =>/
 allowed_to_view	community/models/topics.moon	/^  allowed_to_view: (user, req) =>/;"	f	language:moon class:Topics
 allowed_to_vote	community/models/categories.moon	/^  allowed_to_vote: (user, direction, post) =>/;"	f	language:moon class:Categories
 allowed_to_vote	community/models/posts.moon	/^  allowed_to_vote: (user, direction) =>/;"	f	language:moon class:Posts
+allowed_to_vote	community/models/topic_polls.moon	/^  allowed_to_vote: (user) =>/;"	f	language:moon class:TopicPolls
 archive	community/models/posts.moon	/^  archive: =>/;"	f	language:moon class:Posts
 archive	community/models/topics.moon	/^  archive: =>/;"	f	language:moon class:Topics
 archive_topic	community/flows/topics.moon	/^  archive_topic: =>/;"	f	language:moon class:TopicsFlow
@@ -142,6 +145,7 @@ delete	community/models/poll_choices.moon	/^  delete: =>/;"	f	language:moon clas
 delete	community/models/poll_votes.moon	/^  delete: =>/;"	f	language:moon class:PollVotes
 delete	community/models/post_reports.moon	/^  delete: (\.\.\.) =>/;"	f	language:moon class:PostReports
 delete	community/models/posts.moon	/^  delete: (force) =>/;"	f	language:moon class:Posts
+delete	community/models/topic_polls.moon	/^  delete: =>/;"	f	language:moon class:TopicPolls
 delete	community/models/topics.moon	/^  delete: (force) =>/;"	f	language:moon class:Topics
 delete	community/models/votes.moon	/^  delete: =>/;"	f	language:moon class:Votes
 delete_ban	community/flows/bans.moon	/^  delete_ban: require_current_user =>/;"	f	language:moon class:BansFlow
@@ -427,6 +431,7 @@ vote_score	community/models/posts.moon	/^  vote_score: =>/;"	f	language:moon cla
 with_lock	community/helpers/counters.moon	/^  with_lock: (fn) =>/;"	f	language:moon class:AsyncCounter
 with_user	community/models/categories.moon	/^  with_user: VirtualModel\\make_loader "category_viewers", (user_id) =>/;"	f	language:moon class:Categories
 with_user	community/models/community_users.moon	/^  with_user: VirtualModel\\make_loader "user_users", (user_id) =>/;"	f	language:moon class:CommunityUsers
+with_user	community/models/poll_choices.moon	/^  with_user: VirtualModel\\make_loader "voters", (user_id) =>/;"	f	language:moon class:PollChoices
 with_user	community/models/topics.moon	/^  with_user: VirtualModel\\make_loader "topic_viewers", (user_id) =>/;"	f	language:moon class:Topics
 with_viewing_user	community/models/posts.moon	/^  with_viewing_user: VirtualModel\\make_loader "viewing_users", (user_id) =>/;"	f	language:moon class:Posts
 write_moderation_log	community/flows/bans.moon	/^  write_moderation_log: (action, reason, log_objects) =>/;"	f	language:moon class:BansFlow

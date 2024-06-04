@@ -1395,7 +1395,9 @@ return {
       },
       "PRIMARY KEY (id)"
     })
-    create_index(T("topic_polls"), "topic_id")
+    create_index(T("topic_polls"), "topic_id", {
+      unique = true
+    })
     create_table(T("poll_choices"), {
       {
         "id",

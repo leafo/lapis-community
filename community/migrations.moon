@@ -730,7 +730,7 @@ import create_table, create_index, drop_table, add_column, drop_column, drop_ind
       "PRIMARY KEY (id)"
     }
 
-    create_index T"topic_polls", "topic_id"
+    create_index T"topic_polls", "topic_id", unique: true
 
     create_table T"poll_choices", {
       {"id", serial}

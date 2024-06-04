@@ -23,7 +23,7 @@ import Model from require "community.model"
 -- );
 -- ALTER TABLE ONLY community_topic_polls
 --   ADD CONSTRAINT community_topic_polls_pkey PRIMARY KEY (id);
--- CREATE INDEX community_topic_polls_topic_id_idx ON community_topic_polls USING btree (topic_id);
+-- CREATE UNIQUE INDEX community_topic_polls_topic_id_idx ON community_topic_polls USING btree (topic_id);
 --
 class TopicPolls extends Model
   @timestamp: true

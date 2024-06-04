@@ -91,8 +91,9 @@ describe "models.topics", ->
       }
 
       -- Create another poll to ensure it is not affected by the delete
+      other_topic = factory.Topics!
       another_poll = TopicPolls\create {
-        topic_id: topic.id
+        topic_id: other_topic.id
         poll_question: "What is your favorite fruit?"
         start_date: db.raw "date_trunc('seconds', now() at time zone 'utc')"
         end_date: db.raw "date_trunc('seconds', now() at time zone 'utc') + interval '1 day'"
