@@ -163,6 +163,37 @@ describe "models.topics", ->
       red_choice\recount!
       assert.same 0, red_choice.vote_count
 
+    it "deletes poll choice (including all votes votes)", ->
+      vote1 = PollVotes\create {
+        poll_choice_id: red_choice.id
+        user_id: factory.Users!.id
+        counted: true
+      }
+      vote2 = PollVotes\create {
+        poll_choice_id: red_choice.id
+        user_id: factory.Users!.id
+        counted: false
+      }
+      vote3 = PollVotes\create {
+        poll_choice_id: blue_choice.id
+        user_id: factory.Users!.id
+        counted: true
+      }
+
+      red_choice\refresh!
+      blue_choice\refresh!
+      assert.same 1, red_choice.vote_count
+      assert.same 1, blue_choice.vote_count
+
+      assert red_choice\delete!
+      assert.is_nil PollChoices\find red_choice.id
+
+      assert.is_nil PollVotes\find vote1.id
+      assert.is_nil PollVotes\find vote2.id
+
+      blue_choice\refresh!
+      assert.same 1, blue_choice.vote_count
+
     it "deletes poll votes, both counted and uncounted", ->
       vote1 = PollVotes\create {
         poll_choice_id: red_choice.id

@@ -37,6 +37,15 @@ class PollChoices extends Model
         where poll_choice_id = #{db.escape_identifier @@table_name!}.id and counted = true)"
     }
 
+  delete: =>
+    if super!
+      -- delete all votes for this choice
+      import PollVotes from require "community.models"
+      db.delete PollVotes\table_name!, db.clause {
+        {"poll_choice_id = ?", @id}
+      }
+      true
+
   --- Set the vote for the user, aware of vote_type for the poll
   --- @param user User The user who is voting
   --- @return PollVotes The vote if it was created

@@ -16,6 +16,19 @@ do
         vote_count = db.raw("(select count(*)\n        from " .. tostring(db.escape_identifier(PollVotes:table_name())) .. "\n        where poll_choice_id = " .. tostring(db.escape_identifier(self.__class:table_name())) .. ".id and counted = true)")
       })
     end,
+    delete = function(self)
+      if _class_0.__parent.__base.delete(self) then
+        local PollVotes
+        PollVotes = require("community.models").PollVotes
+        db.delete(PollVotes:table_name(), db.clause({
+          {
+            "poll_choice_id = ?",
+            self.id
+          }
+        }))
+        return true
+      end
+    end,
     vote = function(self, user, counted)
       if counted == nil then
         counted = true
