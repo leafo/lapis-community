@@ -27,7 +27,7 @@ class TopicPollsFlow extends Flow
     {"id",                       types.db_id + types.empty}
     {"choice_text",              types.limited_text(limits.MAX_TITLE_LEN)}
     {"description",              types.empty / db.NULL + types.limited_text(limits.MAX_TITLE_LEN)}
-    {"position",                 types.db_id}
+    {"position",                 types.empty + types.db_id}
   }
 
   validate_params: =>
@@ -38,6 +38,44 @@ class TopicPollsFlow extends Flow
     }
 
   -- this merges the parsed choice params with the existing choices in the database
-  -- choicess with ids should be updated, and new choices should be created
+  -- choices with ids should be updated, and new choices should be created
   -- and choices with ids that are not in the params should be deleted
   set_choices: (poll, choices) =>
+    assert poll, "missing poll id"
+    import PollChoices from require "community.models"
+
+    existing_choices = poll\get_poll_choices!
+    existing_choices_map = { choice.id, choice for choice in *existing_choices }
+
+    -- Process incoming choices
+    for idx, choice_params in ipairs choices
+      choice_params.position or= idx
+
+      if choice_params.id
+        -- Update existing choice
+        existing_choice = existing_choices_map[choice_params.id]
+        if existing_choice
+          existing_choice\update {
+            choice_text: choice_params.choice_text,
+            description: choice_params.description,
+            position: choice_params.position
+          }
+          -- clear it from remiaing choices
+          existing_choices_map[choice_params.id] = nil
+        else
+          -- choice not found, just ignore
+          continue
+      else
+        -- Create new choice
+        PollChoices\create {
+          poll_id: poll.id
+          choice_text: choice_params.choice_text
+          description: choice_params.description
+          position: choice_params.position
+        }
+
+    -- Delete remaining choices that were not updated
+    for _, choice in pairs existing_choices_map
+      choice\delete!
+
+    true

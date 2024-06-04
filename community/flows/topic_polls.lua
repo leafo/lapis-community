@@ -23,7 +23,56 @@ do
         unpack(self.__class.POLL_VALIDATION)
       }))
     end,
-    set_choices = function(self, poll, choices) end
+    set_choices = function(self, poll, choices)
+      assert(poll, "missing poll id")
+      local PollChoices
+      PollChoices = require("community.models").PollChoices
+      local existing_choices = poll:get_poll_choices()
+      local existing_choices_map
+      do
+        local _tbl_0 = { }
+        for _index_0 = 1, #existing_choices do
+          local choice = existing_choices[_index_0]
+          _tbl_0[choice.id] = choice
+        end
+        existing_choices_map = _tbl_0
+      end
+      for idx, choice_params in ipairs(choices) do
+        local _continue_0 = false
+        repeat
+          choice_params.position = choice_params.position or idx
+          if choice_params.id then
+            local existing_choice = existing_choices_map[choice_params.id]
+            if existing_choice then
+              existing_choice:update({
+                choice_text = choice_params.choice_text,
+                description = choice_params.description,
+                position = choice_params.position
+              })
+              existing_choices_map[choice_params.id] = nil
+            else
+              _continue_0 = true
+              break
+            end
+          else
+            PollChoices:create({
+              poll_id = poll.id,
+              choice_text = choice_params.choice_text,
+              description = choice_params.description,
+              position = choice_params.position
+            })
+          end
+          _continue_0 = true
+        until true
+        if not _continue_0 then
+          break
+        end
+      end
+      for _, choice in pairs(existing_choices_map) do
+        choice:delete()
+      end
+      return true
+    end
   }
   _base_0.__index = _base_0
   setmetatable(_base_0, _parent_0.__base)
@@ -91,7 +140,7 @@ do
     },
     {
       "position",
-      types.db_id
+      types.empty + types.db_id
     }
   }
   if _parent_0.__inherited then

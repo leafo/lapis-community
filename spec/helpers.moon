@@ -72,4 +72,4 @@ sorted_pairs = (sort=table.sort) ->
   after_each ->
     _G.pairs = _pairs
 
-{:assert_queries, :assert_has_queries, :assert_no_queries, :sorted_pairs}
+{:assert_queries, :assert_has_queries, :assert_no_queries, :sorted_pairs, :capture_queries}
