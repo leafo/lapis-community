@@ -232,6 +232,12 @@ do
           object_id = assert(self.id)
         }))
       end
+      do
+        local poll = self:get_poll()
+        if poll then
+          poll:delete()
+        end
+      end
       return true
     end,
     soft_delete = function(self)
@@ -819,10 +825,6 @@ do
         where = {
           object_type = 2
         }
-      },
-      {
-        "poll",
-        has_one = "TopicPolls"
       }
     }
     if _parent_1.__inherited then
@@ -872,6 +874,10 @@ do
       where = {
         object_type = 1
       }
+    },
+    {
+      "poll",
+      has_one = "TopicPolls"
     }
   }
   self.statuses = enum({

@@ -42,8 +42,21 @@ class TopicPolls extends Model
     opts.vote_type = @vote_types\for_db opts.vote_type or "single"
     super opts
 
+  delete: =>
+    if super!
+      -- clean up poll choices and votes
+      for choice in *@get_poll_choices!
+        choice\delete!
+      true
+
   name_for_display: =>
     @poll_question
+
+  allowed_to_edit: (user) =>
+    @get_topic!\allowed_to_edit user
+
+  allowed_to_vote: (user) =>
+    @get_topic!\allowed_to_view user
 
   is_open: =>
     now = date(true)

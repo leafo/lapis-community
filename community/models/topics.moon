@@ -69,7 +69,6 @@ class Topics extends Model
       }, where: {
         object_type: 2
       }}
-      {"poll", has_one: "TopicPolls"}
     }
 
   @relations: {
@@ -84,6 +83,8 @@ class Topics extends Model
     {"last_post", belongs_to: "Posts"}
     {"subscriptions", has_many: "Subscriptions", key: "object_id", where: {object_type: 1}}
     {"moderation_logs", has_many: "ModerationLogs", key: "object_id", where: {object_type: 1}}
+
+    {"poll", has_one: "TopicPolls"}
   }
 
   @statuses: enum {
@@ -341,6 +342,9 @@ class Topics extends Model
         object_type: assert model\object_type_for_object @
         object_id: assert @id
       }
+
+    if poll = @get_poll!
+      poll\delete!
 
     true
 

@@ -9,8 +9,24 @@ do
   local _class_0
   local _parent_0 = Model
   local _base_0 = {
+    delete = function(self)
+      if _class_0.__parent.__base.delete(self) then
+        local _list_0 = self:get_poll_choices()
+        for _index_0 = 1, #_list_0 do
+          local choice = _list_0[_index_0]
+          choice:delete()
+        end
+        return true
+      end
+    end,
     name_for_display = function(self)
       return self.poll_question
+    end,
+    allowed_to_edit = function(self, user)
+      return self:get_topic():allowed_to_edit(user)
+    end,
+    allowed_to_vote = function(self, user)
+      return self:get_topic():allowed_to_view(user)
     end,
     is_open = function(self)
       local now = date(true)

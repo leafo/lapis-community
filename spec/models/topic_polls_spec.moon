@@ -78,6 +78,25 @@ describe "models.topics", ->
       poll\update { end_date: db.raw "date_trunc('seconds', now() at time zone 'utc') - interval '1 minute'" }
       assert.falsy poll\is_open!
 
+    it "deletes poll", ->
+      vote1 = PollVotes\create {
+        poll_choice_id: red_choice.id
+        user_id: factory.Users!.id
+        counted: true
+      }
+      vote2 = PollVotes\create {
+        poll_choice_id: blue_choice.id
+        user_id: factory.Users!.id
+        counted: true
+      }
+
+      poll\delete!
+
+      assert.falsy TopicPolls\find poll.id
+      assert.falsy PollChoices\find red_choice.id
+      assert.falsy PollChoices\find blue_choice.id
+      assert.falsy PollVotes\find vote1.id
+      assert.falsy PollVotes\find vote2.id
 
     it "creates poll votes, counted and uncounted", ->
       vote1 = PollVotes\create {
