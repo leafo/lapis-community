@@ -1360,6 +1360,10 @@ return {
         })
       },
       {
+        "vote_type",
+        enum
+      },
+      {
         "anonymous",
         boolean({
           default = true

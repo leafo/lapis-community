@@ -1,5 +1,7 @@
 local db = require("lapis.db")
 local date = require("date")
+local enum
+enum = require("lapis.db.model").enum
 local Model
 Model = require("community.model").Model
 local TopicPolls
@@ -8,7 +10,7 @@ do
   local _parent_0 = Model
   local _base_0 = {
     is_open = function(self)
-      local now = now(true)
+      local now = date(true)
       return now >= date(self.start_date) and now < date(self.end_date)
     end
   }
@@ -51,9 +53,20 @@ do
       "poll_choices",
       has_many = "PollChoices",
       key = "poll_id",
-      order = "'order' ASC"
+      order = "position ASC"
     }
   }
+  self.vote_types = enum({
+    single = 1,
+    multiple = 2
+  })
+  self.create = function(self, opts)
+    if opts == nil then
+      opts = { }
+    end
+    opts.vote_type = self.vote_types:for_db(opts.vote_type or "single")
+    return _class_0.__parent.create(self, opts)
+  end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end

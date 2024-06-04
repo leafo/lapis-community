@@ -719,6 +719,7 @@ import create_table, create_index, drop_table, add_column, drop_column, drop_ind
       {"topic_id", foreign_key}
       {"poll_question", text}
       {"description", text null: true}
+      {"vote_type", enum}
       {"anonymous", boolean default: true}
       {"hide_results", boolean default: false}
       {"start_date", time default: db.raw("date_trunc('second', now() at time zone 'utc')")}

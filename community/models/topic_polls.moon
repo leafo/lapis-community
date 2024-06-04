@@ -2,6 +2,8 @@ db = require "lapis.db"
 
 date = require "date"
 
+import enum from require "lapis.db.model"
+
 import Model from require "community.model"
 
 -- Generated schema dump: (do not edit)
@@ -29,6 +31,15 @@ class TopicPolls extends Model
     {"topic", belongs_to: "Topics"}
     {"poll_choices", has_many: "PollChoices", key: "poll_id", order: "position ASC"}
   }
+
+  @vote_types: enum {
+    single: 1 -- user can vote on a single choice
+    multiple: 2 -- user can vote on any number of choices
+  }
+
+  @create: (opts={}) =>
+    opts.vote_type = @vote_types\for_db opts.vote_type or "single"
+    super opts
 
   is_open: =>
     now = date(true)
