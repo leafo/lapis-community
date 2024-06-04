@@ -69,6 +69,7 @@ class Topics extends Model
       }, where: {
         object_type: 2
       }}
+      {"poll", has_one: "TopicPolls"}
     }
 
   @relations: {

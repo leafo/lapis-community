@@ -1338,5 +1338,124 @@ return {
     })
     create_index(T("warnings"), "user_id")
     return db.query("comment on column " .. tostring(T("warnings")) .. ".expires_at is ?", "Is set when the user first sees the warning")
+  end,
+  [45] = function(self)
+    create_table(T("topic_polls"), {
+      {
+        "id",
+        serial
+      },
+      {
+        "topic_id",
+        foreign_key
+      },
+      {
+        "poll_question",
+        text
+      },
+      {
+        "description",
+        text({
+          null = true
+        })
+      },
+      {
+        "anonymous",
+        boolean({
+          default = true
+        })
+      },
+      {
+        "hide_results",
+        boolean({
+          default = false
+        })
+      },
+      {
+        "start_date",
+        time({
+          default = db.raw("date_trunc('second', now() at time zone 'utc')")
+        })
+      },
+      {
+        "end_date",
+        time
+      },
+      {
+        "created_at",
+        time
+      },
+      {
+        "updated_at",
+        time
+      },
+      "PRIMARY KEY (id)"
+    })
+    create_index(T("topic_polls"), "topic_id")
+    create_table(T("poll_choices"), {
+      {
+        "id",
+        serial
+      },
+      {
+        "poll_id",
+        foreign_key
+      },
+      {
+        "choice_text",
+        text
+      },
+      {
+        "vote_count",
+        integer({
+          default = 0
+        })
+      },
+      {
+        "created_at",
+        time
+      },
+      {
+        "updated_at",
+        time
+      },
+      {
+        "position",
+        integer
+      },
+      "PRIMARY KEY (id)"
+    })
+    create_index(T("poll_choices"), "poll_id")
+    create_table(T("poll_votes"), {
+      {
+        "id",
+        serial
+      },
+      {
+        "poll_choice_id",
+        foreign_key
+      },
+      {
+        "user_id",
+        foreign_key
+      },
+      {
+        "counted",
+        boolean({
+          default = true
+        })
+      },
+      {
+        "created_at",
+        time
+      },
+      {
+        "updated_at",
+        time
+      },
+      "PRIMARY KEY (id)"
+    })
+    create_index(T("poll_votes"), "poll_choice_id")
+    return create_index(T("poll_votes"), "user_id")
   end
 }

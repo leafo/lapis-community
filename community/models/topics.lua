@@ -819,6 +819,10 @@ do
         where = {
           object_type = 2
         }
+      },
+      {
+        "poll",
+        has_one = "TopicPolls"
       }
     }
     if _parent_1.__inherited then
