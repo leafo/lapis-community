@@ -21,14 +21,20 @@ do
   local _class_0
   local _parent_0 = Flow
   local _base_0 = {
-    validate_params = function(self)
-      return assert_valid(self.params, types.params_shape({
+    validate_params_shape = function(self)
+      local choice_shape = types.params_shape(self.__class.CHOICE_VALIDATION)
+      return types.params_shape({
         {
           "choices",
-          shapes.convert_array * types.array_of(types.params_shape(self.__class.CHOICE_VALIDATION))
+          shapes.convert_array * types.params_array(choice_shape, {
+            length = types.range(1, 20)
+          })
         },
         unpack(self.__class.POLL_VALIDATION)
-      }))
+      })
+    end,
+    validate_params = function(self)
+      return assert_valid(self.params, self:validate_params_shape())
     end,
     vote = require_current_user(with_params({
       {

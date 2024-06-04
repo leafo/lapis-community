@@ -71,7 +71,9 @@ do
         opts = { }
       end
       local CategoriesFlow = require("community.flows.categories")
+      local PollsFlow = require("community.flows.topic_polls")
       CategoriesFlow(self):load_category()
+      local poll_flow = PollsFlow(self)
       local new_topic = assert_valid(self.params.topic, types.params_shape({
         {
           "title",
@@ -102,8 +104,23 @@ do
         {
           "locked",
           types.empty / false + types.any / true
+        },
+        {
+          "poll",
+          types.empty + types.table
         }
       }))
+      if new_topic.poll then
+        local new_poll
+        new_poll = assert_valid(self.params.topic, types.params_shape({
+          {
+            "poll",
+            poll_flow:validate_params_shape()
+          }
+        })).new_poll
+        new_topic.poll = new_poll
+        assert_error(self.category:allowed_to_create_poll(self.current_user), "you can't create a poll in this category")
+      end
       local body = assert_error(Posts:filter_body(new_topic.body, new_topic.body_format))
       local community_user = CommunityUsers:for_user(self.current_user)
       assert_error(self.category:allowed_to_post_topic(self.current_user, self._req))
@@ -218,6 +235,9 @@ do
         object = self.topic,
         action = "create"
       })
+      if new_topic.poll then
+        poll_flow:set_poll(self.topic, new_topic.poll)
+      end
       return true
     end),
     delete_topic = require_current_user(function(self)

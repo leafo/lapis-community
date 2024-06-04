@@ -58,7 +58,10 @@ class TopicsFlow extends Flow
   -- opts.force_pending -- always crated post as pending post, skip calling approval method
   new_topic: require_current_user (opts={}) =>
     CategoriesFlow = require "community.flows.categories"
+    PollsFlow = require "community.flows.topic_polls"
     CategoriesFlow(@)\load_category!
+
+    poll_flow = PollsFlow @
 
     new_topic = assert_valid @params.topic, types.params_shape {
       {"title", types.limited_text limits.MAX_TITLE_LEN }
@@ -67,7 +70,19 @@ class TopicsFlow extends Flow
       {"tags", types.empty + types.limited_text(240) / @category\parse_tags }
       {"sticky", types.empty / false + types.any / true}
       {"locked", types.empty / false + types.any / true}
+      {"poll", types.empty + types.table}
     }
+
+    if new_topic.poll
+      -- we do validation like this so we can have nice error messages
+      {:new_poll} = assert_valid @params.topic, types.params_shape {
+        {"poll", poll_flow\validate_params_shape!}
+      }
+
+      new_topic.poll = new_poll
+
+      assert_error @category\allowed_to_create_poll(@current_user),
+        "you can't create a poll in this category"
 
     body = assert_error Posts\filter_body new_topic.body, new_topic.body_format
 
@@ -174,6 +189,9 @@ class TopicsFlow extends Flow
       object: @topic
       action: "create"
     }
+
+    if new_topic.poll
+      poll_flow\set_poll @topic, new_topic.poll
 
     true
 

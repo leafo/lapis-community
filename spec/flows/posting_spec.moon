@@ -413,6 +413,125 @@ describe "posting flow", ->
 
       assert.same 1, Topics\count!
 
+    describe "polls", ->
+      import TopicPolls, PollChoices from require "spec.community_models"
+
+      it "creates poll with topic", ->
+        category = factory.Categories!
+
+        new_topic {
+          category_id: category.id
+          "topic[title]": "Poll Test"
+          "topic[body]": "Choose your favorite color"
+
+          "topic[poll][poll_question]": "Favorite color?"
+          "topic[poll][vote_type]": "multiple"
+          "topic[poll][choices][1][choice_text]": "Red"
+          "topic[poll][choices][2][choice_text]": "Blue"
+          "topic[poll][choices][2][description]": "It's very bloue"
+          "topic[poll][choices][3][choice_text]": "Green"
+        }
+
+        topic = unpack Topics\select!
+        poll = assert TopicPolls\find(topic_id: topic.id), "topic should have poll"
+
+        assert_poll = types.assert types.partial {
+          topic_id: topic.id
+          poll_question: "Favorite color?"
+          vote_type: TopicPolls.vote_types.multiple
+        }
+
+        assert_poll poll
+
+        choices = PollChoices\select "order by position asc"
+
+        assert_choices = types.assert types.shape {
+          types.partial {
+            poll_id: poll.id
+            choice_text: "Red"
+            position: 1
+          }
+          types.partial {
+            poll_id: poll.id
+            choice_text: "Blue"
+            description: "It's very bloue"
+            position: 2
+          }
+          types.partial {
+            poll_id: poll.id
+            choice_text: "Green"
+            position: 3
+          }
+        }
+
+        assert_choices choices
+
+      it "aborts creating topic (and poll) if poll field validation fails", ->
+        category = factory.Categories!
+
+        assert.has_error(
+          ->
+            new_topic {
+              category_id: category.id
+              "topic[title]": "Invalid Poll Test"
+              "topic[body]": "This poll should fail validation"
+
+              "topic[poll][poll_question]": ""
+              "topic[poll][vote_type]": "multiple"
+              "topic[poll][choices][1][choice_text]": "Red"
+              "topic[poll][choices][2][choice_text]": "Blue"
+              "topic[poll][choices][2][description]": "It's very bloue"
+              "topic[poll][choices][3][choice_text]": "Green"
+            }
+          {
+            message: {
+              'poll: poll_question: expected text between 1 and 256 characters'
+            }
+          }
+        )
+
+        -- nothing is created
+        assert.same 0, Topics\count!
+        assert.same 0, TopicPolls\count!
+        assert.same 0, PollChoices\count!
+
+        -- invalid choice
+        assert.has_error(
+          ->
+            new_topic {
+              category_id: category.id
+              "topic[title]": "Invalid Poll Test"
+              "topic[body]": "This poll should fail validation"
+
+              "topic[poll][poll_question]": "Hello"
+              "topic[poll][vote_type]": "badidea"
+              "topic[poll][choices][1][choice_text]": "Red"
+              "topic[poll][choices][2][choice_text][oops]": "yes"
+            }
+          {
+            message: {
+              'poll: choices: item 2: choice_text: expected text between 1 and 256 characters'
+              'poll: vote_type: expected enum(single, multiple)'
+            }
+          }
+        )
+
+        -- no choices
+        assert.has_error(
+          ->
+            new_topic {
+              category_id: category.id
+              "topic[title]": "Invalid Poll Test"
+              "topic[body]": "This poll should fail validation"
+
+              "topic[poll][poll_question]": "Hello"
+            }
+          {
+            message: { [[poll: choices: expected type "table", got "nil"]] }
+          }
+        )
+
+
     describe "warnings", ->
       import Warnings, PendingPosts from require "spec.community_models"
 

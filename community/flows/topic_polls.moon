@@ -32,12 +32,19 @@ class TopicPollsFlow extends Flow
     {"position",                 types.empty + types.db_id}
   }
 
-  validate_params: =>
-    assert_valid @params, types.params_shape {
-      {"choices", shapes.convert_array * types.array_of types.params_shape @@CHOICE_VALIDATION}
+  validate_params_shape: =>
+    choice_shape = types.params_shape @@CHOICE_VALIDATION
+
+    types.params_shape {
+      {"choices", shapes.convert_array * types.params_array choice_shape, {
+        length: types.range(1, 20)
+      }}
 
       unpack @@POLL_VALIDATION
     }
+
+  validate_params: =>
+    assert_valid @params, @validate_params_shape!
 
   vote: require_current_user with_params {
     {"choice_id", types.db_id}
