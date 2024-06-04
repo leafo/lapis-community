@@ -2,8 +2,15 @@ local db = require("lapis.db")
 local Flow
 Flow = require("lapis.flow").Flow
 local limits = require("community.limits")
-local assert_valid
-assert_valid = require("lapis.validate").assert_valid
+local assert_error
+assert_error = require("lapis.application").assert_error
+local assert_valid, with_params
+do
+  local _obj_0 = require("lapis.validate")
+  assert_valid, with_params = _obj_0.assert_valid, _obj_0.with_params
+end
+local require_current_user
+require_current_user = require("community.helpers.app").require_current_user
 local shapes = require("community.helpers.shapes")
 local types = require("lapis.validate.types")
 local bool_t = types.boolean + types.empty / false + types.any / true
@@ -23,6 +30,46 @@ do
         unpack(self.__class.POLL_VALIDATION)
       }))
     end,
+    vote = require_current_user(with_params({
+      {
+        "choice_id",
+        types.db_id
+      },
+      {
+        "action",
+        types.one_of({
+          "create",
+          "delete"
+        })
+      }
+    }, function(self, params)
+      local PollChoices, PollVotes
+      do
+        local _obj_0 = require("community.models")
+        PollChoices, PollVotes = _obj_0.PollChoices, _obj_0.PollVotes
+      end
+      local choice = PollChoices:find(params.choice_id)
+      local poll = assert_error(choice:get_poll(), "invalid poll")
+      local _exp_0 = params.action
+      if "create" == _exp_0 then
+        assert_error(poll:is_open(), "poll is closed")
+        assert_error(poll:allowed_to_vote(self.current_user), "not allowed to vote")
+        return assert_error(choice:vote(self.current_user))
+      elseif "delete" == _exp_0 then
+        assert_error(poll:is_open(), "poll is closed")
+        assert_error(poll:allowed_to_vote(self.current_user), "invalid poll")
+        local vote = PollVotes:find({
+          poll_choice_id = choice.id,
+          user_id = self.current_user.id
+        })
+        if vote then
+          vote:delete()
+          return true
+        else
+          return nil, "invalid vote"
+        end
+      end
+    end)),
     set_choices = function(self, poll, choices)
       assert(poll, "missing poll id")
       local PollChoices

@@ -3,7 +3,9 @@ import Flow from require "lapis.flow"
 
 limits = require "community.limits"
 
-import assert_valid from require "lapis.validate"
+import assert_error from require "lapis.application"
+import assert_valid, with_params from require "lapis.validate"
+import require_current_user from require "community.helpers.app"
 
 shapes = require "community.helpers.shapes"
 types = require "lapis.validate.types"
@@ -36,6 +38,35 @@ class TopicPollsFlow extends Flow
 
       unpack @@POLL_VALIDATION
     }
+
+  vote: require_current_user with_params {
+    {"choice_id", types.db_id}
+    {"action", types.one_of {"create", "delete"}}
+  }, (params) =>
+    import PollChoices,PollVotes from require "community.models"
+
+    choice = PollChoices\find params.choice_id
+    poll = assert_error choice\get_poll!, "invalid poll"
+    switch params.action
+      when "create"
+        assert_error poll\is_open!, "poll is closed" -- preempt for better error message
+        assert_error poll\allowed_to_vote(@current_user), "not allowed to vote"
+        assert_error choice\vote @current_user
+      when "delete"
+        assert_error poll\is_open!, "poll is closed"
+        assert_error poll\allowed_to_vote(@current_user), "invalid poll"
+
+        -- find existing vote
+        vote = PollVotes\find {
+          poll_choice_id: choice.id
+          user_id: @current_user.id
+        }
+
+        if vote
+          vote\delete!
+          return true
+        else
+          nil, "invalid vote"
 
   -- this merges the parsed choice params with the existing choices in the database
   -- choices with ids should be updated, and new choices should be created

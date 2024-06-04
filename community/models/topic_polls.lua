@@ -26,6 +26,9 @@ do
       return self:get_topic():allowed_to_edit(user)
     end,
     allowed_to_vote = function(self, user)
+      if not (self:is_open()) then
+        return nil, "poll is closed"
+      end
       return self:get_topic():allowed_to_view(user)
     end,
     is_open = function(self)

@@ -56,6 +56,9 @@ class TopicPolls extends Model
     @get_topic!\allowed_to_edit user
 
   allowed_to_vote: (user) =>
+    unless @is_open!
+      return nil, "poll is closed"
+
     @get_topic!\allowed_to_view user
 
   is_open: =>

@@ -102,6 +102,114 @@ describe "TopicPollsFlow", ->
 
     test_result result
 
+  describe "vote", ->
+    local current_user, poll, choice
+    before_each ->
+      current_user = factory.Users!
+      topic = factory.Topics!
+      poll = TopicPolls\create {
+        topic_id: topic.id
+        poll_question: "Vote on this question"
+        end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )")
+        vote_type: TopicPolls.vote_types.single
+      }
+      choice = PollChoices\create {
+        poll_id: poll.id
+        choice_text: "Option A"
+        position: 1
+      }
+
+    it "creates a vote", ->
+      in_request {
+        post: {
+          choice_id: choice.id
+          action: "create"
+        }
+      }, =>
+        @current_user = current_user
+        @flow("topic_polls")\vote!
+        true
+
+      assert PollVotes\find {
+        poll_choice_id: choice.id,
+        user_id: current_user.id
+      }
+
+    it "deletes an existing vote", ->
+      assert PollVotes\create {
+        poll_choice_id: choice.id
+        user_id: current_user.id
+        counted: true
+      }
+
+      in_request {
+        post: {
+          choice_id: choice.id
+          action: "delete"
+        }
+      }, =>
+        @current_user = current_user
+        @flow("topic_polls")\vote!
+        true
+
+      vote = PollVotes\find {
+        poll_choice_id: choice.id,
+        user_id: current_user.id
+      }
+      assert not vote
+
+    it "fails to create a vote on a closed poll", ->
+      poll\update {
+        end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' - interval '1 day' )")
+      }
+
+      assert.has_error(
+        -> in_request {
+          post: {
+            choice_id: choice.id
+            action: "create"
+          }
+        }, =>
+          @current_user = current_user
+          @flow("topic_polls")\vote!
+          true
+        {
+          message: {"poll is closed"}
+        }
+      )
+
+    it "prevents deleting a vote on a closed poll", ->
+      poll\update {
+        end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' - interval '1 day' )")
+      }
+      assert PollVotes\create {
+        poll_choice_id: choice.id
+        user_id: current_user.id
+        counted: true
+      }
+
+      assert.has_error(
+        -> in_request {
+          post: {
+            choice_id: choice.id
+            action: "delete"
+          }
+        }, =>
+          @current_user = current_user
+          @flow("topic_polls")\vote!
+          true
+        {
+          message: {"poll is closed"}
+        }
+      )
+
+      -- vote should still exist
+      vote = PollVotes\find {
+        poll_choice_id: choice.id,
+        user_id: current_user.id
+      }
+      assert vote
+
   describe "set choices", ->
     sorted_pairs!
 
