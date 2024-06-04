@@ -10,19 +10,21 @@ do
       if opts == nil then
         opts = { }
       end
-      local res = db.insert(self.__class:table_name(), opts, {
-        on_conflict = "do nothing",
+      opts.created_at = opts.created_at or db.format_date()
+      opts.updated_at = opts.updated_at or db.format_date()
+      local res = unpack(db.insert(self.__class:table_name(), opts, {
+        on_conflict = "do_nothing",
         returning = "*"
-      })
+      }))
       if res.counted then
         local PollChoices
         PollChoices = require("community.models").PollChoices
         db.update(PollChoices:table_name(), {
-          vote_count = db.raw(db.interpolate_query("vote_count + 1"))
+          vote_count = db.raw("vote_count + 1")
         }, db.clause({
           {
-            "poll_id = ?",
-            res.poll_id
+            "id = ?",
+            res.poll_choice_id
           }
         }))
       end
@@ -35,7 +37,7 @@ do
         where = db.clause({
           {
             "counted = ?",
-            counted
+            not counted
           }
         })
       })
@@ -46,12 +48,14 @@ do
         else
           delta = -1
         end
-        db.update(self.poll_choice:table_name(), {
+        local PollChoices
+        PollChoices = require("community.models").PollChoices
+        db.update(PollChoices:table_name(), {
           vote_count = db.raw(db.interpolate_query("vote_count + ?", delta))
         }, db.clause({
           {
-            "poll_id = ?",
-            self.poll_id
+            "id = ?",
+            self.poll_choice_id
           }
         }))
         return true

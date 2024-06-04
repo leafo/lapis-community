@@ -167,4 +167,50 @@ describe "models.topics", ->
     choice1\recount!
     assert.same 0, choice1.vote_count
 
+  it "deletes poll votes, both counted and uncounted", ->
+    topic = factory.Topics!
+    poll = TopicPolls\create {
+      topic_id: topic.id
+      poll_question: "What is your favorite color?"
+      start_date: db.raw "date_trunc('seconds', now() at time zone 'utc')"
+      end_date: db.raw "date_trunc('seconds', now() at time zone 'utc') + interval '1 day'"
+    }
+    red_choice = PollChoices\create {
+      poll_id: poll.id
+      choice_text: "Red"
+      position: 1
+    }
 
+    blue_choice = PollChoices\create {
+      poll_id: poll.id
+      choice_text: "Blue"
+      position: 2
+    }
+
+    vote1 = PollVotes\create {
+      poll_choice_id: red_choice.id
+      user_id: factory.Users!.id
+      counted: true
+    }
+    vote2 = PollVotes\create {
+      poll_choice_id: red_choice.id
+      user_id: factory.Users!.id
+      counted: false
+    }
+
+    red_choice\refresh!
+    blue_choice\refresh!
+    assert.same 1, red_choice.vote_count
+    assert.same 0, blue_choice.vote_count
+
+    vote1\delete!
+    red_choice\refresh!
+    blue_choice\refresh!
+    assert.same 0, red_choice.vote_count
+    assert.same 0, blue_choice.vote_count
+
+    vote2\delete!
+    red_choice\refresh!
+    blue_choice\refresh!
+    assert.same 0, red_choice.vote_count
+    assert.same 0, blue_choice.vote_count

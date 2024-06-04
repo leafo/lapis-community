@@ -45,6 +45,23 @@ class PollVotes extends Model
 
     @load res
 
+  delete: =>
+    deleted, res = super db.raw "*"
+
+    if deleted
+      removed_row = unpack res
+      if removed_row.counted
+        -- decrement the vote count on the poll choice
+        import PollChoices from require "community.models"
+        db.update PollChoices\table_name!, {
+          vote_count: db.raw "vote_count - 1"
+        }, db.clause {
+          {"id = ?", removed_row.poll_choice_id}
+        }
+
+      true
+
+  -- update the counted field and correctly increment the vote count
   set_counted: (counted) =>
     updated = @update {
       counted: counted
