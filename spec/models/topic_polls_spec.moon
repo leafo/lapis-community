@@ -90,6 +90,24 @@ describe "models.topics", ->
         counted: true
       }
 
+      -- Create another poll to ensure it is not affected by the delete
+      another_poll = TopicPolls\create {
+        topic_id: topic.id
+        poll_question: "What is your favorite fruit?"
+        start_date: db.raw "date_trunc('seconds', now() at time zone 'utc')"
+        end_date: db.raw "date_trunc('seconds', now() at time zone 'utc') + interval '1 day'"
+      }
+      another_choice = PollChoices\create {
+        poll_id: another_poll.id
+        choice_text: "Apple"
+        position: 1
+      }
+      another_vote = PollVotes\create {
+        poll_choice_id: another_choice.id
+        user_id: factory.Users!.id
+        counted: true
+      }
+
       poll\delete!
 
       assert.falsy TopicPolls\find poll.id
@@ -97,6 +115,11 @@ describe "models.topics", ->
       assert.falsy PollChoices\find blue_choice.id
       assert.falsy PollVotes\find vote1.id
       assert.falsy PollVotes\find vote2.id
+
+      -- Ensure the new poll and its choices/votes are not affected
+      assert.truthy TopicPolls\find another_poll.id
+      assert.truthy PollChoices\find another_choice.id
+      assert.truthy PollVotes\find another_vote.id
 
     it "creates poll votes, counted and uncounted", ->
       vote1 = PollVotes\create {
