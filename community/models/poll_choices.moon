@@ -1,6 +1,6 @@
 db = require "lapis.db"
 
-import Model from require "community.model"
+import Model, VirtualModel from require "community.model"
 
 -- Generated schema dump: (do not edit)
 --
@@ -21,10 +21,26 @@ import Model from require "community.model"
 class PollChoices extends Model
   @timestamp: true
 
+  class PollChoiceVoters extends VirtualModel
+    @primary_key: {"poll_choice_id", "user_id"}
+
+    @relations: {
+      {"poll_choice", belongs_to: "PollChoices"}
+      {"user", belongs_to: "Users"}
+      {"vote", has_one: "PollVotes", key: {"poll_choice_id", "user_id"}}
+    }
+
   @relations: {
     {"poll", belongs_to: "TopicPolls"}
     {"poll_votes", has_many: "PollVotes", key: "poll_choice_id"}
   }
+
+  with_user: VirtualModel\make_loader "voters", (user_id) =>
+    assert user_id, "expecting user id"
+    PollChoiceVoters\load {
+      user_id: user_id
+      poll_choice_id: @id
+    }
 
   name_for_display: =>
     @choice_text

@@ -265,6 +265,33 @@ describe "models.topics", ->
       assert.same 0, red_choice.vote_count
       assert.same 0, blue_choice.vote_count
 
+    it "poll choice voters", ->
+      import preload from require "lapis.db.model"
+      users = {
+        factory.Users!
+        factory.Users!
+      }
+
+      v1 = assert red_choice\vote users[1]
+      v2 = assert blue_choice\vote users[2]
+
+      voters = {}
+      for c in *{red_choice, blue_choice}
+        for u in *users
+          table.insert voters, c\with_user(u.id)
+
+      preload voters, "vote"
+
+      -- verify all the votes are loaded
+      for voter in *voters
+        switch "#{voter.poll_choice_id}_#{voter.user_id}"
+          when "#{red_choice.id}_#{users[1].id}"
+            assert.same v1, voter.vote
+          when "#{blue_choice.id}_#{users[2].id}"
+            assert.same v2, voter.vote
+          else
+            assert.nil voter.vote
+
     describe "vote", ->
       it "allows voting on a single choice poll", ->
         user = factory.Users!
