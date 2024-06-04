@@ -370,10 +370,8 @@ class Posts extends Model
   false
 
   hard_delete: (deleted_topic) =>
-    res = db.query "delete from #{db.escape_identifier @@table_name!} where #{db.encode_clause @_primary_cond!} returning *"
-
-    unless res and res.affected_rows and res.affected_rows > 0
-      return false
+    deleted, res = Model.delete @, db.raw "*"
+    return false unless deleted
 
     deleted_post = unpack res
     was_soft_deleted = deleted_post.deleted

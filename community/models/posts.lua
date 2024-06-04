@@ -200,8 +200,8 @@ do
       end
     end,
     hard_delete = function(self, deleted_topic)
-      local res = db.query("delete from " .. tostring(db.escape_identifier(self.__class:table_name())) .. " where " .. tostring(db.encode_clause(self:_primary_cond())) .. " returning *")
-      if not (res and res.affected_rows and res.affected_rows > 0) then
+      local deleted, res = Model.delete(self, db.raw("*"))
+      if not (deleted) then
         return false
       end
       local deleted_post = unpack(res)

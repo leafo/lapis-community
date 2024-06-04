@@ -14,8 +14,7 @@ import Model from require "community.model"
 -- );
 -- ALTER TABLE ONLY community_poll_votes
 --   ADD CONSTRAINT community_poll_votes_pkey PRIMARY KEY (id);
--- CREATE INDEX community_poll_votes_poll_choice_id_idx ON community_poll_votes USING btree (poll_choice_id);
--- CREATE INDEX community_poll_votes_user_id_idx ON community_poll_votes USING btree (user_id);
+-- CREATE UNIQUE INDEX community_poll_votes_poll_choice_id_user_id_idx ON community_poll_votes USING btree (poll_choice_id, user_id);
 --
 class PollVotes extends Model
   @timestamp: true

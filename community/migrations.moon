@@ -736,6 +736,7 @@ import create_table, create_index, drop_table, add_column, drop_column, drop_ind
       {"id", serial}
       {"poll_id", foreign_key}
       {"choice_text", text}
+      {"description", text null: true}
       {"vote_count", integer default: 0}
       {"created_at", time}
       {"updated_at", time}

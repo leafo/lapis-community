@@ -1410,6 +1410,12 @@ return {
         text
       },
       {
+        "description",
+        text({
+          null = true
+        })
+      },
+      {
         "vote_count",
         integer({
           default = 0

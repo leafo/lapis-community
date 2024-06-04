@@ -9,9 +9,21 @@ do
   local _class_0
   local _parent_0 = Model
   local _base_0 = {
+    name_for_display = function(self)
+      return self.poll_question
+    end,
     is_open = function(self)
       local now = date(true)
       return now >= date(self.start_date) and now < date(self.end_date)
+    end,
+    total_vote_count = function(self)
+      local sum = 0
+      local _list_0 = self:get_poll_choices()
+      for _index_0 = 1, #_list_0 do
+        local choice = _list_0[_index_0]
+        sum = sum + choice.vote_count
+      end
+      return sum
     end
   }
   _base_0.__index = _base_0

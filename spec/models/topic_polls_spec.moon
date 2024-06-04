@@ -4,6 +4,8 @@ factory = require "spec.factory"
 
 import assert_has_queries, sorted_pairs from require "spec.helpers"
 
+import types from require "tableshape"
+
 describe "models.topics", ->
   sorted_pairs!
 
@@ -189,3 +191,89 @@ describe "models.topics", ->
       blue_choice\refresh!
       assert.same 0, red_choice.vote_count
       assert.same 0, blue_choice.vote_count
+
+    describe "vote", ->
+      it "allows voting on a single choice poll", ->
+        user = factory.Users!
+        another_user = factory.Users!
+        poll\update { vote_type: TopicPolls.vote_types.single }
+
+        vote1 = red_choice\vote user
+        assert.truthy vote1
+        assert.same red_choice.id, vote1.poll_choice_id
+
+        other_vote = red_choice\vote another_user
+        assert.truthy other_vote
+        assert.same red_choice.id, other_vote.poll_choice_id
+
+        red_choice\refresh!
+        blue_choice\refresh!
+        assert.same 2, red_choice.vote_count
+        assert.same 0, blue_choice.vote_count
+
+        vote2 = blue_choice\vote user
+        assert.truthy vote2
+        assert.same blue_choice.id, vote2.poll_choice_id
+
+        red_choice\refresh!
+        blue_choice\refresh!
+        assert.same 1, red_choice.vote_count
+        assert.same 1, blue_choice.vote_count
+
+        -- Ensure another user's vote is unaffected
+        assert.same red_choice.id, other_vote.poll_choice_id
+        assert.truthy PollVotes\find other_vote.id
+
+        assert_votes = types.assert types.shape {
+          types.partial {
+            id: other_vote.id
+            poll_choice_id: red_choice.id
+            user_id: another_user.id
+            counted: true
+          }
+          types.partial {
+            id: vote2.id
+            poll_choice_id: blue_choice.id
+            user_id: user.id
+            counted: true
+          }
+        }
+
+        assert_votes PollVotes\select "order by id asc"
+
+
+      it "allows voting on multiple choices poll", ->
+        user = factory.Users!
+        poll\update { vote_type: TopicPolls.vote_types.multiple }
+
+        vote1 = red_choice\vote user
+        assert.truthy vote1
+        assert.same red_choice.id, vote1.poll_choice_id
+
+        vote2 = blue_choice\vote user
+        assert.truthy vote2
+        assert.same blue_choice.id, vote2.poll_choice_id
+
+        red_choice\refresh!
+        blue_choice\refresh!
+        assert.same 1, red_choice.vote_count
+        assert.same 1, blue_choice.vote_count
+
+        assert_votes = types.assert types.shape {
+          types.partial {
+            id: vote1.id
+            poll_choice_id: red_choice.id
+            user_id: user.id
+            counted: true
+          }
+          types.partial {
+            id: vote2.id
+            poll_choice_id: blue_choice.id
+            user_id: user.id
+            counted: true
+          }
+        }
+
+        assert_votes PollVotes\select "order by id asc"
+
+
