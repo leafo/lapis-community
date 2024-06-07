@@ -198,9 +198,26 @@ do
             end
           end)() or nil)
         })
+        table.insert(v, {
+          "poll",
+          types.empty + types.table
+        })
       end
       local post_update = assert_valid(self.params.post, types.params_shape(v))
       post_update.body = assert_error(Posts:filter_body(post_update.body, post_update.body_format))
+      local poll_flow
+      if post_update.poll then
+        local PollsFlow = require("community.flows.topic_polls")
+        poll_flow = PollsFlow(self)
+        local poll_edit
+        poll_edit = assert_valid(self.params.topic, types.params_shape({
+          {
+            "poll",
+            poll_flow:validate_params_shape()
+          }
+        })).poll
+        post_update.poll = poll_edit
+      end
       if opts and opts.before_edit_callback then
         opts.before_edit_callback(post_update)
       end

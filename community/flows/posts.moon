@@ -167,9 +167,24 @@ class PostsFlow extends Flow
 
       -- this treats nil and not provided and does not action
       table.insert v, {"tags", types.nil + types.empty / (-> {}) + types.limited_text(240) / (category and category\parse_tags or nil) }
+      table.insert v, {"poll", types.empty + types.table}
+
 
     post_update = assert_valid @params.post, types.params_shape v
     post_update.body = assert_error Posts\filter_body post_update.body, post_update.body_format
+
+    local poll_flow
+    if post_update.poll
+      PollsFlow = require "community.flows.topic_polls"
+      poll_flow = PollsFlow @
+
+      -- we do validation in separate step to have better error messages
+      {poll: poll_edit} = assert_valid @params.topic, types.params_shape {
+        {"poll", poll_flow\validate_params_shape!}
+      }
+
+      post_update.poll = poll_edit
+
 
     if opts and opts.before_edit_callback
       opts.before_edit_callback post_update

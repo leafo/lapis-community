@@ -75,7 +75,7 @@ class TopicsFlow extends Flow
 
     if new_topic.poll
       -- we do validation like this so we can have nice error messages
-      {:new_poll} = assert_valid @params.topic, types.params_shape {
+      {poll: new_poll} = assert_valid @params.topic, types.params_shape {
         {"poll", poll_flow\validate_params_shape!}
       }
 

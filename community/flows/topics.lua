@@ -117,7 +117,7 @@ do
             "poll",
             poll_flow:validate_params_shape()
           }
-        })).new_poll
+        })).poll
         new_topic.poll = new_poll
         assert_error(self.category:allowed_to_create_poll(self.current_user), "you can't create a poll in this category")
       end
