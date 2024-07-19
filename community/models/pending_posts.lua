@@ -16,7 +16,7 @@ do
       if _class_0.__parent.__base.delete(self) then
         db.delete(ActivityLogs:table_name(), {
           object_type = assert(ActivityLogs.object_types.pending_post),
-          object_id = self.id
+          object_id = assert(self.id)
         })
         return true
       end

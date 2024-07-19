@@ -76,7 +76,7 @@ class PendingPosts extends Model
     if super!
       db.delete ActivityLogs\table_name!, {
         object_type: assert ActivityLogs.object_types.pending_post
-        object_id: @id
+        object_id: assert @id
       }
       true
 
