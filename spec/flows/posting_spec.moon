@@ -1228,6 +1228,34 @@ describe "posting flow", ->
         assert.truthy block
         assert.nil post
 
+      it "allows post if moderator is blocked", ->
+        post = factory.Posts topic_id: topic.id
+        Blocks\create {
+          blocking_user_id: post.user_id
+          blocked_user_id: current_user.id
+        }
+
+        category = topic\get_category!
+        category\update {
+          user_id: current_user.id
+        }
+
+        assert topic\allowed_to_moderate(current_user), "current user should be moderator"
+
+        local req
+
+        assert.has_no_error(
+          ->
+            new_post {
+              topic_id: topic.id
+              parent_post_id: post.id
+              "post[body]": "This is a sub message"
+            }, (r) -> req = r
+        )
+
+        assert.nil req.block
+        assert.not_nil req.post
+
       it "posts a threaded post", ->
         post = factory.Posts topic_id: topic.id
 

@@ -65,8 +65,9 @@ class PostsFlow extends Flow
       -- reply button to be hidden, revealing the block
       viewer = parent_post\with_viewing_user(@current_user.id)
       if block = viewer\get_block_received!
-        @block = block
-        yield_error "can't reply to post"
+        if viewer\can_be_blocked!
+          @block = block
+          yield_error "can't reply to post"
 
 
     needs_approval, warning = if opts.force_pending

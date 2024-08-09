@@ -623,7 +623,32 @@ do
   do
     local _class_1
     local _parent_1 = VirtualModel
-    local _base_1 = { }
+    local _base_1 = {
+      can_be_blocked = function(self)
+        do
+          local viewer = self:get_viewer()
+          if viewer then
+            if viewer:is_admin() then
+              return false
+            end
+            do
+              local post = self:get_post()
+              if post then
+                do
+                  local topic = post:get_topic()
+                  if topic then
+                    if topic:allowed_to_moderate(viewer) then
+                      return false
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+        return true
+      end
+    }
     _base_1.__index = _base_1
     setmetatable(_base_1, _parent_1.__base)
     _class_1 = setmetatable({
@@ -659,6 +684,18 @@ do
       "viewer_id"
     }
     self.relations = {
+      {
+        "viewer",
+        belongs_to = "Users"
+      },
+      {
+        "author",
+        belongs_to = "Users"
+      },
+      {
+        "post",
+        belongs_to = "Posts"
+      },
       {
         "block_given",
         has_one = "Blocks",

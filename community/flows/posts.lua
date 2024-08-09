@@ -89,8 +89,10 @@ do
         do
           local block = viewer:get_block_received()
           if block then
-            self.block = block
-            yield_error("can't reply to post")
+            if viewer:can_be_blocked() then
+              self.block = block
+              yield_error("can't reply to post")
+            end
           end
         end
       end

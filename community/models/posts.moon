@@ -47,6 +47,10 @@ class Posts extends Model
     @primary_key: {"post_id", "author_id", "viewer_id"}
 
     @relations: {
+      {"viewer", belongs_to: "Users"}
+      {"author", belongs_to: "Users"}
+      {"post", belongs_to: "Posts"}
+
       {"block_given", has_one: "Blocks", key: {
         blocking_user_id: "viewer_id"
         blocked_user_id: "author_id"
@@ -63,6 +67,16 @@ class Posts extends Model
       }}
     }
 
+    -- NOTE: this is checked at post time to see if block can be enforced
+    can_be_blocked: =>
+      if viewer = @get_viewer!
+        return false if viewer\is_admin!
+
+        if post = @get_post!
+          if topic = post\get_topic!
+            return false if topic\allowed_to_moderate(viewer)
+
+      true
 
   @relations: {
     {"topic", belongs_to: "Topics"}
