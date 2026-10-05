@@ -722,6 +722,7 @@ import create_table, create_index, drop_table, add_column, drop_column, drop_ind
       {"vote_type", enum}
       {"anonymous", boolean default: true}
       {"hide_results", boolean default: false}
+      {"version", integer default: 1}
       {"start_date", time default: db.raw("date_trunc('second', now() at time zone 'utc')")}
       {"end_date", time}
       {"created_at", time}

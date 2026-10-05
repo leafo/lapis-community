@@ -1770,7 +1770,7 @@ describe "posting flow", ->
 
           choices[1]\vote factory.Users!
 
-        -- builds edit params for the poll, overrides is merged into the params
+        -- a false override removes the param
         poll_edit = (overrides={}) ->
           params = {
             post_id: post.id

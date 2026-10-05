@@ -60,6 +60,7 @@ class TopicPollsFlow extends Flow
   vote: require_current_user with_params {
     {"choice_id", types.db_id}
     {"action", types.one_of {"create", "delete"}}
+    {"poll_version", types.empty + types.db_id}
   }, (params) =>
     import PollChoices,PollVotes from require "community.models"
 
@@ -69,6 +70,11 @@ class TopicPollsFlow extends Flow
       when "create"
         assert_error poll\is_open!, "poll is closed" -- preempt for better error message
         assert_error poll\allowed_to_vote(@current_user), "not allowed to vote"
+
+        assert_error params.poll_version, "missing poll version"
+        assert_error params.poll_version == poll.version,
+          "this poll has changed since you loaded it, please review it and vote again"
+
         assert_error choice\vote @current_user
       when "delete"
         assert_error poll\is_open!, "poll is closed"
@@ -87,12 +93,9 @@ class TopicPollsFlow extends Flow
           nil, "invalid vote"
 
 
-  -- Returns list of changes that would alter the meaning of votes already
-  -- cast on the poll, or nil if the poll has no votes or no such changes are
-  -- made. params is the output of validate_params_shape
-  locked_poll_changes: (poll, params) =>
-    return nil unless poll\has_votes!
-
+  -- Used by set_poll to decide when to bump the poll version, and by
+  -- locked_poll_changes. params must be the output of validate_params_shape
+  content_changes: (poll, params) =>
     changes = {}
 
     if params.poll_question != poll.poll_question
@@ -100,9 +103,6 @@ class TopicPollsFlow extends Flow
 
     if TopicPolls.vote_types\for_db(params.vote_type) != poll.vote_type
       table.insert changes, "vote type"
-
-    if poll.anonymous and not params.anonymous
-      table.insert changes, "anonymous"
 
     choices_by_id = { c.id, c for c in *params.choices when c.id }
 
@@ -114,6 +114,23 @@ class TopicPollsFlow extends Flow
 
       if choice_params.choice_text != choice.choice_text
         table.insert changes, "choice text"
+
+    for c in *params.choices
+      unless c.id
+        table.insert changes, "added choice"
+        break
+
+    changes
+
+  -- Used by edit_post to stop non-moderators from changing what existing
+  -- votes mean. params must be the output of validate_params_shape
+  locked_poll_changes: (poll, params) =>
+    return nil unless poll\has_votes!
+
+    changes = [c for c in *@content_changes poll, params when c != "added choice"]
+
+    if poll.anonymous and not params.anonymous
+      table.insert changes, "anonymous"
 
     if next changes
       changes
@@ -133,7 +150,13 @@ class TopicPollsFlow extends Flow
 
     poll = if existing_poll = topic\get_poll!
       import filter_update from require "community.helpers.models"
-      existing_poll\update filter_update existing_poll, poll_params
+      poll_update = filter_update existing_poll, poll_params
+
+      -- invalidates vote forms rendered before this edit
+      if next @content_changes existing_poll, params
+        poll_update.version = db.raw "version + 1"
+
+      existing_poll\update poll_update
       existing_poll
     else
       poll_params.topic_id = topic.id

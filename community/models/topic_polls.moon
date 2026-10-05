@@ -16,6 +16,7 @@ import Model from require "community.model"
 --   vote_type smallint NOT NULL,
 --   anonymous boolean DEFAULT true NOT NULL,
 --   hide_results boolean DEFAULT false NOT NULL,
+--   version integer DEFAULT 1 NOT NULL,
 --   start_date timestamp without time zone DEFAULT date_trunc('second'::text, (now() AT TIME ZONE 'utc'::text)) NOT NULL,
 --   end_date timestamp without time zone NOT NULL,
 --   created_at timestamp without time zone NOT NULL,

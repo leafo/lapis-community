@@ -113,6 +113,7 @@ describe "TopicPollsFlow", ->
         end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )")
         vote_type: TopicPolls.vote_types.single
       }
+      poll\refresh!
       choice = PollChoices\create {
         poll_id: poll.id
         choice_text: "Option A"
@@ -124,6 +125,7 @@ describe "TopicPollsFlow", ->
         post: {
           choice_id: choice.id
           action: "create"
+          poll_version: poll.version
         }
       }, =>
         @current_user = current_user
@@ -142,6 +144,7 @@ describe "TopicPollsFlow", ->
             post: {
               choice_id: choice.id + 1000
               action: "create"
+              poll_version: poll.version
             }
           }, =>
             @current_user = current_user
@@ -151,6 +154,46 @@ describe "TopicPollsFlow", ->
           message: {"invalid poll"}
         }
       )
+
+    it "requires poll version to create a vote", ->
+      assert.has_error(
+        -> in_request {
+          post: {
+            choice_id: choice.id
+            action: "create"
+          }
+        }, =>
+          @current_user = current_user
+          @flow("topic_polls")\vote!
+          true
+        {
+          message: {"missing poll version"}
+        }
+      )
+
+      assert.same 0, PollVotes\count!
+
+    it "rejects a vote for an outdated poll version", ->
+      stale_version = poll.version
+      poll\update version: db.raw "version + 1"
+
+      assert.has_error(
+        -> in_request {
+          post: {
+            choice_id: choice.id
+            action: "create"
+            poll_version: stale_version
+          }
+        }, =>
+          @current_user = current_user
+          @flow("topic_polls")\vote!
+          true
+        {
+          message: {"this poll has changed since you loaded it, please review it and vote again"}
+        }
+      )
+
+      assert.same 0, PollVotes\count!
 
     it "deletes an existing vote", ->
       assert PollVotes\create {
@@ -185,6 +228,7 @@ describe "TopicPollsFlow", ->
           post: {
             choice_id: choice.id
             action: "create"
+            poll_version: poll.version
           }
         }, =>
           @current_user = current_user
@@ -504,7 +548,7 @@ describe "TopicPollsFlow", ->
         description: db.NULL
         anonymous: true
         hide_results: false
-        vote_type: "single"
+        vote_type: TopicPolls.vote_types.single
         choices: {
           { id: choice_a.id, choice_text: "A" }
           { id: choice_b.id, choice_text: "B" }
@@ -546,14 +590,14 @@ describe "TopicPollsFlow", ->
       it "detects every locked change", ->
         params = unchanged_params!
         params.poll_question = "Different?"
-        params.vote_type = "multiple"
+        params.vote_type = TopicPolls.vote_types.multiple
         params.anonymous = false
         params.choices = {
           { id: choice_a.id, choice_text: "A changed" }
         }
 
         assert.same {
-          "question", "vote type", "anonymous", "choice text", "removed choice"
+          "question", "vote type", "choice text", "removed choice", "anonymous"
         }, locked_poll_changes params
 
       it "treats choice ids from another poll as removal", ->
@@ -562,3 +606,69 @@ describe "TopicPollsFlow", ->
         params.choices[2] = { id: other_choice.id, choice_text: "B" }
 
         assert.same {"removed choice"}, locked_poll_changes params
+
+  describe "poll version", ->
+    local topic, poll, choice_a, choice_b
+
+    before_each ->
+      topic = factory.Topics!
+      poll = TopicPolls\create {
+        topic_id: topic.id
+        poll_question: "Question?"
+        vote_type: TopicPolls.vote_types.single
+        end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day')")
+      }
+      poll\refresh!
+
+      choice_a = PollChoices\create poll_id: poll.id, choice_text: "A", position: 1
+      choice_b = PollChoices\create poll_id: poll.id, choice_text: "B", position: 2
+
+    edit_poll = (fn) ->
+      params = {
+        poll_question: "Question?"
+        description: "Description"
+        anonymous: true
+        hide_results: false
+        vote_type: TopicPolls.vote_types.single
+        choices: {
+          { id: choice_a.id, choice_text: "A" }
+          { id: choice_b.id, choice_text: "B" }
+        }
+      }
+
+      fn params if fn
+
+      in_request {}, =>
+        @flow("topic_polls")\set_poll topic, params
+
+      poll\refresh!
+      poll.version
+
+    it "starts at 1", ->
+      assert.same 1, poll.version
+
+    it "doesn't change for description and display settings", ->
+      assert.same 1, edit_poll (p) ->
+        p.description = "Other description"
+        p.hide_results = true
+        p.anonymous = false
+        p.choices[1].description = "about A"
+
+    it "increments when question changes", ->
+      assert.same 2, edit_poll (p) -> p.poll_question = "Other?"
+
+    it "increments when vote type changes", ->
+      assert.same 2, edit_poll (p) -> p.vote_type = TopicPolls.vote_types.multiple
+
+    it "increments when choice text changes", ->
+      assert.same 2, edit_poll (p) -> p.choices[2].choice_text = "B2"
+
+    it "increments when choice is added", ->
+      assert.same 2, edit_poll (p) -> table.insert p.choices, { choice_text: "C" }
+
+    it "increments when choice is removed", ->
+      assert.same 2, edit_poll (p) -> table.remove p.choices
+
+    it "increments on each content edit", ->
+      edit_poll (p) -> p.poll_question = "Second?"
+      assert.same 3, edit_poll (p) -> p.poll_question = "Third?"

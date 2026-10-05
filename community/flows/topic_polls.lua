@@ -69,6 +69,10 @@ do
           "create",
           "delete"
         })
+      },
+      {
+        "poll_version",
+        types.empty + types.db_id
       }
     }, function(self, params)
       local PollChoices, PollVotes
@@ -82,6 +86,8 @@ do
       if "create" == _exp_0 then
         assert_error(poll:is_open(), "poll is closed")
         assert_error(poll:allowed_to_vote(self.current_user), "not allowed to vote")
+        assert_error(params.poll_version, "missing poll version")
+        assert_error(params.poll_version == poll.version, "this poll has changed since you loaded it, please review it and vote again")
         return assert_error(choice:vote(self.current_user))
       elseif "delete" == _exp_0 then
         assert_error(poll:is_open(), "poll is closed")
@@ -98,19 +104,13 @@ do
         end
       end
     end)),
-    locked_poll_changes = function(self, poll, params)
-      if not (poll:has_votes()) then
-        return nil
-      end
+    content_changes = function(self, poll, params)
       local changes = { }
       if params.poll_question ~= poll.poll_question then
         table.insert(changes, "question")
       end
       if TopicPolls.vote_types:for_db(params.vote_type) ~= poll.vote_type then
         table.insert(changes, "vote type")
-      end
-      if poll.anonymous and not params.anonymous then
-        table.insert(changes, "anonymous")
       end
       local choices_by_id
       do
@@ -144,6 +144,37 @@ do
           break
         end
       end
+      local _list_1 = params.choices
+      for _index_0 = 1, #_list_1 do
+        local c = _list_1[_index_0]
+        if not (c.id) then
+          table.insert(changes, "added choice")
+          break
+        end
+      end
+      return changes
+    end,
+    locked_poll_changes = function(self, poll, params)
+      if not (poll:has_votes()) then
+        return nil
+      end
+      local changes
+      do
+        local _accum_0 = { }
+        local _len_0 = 1
+        local _list_0 = self:content_changes(poll, params)
+        for _index_0 = 1, #_list_0 do
+          local c = _list_0[_index_0]
+          if c ~= "added choice" then
+            _accum_0[_len_0] = c
+            _len_0 = _len_0 + 1
+          end
+        end
+        changes = _accum_0
+      end
+      if poll.anonymous and not params.anonymous then
+        table.insert(changes, "anonymous")
+      end
       if next(changes) then
         return changes
       end
@@ -163,7 +194,11 @@ do
         if existing_poll then
           local filter_update
           filter_update = require("community.helpers.models").filter_update
-          existing_poll:update(filter_update(existing_poll, poll_params))
+          local poll_update = filter_update(existing_poll, poll_params)
+          if next(self:content_changes(existing_poll, params)) then
+            poll_update.version = db.raw("version + 1")
+          end
+          existing_poll:update(poll_update)
           poll = existing_poll
         else
           poll_params.topic_id = topic.id

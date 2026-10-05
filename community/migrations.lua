@@ -1376,6 +1376,12 @@ return {
         })
       },
       {
+        "version",
+        integer({
+          default = 1
+        })
+      },
+      {
         "start_date",
         time({
           default = db.raw("date_trunc('second', now() at time zone 'utc')")
