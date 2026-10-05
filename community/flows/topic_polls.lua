@@ -83,8 +83,7 @@ do
         description = params.description,
         anonymous = params.anonymous,
         hide_results = params.hide_results,
-        vote_type = params.vote_type,
-        end_date = db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )")
+        vote_type = params.vote_type
       }
       local poll
       do
@@ -96,6 +95,7 @@ do
           poll = existing_poll
         else
           poll_params.topic_id = topic.id
+          poll_params.end_date = db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )")
           poll = TopicPolls:create(poll_params)
         end
       end

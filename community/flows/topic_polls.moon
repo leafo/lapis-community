@@ -87,9 +87,6 @@ class TopicPollsFlow extends Flow
       anonymous: params.anonymous
       hide_results: params.hide_results
       vote_type: params.vote_type
-
-      -- TODO: allow this to be specified, look into how we set date with timezone
-      end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )"
     }
 
     poll = if existing_poll = topic\get_poll!
@@ -98,6 +95,9 @@ class TopicPollsFlow extends Flow
       existing_poll
     else
       poll_params.topic_id = topic.id
+      -- end_date is only set on creation so editing a poll can't reopen or extend it
+      -- TODO: allow this to be specified, look into how we set date with timezone
+      poll_params.end_date = db.raw "date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )"
       TopicPolls\create poll_params
 
     if poll

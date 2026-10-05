@@ -455,3 +455,29 @@ describe "TopicPollsFlow", ->
       }
 
       test_choices poll_choices
+
+    it "does not change end_date when updating existing poll", ->
+      poll = TopicPolls\create {
+        topic_id: topic.id
+        poll_question: "Closed question"
+        vote_type: TopicPolls.vote_types.single
+        start_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' - interval '2 days')")
+        end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' - interval '1 day')")
+      }
+
+      original_end_date = poll.end_date
+      assert.falsy poll\is_open!
+
+      in_request {}, =>
+        @flow("topic_polls")\set_poll topic, {
+          poll_question: "Edited question"
+          vote_type: TopicPolls.vote_types.single
+          choices: {
+            { choice_text: "Only option" }
+          }
+        }
+
+      poll\refresh!
+      assert.equal "Edited question", poll.poll_question
+      assert.equal original_end_date, poll.end_date
+      assert.falsy poll\is_open!
