@@ -78,7 +78,7 @@ describe "TopicPollsFlow", ->
     test_result = types.assert types.shape {
       poll_question: "Which do you prefer?"
       description: types.literal(db.NULL)
-      anonymous: true
+      anonymous: false
       hide_results: false
       vote_type: TopicPolls.vote_types.multiple
       choices: types.shape {

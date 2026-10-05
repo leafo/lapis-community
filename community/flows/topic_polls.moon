@@ -10,16 +10,14 @@ import require_current_user from require "community.helpers.app"
 shapes = require "community.helpers.shapes"
 types = require "lapis.validate.types"
 
-bool_t = types.boolean + types.empty / false + types.any / true
-
 import TopicPolls from require "community.models"
 
 class TopicPollsFlow extends Flow
   @POLL_VALIDATION: {
     {"poll_question",            types.limited_text(limits.MAX_TITLE_LEN)}
     {"description",              types.empty / db.NULL + types.limited_text(limits.MAX_TITLE_LEN)}
-    {"anonymous",                shapes.default(true) * bool_t}
-    {"hide_results",             shapes.default(false) * bool_t}
+    {"anonymous",                types.empty / false + types.any / true}
+    {"hide_results",             types.empty / false + types.any / true}
     -- {"end_date", types.db_datetime}, -- TODO: figure out how we want to parse this
     -- TODO consdier just passing duration in hours
     {"vote_type",                shapes.default("single") * types.db_enum(TopicPolls.vote_types)}

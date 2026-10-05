@@ -13,7 +13,6 @@ local require_current_user
 require_current_user = require("community.helpers.app").require_current_user
 local shapes = require("community.helpers.shapes")
 local types = require("lapis.validate.types")
-local bool_t = types.boolean + types.empty / false + types.any / true
 local TopicPolls
 TopicPolls = require("community.models").TopicPolls
 local TopicPollsFlow
@@ -302,11 +301,11 @@ do
     },
     {
       "anonymous",
-      shapes.default(true) * bool_t
+      types.empty / false + types.any / true
     },
     {
       "hide_results",
-      shapes.default(false) * bool_t
+      types.empty / false + types.any / true
     },
     {
       "vote_type",

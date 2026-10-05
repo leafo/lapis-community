@@ -1834,6 +1834,25 @@ describe "posting flow", ->
           assert.same "Red", PollChoices\find(choices[1].id).choice_text
           assert.same 0, ModerationLogs\count!
 
+        it "prevents author from disabling anonymous", ->
+          poll\update anonymous: true
+
+          assert.has_error(
+            -> edit_post poll_edit!
+            {
+              message: {"poll already has votes, can't change: anonymous"}
+            }
+          )
+
+          edit_post poll_edit {
+            "topic[poll][anonymous]": "on"
+            "topic[poll][description]": "Still anonymous"
+          }
+
+          poll\refresh!
+          assert.true poll.anonymous
+          assert.same "Still anonymous", poll.description
+
         it "counts uncounted votes as votes", ->
           PollVotes\delete db.clause { poll_choice_id: choices[1].id }
           choices[2]\vote factory.Users!, false
