@@ -14,7 +14,7 @@ describe "browsing flow", ->
   import Categories, Topics, Posts, Votes,
     UserCategoryLastSeens, UserTopicLastSeens from require "spec.community_models"
 
-  for logged_in in *{true, nil} -- false
+  for logged_in in *{true, false}
     local current_user
 
     describe logged_in and "logged in" or "logged out", ->
@@ -409,6 +409,10 @@ describe "browsing flow", ->
           assert.same 4, #result_topics
           assert.nil next_page
           assert.nil prev_page
+
+          unless current_user
+            assert.same 0, UserCategoryLastSeens\count!
+            return
 
           last_seen, other = unpack UserCategoryLastSeens\select!
           assert.nil other
