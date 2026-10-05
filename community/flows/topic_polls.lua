@@ -308,6 +308,29 @@ do
       })
       return true
     end),
+    close_poll = require_current_user(function(self)
+      local TopicsFlow = require("community.flows.topics")
+      local topics_flow = TopicsFlow(self)
+      topics_flow:load_topic()
+      local topic = topics_flow.topic
+      local poll = assert_error(topic:get_poll(), "topic has no poll")
+      assert_error(poll:allowed_to_edit(self.current_user), "invalid user")
+      assert_error(not poll:is_closed(), "poll is already closed")
+      local params = assert_valid(self.params, types.params_shape({
+        {
+          "reason",
+          types.empty + types.limited_text(limits.MAX_BODY_LEN)
+        }
+      }))
+      local date = require("date")
+      poll:update({
+        end_date = date(true):fmt(date_format)
+      })
+      if self.current_user.id ~= topic.user_id then
+        topics_flow:write_moderation_log("topic.close_poll", params.reason)
+      end
+      return true
+    end),
     delete_poll = require_current_user(function(self)
       local topics_flow, poll = self:load_poll_for_moderation()
       local params = assert_valid(self.params, types.params_shape({

@@ -897,6 +897,49 @@ describe "TopicPollsFlow", ->
           { message: {"poll can't be open for more than 30 days"} }
         )
 
+    describe "close_poll", ->
+      it "lets author close their poll", ->
+        moderate "close_poll", {}, topic\get_user!
+
+        poll\refresh!
+        assert.true poll\is_closed!
+        assert.same 0, ModerationLogs\count!
+
+      it "lets moderator close poll and logs it", ->
+        moderate "close_poll", reason: "resolved"
+
+        poll\refresh!
+        assert.true poll\is_closed!
+
+        assert types.partial({
+          action: "topic.close_poll"
+          user_id: moderator.id
+          reason: "resolved"
+        }) unpack ModerationLogs\select!
+
+      it "rejects other users", ->
+        assert.has_error(
+          -> moderate "close_poll", {}, factory.Users!
+          { message: {"invalid user"} }
+        )
+
+        poll\refresh!
+        assert.true poll\is_open!
+
+      it "rejects closed poll", ->
+        moderate "close_poll"
+
+        assert.has_error(
+          -> moderate "close_poll"
+          { message: {"poll is already closed"} }
+        )
+
+      it "rejects topic without poll", ->
+        assert.has_error(
+          -> moderate "close_poll", { topic_id: factory.Topics(category_id: topic.category_id).id }
+          { message: {"topic has no poll"} }
+        )
+
     it "delete_poll removes poll, choices and votes", ->
       moderate "delete_poll", reason: "spam"
 

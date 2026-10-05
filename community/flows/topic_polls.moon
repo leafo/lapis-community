@@ -247,6 +247,30 @@ class TopicPollsFlow extends Flow
 
     true
 
+  -- For the topic's author or a moderator. Only a moderator closing someone
+  -- else's poll is logged
+  close_poll: require_current_user =>
+    TopicsFlow = require "community.flows.topics"
+    topics_flow = TopicsFlow @
+    topics_flow\load_topic!
+    topic = topics_flow.topic
+
+    poll = assert_error topic\get_poll!, "topic has no poll"
+    assert_error poll\allowed_to_edit(@current_user), "invalid user"
+    assert_error not poll\is_closed!, "poll is already closed"
+
+    params = assert_valid @params, types.params_shape {
+      {"reason", types.empty + types.limited_text limits.MAX_BODY_LEN}
+    }
+
+    date = require "date"
+    poll\update end_date: date(true)\fmt date_format
+
+    if @current_user.id != topic.user_id
+      topics_flow\write_moderation_log "topic.close_poll", params.reason
+
+    true
+
   delete_poll: require_current_user =>
     topics_flow, poll = @load_poll_for_moderation!
 
