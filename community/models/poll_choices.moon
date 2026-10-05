@@ -42,6 +42,37 @@ class PollChoices extends Model
       poll_choice_id: @id
     }
 
+  -- Used by BrowsingFlow.preload_poll_voters. Sets recent_votes on each
+  -- choice, newest first, with users loaded. Costs two queries regardless of
+  -- how many votes the choices have
+  @preload_recent_votes: (choices, limit=5) =>
+    return choices unless next choices
+    import PollVotes from require "community.models"
+    import preload from require "lapis.db.model"
+
+    votes = PollVotes\load_all db.query "
+      select v.* from unnest(?::integer[]) as c(id)
+      cross join lateral (
+        select * from #{db.escape_identifier PollVotes\table_name!}
+        where poll_choice_id = c.id and counted
+        order by id desc
+        limit ?
+      ) v
+      order by v.poll_choice_id, v.id desc
+    ", db.array([c.id for c in *choices]), limit
+
+    preload votes, "user"
+
+    by_choice = {}
+    for vote in *votes
+      by_choice[vote.poll_choice_id] or= {}
+      table.insert by_choice[vote.poll_choice_id], vote
+
+    for choice in *choices
+      choice.recent_votes = by_choice[choice.id] or {}
+
+    choices
+
   name_for_display: =>
     @choice_text
 

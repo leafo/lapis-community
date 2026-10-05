@@ -452,3 +452,52 @@ describe "models.topics", ->
         results: {false, false, true, true}
         voters: {false, false, true, true}
       }, visibility create_poll anonymous: false, hide_results: true
+
+  describe "preload_recent_votes", ->
+    import capture_queries from require "spec.helpers"
+
+    local poll
+
+    before_each ->
+      poll = TopicPolls\create {
+        topic_id: factory.Topics!.id
+        poll_question: "Color?"
+        vote_type: TopicPolls.vote_types.multiple
+        end_date: db.raw "date_trunc('second', now() at time zone 'utc') + interval '1 day'"
+      }
+
+    it "loads newest counted votes per choice", ->
+      busy = PollChoices\create poll_id: poll.id, choice_text: "Busy", position: 1
+      quiet = PollChoices\create poll_id: poll.id, choice_text: "Quiet", position: 2
+      empty = PollChoices\create poll_id: poll.id, choice_text: "Empty", position: 3
+
+      busy_votes = for i=1,4
+        busy\vote factory.Users!
+
+      busy\vote factory.Users!, false
+      quiet_vote = quiet\vote factory.Users!
+
+      choices = { busy, quiet, empty }
+
+      queries = capture_queries ->
+        PollChoices\preload_recent_votes choices, 3
+
+      assert.same 2, #queries
+
+      assert.same {busy_votes[4].id, busy_votes[3].id, busy_votes[2].id},
+        [v.id for v in *busy.recent_votes]
+      assert.same {quiet_vote.id}, [v.id for v in *quiet.recent_votes]
+      assert.same {}, empty.recent_votes
+
+      queries = capture_queries ->
+        for c in *choices
+          for v in *c.recent_votes
+            assert v\get_user!
+
+      assert.same {}, queries
+
+    it "does nothing for empty list", ->
+      queries = capture_queries ->
+        assert.same {}, PollChoices\preload_recent_votes {}
+
+      assert.same {}, queries

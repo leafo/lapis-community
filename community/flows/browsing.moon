@@ -213,6 +213,13 @@ class BrowsingFlow extends Flow
 
     poll
 
+  -- Opt-in for views that list voters, call after topic_posts
+  preload_poll_voters: (poll, limit) =>
+    return nil unless poll\allowed_to_view_voters @current_user
+    import PollChoices from require "community.models"
+    PollChoices\preload_recent_votes poll\get_poll_choices!, limit
+    true
+
   preload_topics: (topics, last_seens=true) =>
     Topics\preload_relation topics, "last_post", {
       fields: "id, user_id, created_at, updated_at"

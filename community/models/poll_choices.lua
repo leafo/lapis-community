@@ -186,6 +186,41 @@ do
       key = "poll_choice_id"
     }
   }
+  self.preload_recent_votes = function(self, choices, limit)
+    if limit == nil then
+      limit = 5
+    end
+    if not (next(choices)) then
+      return choices
+    end
+    local PollVotes
+    PollVotes = require("community.models").PollVotes
+    local preload
+    preload = require("lapis.db.model").preload
+    local votes = PollVotes:load_all(db.query("\n      select v.* from unnest(?::integer[]) as c(id)\n      cross join lateral (\n        select * from " .. tostring(db.escape_identifier(PollVotes:table_name())) .. "\n        where poll_choice_id = c.id and counted\n        order by id desc\n        limit ?\n      ) v\n      order by v.poll_choice_id, v.id desc\n    ", db.array((function()
+      local _accum_0 = { }
+      local _len_0 = 1
+      for _index_0 = 1, #choices do
+        local c = choices[_index_0]
+        _accum_0[_len_0] = c.id
+        _len_0 = _len_0 + 1
+      end
+      return _accum_0
+    end)()), limit))
+    preload(votes, "user")
+    local by_choice = { }
+    for _index_0 = 1, #votes do
+      local vote = votes[_index_0]
+      local _update_0 = vote.poll_choice_id
+      by_choice[_update_0] = by_choice[_update_0] or { }
+      table.insert(by_choice[vote.poll_choice_id], vote)
+    end
+    for _index_0 = 1, #choices do
+      local choice = choices[_index_0]
+      choice.recent_votes = by_choice[choice.id] or { }
+    end
+    return choices
+  end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end

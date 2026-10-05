@@ -281,6 +281,37 @@ describe "browsing flow", ->
 
             assert.same {}, queries
 
+          describe "preload_poll_voters", ->
+            preload_poll_voters = (topic) ->
+              unpack in_request { get: { topic_id: topic.id } }, =>
+                @current_user = current_user
+                flow = @flow "browsing"
+                flow\topic_posts!
+                poll = @topic\get_poll!
+                { flow\preload_poll_voters(poll), poll }
+
+            create_poll = (anonymous) ->
+              topic = factory.Topics!
+              poll = TopicPolls\create {
+                topic_id: topic.id
+                poll_question: "Color?"
+                :anonymous
+                end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
+              }
+              choice = PollChoices\create poll_id: poll.id, choice_text: "Red", position: 1
+              choice\vote factory.Users!
+              topic
+
+            it "loads voters when poll isn't anonymous", ->
+              loaded, poll = preload_poll_voters create_poll false
+              assert.true loaded
+              assert.same 1, #poll\get_poll_choices![1].recent_votes
+
+            it "skips anonymous poll", ->
+              loaded, poll = preload_poll_voters create_poll true
+              assert.nil loaded
+              assert.nil poll\get_poll_choices![1].recent_votes
+
           it "preloads missing poll", ->
             topic = factory.Topics!
             queries = queries_after_topic_posts topic, (t) ->

@@ -330,6 +330,15 @@ do
       end
       return poll
     end,
+    preload_poll_voters = function(self, poll, limit)
+      if not (poll:allowed_to_view_voters(self.current_user)) then
+        return nil
+      end
+      local PollChoices
+      PollChoices = require("community.models").PollChoices
+      PollChoices:preload_recent_votes(poll:get_poll_choices(), limit)
+      return true
+    end,
     preload_topics = function(self, topics, last_seens)
       if last_seens == nil then
         last_seens = true
