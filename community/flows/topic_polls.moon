@@ -113,6 +113,11 @@ class TopicPollsFlow extends Flow
       if choice_params.choice_text != choice.choice_text
         table.insert changes, "choice text"
 
+      new_description = choice_params.description
+      new_description = nil if new_description == db.NULL
+      if new_description != choice.description
+        table.insert changes, "choice description"
+
     for c in *params.choices
       unless c.id
         table.insert changes, "added choice"
@@ -143,6 +148,9 @@ class TopicPollsFlow extends Flow
     start = params.start_date and date params.start_date
     -- also covers a client clock running slightly behind
     start = now if not start or start < now
+
+    if date.diff(start, now)\spanseconds! > limits.MAX_POLL_START_DELAY
+      return nil, "poll can't start more than #{math.floor limits.MAX_POLL_START_DELAY / 86400} days from now"
 
     finish = if params.end_date
       date params.end_date

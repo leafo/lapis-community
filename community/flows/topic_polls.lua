@@ -137,6 +137,13 @@ do
           if choice_params.choice_text ~= choice.choice_text then
             table.insert(changes, "choice text")
           end
+          local new_description = choice_params.description
+          if new_description == db.NULL then
+            new_description = nil
+          end
+          if new_description ~= choice.description then
+            table.insert(changes, "choice description")
+          end
           _continue_0 = true
         until true
         if not _continue_0 then
@@ -185,6 +192,9 @@ do
       local start = params.start_date and date(params.start_date)
       if not start or start < now then
         start = now
+      end
+      if date.diff(start, now):spanseconds() > limits.MAX_POLL_START_DELAY then
+        return nil, "poll can't start more than " .. tostring(math.floor(limits.MAX_POLL_START_DELAY / 86400)) .. " days from now"
       end
       local finish
       if params.end_date then

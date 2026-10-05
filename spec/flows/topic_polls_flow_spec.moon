@@ -579,9 +579,13 @@ describe "TopicPollsFlow", ->
         params.description = "New description"
         params.hide_results = true
         params.anonymous = true
-        params.choices[1].description = "about A"
         table.insert params.choices, { choice_text: "C" }
         assert.is_nil locked_poll_changes params
+
+      it "detects choice description change", ->
+        params = unchanged_params!
+        params.choices[1].description = "about A"
+        assert.same {"choice description"}, locked_poll_changes params
 
       it "allows enabling anonymous", ->
         poll\update anonymous: false
@@ -652,7 +656,6 @@ describe "TopicPollsFlow", ->
         p.description = "Other description"
         p.hide_results = true
         p.anonymous = false
-        p.choices[1].description = "about A"
 
     it "increments when question changes", ->
       assert.same 2, edit_poll (p) -> p.poll_question = "Other?"
@@ -662,6 +665,9 @@ describe "TopicPollsFlow", ->
 
     it "increments when choice text changes", ->
       assert.same 2, edit_poll (p) -> p.choices[2].choice_text = "B2"
+
+    it "increments when choice description changes", ->
+      assert.same 2, edit_poll (p) -> p.choices[1].description = "about A"
 
     it "increments when choice is added", ->
       assert.same 2, edit_poll (p) -> table.insert p.choices, { choice_text: "C" }
@@ -716,6 +722,11 @@ describe "TopicPollsFlow", ->
       assert.same {nil, "poll must be open for at least 1 hour(s)"}, {set_poll_dates {
         start_date: from_now(60 * 60 * 10)\fmt "%Y-%m-%d %H:%M:%S"
         end_date: from_now(60 * 60 * 5)\fmt "%Y-%m-%d %H:%M:%S"
+      }}
+
+    it "rejects a start date too far in the future", ->
+      assert.same {nil, "poll can't start more than 30 days from now"}, {set_poll_dates {
+        start_date: from_now(60 * 60 * 24 * 31)\fmt "%Y-%m-%d %H:%M:%S"
       }}
 
     it "rejects a poll longer than the maximum", ->

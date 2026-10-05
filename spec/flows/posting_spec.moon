@@ -1914,7 +1914,6 @@ describe "posting flow", ->
         it "lets author add choices and edit description", ->
           edit_post poll_edit {
             "topic[poll][description]": "Pick a color"
-            "topic[poll][choices][1][description]": "Like a rose"
             "topic[poll][choices][3][choice_text]": "Green"
           }
 
@@ -1923,7 +1922,6 @@ describe "posting flow", ->
 
           updated_choices = poll\get_poll_choices!
           assert.same {"Red", "Blue", "Green"}, [c.choice_text for c in *updated_choices]
-          assert.same "Like a rose", updated_choices[1].description
           assert.same 1, updated_choices[1].vote_count
 
           assert.same 0, ModerationLogs\count!
