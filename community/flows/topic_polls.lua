@@ -54,7 +54,7 @@ do
         local _obj_0 = require("community.models")
         PollChoices, PollVotes = _obj_0.PollChoices, _obj_0.PollVotes
       end
-      local choice = PollChoices:find(params.choice_id)
+      local choice = assert_error(PollChoices:find(params.choice_id), "invalid poll")
       local poll = assert_error(choice:get_poll(), "invalid poll")
       local _exp_0 = params.action
       if "create" == _exp_0 then

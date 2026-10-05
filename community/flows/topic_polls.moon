@@ -52,7 +52,7 @@ class TopicPollsFlow extends Flow
   }, (params) =>
     import PollChoices,PollVotes from require "community.models"
 
-    choice = PollChoices\find params.choice_id
+    choice = assert_error PollChoices\find(params.choice_id), "invalid poll"
     poll = assert_error choice\get_poll!, "invalid poll"
     switch params.action
       when "create"

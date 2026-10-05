@@ -1671,6 +1671,82 @@ describe "posting flow", ->
       assert.same 0, post.edits_count
       assert.falsy post.last_edited_at
 
+    describe "polls", ->
+      import TopicPolls, PollChoices from require "spec.community_models"
+
+      it "updates poll when editing topic post", ->
+        category = factory.Categories!
+
+        req = new_topic {
+          category_id: category.id
+          "topic[title]": "Poll Edit"
+          "topic[body]": "Original body"
+
+          "topic[poll][poll_question]": "Original question?"
+          "topic[poll][vote_type]": "multiple"
+          "topic[poll][choices][1][choice_text]": "Red"
+          "topic[poll][choices][2][choice_text]": "Blue"
+          "topic[poll][choices][3][choice_text]": "Green"
+        }
+
+        topic = req.topic
+        post = req.post or topic\get_topic_post!
+
+        poll = assert TopicPolls\find(topic_id: topic.id), "topic should have poll"
+        original_choices = poll\get_poll_choices!
+        removed_choice_id = original_choices[3] and original_choices[3].id
+
+        edit_post {
+          post_id: post.id
+          "post[body]": "Updated body"
+
+          "topic[poll][poll_question]": "Updated question?"
+          "topic[poll][vote_type]": "single"
+          "topic[poll][choices][1][id]": "#{original_choices[1].id}"
+          "topic[poll][choices][1][choice_text]": "Red Updated"
+          "topic[poll][choices][2][id]": "#{original_choices[2].id}"
+          "topic[poll][choices][2][choice_text]": "Blue"
+          "topic[poll][choices][2][description]": "Still blue"
+          "topic[poll][choices][3][choice_text]": "Yellow"
+        }
+
+        post\refresh!
+        poll\refresh!
+
+        assert.same "Updated body", post.body
+        assert.same "Updated question?", poll.poll_question
+        assert.same TopicPolls.vote_types.single, poll.vote_type
+
+        updated_choices = PollChoices\select "where ? order by position asc", db.clause {
+          poll_id: poll.id
+        }
+
+        assert_choices = types.assert types.shape {
+          types.partial {
+            id: original_choices[1].id
+            poll_id: poll.id
+            choice_text: "Red Updated"
+            position: 1
+          }
+          types.partial {
+            id: original_choices[2].id
+            poll_id: poll.id
+            choice_text: "Blue"
+            description: "Still blue"
+            position: 2
+          }
+          types.partial {
+            poll_id: poll.id
+            choice_text: "Yellow"
+            position: 3
+          }
+        }
+
+        assert_choices updated_choices
+
+        if removed_choice_id
+          assert.is_nil PollChoices\find removed_choice_id
+
     describe "on_body_updated_callback", ->
       it "calls on_body_updated_callback when updating body", ->
         s = spy.on(Posts.__base, "on_body_updated_callback")
@@ -1950,4 +2026,3 @@ describe "posting flow", ->
       }
 
       assert.same {}, Posts\select!
-

@@ -17,8 +17,8 @@ local VOTE_TYPES_DEFAULT = {
 local Topics
 do
   local _class_0
-  local TopicViewers
   local _parent_0 = Model
+  local TopicViewers
   local _base_0 = {
     with_user = VirtualModel:make_loader("topic_viewers", function(self, user_id)
       assert(user_id, "expecting user id")

@@ -200,15 +200,19 @@ do
             end
           end)() or nil)
         })
-        table.insert(v, {
-          "poll",
-          types.empty + types.table
-        })
       end
       local post_update = assert_valid(self.params.post, types.params_shape(v))
       post_update.body = assert_error(Posts:filter_body(post_update.body, post_update.body_format))
-      local poll_flow
-      if post_update.poll then
+      local has_poll
+      has_poll = assert_valid(self.params.topic or { }, types.params_shape({
+        {
+          "poll",
+          types.empty + types.table
+        }
+      })).poll
+      local poll_flow, poll_was_updated
+      poll_was_updated = false
+      if is_topic_post and has_poll then
         local PollsFlow = require("community.flows.topic_polls")
         poll_flow = PollsFlow(self)
         local poll_edit
@@ -273,7 +277,11 @@ do
         self.topic:update(topic_update)
         edited_title = topic_update.title and true
       end
-      if edited_body or edited_title then
+      if is_topic_post and post_update.poll then
+        poll_flow:set_poll(self.topic, post_update.poll)
+        poll_was_updated = true
+      end
+      if edited_body or edited_title or poll_was_updated then
         self.post:on_body_updated_callback(self)
       end
       if edited_body then

@@ -7,8 +7,8 @@ end
 local PollChoices
 do
   local _class_0
-  local PollChoiceVoters
   local _parent_0 = Model
+  local PollChoiceVoters
   local _base_0 = {
     with_user = VirtualModel:make_loader("voters", function(self, user_id)
       assert(user_id, "expecting user id")

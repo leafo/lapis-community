@@ -135,6 +135,23 @@ describe "TopicPollsFlow", ->
         user_id: current_user.id
       }
 
+    it "errors when poll choice is missing", ->
+      assert.has_error(
+        ->
+          in_request {
+            post: {
+              choice_id: choice.id + 1000
+              action: "create"
+            }
+          }, =>
+            @current_user = current_user
+            @flow("topic_polls")\vote!
+            true
+        {
+          message: {"invalid poll"}
+        }
+      )
+
     it "deletes an existing vote", ->
       assert PollVotes\create {
         poll_choice_id: choice.id

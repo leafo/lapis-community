@@ -44,8 +44,8 @@ end
 local Categories
 do
   local _class_0
-  local CategoryViewers
   local _parent_0 = Model
+  local CategoryViewers
   local _base_0 = {
     with_user = VirtualModel:make_loader("category_viewers", function(self, user_id)
       assert(user_id, "expecting user id")
@@ -98,7 +98,7 @@ do
       end
       local _exp_0 = self.__class.membership_types[self:get_membership_type()]
       if "public" == _exp_0 then
-        local _ = nil
+        local _scrap_0 = nil
       elseif "members_only" == _exp_0 then
         if not (user) then
           return false

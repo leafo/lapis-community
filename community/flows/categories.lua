@@ -49,7 +49,7 @@ split_field = function(fields, name)
         end)()
       end
     end
-    local _ = false, fields
+    local _scrap_0 = false, fields
   end
   return true, fields
 end

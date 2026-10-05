@@ -10,8 +10,8 @@ local date = require("date")
 local Posts
 do
   local _class_0
-  local PostViewers
   local _parent_0 = Model
+  local PostViewers
   local _base_0 = {
     with_viewing_user = VirtualModel:make_loader("viewing_users", function(self, user_id)
       return PostViewers:load({
@@ -1017,7 +1017,7 @@ do
     end
     return _accum_0
   end
-  local _ = false
+  local _scrap_0 = false
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end

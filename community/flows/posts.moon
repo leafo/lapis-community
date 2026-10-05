@@ -168,14 +168,19 @@ class PostsFlow extends Flow
 
       -- this treats nil and not provided and does not action
       table.insert v, {"tags", types.nil + types.empty / (-> {}) + types.limited_text(240) / (category and category\parse_tags or nil) }
-      table.insert v, {"poll", types.empty + types.table}
 
 
     post_update = assert_valid @params.post, types.params_shape v
     post_update.body = assert_error Posts\filter_body post_update.body, post_update.body_format
 
-    local poll_flow
-    if post_update.poll
+    -- poll params are passed as topic[poll], matching new_topic
+    {poll: has_poll} = assert_valid @params.topic or {}, types.params_shape {
+      {"poll", types.empty + types.table}
+    }
+
+    local poll_flow, poll_was_updated
+    poll_was_updated = false
+    if is_topic_post and has_poll
       PollsFlow = require "community.flows.topic_polls"
       poll_flow = PollsFlow @
 
@@ -231,7 +236,11 @@ class PostsFlow extends Flow
       @topic\update topic_update
       topic_update.title and true
 
-    if edited_body or edited_title
+    if is_topic_post and post_update.poll
+      poll_flow\set_poll @topic, post_update.poll
+      poll_was_updated = true
+
+    if edited_body or edited_title or poll_was_updated
       @post\on_body_updated_callback @
 
     if edited_body
@@ -270,4 +279,3 @@ class PostsFlow extends Flow
         }
 
       true, kind
-
