@@ -182,7 +182,7 @@ class TopicPollsFlow extends Flow
       vote_type: params.vote_type
     }
 
-    poll = if existing_poll = topic\get_poll!
+    if existing_poll = topic\get_poll!
       import filter_update from require "community.helpers.models"
       poll_update = filter_update existing_poll, poll_params
 
@@ -190,21 +190,12 @@ class TopicPollsFlow extends Flow
       if next @content_changes existing_poll, params
         poll_update.version = db.raw "version + 1"
 
+      -- dates are left alone so editing a poll can't reopen or extend it
       existing_poll\update poll_update
+      @set_choices existing_poll, params.choices
       existing_poll
     else
-      poll_params.topic_id = topic.id
-      -- dates are only set on creation so editing a poll can't reopen or extend it
-      poll_params.start_date = params.start_date
-      poll_params.end_date = params.end_date or db.raw db.interpolate_query(
-        "date_trunc('second', now() AT TIME ZONE 'utc') + ? * interval '1 second'",
-        limits.DEFAULT_POLL_DURATION
-      )
-      TopicPolls\create poll_params
-
-    if poll
-      @set_choices poll, params.choices
-      poll
+      TopicPolls\create_for_topic topic, params
 
   -- this merges the parsed choice params with the existing choices in the database
   -- choices with ids should be updated, and new choices should be created

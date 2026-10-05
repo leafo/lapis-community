@@ -186,7 +186,14 @@ do
             end
           end)(),
           topic_tags = create_params.tags,
-          note = create_params.approval_note
+          note = create_params.approval_note,
+          poll = (function()
+            if new_topic.poll then
+              local TopicPolls
+              TopicPolls = require("community.models").TopicPolls
+              return TopicPolls:pending_data(new_topic.poll)
+            end
+          end)()
         }
         if not (next(metadata)) then
           metadata = nil

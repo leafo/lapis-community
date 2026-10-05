@@ -222,7 +222,6 @@ do
         hide_results = params.hide_results,
         vote_type = params.vote_type
       }
-      local poll
       do
         local existing_poll = topic:get_poll()
         if existing_poll then
@@ -233,17 +232,11 @@ do
             poll_update.version = db.raw("version + 1")
           end
           existing_poll:update(poll_update)
-          poll = existing_poll
+          self:set_choices(existing_poll, params.choices)
+          return existing_poll
         else
-          poll_params.topic_id = topic.id
-          poll_params.start_date = params.start_date
-          poll_params.end_date = params.end_date or db.raw(db.interpolate_query("date_trunc('second', now() AT TIME ZONE 'utc') + ? * interval '1 second'", limits.DEFAULT_POLL_DURATION))
-          poll = TopicPolls:create(poll_params)
+          return TopicPolls:create_for_topic(topic, params)
         end
-      end
-      if poll then
-        self:set_choices(poll, params.choices)
-        return poll
       end
     end,
     set_choices = function(self, poll, choices)

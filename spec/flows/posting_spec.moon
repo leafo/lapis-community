@@ -794,6 +794,79 @@ describe "posting flow", ->
           }
         }) Posts\select!
 
+      describe "with poll", ->
+        import TopicPolls, PollChoices from require "spec.community_models"
+        import db_json from require "community.helpers.models"
+        date = require "date"
+        format = "%Y-%m-%d %H:%M:%S"
+
+        create_pending = (poll_fields={}) ->
+          post = {
+            category_id: category.id
+            "topic[title]": "Poll topic"
+            "topic[body]": "Body"
+            "topic[poll][poll_question]": "Question?"
+            "topic[poll][choices][1][choice_text]": "Red"
+            "topic[poll][choices][1][description]": "warm"
+            "topic[poll][choices][2][choice_text]": "Blue"
+          }
+
+          for k, v in pairs poll_fields
+            post["topic[poll][#{k}]"] = v
+
+          new_topic post
+          assert.same 0, TopicPolls\count!
+          unpack PendingPosts\select!
+
+        it "stores poll on pending post and creates it when approved", ->
+          pending_post = create_pending!
+
+          assert types.partial({
+            poll: types.partial {
+              poll_question: "Question?"
+              description: types.nil
+              start_date: types.string
+              end_date: types.string
+              choices: types.shape {
+                types.shape { choice_text: "Red", description: "warm" }
+                types.shape { choice_text: "Blue" }
+              }
+            }
+          }) pending_post.data
+
+          -- approved two days after it was submitted
+          pending_post.data.poll.start_date = date(true)\addhours(-48)\fmt format
+          pending_post.data.poll.end_date = date(true)\addhours(-24)\fmt format
+          pending_post\update data: db_json pending_post.data
+
+          post = assert pending_post\promote!
+          poll = assert TopicPolls\find(topic_id: post.topic_id), "topic should have poll"
+
+          now = date true
+          assert.true math.abs(date.diff(date(poll.start_date), now)\spanseconds!) <= 2
+          assert.same 60 * 60 * 24, date.diff(date(poll.end_date), date(poll.start_date))\spanseconds!
+          assert.true poll\is_open!
+
+          assert types.shape({
+            types.partial { choice_text: "Red", description: "warm", position: 1 }
+            types.partial { choice_text: "Blue", description: types.nil, position: 2 }
+          }) poll\get_poll_choices!
+
+        it "keeps a scheduled start date when approved", ->
+          start = date(true)\addhours 48
+          finish = date(true)\addhours 72
+
+          pending_post = create_pending {
+            start_date: start\fmt "%Y-%m-%dT%H:%M:%SZ"
+            end_date: finish\fmt "%Y-%m-%dT%H:%M:%SZ"
+          }
+
+          post = assert pending_post\promote!
+          poll = assert TopicPolls\find(topic_id: post.topic_id), "topic should have poll"
+
+          assert.same start\fmt(format), poll.start_date
+          assert.same finish\fmt(format), poll.end_date
+
       it "skips pending restriction if user is moderator", ->
         category\update user_id: current_user.id
 

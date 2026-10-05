@@ -109,6 +109,62 @@ do
     opts.vote_type = self.vote_types:for_db(opts.vote_type or "single")
     return _class_0.__parent.create(self, opts)
   end
+  self.create_for_topic = function(self, topic, params)
+    local PollChoices
+    PollChoices = require("community.models").PollChoices
+    local limits = require("community.limits")
+    local poll = self:create({
+      topic_id = topic.id,
+      poll_question = params.poll_question,
+      description = params.description,
+      anonymous = params.anonymous,
+      hide_results = params.hide_results,
+      vote_type = params.vote_type,
+      start_date = params.start_date,
+      end_date = params.end_date or db.raw(db.interpolate_query("date_trunc('second', now() AT TIME ZONE 'utc') + ? * interval '1 second'", limits.DEFAULT_POLL_DURATION))
+    })
+    for idx, choice in ipairs(params.choices) do
+      PollChoices:create({
+        poll_id = poll.id,
+        choice_text = choice.choice_text,
+        description = choice.description,
+        position = choice.position or idx
+      })
+    end
+    return poll
+  end
+  self.pending_data = function(self, params)
+    local not_null
+    not_null = function(v)
+      if not (v == db.NULL) then
+        return v
+      end
+    end
+    return {
+      poll_question = params.poll_question,
+      description = not_null(params.description),
+      anonymous = params.anonymous,
+      hide_results = params.hide_results,
+      vote_type = params.vote_type,
+      start_date = params.start_date,
+      end_date = params.end_date,
+      choices = (function()
+        local _accum_0 = { }
+        local _len_0 = 1
+        local _list_0 = params.choices
+        for _index_0 = 1, #_list_0 do
+          local c = _list_0[_index_0]
+          _accum_0[_len_0] = {
+            choice_text = c.choice_text,
+            description = not_null(c.description),
+            position = c.position
+          }
+          _len_0 = _len_0 + 1
+        end
+        return _accum_0
+      end)()
+    }
+  end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end

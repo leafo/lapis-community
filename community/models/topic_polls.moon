@@ -43,6 +43,57 @@ class TopicPolls extends Model
     opts.vote_type = @vote_types\for_db opts.vote_type or "single"
     super opts
 
+  -- Used by TopicPollsFlow.set_poll and PendingPosts.promote. Doesn't
+  -- validate anything, dates should already be checked by set_poll_dates
+  @create_for_topic: (topic, params) =>
+    import PollChoices from require "community.models"
+    limits = require "community.limits"
+
+    poll = @create {
+      topic_id: topic.id
+      poll_question: params.poll_question
+      description: params.description
+      anonymous: params.anonymous
+      hide_results: params.hide_results
+      vote_type: params.vote_type
+      start_date: params.start_date
+      end_date: params.end_date or db.raw db.interpolate_query(
+        "date_trunc('second', now() AT TIME ZONE 'utc') + ? * interval '1 second'",
+        limits.DEFAULT_POLL_DURATION
+      )
+    }
+
+    for idx, choice in ipairs params.choices
+      PollChoices\create {
+        poll_id: poll.id
+        choice_text: choice.choice_text
+        description: choice.description
+        position: choice.position or idx
+      }
+
+    poll
+
+  -- Used by new_topic to store a poll on a pending post. db.NULL doesn't
+  -- survive JSON encoding
+  @pending_data: (params) =>
+    not_null = (v) -> v unless v == db.NULL
+
+    {
+      poll_question: params.poll_question
+      description: not_null params.description
+      anonymous: params.anonymous
+      hide_results: params.hide_results
+      vote_type: params.vote_type
+      start_date: params.start_date
+      end_date: params.end_date
+      choices: for c in *params.choices
+        {
+          choice_text: c.choice_text
+          description: not_null c.description
+          position: c.position
+        }
+    }
+
   delete: =>
     if super!
       -- clean up poll choices and votes

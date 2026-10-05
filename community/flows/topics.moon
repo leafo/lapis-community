@@ -137,6 +137,9 @@ class TopicsFlow extends Flow
         sticky: if create_params.sticky then create_params.sticky
         topic_tags: create_params.tags
         note: create_params.approval_note
+        poll: if new_topic.poll
+          import TopicPolls from require "community.models"
+          TopicPolls\pending_data new_topic.poll
       }
 
       metadata = nil unless next metadata
