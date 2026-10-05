@@ -103,6 +103,53 @@ do
         end
       end
     end)),
+    choice_voters = function(self, opts)
+      if opts == nil then
+        opts = { }
+      end
+      local PollChoices, PollVotes
+      do
+        local _obj_0 = require("community.models")
+        PollChoices, PollVotes = _obj_0.PollChoices, _obj_0.PollVotes
+      end
+      local OrderedPaginator
+      OrderedPaginator = require("lapis.db.pagination").OrderedPaginator
+      local preload
+      preload = require("lapis.db.model").preload
+      local params = assert_valid(self.params, types.params_shape({
+        {
+          "choice_id",
+          types.db_id
+        },
+        {
+          "before",
+          types.empty + types.db_id
+        }
+      }))
+      local choice = assert_error(PollChoices:find(params.choice_id), "invalid poll")
+      local poll = assert_error(choice:get_poll(), "invalid poll")
+      assert_error(poll:get_topic():allowed_to_view(self.current_user, self._req), "invalid poll")
+      assert_error(poll:allowed_to_view_voters(self.current_user), "not allowed to view voters")
+      local per_page = opts.per_page or limits.POLL_VOTERS_PER_PAGE
+      local pager = OrderedPaginator(PollVotes, "id", "where ?", db.clause({
+        poll_choice_id = choice.id,
+        counted = true
+      }), {
+        per_page = per_page,
+        prepare_results = function(votes)
+          preload(votes, "user")
+          return votes
+        end
+      })
+      local votes = pager:before(params.before)
+      local next_page
+      if #votes == per_page then
+        next_page = {
+          before = votes[#votes].id
+        }
+      end
+      return votes, next_page
+    end,
     content_changes = function(self, poll, params)
       local changes = { }
       if params.poll_question ~= poll.poll_question then

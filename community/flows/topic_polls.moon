@@ -91,6 +91,42 @@ class TopicPollsFlow extends Flow
           nil, "invalid vote"
 
 
+  -- Request handler for listing who voted for a choice. next_page can lead to
+  -- an empty page when the last page was exactly full
+  choice_voters: (opts={}) =>
+    import PollChoices, PollVotes from require "community.models"
+    import OrderedPaginator from require "lapis.db.pagination"
+    import preload from require "lapis.db.model"
+
+    params = assert_valid @params, types.params_shape {
+      {"choice_id", types.db_id}
+      {"before", types.empty + types.db_id}
+    }
+
+    choice = assert_error PollChoices\find(params.choice_id), "invalid poll"
+    poll = assert_error choice\get_poll!, "invalid poll"
+    assert_error poll\get_topic!\allowed_to_view(@current_user, @_req), "invalid poll"
+    assert_error poll\allowed_to_view_voters(@current_user), "not allowed to view voters"
+
+    per_page = opts.per_page or limits.POLL_VOTERS_PER_PAGE
+
+    pager = OrderedPaginator PollVotes, "id", "where ?", db.clause({
+      poll_choice_id: choice.id
+      counted: true
+    }), {
+      :per_page
+      prepare_results: (votes) ->
+        preload votes, "user"
+        votes
+    }
+
+    votes = pager\before params.before
+
+    next_page = if #votes == per_page
+      { before: votes[#votes].id }
+
+    votes, next_page
+
   -- Used by set_poll to decide when to bump the poll version, and by
   -- locked_poll_changes. params must be the output of validate_params_shape
   content_changes: (poll, params) =>

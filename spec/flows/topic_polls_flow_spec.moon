@@ -764,3 +764,55 @@ describe "TopicPollsFlow", ->
           message: {"end_date: expected empty, or ISO 8601 date with timezone"}
         }
       )
+
+  describe "choice_voters", ->
+    local current_user, choice
+
+    before_each ->
+      current_user = factory.Users!
+      poll = TopicPolls\create {
+        topic_id: factory.Topics!.id
+        poll_question: "Color?"
+        anonymous: false
+        end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
+      }
+      choice = PollChoices\create poll_id: poll.id, choice_text: "Red", position: 1
+
+    choice_voters = (params, opts) ->
+      unpack in_request { get: params }, =>
+        @current_user = current_user
+        { @flow("topic_polls")\choice_voters opts }
+
+    it "pages through counted votes newest first", ->
+      votes = for i=1,3
+        choice\vote factory.Users!
+
+      choice\vote factory.Users!, false
+
+      page, next_page = choice_voters { choice_id: choice.id }, per_page: 2
+      assert.same {votes[3].id, votes[2].id}, [v.id for v in *page]
+      assert.same { before: votes[2].id }, next_page
+      assert v\get_user! for v in *page
+
+      page, next_page = choice_voters { choice_id: choice.id, before: next_page.before }, per_page: 2
+      assert.same {votes[1].id}, [v.id for v in *page]
+      assert.nil next_page
+
+    it "returns empty page for choice with no votes", ->
+      page, next_page = choice_voters { choice_id: choice.id }
+      assert.same {}, page
+      assert.nil next_page
+
+    it "rejects anonymous poll", ->
+      choice\get_poll!\update anonymous: true
+
+      assert.has_error(
+        -> choice_voters { choice_id: choice.id }
+        { message: {"not allowed to view voters"} }
+      )
+
+    it "rejects missing choice", ->
+      assert.has_error(
+        -> choice_voters { choice_id: choice.id + 1000 }
+        { message: {"invalid poll"} }
+      )
