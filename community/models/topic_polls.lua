@@ -22,6 +22,25 @@ do
     name_for_display = function(self)
       return self.poll_question
     end,
+    reset_votes = function(self)
+      local PollChoices, PollVotes
+      do
+        local _obj_0 = require("community.models")
+        PollChoices, PollVotes = _obj_0.PollChoices, _obj_0.PollVotes
+      end
+      local res = db.delete(PollVotes:table_name(), db.clause({
+        {
+          "poll_choice_id in (select id from " .. tostring(db.escape_identifier(PollChoices:table_name())) .. " where poll_id = ?)",
+          self.id
+        }
+      }))
+      db.update(PollChoices:table_name(), {
+        vote_count = 0
+      }, {
+        poll_id = self.id
+      })
+      return res.affected_rows
+    end,
     allowed_to_edit = function(self, user)
       return self:get_topic():allowed_to_edit(user)
     end,

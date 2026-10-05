@@ -816,3 +816,117 @@ describe "TopicPollsFlow", ->
         -> choice_voters { choice_id: choice.id + 1000 }
         { message: {"invalid poll"} }
       )
+
+  describe "moderation", ->
+    import ModerationLogs from require "spec.community_models"
+    date = require "date"
+
+    local topic, moderator, poll, red, blue
+
+    before_each ->
+      topic = factory.Topics!
+      moderator = factory.Users!
+      factory.Moderators user_id: moderator.id, object: topic\get_category!
+
+      poll = TopicPolls\create {
+        topic_id: topic.id
+        poll_question: "Color?"
+        vote_type: TopicPolls.vote_types.multiple
+        start_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') - interval '1 hour'"
+        end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
+      }
+      poll\refresh!
+
+      red = PollChoices\create poll_id: poll.id, choice_text: "Red", position: 1
+      blue = PollChoices\create poll_id: poll.id, choice_text: "Blue", position: 2
+      red\vote factory.Users!
+      blue\vote factory.Users!
+
+    moderate = (action, params={}, user=moderator) ->
+      params.topic_id or= topic.id
+      in_request { post: params }, =>
+        @current_user = user
+        flow = @flow "topic_polls"
+        flow[action] flow
+
+    for action in *{"set_poll_end_date", "delete_poll", "reset_poll_votes"}
+      it "#{action} rejects non-moderator", ->
+        assert.has_error(
+          -> moderate action, { end_date: "2030-01-01T00:00:00Z" }, factory.Users!
+          { message: {"invalid user"} }
+        )
+
+      it "#{action} rejects topic without poll", ->
+        assert.has_error(
+          -> moderate action, { topic_id: factory.Topics(category_id: topic.category_id).id, end_date: "2030-01-01T00:00:00Z" }
+          { message: {"topic has no poll"} }
+        )
+
+    describe "set_poll_end_date", ->
+      it "extends poll", ->
+        finish = date(true)\addhours 24 * 3
+        moderate "set_poll_end_date", {
+          end_date: finish\fmt "%Y-%m-%dT%H:%M:%SZ"
+          reason: "more time"
+        }
+
+        before = poll.end_date
+        poll\refresh!
+        assert.same finish\fmt("%Y-%m-%d %H:%M:%S"), poll.end_date
+
+        assert types.partial({
+          action: "topic.set_poll_end_date"
+          object_id: topic.id
+          user_id: moderator.id
+          reason: "more time"
+          data: types.shape {
+            end_date_before: before
+            end_date: poll.end_date
+          }
+        }) unpack ModerationLogs\select!
+
+      it "closes poll with a past date", ->
+        moderate "set_poll_end_date", end_date: "2020-01-01T00:00:00Z"
+        poll\refresh!
+        assert.true poll\is_closed!
+        assert.true math.abs(date.diff(date(poll.end_date), date(true))\spanseconds!) <= 2
+
+      it "rejects a duration over the limit", ->
+        assert.has_error(
+          -> moderate "set_poll_end_date", end_date: date(true)\addhours(24 * 40)\fmt "%Y-%m-%dT%H:%M:%SZ"
+          { message: {"poll can't be open for more than 30 days"} }
+        )
+
+    it "delete_poll removes poll, choices and votes", ->
+      moderate "delete_poll", reason: "spam"
+
+      assert.same 0, TopicPolls\count!
+      assert.same 0, PollChoices\count!
+      assert.same 0, PollVotes\count!
+
+      assert types.partial({
+        action: "topic.delete_poll"
+        reason: "spam"
+      }) unpack ModerationLogs\select!
+
+    it "reset_poll_votes clears votes and keeps poll", ->
+      other_poll = TopicPolls\create {
+        topic_id: factory.Topics!.id
+        poll_question: "Other?"
+        end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
+      }
+      other_choice = PollChoices\create poll_id: other_poll.id, choice_text: "Other", position: 1
+      other_vote = other_choice\vote factory.Users!
+
+      moderate "reset_poll_votes"
+
+      assert.same {other_vote.id}, [v.id for v in *PollVotes\select!]
+      assert.same {0, 0}, [c.vote_count for c in *poll\get_poll_choices!]
+      other_choice\refresh!
+      assert.same 1, other_choice.vote_count
+      assert TopicPolls\find poll.id
+
+      assert types.partial({
+        action: "topic.reset_poll_votes"
+        data: types.shape { deleted_votes: 2 }
+      }) unpack ModerationLogs\select!

@@ -12,6 +12,20 @@ types = require "lapis.validate.types"
 
 import TopicPolls from require "community.models"
 
+date_format = "%Y-%m-%d %H:%M:%S"
+
+check_duration = (start, finish) ->
+  date = require "date"
+  duration = date.diff(finish, start)\spanseconds!
+
+  if duration < limits.MIN_POLL_DURATION
+    return nil, "poll must be open for at least #{math.floor limits.MIN_POLL_DURATION / 3600} hour(s)"
+
+  if duration > limits.MAX_POLL_DURATION
+    return nil, "poll can't be open for more than #{math.floor limits.MAX_POLL_DURATION / 86400} days"
+
+  true
+
 class TopicPollsFlow extends Flow
   @POLL_VALIDATION: {
     {"poll_question",            types.limited_text(limits.MAX_TITLE_LEN)}
@@ -178,7 +192,6 @@ class TopicPollsFlow extends Flow
   -- edits, an existing poll's dates are never changed by set_poll
   set_poll_dates: (params) =>
     date = require "date"
-    format = "%Y-%m-%d %H:%M:%S"
 
     now = date true
     start = params.start_date and date params.start_date
@@ -193,16 +206,70 @@ class TopicPollsFlow extends Flow
     else
       start\copy!\addseconds limits.DEFAULT_POLL_DURATION
 
-    duration = date.diff(finish, start)\spanseconds!
+    ok, err = check_duration start, finish
+    return nil, err unless ok
 
-    if duration < limits.MIN_POLL_DURATION
-      return nil, "poll must be open for at least #{math.floor limits.MIN_POLL_DURATION / 3600} hour(s)"
+    params.start_date = start\fmt date_format
+    params.end_date = finish\fmt date_format
+    true
 
-    if duration > limits.MAX_POLL_DURATION
-      return nil, "poll can't be open for more than #{math.floor limits.MAX_POLL_DURATION / 86400} days"
+  load_poll_for_moderation: =>
+    TopicsFlow = require "community.flows.topics"
+    topics_flow = TopicsFlow @
+    topics_flow\load_topic_for_moderation!
+    poll = assert_error topics_flow.topic\get_poll!, "topic has no poll"
+    topics_flow, poll
 
-    params.start_date = start\fmt format
-    params.end_date = finish\fmt format
+  -- An end_date that has passed closes the poll now
+  set_poll_end_date: require_current_user =>
+    topics_flow, poll = @load_poll_for_moderation!
+
+    params = assert_valid @params, types.params_shape {
+      {"end_date", shapes.utc_datetime}
+      {"reason", types.empty + types.limited_text limits.MAX_BODY_LEN}
+    }
+
+    date = require "date"
+    now = date true
+    finish = date params.end_date
+
+    if finish <= now
+      finish = now
+    else
+      assert_error check_duration date(poll.start_date), finish
+
+    before = poll.end_date
+    poll\update end_date: finish\fmt date_format
+
+    topics_flow\write_moderation_log "topic.set_poll_end_date", params.reason, {
+      data: { end_date_before: before, end_date: poll.end_date }
+    }
+
+    true
+
+  delete_poll: require_current_user =>
+    topics_flow, poll = @load_poll_for_moderation!
+
+    params = assert_valid @params, types.params_shape {
+      {"reason", types.empty + types.limited_text limits.MAX_BODY_LEN}
+    }
+
+    poll\delete!
+    topics_flow\write_moderation_log "topic.delete_poll", params.reason
+    true
+
+  reset_poll_votes: require_current_user =>
+    topics_flow, poll = @load_poll_for_moderation!
+
+    params = assert_valid @params, types.params_shape {
+      {"reason", types.empty + types.limited_text limits.MAX_BODY_LEN}
+    }
+
+    deleted_count = poll\reset_votes!
+    topics_flow\write_moderation_log "topic.reset_poll_votes", params.reason, {
+      data: { deleted_votes: deleted_count }
+    }
+
     true
 
   -- creates new poll for topic from previously validated params. Will set

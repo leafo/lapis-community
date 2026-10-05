@@ -104,6 +104,16 @@ class TopicPolls extends Model
   name_for_display: =>
     @poll_question
 
+  reset_votes: =>
+    import PollChoices, PollVotes from require "community.models"
+
+    res = db.delete PollVotes\table_name!, db.clause {
+      {"poll_choice_id in (select id from #{db.escape_identifier PollChoices\table_name!} where poll_id = ?)", @id}
+    }
+
+    db.update PollChoices\table_name!, { vote_count: 0 }, { poll_id: @id }
+    res.affected_rows
+
   allowed_to_edit: (user) =>
     @get_topic!\allowed_to_edit user
 

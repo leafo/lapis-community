@@ -15,6 +15,19 @@ local shapes = require("community.helpers.shapes")
 local types = require("lapis.validate.types")
 local TopicPolls
 TopicPolls = require("community.models").TopicPolls
+local date_format = "%Y-%m-%d %H:%M:%S"
+local check_duration
+check_duration = function(start, finish)
+  local date = require("date")
+  local duration = date.diff(finish, start):spanseconds()
+  if duration < limits.MIN_POLL_DURATION then
+    return nil, "poll must be open for at least " .. tostring(math.floor(limits.MIN_POLL_DURATION / 3600)) .. " hour(s)"
+  end
+  if duration > limits.MAX_POLL_DURATION then
+    return nil, "poll can't be open for more than " .. tostring(math.floor(limits.MAX_POLL_DURATION / 86400)) .. " days"
+  end
+  return true
+end
 local TopicPollsFlow
 do
   local _class_0
@@ -234,7 +247,6 @@ do
     end,
     set_poll_dates = function(self, params)
       local date = require("date")
-      local format = "%Y-%m-%d %H:%M:%S"
       local now = date(true)
       local start = params.start_date and date(params.start_date)
       if not start or start < now then
@@ -249,17 +261,81 @@ do
       else
         finish = start:copy():addseconds(limits.DEFAULT_POLL_DURATION)
       end
-      local duration = date.diff(finish, start):spanseconds()
-      if duration < limits.MIN_POLL_DURATION then
-        return nil, "poll must be open for at least " .. tostring(math.floor(limits.MIN_POLL_DURATION / 3600)) .. " hour(s)"
+      local ok, err = check_duration(start, finish)
+      if not (ok) then
+        return nil, err
       end
-      if duration > limits.MAX_POLL_DURATION then
-        return nil, "poll can't be open for more than " .. tostring(math.floor(limits.MAX_POLL_DURATION / 86400)) .. " days"
-      end
-      params.start_date = start:fmt(format)
-      params.end_date = finish:fmt(format)
+      params.start_date = start:fmt(date_format)
+      params.end_date = finish:fmt(date_format)
       return true
     end,
+    load_poll_for_moderation = function(self)
+      local TopicsFlow = require("community.flows.topics")
+      local topics_flow = TopicsFlow(self)
+      topics_flow:load_topic_for_moderation()
+      local poll = assert_error(topics_flow.topic:get_poll(), "topic has no poll")
+      return topics_flow, poll
+    end,
+    set_poll_end_date = require_current_user(function(self)
+      local topics_flow, poll = self:load_poll_for_moderation()
+      local params = assert_valid(self.params, types.params_shape({
+        {
+          "end_date",
+          shapes.utc_datetime
+        },
+        {
+          "reason",
+          types.empty + types.limited_text(limits.MAX_BODY_LEN)
+        }
+      }))
+      local date = require("date")
+      local now = date(true)
+      local finish = date(params.end_date)
+      if finish <= now then
+        finish = now
+      else
+        assert_error(check_duration(date(poll.start_date), finish))
+      end
+      local before = poll.end_date
+      poll:update({
+        end_date = finish:fmt(date_format)
+      })
+      topics_flow:write_moderation_log("topic.set_poll_end_date", params.reason, {
+        data = {
+          end_date_before = before,
+          end_date = poll.end_date
+        }
+      })
+      return true
+    end),
+    delete_poll = require_current_user(function(self)
+      local topics_flow, poll = self:load_poll_for_moderation()
+      local params = assert_valid(self.params, types.params_shape({
+        {
+          "reason",
+          types.empty + types.limited_text(limits.MAX_BODY_LEN)
+        }
+      }))
+      poll:delete()
+      topics_flow:write_moderation_log("topic.delete_poll", params.reason)
+      return true
+    end),
+    reset_poll_votes = require_current_user(function(self)
+      local topics_flow, poll = self:load_poll_for_moderation()
+      local params = assert_valid(self.params, types.params_shape({
+        {
+          "reason",
+          types.empty + types.limited_text(limits.MAX_BODY_LEN)
+        }
+      }))
+      local deleted_count = poll:reset_votes()
+      topics_flow:write_moderation_log("topic.reset_poll_votes", params.reason, {
+        data = {
+          deleted_votes = deleted_count
+        }
+      })
+      return true
+    end),
     set_poll = function(self, topic, params)
       TopicPolls = require("community.models").TopicPolls
       local poll_params = {
