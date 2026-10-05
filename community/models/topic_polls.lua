@@ -35,6 +35,17 @@ do
       local now = date(true)
       return now >= date(self.start_date) and now < date(self.end_date)
     end,
+    has_votes = function(self)
+      local PollChoices, PollVotes
+      do
+        local _obj_0 = require("community.models")
+        PollChoices, PollVotes = _obj_0.PollChoices, _obj_0.PollVotes
+      end
+      local res = PollVotes:select("where poll_choice_id in (select id from " .. tostring(db.escape_identifier(PollChoices:table_name())) .. " where poll_id = ?) limit 1", self.id, {
+        fields = "1"
+      })
+      return next(res) ~= nil
+    end,
     total_vote_count = function(self)
       local sum = 0
       local _list_0 = self:get_poll_choices()

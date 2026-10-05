@@ -23,12 +23,34 @@ do
   local _base_0 = {
     validate_params_shape = function(self)
       local choice_shape = types.params_shape(self.__class.CHOICE_VALIDATION)
+      local unique_ids = types.custom(function(choices)
+        local seen = { }
+        for _index_0 = 1, #choices do
+          local _continue_0 = false
+          repeat
+            local c = choices[_index_0]
+            if not (c.id) then
+              _continue_0 = true
+              break
+            end
+            if seen[c.id] then
+              return nil, "duplicate choice id"
+            end
+            seen[c.id] = true
+            _continue_0 = true
+          until true
+          if not _continue_0 then
+            break
+          end
+        end
+        return true
+      end)
       return types.params_shape({
         {
           "choices",
           shapes.convert_array * types.params_array(choice_shape, {
             length = types.range(1, 20)
-          })
+          }) * unique_ids
         },
         unpack(self.__class.POLL_VALIDATION)
       })
@@ -76,6 +98,56 @@ do
         end
       end
     end)),
+    locked_poll_changes = function(self, poll, params)
+      if not (poll:has_votes()) then
+        return nil
+      end
+      local changes = { }
+      if params.poll_question ~= poll.poll_question then
+        table.insert(changes, "question")
+      end
+      if TopicPolls.vote_types:for_db(params.vote_type) ~= poll.vote_type then
+        table.insert(changes, "vote type")
+      end
+      if poll.anonymous and not params.anonymous then
+        table.insert(changes, "anonymous")
+      end
+      local choices_by_id
+      do
+        local _tbl_0 = { }
+        local _list_0 = params.choices
+        for _index_0 = 1, #_list_0 do
+          local c = _list_0[_index_0]
+          if c.id then
+            _tbl_0[c.id] = c
+          end
+        end
+        choices_by_id = _tbl_0
+      end
+      local _list_0 = poll:get_poll_choices()
+      for _index_0 = 1, #_list_0 do
+        local _continue_0 = false
+        repeat
+          local choice = _list_0[_index_0]
+          local choice_params = choices_by_id[choice.id]
+          if not (choice_params) then
+            table.insert(changes, "removed choice")
+            _continue_0 = true
+            break
+          end
+          if choice_params.choice_text ~= choice.choice_text then
+            table.insert(changes, "choice text")
+          end
+          _continue_0 = true
+        until true
+        if not _continue_0 then
+          break
+        end
+      end
+      if next(changes) then
+        return changes
+      end
+    end,
     set_poll = function(self, topic, params)
       TopicPolls = require("community.models").TopicPolls
       local poll_params = {

@@ -1,6 +1,6 @@
 import Flow from require "lapis.flow"
 import Topics, Posts, PostEdits,
-  CommunityUsers, ActivityLogs, PendingPosts from require "community.models"
+  CommunityUsers, ActivityLogs, PendingPosts, ModerationLogs from require "community.models"
 
 db = require "lapis.db"
 import assert_error, yield_error from require "lapis.application"
@@ -178,7 +178,7 @@ class PostsFlow extends Flow
       {"poll", types.empty + types.table}
     }
 
-    local poll_flow, poll_was_updated
+    local poll_flow, poll_was_updated, poll_moderated_changes
     poll_was_updated = false
     if is_topic_post and has_poll
       PollsFlow = require "community.flows.topic_polls"
@@ -190,6 +190,18 @@ class PostsFlow extends Flow
       }
 
       post_update.poll = poll_edit
+
+      if existing_poll = @topic\get_poll!
+        if locked_changes = poll_flow\locked_poll_changes existing_poll, poll_edit
+          unless @topic\allowed_to_moderate @current_user
+            yield_error "poll already has votes, can't change: #{table.concat locked_changes, ", "}"
+
+          poll_moderated_changes = locked_changes
+      else
+        category = @topic\get_category!
+        if category
+          assert_error category\allowed_to_create_poll(@current_user),
+            "you can't create a poll in this category"
 
 
     if opts and opts.before_edit_callback
@@ -239,6 +251,15 @@ class PostsFlow extends Flow
     if is_topic_post and post_update.poll
       poll_flow\set_poll @topic, post_update.poll
       poll_was_updated = true
+
+      if poll_moderated_changes
+        ModerationLogs\create {
+          user_id: @current_user.id
+          object: @topic
+          category_id: @topic.category_id
+          action: "topic.edit_poll"
+          data: { changes: poll_moderated_changes }
+        }
 
     if edited_body or edited_title or poll_was_updated
       @post\on_body_updated_callback @

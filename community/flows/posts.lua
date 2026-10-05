@@ -1,9 +1,9 @@
 local Flow
 Flow = require("lapis.flow").Flow
-local Topics, Posts, PostEdits, CommunityUsers, ActivityLogs, PendingPosts
+local Topics, Posts, PostEdits, CommunityUsers, ActivityLogs, PendingPosts, ModerationLogs
 do
   local _obj_0 = require("community.models")
-  Topics, Posts, PostEdits, CommunityUsers, ActivityLogs, PendingPosts = _obj_0.Topics, _obj_0.Posts, _obj_0.PostEdits, _obj_0.CommunityUsers, _obj_0.ActivityLogs, _obj_0.PendingPosts
+  Topics, Posts, PostEdits, CommunityUsers, ActivityLogs, PendingPosts, ModerationLogs = _obj_0.Topics, _obj_0.Posts, _obj_0.PostEdits, _obj_0.CommunityUsers, _obj_0.ActivityLogs, _obj_0.PendingPosts, _obj_0.ModerationLogs
 end
 local db = require("lapis.db")
 local assert_error, yield_error
@@ -210,7 +210,7 @@ do
           types.empty + types.table
         }
       })).poll
-      local poll_flow, poll_was_updated
+      local poll_flow, poll_was_updated, poll_moderated_changes
       poll_was_updated = false
       if is_topic_post and has_poll then
         local PollsFlow = require("community.flows.topic_polls")
@@ -223,6 +223,25 @@ do
           }
         })).poll
         post_update.poll = poll_edit
+        do
+          local existing_poll = self.topic:get_poll()
+          if existing_poll then
+            do
+              local locked_changes = poll_flow:locked_poll_changes(existing_poll, poll_edit)
+              if locked_changes then
+                if not (self.topic:allowed_to_moderate(self.current_user)) then
+                  yield_error("poll already has votes, can't change: " .. tostring(table.concat(locked_changes, ", ")))
+                end
+                poll_moderated_changes = locked_changes
+              end
+            end
+          else
+            local category = self.topic:get_category()
+            if category then
+              assert_error(category:allowed_to_create_poll(self.current_user), "you can't create a poll in this category")
+            end
+          end
+        end
       end
       if opts and opts.before_edit_callback then
         opts.before_edit_callback(post_update)
@@ -280,6 +299,17 @@ do
       if is_topic_post and post_update.poll then
         poll_flow:set_poll(self.topic, post_update.poll)
         poll_was_updated = true
+        if poll_moderated_changes then
+          ModerationLogs:create({
+            user_id = self.current_user.id,
+            object = self.topic,
+            category_id = self.topic.category_id,
+            action = "topic.edit_poll",
+            data = {
+              changes = poll_moderated_changes
+            }
+          })
+        end
       end
       if edited_body or edited_title or poll_was_updated then
         self.post:on_body_updated_callback(self)

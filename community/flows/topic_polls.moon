@@ -35,10 +35,21 @@ class TopicPollsFlow extends Flow
   validate_params_shape: =>
     choice_shape = types.params_shape @@CHOICE_VALIDATION
 
+    -- set_choices only applies the first entry for an id, so duplicates could
+    -- be used to slip changes past locked_poll_changes
+    unique_ids = types.custom (choices) ->
+      seen = {}
+      for c in *choices
+        continue unless c.id
+        return nil, "duplicate choice id" if seen[c.id]
+        seen[c.id] = true
+
+      true
+
     types.params_shape {
-      {"choices", shapes.convert_array * types.params_array choice_shape, {
+      {"choices", shapes.convert_array * types.params_array(choice_shape, {
         length: types.range(1, 20)
-      }}
+      }) * unique_ids}
 
       unpack @@POLL_VALIDATION
     }
@@ -75,6 +86,37 @@ class TopicPollsFlow extends Flow
         else
           nil, "invalid vote"
 
+
+  -- Returns list of changes that would alter the meaning of votes already
+  -- cast on the poll, or nil if the poll has no votes or no such changes are
+  -- made. params is the output of validate_params_shape
+  locked_poll_changes: (poll, params) =>
+    return nil unless poll\has_votes!
+
+    changes = {}
+
+    if params.poll_question != poll.poll_question
+      table.insert changes, "question"
+
+    if TopicPolls.vote_types\for_db(params.vote_type) != poll.vote_type
+      table.insert changes, "vote type"
+
+    if poll.anonymous and not params.anonymous
+      table.insert changes, "anonymous"
+
+    choices_by_id = { c.id, c for c in *params.choices when c.id }
+
+    for choice in *poll\get_poll_choices!
+      choice_params = choices_by_id[choice.id]
+      unless choice_params
+        table.insert changes, "removed choice"
+        continue
+
+      if choice_params.choice_text != choice.choice_text
+        table.insert changes, "choice text"
+
+    if next changes
+      changes
 
   -- creates new poll for topic from previously validated params. Will set
   -- choices on the poll from params.choices

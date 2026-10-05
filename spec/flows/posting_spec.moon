@@ -1747,6 +1747,187 @@ describe "posting flow", ->
         if removed_choice_id
           assert.is_nil PollChoices\find removed_choice_id
 
+      describe "with votes", ->
+        import PollVotes, ModerationLogs from require "spec.community_models"
+
+        local topic, post, poll, choices
+
+        before_each ->
+          req = new_topic {
+            category_id: factory.Categories!.id
+            "topic[title]": "Poll Edit"
+            "topic[body]": "Original body"
+
+            "topic[poll][poll_question]": "Original question?"
+            "topic[poll][choices][1][choice_text]": "Red"
+            "topic[poll][choices][2][choice_text]": "Blue"
+          }
+
+          topic = req.topic
+          post = topic\get_topic_post!
+          poll = assert TopicPolls\find(topic_id: topic.id), "topic should have poll"
+          choices = poll\get_poll_choices!
+
+          choices[1]\vote factory.Users!
+
+        -- builds edit params for the poll, overrides is merged into the params
+        poll_edit = (overrides={}) ->
+          params = {
+            post_id: post.id
+            "post[body]": "Original body"
+            "topic[poll][poll_question]": "Original question?"
+            "topic[poll][choices][1][id]": "#{choices[1].id}"
+            "topic[poll][choices][1][choice_text]": "Red"
+            "topic[poll][choices][2][id]": "#{choices[2].id}"
+            "topic[poll][choices][2][choice_text]": "Blue"
+          }
+
+          for k,v in pairs overrides
+            params[k] = v or nil
+
+          params
+
+        it "prevents author from changing locked fields", ->
+          assert.has_error(
+            -> edit_post poll_edit {
+              "topic[poll][poll_question]": "Different question?"
+              "topic[poll][choices][1][choice_text]": "Green"
+              "topic[poll][vote_type]": "multiple"
+            }
+            {
+              message: {"poll already has votes, can't change: question, vote type, choice text"}
+            }
+          )
+
+          poll\refresh!
+          assert.same "Original question?", poll.poll_question
+          assert.same "Red", PollChoices\find(choices[1].id).choice_text
+
+        it "prevents author from removing choices", ->
+          assert.has_error(
+            -> edit_post poll_edit {
+              "topic[poll][choices][2][id]": false
+              "topic[poll][choices][2][choice_text]": false
+            }
+            {
+              message: {"poll already has votes, can't change: removed choice"}
+            }
+          )
+
+          assert PollChoices\find choices[2].id
+
+        it "rejects duplicate choice ids", ->
+          -- first entry renames the voted choice, second repeats the original text
+          assert.has_error(
+            -> edit_post poll_edit {
+              "topic[poll][choices][1][choice_text]": "Green"
+              "topic[poll][choices][2][id]": "#{choices[1].id}"
+              "topic[poll][choices][2][choice_text]": "Red"
+              "topic[poll][choices][3][id]": "#{choices[2].id}"
+              "topic[poll][choices][3][choice_text]": "Blue"
+            }
+            {
+              message: {"poll: choices: duplicate choice id"}
+            }
+          )
+
+          assert.same "Red", PollChoices\find(choices[1].id).choice_text
+          assert.same 0, ModerationLogs\count!
+
+        it "counts uncounted votes as votes", ->
+          PollVotes\delete db.clause { poll_choice_id: choices[1].id }
+          choices[2]\vote factory.Users!, false
+
+          assert.has_error(
+            -> edit_post poll_edit {
+              "topic[poll][poll_question]": "Different question?"
+            }
+            {
+              message: {"poll already has votes, can't change: question"}
+            }
+          )
+
+        it "lets author add choices and edit description", ->
+          edit_post poll_edit {
+            "topic[poll][description]": "Pick a color"
+            "topic[poll][choices][1][description]": "Like a rose"
+            "topic[poll][choices][3][choice_text]": "Green"
+          }
+
+          poll\refresh!
+          assert.same "Pick a color", poll.description
+
+          updated_choices = poll\get_poll_choices!
+          assert.same {"Red", "Blue", "Green"}, [c.choice_text for c in *updated_choices]
+          assert.same "Like a rose", updated_choices[1].description
+          assert.same 1, updated_choices[1].vote_count
+
+          assert.same 0, ModerationLogs\count!
+
+        it "lets moderator change locked fields and logs it", ->
+          current_user = factory.Users!
+          factory.Moderators {
+            user_id: current_user.id
+            object: topic\get_category!
+          }
+
+          edit_post poll_edit {
+            "topic[poll][poll_question]": "Moderated question?"
+            "topic[poll][choices][2][id]": false
+            "topic[poll][choices][2][choice_text]": false
+          }
+
+          poll\refresh!
+          assert.same "Moderated question?", poll.poll_question
+          assert.is_nil PollChoices\find choices[2].id
+
+          logs = ModerationLogs\select!
+          assert.same 1, #logs
+          assert (types.shape {
+            user_id: current_user.id
+            object_type: ModerationLogs.object_types.topic
+            object_id: topic.id
+            category_id: topic.category_id
+            action: "topic.edit_poll"
+            data: types.shape {
+              changes: types.shape { "question", "removed choice" }
+            }
+          }, open: true) logs[1]
+
+      it "adds poll to topic without poll when editing", ->
+        topic = factory.Topics user_id: current_user.id
+        post = factory.Posts topic_id: topic.id, user_id: current_user.id
+
+        edit_post {
+          post_id: post.id
+          "post[body]": post.body
+          "topic[poll][poll_question]": "New poll?"
+          "topic[poll][choices][1][choice_text]": "Yes"
+        }
+
+        poll = assert topic\get_poll!, "topic should have poll"
+        assert.same "New poll?", poll.poll_question
+
+      it "checks category permission when adding poll on edit", ->
+        topic = factory.Topics user_id: current_user.id
+        post = factory.Posts topic_id: topic.id, user_id: current_user.id
+
+        stub(Categories.__base, "allowed_to_create_poll").returns false
+
+        assert.has_error(
+          -> edit_post {
+            post_id: post.id
+            "post[body]": post.body
+            "topic[poll][poll_question]": "New poll?"
+            "topic[poll][choices][1][choice_text]": "Yes"
+          }
+          {
+            message: {"you can't create a poll in this category"}
+          }
+        )
+
+        assert.is_nil TopicPolls\find topic_id: topic.id
+
     describe "on_body_updated_callback", ->
       it "calls on_body_updated_callback when updating body", ->
         s = spy.on(Posts.__base, "on_body_updated_callback")

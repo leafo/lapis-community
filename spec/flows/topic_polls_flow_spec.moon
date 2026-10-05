@@ -481,3 +481,84 @@ describe "TopicPollsFlow", ->
       assert.equal "Edited question", poll.poll_question
       assert.equal original_end_date, poll.end_date
       assert.falsy poll\is_open!
+
+  describe "locked_poll_changes", ->
+    local poll, choice_a, choice_b
+
+    before_each ->
+      poll = TopicPolls\create {
+        topic_id: factory.Topics!.id
+        poll_question: "Question?"
+        vote_type: TopicPolls.vote_types.single
+        anonymous: true
+        end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day')")
+      }
+
+      choice_a = PollChoices\create poll_id: poll.id, choice_text: "A", position: 1
+      choice_b = PollChoices\create poll_id: poll.id, choice_text: "B", position: 2
+
+    -- params as they would come out of validate_params_shape
+    unchanged_params = ->
+      {
+        poll_question: "Question?"
+        description: db.NULL
+        anonymous: true
+        hide_results: false
+        vote_type: "single"
+        choices: {
+          { id: choice_a.id, choice_text: "A" }
+          { id: choice_b.id, choice_text: "B" }
+        }
+      }
+
+    -- in_request asserts a truthy return, so the result is wrapped
+    locked_poll_changes = (params) ->
+      unpack in_request {}, =>
+        { @flow("topic_polls")\locked_poll_changes poll, params }
+
+    it "allows any change when poll has no votes", ->
+      params = unchanged_params!
+      params.poll_question = "Different?"
+      params.anonymous = false
+      params.choices = { { choice_text: "C" } }
+      assert.is_nil locked_poll_changes params
+
+    describe "with votes", ->
+      before_each ->
+        choice_a\vote factory.Users!
+
+      it "returns nil for unchanged poll", ->
+        assert.is_nil locked_poll_changes unchanged_params!
+
+      it "allows non-locked changes", ->
+        params = unchanged_params!
+        params.description = "New description"
+        params.hide_results = true
+        params.anonymous = true
+        params.choices[1].description = "about A"
+        table.insert params.choices, { choice_text: "C" }
+        assert.is_nil locked_poll_changes params
+
+      it "allows enabling anonymous", ->
+        poll\update anonymous: false
+        assert.is_nil locked_poll_changes unchanged_params!
+
+      it "detects every locked change", ->
+        params = unchanged_params!
+        params.poll_question = "Different?"
+        params.vote_type = "multiple"
+        params.anonymous = false
+        params.choices = {
+          { id: choice_a.id, choice_text: "A changed" }
+        }
+
+        assert.same {
+          "question", "vote type", "anonymous", "choice text", "removed choice"
+        }, locked_poll_changes params
+
+      it "treats choice ids from another poll as removal", ->
+        other_choice = PollChoices\create poll_id: poll.id + 1000, choice_text: "X"
+        params = unchanged_params!
+        params.choices[2] = { id: other_choice.id, choice_text: "B" }
+
+        assert.same {"removed choice"}, locked_poll_changes params

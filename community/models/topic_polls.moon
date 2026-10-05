@@ -65,6 +65,12 @@ class TopicPolls extends Model
     now = date(true)
     now >= date(@start_date) and now < date(@end_date)
 
+  -- includes uncounted votes, unlike total_vote_count
+  has_votes: =>
+    import PollChoices, PollVotes from require "community.models"
+    res = PollVotes\select "where poll_choice_id in (select id from #{db.escape_identifier PollChoices\table_name!} where poll_id = ?) limit 1", @id, fields: "1"
+    next(res) != nil
+
   total_vote_count: =>
     sum = 0
     for choice in *@get_poll_choices!
