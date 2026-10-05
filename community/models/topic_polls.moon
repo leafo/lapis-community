@@ -117,6 +117,26 @@ class TopicPolls extends Model
     now = date(true)
     now >= date(@start_date) and now < date(@end_date)
 
+  is_upcoming: =>
+    date(true) < date(@start_date)
+
+  is_closed: =>
+    date(true) >= date(@end_date)
+
+  allowed_to_view_results: (user) =>
+    return true unless @hide_results
+    return false unless user
+
+    topic = @get_topic!
+    return true if user.id == topic.user_id
+    topic\allowed_to_moderate user
+
+  allowed_to_view_voters: (user) =>
+    return false unless @allowed_to_view_results user
+    return true unless @anonymous
+    return false unless user
+    @get_topic!\allowed_to_moderate user
+
   -- includes uncounted votes, unlike total_vote_count
   has_votes: =>
     import PollChoices, PollVotes from require "community.models"

@@ -35,6 +35,37 @@ do
       local now = date(true)
       return now >= date(self.start_date) and now < date(self.end_date)
     end,
+    is_upcoming = function(self)
+      return date(true) < date(self.start_date)
+    end,
+    is_closed = function(self)
+      return date(true) >= date(self.end_date)
+    end,
+    allowed_to_view_results = function(self, user)
+      if not (self.hide_results) then
+        return true
+      end
+      if not (user) then
+        return false
+      end
+      local topic = self:get_topic()
+      if user.id == topic.user_id then
+        return true
+      end
+      return topic:allowed_to_moderate(user)
+    end,
+    allowed_to_view_voters = function(self, user)
+      if not (self:allowed_to_view_results(user)) then
+        return false
+      end
+      if not (self.anonymous) then
+        return true
+      end
+      if not (user) then
+        return false
+      end
+      return self:get_topic():allowed_to_moderate(user)
+    end,
     has_votes = function(self)
       local PollChoices, PollVotes
       do

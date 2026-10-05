@@ -378,3 +378,77 @@ describe "models.topics", ->
         assert_votes PollVotes\select "order by id asc"
 
 
+
+  describe "status", ->
+    poll_at = (start_offset, end_offset) ->
+      TopicPolls\create {
+        topic_id: factory.Topics!.id
+        poll_question: "When?"
+        start_date: db.raw "date_trunc('second', now() at time zone 'utc') + interval '#{start_offset} hours'"
+        end_date: db.raw "date_trunc('second', now() at time zone 'utc') + interval '#{end_offset} hours'"
+      }
+
+    it "is upcoming", ->
+      poll = poll_at 1, 2
+      poll\refresh!
+      assert.same {true, false, false}, {poll\is_upcoming!, poll\is_open!, poll\is_closed!}
+
+    it "is open", ->
+      poll = poll_at -1, 1
+      poll\refresh!
+      assert.same {false, true, false}, {poll\is_upcoming!, poll\is_open!, poll\is_closed!}
+
+    it "is closed", ->
+      poll = poll_at -2, -1
+      poll\refresh!
+      assert.same {false, false, true}, {poll\is_upcoming!, poll\is_open!, poll\is_closed!}
+
+  describe "visibility", ->
+    local topic, author, moderator, other
+
+    before_each ->
+      author = factory.Users!
+      topic = factory.Topics user_id: author.id
+      moderator = factory.Users!
+      factory.Moderators user_id: moderator.id, object: topic\get_category!
+      other = factory.Users!
+
+    create_poll = (opts) ->
+      TopicPolls\create {
+        topic_id: topic.id
+        poll_question: "Color?"
+        anonymous: opts.anonymous
+        hide_results: opts.hide_results
+        end_date: db.raw "date_trunc('second', now() at time zone 'utc') + interval '1 day'"
+      }
+
+    -- results and voters visibility for: logged out, other user, author, moderator
+    visibility = (poll) ->
+      {
+        results: [poll\allowed_to_view_results(u) and true or false for u in *{false, other, author, moderator}]
+        voters: [poll\allowed_to_view_voters(u) and true or false for u in *{false, other, author, moderator}]
+      }
+
+    it "public results, anonymous", ->
+      assert.same {
+        results: {true, true, true, true}
+        voters: {false, false, false, true}
+      }, visibility create_poll anonymous: true, hide_results: false
+
+    it "public results, not anonymous", ->
+      assert.same {
+        results: {true, true, true, true}
+        voters: {true, true, true, true}
+      }, visibility create_poll anonymous: false, hide_results: false
+
+    it "hidden results, anonymous", ->
+      assert.same {
+        results: {false, false, true, true}
+        voters: {false, false, false, true}
+      }, visibility create_poll anonymous: true, hide_results: true
+
+    it "hidden results, not anonymous", ->
+      assert.same {
+        results: {false, false, true, true}
+        voters: {false, false, true, true}
+      }, visibility create_poll anonymous: false, hide_results: true

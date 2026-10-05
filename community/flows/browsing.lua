@@ -122,6 +122,7 @@ do
       local TopicsFlow = require("community.flows.topics")
       TopicsFlow(self):load_topic()
       assert_error(self:allowed_to_view(self.topic), "not allowed to view")
+      self:preload_topic_poll(self.topic)
       if opts.increment_views ~= false then
         self:increment_topic_view_counter()
       end
@@ -303,6 +304,32 @@ do
       end
       return categories
     end,
+    preload_topic_poll = function(self, topic)
+      preload({
+        topic
+      }, {
+        poll = "poll_choices"
+      })
+      local poll = topic:get_poll()
+      if not (poll) then
+        return 
+      end
+      poll.topic = topic
+      if self.current_user then
+        preload((function()
+          local _accum_0 = { }
+          local _len_0 = 1
+          local _list_0 = poll:get_poll_choices()
+          for _index_0 = 1, #_list_0 do
+            local c = _list_0[_index_0]
+            _accum_0[_len_0] = c:with_user(self.current_user.id)
+            _len_0 = _len_0 + 1
+          end
+          return _accum_0
+        end)(), "vote")
+      end
+      return poll
+    end,
     preload_topics = function(self, topics, last_seens)
       if last_seens == nil then
         last_seens = true
@@ -328,6 +355,7 @@ do
         end
       end
       preload(all_topics, "user")
+      preload(topics, "poll")
       if last_seens and self.current_user then
         preload((function()
           local _accum_0 = { }

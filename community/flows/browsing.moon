@@ -88,6 +88,8 @@ class BrowsingFlow extends Flow
 
     assert_error @allowed_to_view(@topic), "not allowed to view"
 
+    @preload_topic_poll @topic
+
     if opts.increment_views != false
       @increment_topic_view_counter!
 
@@ -197,6 +199,20 @@ class BrowsingFlow extends Flow
 
     categories
 
+  -- Used by topic_posts so a view can render the poll and the viewer's votes
+  -- without further queries
+  preload_topic_poll: (topic) =>
+    preload { topic }, poll: "poll_choices"
+    poll = topic\get_poll!
+    return unless poll
+
+    poll.topic = topic
+
+    if @current_user
+      preload [c\with_user(@current_user.id) for c in *poll\get_poll_choices!], "vote"
+
+    poll
+
   preload_topics: (topics, last_seens=true) =>
     Topics\preload_relation topics, "last_post", {
       fields: "id, user_id, created_at, updated_at"
@@ -208,6 +224,7 @@ class BrowsingFlow extends Flow
         table.insert all_topics, t.last_post
 
     preload all_topics, "user"
+    preload topics, "poll"
 
     if last_seens and @current_user
       preload [t\with_user(@current_user.id) for t in *topics], "last_seen"

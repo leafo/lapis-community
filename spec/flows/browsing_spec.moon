@@ -6,6 +6,8 @@ import Application from require "lapis"
 import capture_errors_json from require "lapis.application"
 
 import types from require "tableshape"
+import capture_queries from require "spec.helpers"
+db = require "lapis.db"
 
 describe "browsing flow", ->
   import Users from require "spec.models"
@@ -244,6 +246,48 @@ describe "browsing flow", ->
           topic\refresh!
           assert.same 1, topic.views_count, "views_count"
 
+        describe "poll", ->
+          import TopicPolls, PollChoices from require "spec.community_models"
+
+          queries_after_topic_posts = (topic, fn) ->
+            in_request { get: { topic_id: topic.id } }, =>
+              @current_user = current_user
+              @flow("browsing")\topic_posts!
+              capture_queries -> fn @topic
+
+          it "preloads poll, choices and viewer votes", ->
+            topic = factory.Topics!
+            poll = TopicPolls\create {
+              topic_id: topic.id
+              poll_question: "Color?"
+              end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
+            }
+            red = PollChoices\create poll_id: poll.id, choice_text: "Red", position: 1
+            PollChoices\create poll_id: poll.id, choice_text: "Blue", position: 2
+
+            red\vote current_user if current_user
+
+            queries = queries_after_topic_posts topic, (t) ->
+              p = assert t\get_poll!
+              assert.same poll.id, p.id
+              assert.same t, p\get_topic!
+
+              choices = p\get_poll_choices!
+              assert.same {"Red", "Blue"}, [c.choice_text for c in *choices]
+
+              if current_user
+                assert.same {true, false},
+                  [c\with_user(current_user.id)\get_vote! != nil for c in *choices]
+
+            assert.same {}, queries
+
+          it "preloads missing poll", ->
+            topic = factory.Topics!
+            queries = queries_after_topic_posts topic, (t) ->
+              assert.nil t\get_poll!
+
+            assert.same {}, queries
+
       describe "preview category topics", ->
         get_category_preview = (user, params) ->
           in_request { get: params }, =>
@@ -325,6 +369,27 @@ describe "browsing flow", ->
           assert.same nil, next_page
           assert.same nil, prev_page
           assert.same 0, UserCategoryLastSeens\count!
+
+        it "preloads topic polls", ->
+          category = factory.Categories!
+          with_poll = factory.Topics category_id: category.id
+          factory.Topics category_id: category.id
+
+          TopicPolls = require("spec.community_models").TopicPolls
+          TopicPolls\create {
+            topic_id: with_poll.id
+            poll_question: "Color?"
+            end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
+          }
+
+          topics = category_topics current_user, category_id: category.id
+          assert.same 2, #topics
+
+          queries = capture_queries ->
+            assert.same { [with_poll.id]: true },
+              { t.id, true for t in *topics when t\get_poll! }
+
+          assert.same {}, queries
 
         it "gets empty sticky topics", ->
           topics = sticky_category_topics!
