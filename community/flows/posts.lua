@@ -240,6 +240,7 @@ do
             if category then
               assert_error(category:allowed_to_create_poll(self.current_user), "you can't create a poll in this category")
             end
+            assert_error(poll_flow:set_poll_dates(poll_edit))
           end
         end
       end

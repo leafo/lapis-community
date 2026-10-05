@@ -101,3 +101,37 @@ describe "community.helpers", ->
         assert.same {nil, "expected empty, or page number"}, {page_number\transform "-5"}
         assert.same {nil, "expected empty, or page number"}, {page_number\transform "5.3"}
 
+    describe "utc_datetime", ->
+      local utc_datetime
+
+      before_each ->
+        import utc_datetime from require "community.helpers.shapes"
+
+      it "converts to utc", ->
+        assert.same "2026-10-05 18:00:00", utc_datetime\transform "2026-10-05T18:00:00Z"
+        assert.same "2026-10-05 18:00:00", utc_datetime\transform "2026-10-05T18:00:00.123Z"
+        assert.same "2026-10-05 18:00:00", utc_datetime\transform "2026-10-05T20:00:00+02:00"
+        assert.same "2026-10-05 18:00:00", utc_datetime\transform "2026-10-05T13:30:00-04:30"
+        assert.same "2026-10-06 01:00:00", utc_datetime\transform "2026-10-05T23:00:00-02:00"
+        assert.same "2026-10-05 04:00:00", utc_datetime\transform "2026-10-05T18:00:00+14:00"
+
+      it "fails invalid input", ->
+        for input in *{
+          "2026-10-05T18:00:00"
+          "2026-10-05 18:00:00Z"
+          "2026-10-05"
+          "2026-13-01T00:00:00Z"
+          "2026-02-30T00:00:00Z"
+          "2026-10-05T25:00:00Z"
+          "2026-10-05T18:00:0012Z"
+          "2026-10-05T18:00:00+2:00"
+          "2026-10-05T18:00:00+99:99"
+          "2026-10-05T18:00:00+02:60"
+          "2026-10-05T18:00:00Zjunk"
+          "1700000000"
+          ""
+          123
+        }
+          assert.same {nil, "expected ISO 8601 date with timezone"},
+            {utc_datetime\transform input}, "input: #{input}"
+

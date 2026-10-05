@@ -203,6 +203,8 @@ class PostsFlow extends Flow
           assert_error category\allowed_to_create_poll(@current_user),
             "you can't create a poll in this category"
 
+        assert_error poll_flow\set_poll_dates poll_edit
+
 
     if opts and opts.before_edit_callback
       opts.before_edit_callback post_update

@@ -18,8 +18,8 @@ class TopicPollsFlow extends Flow
     {"description",              types.empty / db.NULL + types.limited_text(limits.MAX_TITLE_LEN)}
     {"anonymous",                types.empty / false + types.any / true}
     {"hide_results",             types.empty / false + types.any / true}
-    -- {"end_date", types.db_datetime}, -- TODO: figure out how we want to parse this
-    -- TODO consdier just passing duration in hours
+    {"start_date",               types.empty / nil + shapes.utc_datetime}
+    {"end_date",                 types.empty / nil + shapes.utc_datetime}
     {"vote_type",                shapes.default("single") * types.db_enum(TopicPolls.vote_types)}
   }
 
@@ -133,6 +133,34 @@ class TopicPollsFlow extends Flow
     if next changes
       changes
 
+  -- Called before creating a poll, after validate_params_shape. Not used for
+  -- edits, an existing poll's dates are never changed by set_poll
+  set_poll_dates: (params) =>
+    date = require "date"
+    format = "%Y-%m-%d %H:%M:%S"
+
+    now = date true
+    start = params.start_date and date params.start_date
+    -- also covers a client clock running slightly behind
+    start = now if not start or start < now
+
+    finish = if params.end_date
+      date params.end_date
+    else
+      start\copy!\addseconds limits.DEFAULT_POLL_DURATION
+
+    duration = date.diff(finish, start)\spanseconds!
+
+    if duration < limits.MIN_POLL_DURATION
+      return nil, "poll must be open for at least #{math.floor limits.MIN_POLL_DURATION / 3600} hour(s)"
+
+    if duration > limits.MAX_POLL_DURATION
+      return nil, "poll can't be open for more than #{math.floor limits.MAX_POLL_DURATION / 86400} days"
+
+    params.start_date = start\fmt format
+    params.end_date = finish\fmt format
+    true
+
   -- creates new poll for topic from previously validated params. Will set
   -- choices on the poll from params.choices
   set_poll: (topic, params) =>
@@ -158,9 +186,12 @@ class TopicPollsFlow extends Flow
       existing_poll
     else
       poll_params.topic_id = topic.id
-      -- end_date is only set on creation so editing a poll can't reopen or extend it
-      -- TODO: allow this to be specified, look into how we set date with timezone
-      poll_params.end_date = db.raw "date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )"
+      -- dates are only set on creation so editing a poll can't reopen or extend it
+      poll_params.start_date = params.start_date
+      poll_params.end_date = params.end_date or db.raw db.interpolate_query(
+        "date_trunc('second', now() AT TIME ZONE 'utc') + ? * interval '1 second'",
+        limits.DEFAULT_POLL_DURATION
+      )
       TopicPolls\create poll_params
 
     if poll

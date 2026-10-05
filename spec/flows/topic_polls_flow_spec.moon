@@ -672,3 +672,84 @@ describe "TopicPollsFlow", ->
     it "increments on each content edit", ->
       edit_poll (p) -> p.poll_question = "Second?"
       assert.same 3, edit_poll (p) -> p.poll_question = "Third?"
+
+  describe "set_poll_dates", ->
+    date = require "date"
+
+    iso = (d) -> d\fmt "%Y-%m-%dT%H:%M:%SZ"
+    from_now = (seconds) -> date(true)\addseconds seconds
+
+    -- in_request asserts a truthy return, so the result is wrapped
+    set_poll_dates = (params) ->
+      unpack in_request {}, =>
+        { @flow("topic_polls")\set_poll_dates params }
+
+    span = (a, b) -> date.diff(date(b), date(a))\spanseconds!
+
+    it "defaults to starting now and lasting one day", ->
+      params = {}
+      assert.true set_poll_dates params
+      assert.true math.abs(span(date(true)\fmt("%Y-%m-%d %H:%M:%S"), params.start_date)) <= 2
+      assert.same 60 * 60 * 24, span params.start_date, params.end_date
+
+    it "keeps a future start date", ->
+      start = from_now 60 * 60 * 24 * 2
+      params = { start_date: start\fmt "%Y-%m-%d %H:%M:%S" }
+      assert.true set_poll_dates params
+      assert.same start\fmt("%Y-%m-%d %H:%M:%S"), params.start_date
+      assert.same 60 * 60 * 24, span params.start_date, params.end_date
+
+    it "moves a past start date to now", ->
+      params = {
+        start_date: from_now(-60 * 60 * 24)\fmt "%Y-%m-%d %H:%M:%S"
+        end_date: from_now(60 * 60 * 5)\fmt "%Y-%m-%d %H:%M:%S"
+      }
+      assert.true set_poll_dates params
+      assert.true math.abs(span(date(true)\fmt("%Y-%m-%d %H:%M:%S"), params.start_date)) <= 2
+
+    it "rejects a poll shorter than the minimum", ->
+      assert.same {nil, "poll must be open for at least 1 hour(s)"}, {set_poll_dates {
+        end_date: from_now(60 * 30)\fmt "%Y-%m-%d %H:%M:%S"
+      }}
+
+    it "rejects an end date before the start date", ->
+      assert.same {nil, "poll must be open for at least 1 hour(s)"}, {set_poll_dates {
+        start_date: from_now(60 * 60 * 10)\fmt "%Y-%m-%d %H:%M:%S"
+        end_date: from_now(60 * 60 * 5)\fmt "%Y-%m-%d %H:%M:%S"
+      }}
+
+    it "rejects a poll longer than the maximum", ->
+      assert.same {nil, "poll can't be open for more than 30 days"}, {set_poll_dates {
+        end_date: from_now(60 * 60 * 24 * 31)\fmt "%Y-%m-%d %H:%M:%S"
+      }}
+
+    it "validates dates through validate_params", ->
+      start = from_now 60 * 60
+      finish = from_now 60 * 60 * 25
+
+      result = in_request {
+        post: {
+          poll_question: "When?"
+          start_date: iso start
+          end_date: iso finish
+          "choices[1][choice_text]": "Now"
+        }
+      }, =>
+        @flow("topic_polls")\validate_params!
+
+      assert.same start\fmt("%Y-%m-%d %H:%M:%S"), result.start_date
+      assert.same finish\fmt("%Y-%m-%d %H:%M:%S"), result.end_date
+
+      assert.has_error(
+        -> in_request {
+          post: {
+            poll_question: "When?"
+            end_date: "tomorrow"
+            "choices[1][choice_text]": "Now"
+          }
+        }, =>
+          @flow("topic_polls")\validate_params!
+        {
+          message: {"end_date: expected empty, or ISO 8601 date with timezone"}
+        }
+      )

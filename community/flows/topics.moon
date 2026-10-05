@@ -84,6 +84,8 @@ class TopicsFlow extends Flow
       assert_error @category\allowed_to_create_poll(@current_user),
         "you can't create a poll in this category"
 
+      assert_error poll_flow\set_poll_dates new_poll
+
     body = assert_error Posts\filter_body new_topic.body, new_topic.body_format
 
     community_user = CommunityUsers\for_user @current_user

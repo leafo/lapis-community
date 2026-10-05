@@ -12,6 +12,42 @@ local page_number = (types.empty / 1) + (types.one_of({
   types.number / math.floor,
   types.string:length(0, 5) * types.pattern("^%d+$") / tonumber
 }) * types.range(1, 1000)):describe("page number")
+local parse_utc_datetime
+parse_utc_datetime = function(str)
+  local day, time, fraction, zone = str:match("^(%d%d%d%d%-%d%d%-%d%d)T(%d%d:%d%d:%d%d)([%.%d]*)(.*)$")
+  if not (day) then
+    return nil
+  end
+  if not (fraction == "" or fraction:match("^%.%d+$")) then
+    return nil
+  end
+  local offset_minutes
+  if zone == "Z" then
+    offset_minutes = 0
+  else
+    local sign, h, m = zone:match("^([+-])(%d%d):(%d%d)$")
+    if not (sign) then
+      return nil
+    end
+    h, m = tonumber(h), tonumber(m)
+    if h > 14 or m > 59 then
+      return nil
+    end
+    offset_minutes = (h * 60 + m) * (sign == "-" and -1 or 1)
+  end
+  local date = require("date")
+  local local_str = tostring(day) .. " " .. tostring(time)
+  local ok, d = pcall(date, local_str)
+  if not (ok and d) then
+    return nil
+  end
+  if not (d:fmt("%Y-%m-%d %H:%M:%S") == local_str) then
+    return nil
+  end
+  d:addminutes(-offset_minutes)
+  return d:fmt("%Y-%m-%d %H:%M:%S")
+end
+local utc_datetime = (types.string / parse_utc_datetime * types.string):describe("ISO 8601 date with timezone")
 local db_nullable
 db_nullable = function(t)
   local db = require("lapis.db")
@@ -45,6 +81,7 @@ return {
   empty_html = empty_html,
   color = color,
   page_number = page_number,
+  utc_datetime = utc_datetime,
   db_nullable = db_nullable,
   default = default,
   convert_array = convert_array

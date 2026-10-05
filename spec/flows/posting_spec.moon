@@ -466,6 +466,51 @@ describe "posting flow", ->
 
         assert_choices choices
 
+      it "creates poll with start and end dates", ->
+        date = require "date"
+        start = date(true)\addseconds 60 * 60 * 24
+        finish = date(true)\addseconds 60 * 60 * 24 * 3
+
+        -- submitted in a +02:00 timezone, stored as utc
+        new_topic {
+          category_id: factory.Categories!.id
+          "topic[title]": "Poll Test"
+          "topic[body]": "Scheduled poll"
+
+          "topic[poll][poll_question]": "Later?"
+          "topic[poll][start_date]": start\copy!\addhours(2)\fmt "%Y-%m-%dT%H:%M:%S+02:00"
+          "topic[poll][end_date]": finish\fmt "%Y-%m-%dT%H:%M:%SZ"
+          "topic[poll][choices][1][choice_text]": "Yes"
+        }
+
+        topic = unpack Topics\select!
+        poll = assert TopicPolls\find(topic_id: topic.id), "topic should have poll"
+
+        assert.same start\fmt("%Y-%m-%d %H:%M:%S"), poll.start_date
+        assert.same finish\fmt("%Y-%m-%d %H:%M:%S"), poll.end_date
+        assert.false poll\is_open!
+
+      it "aborts creating topic if poll duration is invalid", ->
+        date = require "date"
+
+        assert.has_error(
+          -> new_topic {
+            category_id: factory.Categories!.id
+            "topic[title]": "Poll Test"
+            "topic[body]": "Too long"
+
+            "topic[poll][poll_question]": "Forever?"
+            "topic[poll][end_date]": date(true)\addseconds(60 * 60 * 24 * 60)\fmt "%Y-%m-%dT%H:%M:%SZ"
+            "topic[poll][choices][1][choice_text]": "Yes"
+          }
+          {
+            message: {"poll can't be open for more than 30 days"}
+          }
+        )
+
+        assert.same 0, Topics\count!
+        assert.same 0, TopicPolls\count!
+
       it "aborts creating topic (and poll) if poll field validation fails", ->
         category = factory.Categories!
 
@@ -1912,6 +1957,32 @@ describe "posting flow", ->
               changes: types.shape { "question", "removed choice" }
             }
           }, open: true) logs[1]
+
+      it "ignores dates when editing existing poll", ->
+        req = new_topic {
+          category_id: factory.Categories!.id
+          "topic[title]": "Poll Edit"
+          "topic[body]": "Body"
+          "topic[poll][poll_question]": "Question?"
+          "topic[poll][choices][1][choice_text]": "Yes"
+        }
+
+        poll = assert TopicPolls\find(topic_id: req.topic.id), "topic should have poll"
+        {:start_date, :end_date} = poll
+
+        edit_post {
+          post_id: req.topic\get_topic_post!.id
+          "post[body]": "Body"
+          "topic[poll][poll_question]": "Question?"
+          "topic[poll][start_date]": "2020-01-01T00:00:00Z"
+          "topic[poll][end_date]": "2020-01-02T00:00:00Z"
+          "topic[poll][choices][1][id]": "#{poll\get_poll_choices![1].id}"
+          "topic[poll][choices][1][choice_text]": "Yes"
+        }
+
+        poll\refresh!
+        assert.same start_date, poll.start_date
+        assert.same end_date, poll.end_date
 
       it "adds poll to topic without poll when editing", ->
         topic = factory.Topics user_id: current_user.id

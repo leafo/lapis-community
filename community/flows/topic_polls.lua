@@ -178,6 +178,31 @@ do
         return changes
       end
     end,
+    set_poll_dates = function(self, params)
+      local date = require("date")
+      local format = "%Y-%m-%d %H:%M:%S"
+      local now = date(true)
+      local start = params.start_date and date(params.start_date)
+      if not start or start < now then
+        start = now
+      end
+      local finish
+      if params.end_date then
+        finish = date(params.end_date)
+      else
+        finish = start:copy():addseconds(limits.DEFAULT_POLL_DURATION)
+      end
+      local duration = date.diff(finish, start):spanseconds()
+      if duration < limits.MIN_POLL_DURATION then
+        return nil, "poll must be open for at least " .. tostring(math.floor(limits.MIN_POLL_DURATION / 3600)) .. " hour(s)"
+      end
+      if duration > limits.MAX_POLL_DURATION then
+        return nil, "poll can't be open for more than " .. tostring(math.floor(limits.MAX_POLL_DURATION / 86400)) .. " days"
+      end
+      params.start_date = start:fmt(format)
+      params.end_date = finish:fmt(format)
+      return true
+    end,
     set_poll = function(self, topic, params)
       TopicPolls = require("community.models").TopicPolls
       local poll_params = {
@@ -201,7 +226,8 @@ do
           poll = existing_poll
         else
           poll_params.topic_id = topic.id
-          poll_params.end_date = db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )")
+          poll_params.start_date = params.start_date
+          poll_params.end_date = params.end_date or db.raw(db.interpolate_query("date_trunc('second', now() AT TIME ZONE 'utc') + ? * interval '1 second'", limits.DEFAULT_POLL_DURATION))
           poll = TopicPolls:create(poll_params)
         end
       end
@@ -306,6 +332,14 @@ do
     {
       "hide_results",
       types.empty / false + types.any / true
+    },
+    {
+      "start_date",
+      types.empty / nil + shapes.utc_datetime
+    },
+    {
+      "end_date",
+      types.empty / nil + shapes.utc_datetime
     },
     {
       "vote_type",

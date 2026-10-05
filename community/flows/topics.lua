@@ -120,6 +120,7 @@ do
         })).poll
         new_topic.poll = new_poll
         assert_error(self.category:allowed_to_create_poll(self.current_user), "you can't create a poll in this category")
+        assert_error(poll_flow:set_poll_dates(new_poll))
       end
       local body = assert_error(Posts:filter_body(new_topic.body, new_topic.body_format))
       local community_user = CommunityUsers:for_user(self.current_user)
