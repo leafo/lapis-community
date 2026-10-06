@@ -191,10 +191,9 @@ class PostsFlow extends Flow
 
           poll_moderated_changes = locked_changes
       else
-        category = @topic\get_category!
-        if category
-          assert_error category\allowed_to_create_poll(@current_user),
-            "you can't create a poll in this category"
+        category = assert_error @topic\get_category!, "you can't create a poll in this category"
+        assert_error category\allowed_to_create_poll(@current_user),
+          "you can't create a poll in this category"
 
         assert_error poll_flow\validate_end_date poll_edit
 

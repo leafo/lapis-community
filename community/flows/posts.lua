@@ -228,10 +228,8 @@ do
               end
             end
           else
-            local category = self.topic:get_category()
-            if category then
-              assert_error(category:allowed_to_create_poll(self.current_user), "you can't create a poll in this category")
-            end
+            local category = assert_error(self.topic:get_category(), "you can't create a poll in this category")
+            assert_error(category:allowed_to_create_poll(self.current_user), "you can't create a poll in this category")
             assert_error(poll_flow:validate_end_date(poll_edit))
           end
         end

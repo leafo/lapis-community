@@ -2156,6 +2156,23 @@ describe "posting flow", ->
 
         assert.is_nil TopicPolls\find topic_id: topic.id
 
+        no_category_topic = factory.Topics user_id: current_user.id, category: false
+        no_category_post = factory.Posts topic_id: no_category_topic.id, user_id: current_user.id
+
+        assert.has_error(
+          -> edit_post {
+            post_id: no_category_post.id
+            "post[body]": no_category_post.body
+            "post[poll][poll_question]": "New poll?"
+            "post[poll][choices][1][choice_text]": "Yes"
+          }
+          {
+            message: {"you can't create a poll in this category"}
+          }
+        )
+
+        assert.is_nil TopicPolls\find topic_id: no_category_topic.id
+
     describe "on_body_updated_callback", ->
       it "calls on_body_updated_callback when updating body", ->
         s = spy.on(Posts.__base, "on_body_updated_callback")
