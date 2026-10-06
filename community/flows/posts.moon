@@ -193,6 +193,7 @@ class PostsFlow extends Flow
 
       if existing_poll = @topic\get_poll!
         assert_error poll_flow\validate_choice_ids existing_poll, poll_edit
+        assert_error poll_flow\validate_end_date poll_edit, existing_poll
 
         if locked_changes = poll_flow\locked_poll_changes existing_poll, poll_edit
           unless @topic\allowed_to_moderate @current_user
@@ -205,7 +206,7 @@ class PostsFlow extends Flow
           assert_error category\allowed_to_create_poll(@current_user),
             "you can't create a poll in this category"
 
-        assert_error poll_flow\set_poll_dates poll_edit
+        assert_error poll_flow\validate_end_date poll_edit
 
 
     if opts and opts.before_edit_callback

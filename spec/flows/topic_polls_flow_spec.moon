@@ -417,6 +417,7 @@ describe "TopicPollsFlow", ->
         anonymous: true
         hide_results: false
         vote_type: TopicPolls.vote_types.single
+        end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
         choices: {
           { choice_text: "Red", position: 1 }
           { choice_text: "Blue", position: 2 }
@@ -695,77 +696,100 @@ describe "TopicPollsFlow", ->
       edit_poll (p) -> p.poll_question = "Second?"
       assert.same 3, edit_poll (p) -> p.poll_question = "Third?"
 
-  describe "set_poll_dates", ->
+  describe "validate_end_date", ->
     date = require "date"
 
-    iso = (d) -> d\fmt "%Y-%m-%dT%H:%M:%SZ"
+    fmt = (d) -> d\fmt "%Y-%m-%d %H:%M:%S"
     from_now = (seconds) -> date(true)\addseconds seconds
 
     -- in_request asserts a truthy return, so the result is wrapped
-    set_poll_dates = (params) ->
+    validate_end_date = (params) ->
       unpack in_request {}, =>
-        { @flow("topic_polls")\set_poll_dates params }
+        { @flow("topic_polls")\validate_end_date params }
 
     span = (a, b) -> date.diff(date(b), date(a))\spanseconds!
 
-    it "defaults to starting now and lasting one day", ->
+    it "defaults to lasting one day", ->
       params = {}
-      assert.true set_poll_dates params
-      assert.true math.abs(span(date(true)\fmt("%Y-%m-%d %H:%M:%S"), params.start_date)) <= 2
-      assert.same 60 * 60 * 24, span params.start_date, params.end_date
+      assert.true validate_end_date params
+      assert.true math.abs(span(fmt(date(true)), params.end_date) - 60 * 60 * 24) <= 2
 
-    it "keeps a future start date", ->
-      start = from_now 60 * 60 * 24 * 2
-      params = { start_date: start\fmt "%Y-%m-%d %H:%M:%S" }
-      assert.true set_poll_dates params
-      assert.same start\fmt("%Y-%m-%d %H:%M:%S"), params.start_date
-      assert.same 60 * 60 * 24, span params.start_date, params.end_date
-
-    it "moves a past start date to now", ->
-      params = {
-        start_date: from_now(-60 * 60 * 24)\fmt "%Y-%m-%d %H:%M:%S"
-        end_date: from_now(60 * 60 * 5)\fmt "%Y-%m-%d %H:%M:%S"
-      }
-      assert.true set_poll_dates params
-      assert.true math.abs(span(date(true)\fmt("%Y-%m-%d %H:%M:%S"), params.start_date)) <= 2
+    it "keeps a valid end date", ->
+      finish = from_now 60 * 60 * 5
+      params = { end_date: fmt finish }
+      assert.true validate_end_date params
+      assert.same fmt(finish), params.end_date
 
     it "rejects a poll shorter than the minimum", ->
-      assert.same {nil, "poll must be open for at least 1 hour(s)"}, {set_poll_dates {
-        end_date: from_now(60 * 30)\fmt "%Y-%m-%d %H:%M:%S"
+      assert.same {nil, "poll must be open for at least 1 hour(s)"}, {validate_end_date {
+        end_date: fmt from_now 60 * 30
       }}
 
-    it "rejects an end date before the start date", ->
-      assert.same {nil, "poll must be open for at least 1 hour(s)"}, {set_poll_dates {
-        start_date: from_now(60 * 60 * 10)\fmt "%Y-%m-%d %H:%M:%S"
-        end_date: from_now(60 * 60 * 5)\fmt "%Y-%m-%d %H:%M:%S"
-      }}
-
-    it "rejects a start date too far in the future", ->
-      assert.same {nil, "poll can't start more than 30 days from now"}, {set_poll_dates {
-        start_date: from_now(60 * 60 * 24 * 31)\fmt "%Y-%m-%d %H:%M:%S"
+    it "rejects an end date in the past", ->
+      assert.same {nil, "poll must be open for at least 1 hour(s)"}, {validate_end_date {
+        end_date: fmt from_now -60 * 60 * 5
       }}
 
     it "rejects a poll longer than the maximum", ->
-      assert.same {nil, "poll can't be open for more than 30 days"}, {set_poll_dates {
-        end_date: from_now(60 * 60 * 24 * 31)\fmt "%Y-%m-%d %H:%M:%S"
+      assert.same {nil, "poll can't be open for more than 30 days"}, {validate_end_date {
+        end_date: fmt from_now 60 * 60 * 24 * 31
       }}
 
-    it "validates dates through validate_params", ->
-      start = from_now 60 * 60
+    describe "with existing poll", ->
+      local poll
+      before_each ->
+        poll = TopicPolls\create {
+          topic_id: factory.Topics!.id
+          poll_question: "Color?"
+          start_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') - interval '2 hours'"
+          end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
+        }
+        poll\refresh!
+
+      validate_end_date = (params) ->
+        unpack in_request {}, =>
+          { @flow("topic_polls")\validate_end_date params, poll }
+
+      it "leaves end date alone when not provided", ->
+        params = {}
+        assert.true validate_end_date params
+        assert.nil params.end_date
+
+      it "measures duration from poll start", ->
+        -- 29 days from now is 29 days 2 hours from start
+        finish = from_now 60 * 60 * 24 * 29
+        params = { end_date: fmt finish }
+        assert.true validate_end_date params
+        assert.same fmt(finish), params.end_date
+
+        assert.same {nil, "poll can't be open for more than 30 days"}, {validate_end_date {
+          end_date: fmt from_now 60 * 60 * 24 * 30
+        }}
+
+      it "closes poll now with a past end date", ->
+        params = { end_date: fmt from_now -60 * 60 * 24 }
+        assert.true validate_end_date params
+        assert.true math.abs(span(fmt(date(true)), params.end_date)) <= 2
+
+      it "ignores end date of closed poll", ->
+        poll\update end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') - interval '1 hour'"
+        params = { end_date: fmt from_now 60 * 60 * 24 }
+        assert.true validate_end_date params
+        assert.nil params.end_date
+
+    it "validates end date through validate_params", ->
       finish = from_now 60 * 60 * 25
 
       result = in_request {
         post: {
           poll_question: "When?"
-          start_date: iso start
-          end_date: iso finish
+          end_date: fmt finish
           "choices[1][choice_text]": "Now"
         }
       }, =>
         @flow("topic_polls")\validate_params!
 
-      assert.same start\fmt("%Y-%m-%d %H:%M:%S"), result.start_date
-      assert.same finish\fmt("%Y-%m-%d %H:%M:%S"), result.end_date
+      assert.same fmt(finish), result.end_date
 
       assert.has_error(
         -> in_request {
@@ -777,7 +801,7 @@ describe "TopicPollsFlow", ->
         }, =>
           @flow("topic_polls")\validate_params!
         {
-          message: {"end_date: expected empty, or ISO 8601 date with timezone"}
+          message: {"end_date: expected empty, or UTC timestamp (YYYY-MM-DD HH:MM:SS)"}
         }
       )
 
@@ -865,52 +889,17 @@ describe "TopicPollsFlow", ->
         flow = @flow "topic_polls"
         flow[action] flow
 
-    for action in *{"set_poll_end_date", "delete_poll", "reset_poll_votes"}
+    for action in *{"delete_poll", "reset_poll_votes"}
       it "#{action} rejects non-moderator", ->
         assert.has_error(
-          -> moderate action, { end_date: "2030-01-01T00:00:00Z" }, factory.Users!
+          -> moderate action, {}, factory.Users!
           { message: {"invalid user"} }
         )
 
       it "#{action} rejects topic without poll", ->
         assert.has_error(
-          -> moderate action, { topic_id: factory.Topics(category_id: topic.category_id).id, end_date: "2030-01-01T00:00:00Z" }
+          -> moderate action, { topic_id: factory.Topics(category_id: topic.category_id).id }
           { message: {"topic has no poll"} }
-        )
-
-    describe "set_poll_end_date", ->
-      it "extends poll", ->
-        finish = date(true)\addhours 24 * 3
-        moderate "set_poll_end_date", {
-          end_date: finish\fmt "%Y-%m-%dT%H:%M:%SZ"
-          reason: "more time"
-        }
-
-        before = poll.end_date
-        poll\refresh!
-        assert.same finish\fmt("%Y-%m-%d %H:%M:%S"), poll.end_date
-
-        assert types.partial({
-          action: "topic.set_poll_end_date"
-          object_id: topic.id
-          user_id: moderator.id
-          reason: "more time"
-          data: types.shape {
-            end_date_before: before
-            end_date: poll.end_date
-          }
-        }) unpack ModerationLogs\select!
-
-      it "closes poll with a past date", ->
-        moderate "set_poll_end_date", end_date: "2020-01-01T00:00:00Z"
-        poll\refresh!
-        assert.true poll\is_closed!
-        assert.true math.abs(date.diff(date(poll.end_date), date(true))\spanseconds!) <= 2
-
-      it "rejects a duration over the limit", ->
-        assert.has_error(
-          -> moderate "set_poll_end_date", end_date: date(true)\addhours(24 * 40)\fmt "%Y-%m-%dT%H:%M:%SZ"
-          { message: {"poll can't be open for more than 30 days"} }
         )
 
     describe "close_poll", ->

@@ -474,29 +474,25 @@ describe "posting flow", ->
 
         assert_choices choices
 
-      it "creates poll with start and end dates", ->
+      it "creates poll with end date", ->
         date = require "date"
-        start = date(true)\addseconds 60 * 60 * 24
         finish = date(true)\addseconds 60 * 60 * 24 * 3
 
-        -- submitted in a +02:00 timezone, stored as utc
         new_topic {
           category_id: factory.Categories!.id
           "topic[title]": "Poll Test"
-          "topic[body]": "Scheduled poll"
+          "topic[body]": "Long poll"
 
           "topic[poll][poll_question]": "Later?"
-          "topic[poll][start_date]": start\copy!\addhours(2)\fmt "%Y-%m-%dT%H:%M:%S+02:00"
-          "topic[poll][end_date]": finish\fmt "%Y-%m-%dT%H:%M:%SZ"
+          "topic[poll][end_date]": finish\fmt "%Y-%m-%d %H:%M:%S"
           "topic[poll][choices][1][choice_text]": "Yes"
         }
 
         topic = unpack Topics\select!
         poll = assert TopicPolls\find(topic_id: topic.id), "topic should have poll"
 
-        assert.same start\fmt("%Y-%m-%d %H:%M:%S"), poll.start_date
         assert.same finish\fmt("%Y-%m-%d %H:%M:%S"), poll.end_date
-        assert.false poll\is_open!
+        assert.true poll\is_open!
 
       it "aborts creating topic if poll duration is invalid", ->
         date = require "date"
@@ -508,7 +504,7 @@ describe "posting flow", ->
             "topic[body]": "Too long"
 
             "topic[poll][poll_question]": "Forever?"
-            "topic[poll][end_date]": date(true)\addseconds(60 * 60 * 24 * 60)\fmt "%Y-%m-%dT%H:%M:%SZ"
+            "topic[poll][end_date]": date(true)\addseconds(60 * 60 * 24 * 60)\fmt "%Y-%m-%d %H:%M:%S"
             "topic[poll][choices][1][choice_text]": "Yes"
           }
           {
@@ -841,19 +837,13 @@ describe "posting flow", ->
             poll: types.partial {
               poll_question: "Question?"
               description: types.nil
-              start_date: types.string
-              end_date: types.string
+              duration: 60 * 60 * 24
               choices: types.shape {
                 types.shape { choice_text: "Red", description: "warm" }
                 types.shape { choice_text: "Blue" }
               }
             }
           }) pending_post.data
-
-          -- approved two days after it was submitted
-          pending_post.data.poll.start_date = date(true)\addhours(-48)\fmt format
-          pending_post.data.poll.end_date = date(true)\addhours(-24)\fmt format
-          pending_post\update data: db_json pending_post.data
 
           post = assert pending_post\promote!
           poll = assert TopicPolls\find(topic_id: post.topic_id), "topic should have poll"
@@ -868,35 +858,15 @@ describe "posting flow", ->
             types.partial { choice_text: "Blue", description: types.nil, position: 2 }
           }) poll\get_poll_choices!
 
-        it "keeps a scheduled start date when approved", ->
-          start = date(true)\addhours 48
-          finish = date(true)\addhours 72
-
+        it "keeps the submitted duration when approved", ->
           pending_post = create_pending {
-            start_date: start\fmt "%Y-%m-%dT%H:%M:%SZ"
-            end_date: finish\fmt "%Y-%m-%dT%H:%M:%SZ"
+            end_date: date(true)\addhours(72)\fmt format
           }
 
           post = assert pending_post\promote!
           poll = assert TopicPolls\find(topic_id: post.topic_id), "topic should have poll"
 
-          assert.same start\fmt(format), poll.start_date
-          assert.same finish\fmt(format), poll.end_date
-
-      it "skips pending restriction if user is moderator", ->
-        category\update user_id: current_user.id
-
-        {:pending_post, :topic} = new_topic {
-          category_id: category.id
-          "topic[title]": "Hello world"
-          "topic[body]": "This is the body"
-          "topic[body_format]": "markdown"
-        }
-
-        assert.same nil, pending_post, "pending post should not be created"
-        assert.truthy topic, "topic should be created"
-
-        assert.same 0, PendingPosts\count!, "no pending posts should exist"
+          assert.true math.abs(date.diff(date(poll.end_date), date(poll.start_date))\spanseconds! - 60 * 60 * 72) <= 2
 
   describe "new post", ->
     local topic
@@ -2053,7 +2023,7 @@ describe "posting flow", ->
             }
           }, open: true) logs[1]
 
-      it "ignores dates when editing existing poll", ->
+      it "updates end date when editing open poll", ->
         req = new_topic {
           category_id: factory.Categories!.id
           "topic[title]": "Poll Edit"
@@ -2063,21 +2033,24 @@ describe "posting flow", ->
         }
 
         poll = assert TopicPolls\find(topic_id: req.topic.id), "topic should have poll"
-        {:start_date, :end_date} = poll
+        {:start_date} = poll
+
+        date = require "date"
+        finish = date(true)\addhours(24 * 3)\fmt "%Y-%m-%d %H:%M:%S"
 
         edit_post {
           post_id: req.topic\get_topic_post!.id
           "post[body]": "Body"
           "topic[poll][poll_question]": "Question?"
-          "topic[poll][start_date]": "2020-01-01T00:00:00Z"
-          "topic[poll][end_date]": "2020-01-02T00:00:00Z"
+          "topic[poll][end_date]": finish
           "topic[poll][choices][1][id]": "#{poll\get_poll_choices![1].id}"
           "topic[poll][choices][1][choice_text]": "Yes"
         }
 
         poll\refresh!
         assert.same start_date, poll.start_date
-        assert.same end_date, poll.end_date
+        assert.same finish, poll.end_date
+        assert.same 1, poll.version
 
       it "rejects choice id that doesn't belong to the poll", ->
         req = new_topic {

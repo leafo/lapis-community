@@ -32,8 +32,7 @@ class TopicPollsFlow extends Flow
     {"description",              types.empty / db.NULL + types.limited_text(limits.MAX_TITLE_LEN)}
     {"anonymous",                types.empty / false + types.any / true}
     {"hide_results",             types.empty / false + types.any / true}
-    {"start_date",               types.empty / nil + shapes.utc_datetime}
-    {"end_date",                 types.empty / nil + shapes.utc_datetime}
+    {"end_date",                 types.empty / nil + shapes.utc_timestamp}
     {"vote_type",                shapes.default("single") * types.db_enum(TopicPolls.vote_types)}
   }
 
@@ -195,28 +194,38 @@ class TopicPollsFlow extends Flow
     if next changes
       changes
 
-  -- Called before creating a poll, after validate_params_shape. Not used for
-  -- edits, an existing poll's dates are never changed by set_poll
-  set_poll_dates: (params) =>
+  -- Called after validate_params_shape, before set_poll. For a new poll the
+  -- end_date defaults and the duration is measured from now. For an existing
+  -- poll end_date is optional and the duration is measured from the poll's
+  -- start. A past end_date closes the poll now, and a closed poll's end_date
+  -- is left alone so an edit can't reopen it
+  validate_end_date: (params, poll) =>
     date = require "date"
-
     now = date true
-    start = params.start_date and date params.start_date
-    -- also covers a client clock running slightly behind
-    start = now if not start or start < now
 
-    if date.diff(start, now)\spanseconds! > limits.MAX_POLL_START_DELAY
-      return nil, "poll can't start more than #{math.floor limits.MAX_POLL_START_DELAY / 86400} days from now"
+    local start, finish
 
-    finish = if params.end_date
-      date params.end_date
+    if poll
+      if not params.end_date or poll\is_closed!
+        params.end_date = nil
+        return true
+
+      start = date poll.start_date
+      finish = date params.end_date
+
+      if finish <= now
+        params.end_date = now\fmt date_format
+        return true
     else
-      start\copy!\addseconds limits.DEFAULT_POLL_DURATION
+      start = now
+      finish = if params.end_date
+        date params.end_date
+      else
+        now\copy!\addseconds limits.DEFAULT_POLL_DURATION
 
     ok, err = check_duration start, finish
     return nil, err unless ok
 
-    params.start_date = start\fmt date_format
     params.end_date = finish\fmt date_format
     true
 
@@ -226,33 +235,6 @@ class TopicPollsFlow extends Flow
     topics_flow\load_topic_for_moderation!
     poll = assert_error topics_flow.topic\get_poll!, "topic has no poll"
     topics_flow, poll
-
-  -- An end_date that has passed closes the poll now
-  set_poll_end_date: require_current_user =>
-    topics_flow, poll = @load_poll_for_moderation!
-
-    params = assert_valid @params, types.params_shape {
-      {"end_date", shapes.utc_datetime}
-      {"reason", types.empty + types.limited_text limits.MAX_BODY_LEN}
-    }
-
-    date = require "date"
-    now = date true
-    finish = date params.end_date
-
-    if finish <= now
-      finish = now
-    else
-      assert_error check_duration date(poll.start_date), finish
-
-    before = poll.end_date
-    poll\update end_date: finish\fmt date_format
-
-    topics_flow\write_moderation_log "topic.set_poll_end_date", params.reason, {
-      data: { end_date_before: before, end_date: poll.end_date }
-    }
-
-    true
 
   -- For the topic's author or a moderator. Only a moderator closing someone
   -- else's poll is logged
@@ -306,8 +288,6 @@ class TopicPollsFlow extends Flow
   -- creates new poll for topic from previously validated params. Will set
   -- choices on the poll from params.choices
   set_poll: (topic, params) =>
-    import TopicPolls from require "community.models"
-
     poll_params = {
       poll_question: params.poll_question
       description: params.description
@@ -324,7 +304,9 @@ class TopicPollsFlow extends Flow
       if next @content_changes existing_poll, params
         poll_update.version = db.raw "version + 1"
 
-      -- dates are left alone so editing a poll can't reopen or extend it
+      -- validate_end_date decides if end_date can change
+      poll_update.end_date = params.end_date if params.end_date
+
       existing_poll\update poll_update
       @set_choices existing_poll, params.choices
       existing_poll

@@ -261,27 +261,33 @@ do
         return changes
       end
     end,
-    set_poll_dates = function(self, params)
+    validate_end_date = function(self, params, poll)
       local date = require("date")
       local now = date(true)
-      local start = params.start_date and date(params.start_date)
-      if not start or start < now then
-        start = now
-      end
-      if date.diff(start, now):spanseconds() > limits.MAX_POLL_START_DELAY then
-        return nil, "poll can't start more than " .. tostring(math.floor(limits.MAX_POLL_START_DELAY / 86400)) .. " days from now"
-      end
-      local finish
-      if params.end_date then
+      local start, finish
+      if poll then
+        if not params.end_date or poll:is_closed() then
+          params.end_date = nil
+          return true
+        end
+        start = date(poll.start_date)
         finish = date(params.end_date)
+        if finish <= now then
+          params.end_date = now:fmt(date_format)
+          return true
+        end
       else
-        finish = start:copy():addseconds(limits.DEFAULT_POLL_DURATION)
+        start = now
+        if params.end_date then
+          finish = date(params.end_date)
+        else
+          finish = now:copy():addseconds(limits.DEFAULT_POLL_DURATION)
+        end
       end
       local ok, err = check_duration(start, finish)
       if not (ok) then
         return nil, err
       end
-      params.start_date = start:fmt(date_format)
       params.end_date = finish:fmt(date_format)
       return true
     end,
@@ -292,38 +298,6 @@ do
       local poll = assert_error(topics_flow.topic:get_poll(), "topic has no poll")
       return topics_flow, poll
     end,
-    set_poll_end_date = require_current_user(function(self)
-      local topics_flow, poll = self:load_poll_for_moderation()
-      local params = assert_valid(self.params, types.params_shape({
-        {
-          "end_date",
-          shapes.utc_datetime
-        },
-        {
-          "reason",
-          types.empty + types.limited_text(limits.MAX_BODY_LEN)
-        }
-      }))
-      local date = require("date")
-      local now = date(true)
-      local finish = date(params.end_date)
-      if finish <= now then
-        finish = now
-      else
-        assert_error(check_duration(date(poll.start_date), finish))
-      end
-      local before = poll.end_date
-      poll:update({
-        end_date = finish:fmt(date_format)
-      })
-      topics_flow:write_moderation_log("topic.set_poll_end_date", params.reason, {
-        data = {
-          end_date_before = before,
-          end_date = poll.end_date
-        }
-      })
-      return true
-    end),
     close_poll = require_current_user(function(self)
       local TopicsFlow = require("community.flows.topics")
       local topics_flow = TopicsFlow(self)
@@ -376,7 +350,6 @@ do
       return true
     end),
     set_poll = function(self, topic, params)
-      TopicPolls = require("community.models").TopicPolls
       local poll_params = {
         poll_question = params.poll_question,
         description = params.description,
@@ -392,6 +365,9 @@ do
           local poll_update = filter_update(existing_poll, poll_params)
           if next(self:content_changes(existing_poll, params)) then
             poll_update.version = db.raw("version + 1")
+          end
+          if params.end_date then
+            poll_update.end_date = params.end_date
           end
           existing_poll:update(poll_update)
           self:set_choices(existing_poll, params.choices)
@@ -487,12 +463,8 @@ do
       types.empty / false + types.any / true
     },
     {
-      "start_date",
-      types.empty / nil + shapes.utc_datetime
-    },
-    {
       "end_date",
-      types.empty / nil + shapes.utc_datetime
+      types.empty / nil + shapes.utc_timestamp
     },
     {
       "vote_type",

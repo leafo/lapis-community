@@ -227,6 +227,7 @@ do
           local existing_poll = self.topic:get_poll()
           if existing_poll then
             assert_error(poll_flow:validate_choice_ids(existing_poll, poll_edit))
+            assert_error(poll_flow:validate_end_date(poll_edit, existing_poll))
             do
               local locked_changes = poll_flow:locked_poll_changes(existing_poll, poll_edit)
               if locked_changes then
@@ -241,7 +242,7 @@ do
             if category then
               assert_error(category:allowed_to_create_poll(self.current_user), "you can't create a poll in this category")
             end
-            assert_error(poll_flow:set_poll_dates(poll_edit))
+            assert_error(poll_flow:validate_end_date(poll_edit))
           end
         end
       end
