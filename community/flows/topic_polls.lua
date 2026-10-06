@@ -104,16 +104,12 @@ do
       elseif "delete" == _exp_0 then
         assert_error(poll:is_open(), "poll is closed")
         assert_error(poll:allowed_to_vote(self.current_user), "invalid poll")
-        local vote = PollVotes:find({
+        local vote = assert_error(PollVotes:find({
           poll_choice_id = choice.id,
           user_id = self.current_user.id
-        })
-        if vote then
-          vote:delete()
-          return true
-        else
-          return nil, "invalid vote"
-        end
+        }), "invalid vote")
+        vote:delete()
+        return true
       end
     end)),
     choice_voters = function(self, opts)
@@ -219,6 +215,26 @@ do
         end
       end
       return changes
+    end,
+    validate_choice_ids = function(self, poll, params)
+      local existing_ids
+      do
+        local _tbl_0 = { }
+        local _list_0 = poll:get_poll_choices()
+        for _index_0 = 1, #_list_0 do
+          local c = _list_0[_index_0]
+          _tbl_0[c.id] = true
+        end
+        existing_ids = _tbl_0
+      end
+      local _list_0 = params.choices
+      for _index_0 = 1, #_list_0 do
+        local c = _list_0[_index_0]
+        if c.id and not existing_ids[c.id] then
+          return nil, "invalid poll choice"
+        end
+      end
+      return true
     end,
     locked_poll_changes = function(self, poll, params)
       if not (poll:has_votes()) then
@@ -400,34 +416,22 @@ do
         existing_choices_map = _tbl_0
       end
       for idx, choice_params in ipairs(choices) do
-        local _continue_0 = false
-        repeat
-          choice_params.position = choice_params.position or idx
-          if choice_params.id then
-            local existing_choice = existing_choices_map[choice_params.id]
-            if existing_choice then
-              existing_choice:update({
-                choice_text = choice_params.choice_text,
-                description = choice_params.description,
-                position = choice_params.position
-              })
-              existing_choices_map[choice_params.id] = nil
-            else
-              _continue_0 = true
-              break
-            end
-          else
-            PollChoices:create({
-              poll_id = poll.id,
-              choice_text = choice_params.choice_text,
-              description = choice_params.description,
-              position = choice_params.position
-            })
-          end
-          _continue_0 = true
-        until true
-        if not _continue_0 then
-          break
+        choice_params.position = choice_params.position or idx
+        if choice_params.id then
+          local existing_choice = assert(existing_choices_map[choice_params.id], "invalid poll choice")
+          existing_choice:update({
+            choice_text = choice_params.choice_text,
+            description = choice_params.description,
+            position = choice_params.position
+          })
+          existing_choices_map[choice_params.id] = nil
+        else
+          PollChoices:create({
+            poll_id = poll.id,
+            choice_text = choice_params.choice_text,
+            description = choice_params.description,
+            position = choice_params.position
+          })
         end
       end
       for _, choice in pairs(existing_choices_map) do

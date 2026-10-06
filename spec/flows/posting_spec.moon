@@ -2055,6 +2055,36 @@ describe "posting flow", ->
         assert.same start_date, poll.start_date
         assert.same end_date, poll.end_date
 
+      it "rejects choice id that doesn't belong to the poll", ->
+        req = new_topic {
+          category_id: factory.Categories!.id
+          "topic[title]": "Poll Edit"
+          "topic[body]": "Body"
+          "topic[poll][poll_question]": "Question?"
+          "topic[poll][choices][1][choice_text]": "Yes"
+        }
+
+        poll = assert TopicPolls\find(topic_id: req.topic.id), "topic should have poll"
+        choice = unpack poll\get_poll_choices!
+
+        assert.has_error(
+          -> edit_post {
+            post_id: req.topic\get_topic_post!.id
+            "post[body]": "Changed body"
+            "topic[poll][poll_question]": "Question?"
+            "topic[poll][choices][1][id]": "#{choice.id}"
+            "topic[poll][choices][1][choice_text]": "Yes"
+            "topic[poll][choices][2][id]": "#{choice.id + 1000}"
+            "topic[poll][choices][2][choice_text]": "No"
+          }
+          {
+            message: {"invalid poll choice"}
+          }
+        )
+
+        assert.same "Body", req.topic\get_topic_post!.body
+        assert.same 1, #PollChoices\select "where poll_id = ?", poll.id
+
       it "adds poll to topic without poll when editing", ->
         topic = factory.Topics user_id: current_user.id
         post = factory.Posts topic_id: topic.id, user_id: current_user.id

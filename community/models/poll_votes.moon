@@ -24,11 +24,11 @@ class PollVotes extends Model
     {"user", belongs_to: "Users"}
   }
 
-  create: (opts={}) =>
+  @create: (opts={}) =>
     opts.created_at or= db.format_date!
     opts.updated_at or= db.format_date!
 
-    res = unpack db.insert @@table_name!, opts, {
+    res = unpack db.insert @table_name!, opts, {
       on_conflict: "do_nothing"
       returning: "*"
     }

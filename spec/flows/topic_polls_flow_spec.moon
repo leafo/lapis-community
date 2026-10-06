@@ -218,6 +218,22 @@ describe "TopicPollsFlow", ->
       }
       assert not vote
 
+    it "fails to delete a vote that doesn't exist", ->
+      assert.has_error(
+        -> in_request {
+          post: {
+            choice_id: choice.id
+            action: "delete"
+          }
+        }, =>
+          @current_user = current_user
+          @flow("topic_polls")\vote!
+          true
+        {
+          message: {"invalid vote"}
+        }
+      )
+
     it "fails to create a vote on a closed poll", ->
       poll\update {
         end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' - interval '1 day' )")

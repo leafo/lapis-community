@@ -92,17 +92,13 @@ class TopicPollsFlow extends Flow
         assert_error poll\is_open!, "poll is closed"
         assert_error poll\allowed_to_vote(@current_user), "invalid poll"
 
-        -- find existing vote
-        vote = PollVotes\find {
+        vote = assert_error PollVotes\find({
           poll_choice_id: choice.id
           user_id: @current_user.id
-        }
+        }), "invalid vote"
 
-        if vote
-          vote\delete!
-          return true
-        else
-          nil, "invalid vote"
+        vote\delete!
+        true
 
 
   -- Request handler for listing who voted for a choice. next_page can lead to
@@ -174,6 +170,17 @@ class TopicPollsFlow extends Flow
         break
 
     changes
+
+  -- Used by edit_post, every submitted choice id must belong to the poll.
+  -- params must be the output of validate_params_shape
+  validate_choice_ids: (poll, params) =>
+    existing_ids = { c.id, true for c in *poll\get_poll_choices! }
+
+    for c in *params.choices
+      if c.id and not existing_ids[c.id]
+        return nil, "invalid poll choice"
+
+    true
 
   -- Used by edit_post to stop non-moderators from changing what existing
   -- votes mean. params must be the output of validate_params_shape
@@ -340,18 +347,14 @@ class TopicPollsFlow extends Flow
 
       if choice_params.id
         -- Update existing choice
-        existing_choice = existing_choices_map[choice_params.id]
-        if existing_choice
-          existing_choice\update {
-            choice_text: choice_params.choice_text,
-            description: choice_params.description,
-            position: choice_params.position
-          }
-          -- clear it from remiaing choices
-          existing_choices_map[choice_params.id] = nil
-        else
-          -- choice not found, just ignore
-          continue
+        existing_choice = assert existing_choices_map[choice_params.id], "invalid poll choice"
+        existing_choice\update {
+          choice_text: choice_params.choice_text,
+          description: choice_params.description,
+          position: choice_params.position
+        }
+        -- clear it from remiaing choices
+        existing_choices_map[choice_params.id] = nil
       else
         -- Create new choice
         PollChoices\create {

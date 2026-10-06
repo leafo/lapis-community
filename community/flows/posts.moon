@@ -192,6 +192,8 @@ class PostsFlow extends Flow
       post_update.poll = poll_edit
 
       if existing_poll = @topic\get_poll!
+        assert_error poll_flow\validate_choice_ids existing_poll, poll_edit
+
         if locked_changes = poll_flow\locked_poll_changes existing_poll, poll_edit
           unless @topic\allowed_to_moderate @current_user
             yield_error "poll already has votes, can't change: #{table.concat locked_changes, ", "}"

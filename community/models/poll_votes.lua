@@ -6,33 +6,6 @@ do
   local _class_0
   local _parent_0 = Model
   local _base_0 = {
-    create = function(self, opts)
-      if opts == nil then
-        opts = { }
-      end
-      opts.created_at = opts.created_at or db.format_date()
-      opts.updated_at = opts.updated_at or db.format_date()
-      local res = unpack(db.insert(self.__class:table_name(), opts, {
-        on_conflict = "do_nothing",
-        returning = "*"
-      }))
-      if not (res) then
-        return nil, "vote already exists"
-      end
-      if res.counted then
-        local PollChoices
-        PollChoices = require("community.models").PollChoices
-        db.update(PollChoices:table_name(), {
-          vote_count = db.raw("vote_count + 1")
-        }, db.clause({
-          {
-            "id = ?",
-            res.poll_choice_id
-          }
-        }))
-      end
-      return self:load(res)
-    end,
     delete = function(self)
       local deleted, res = _class_0.__parent.__base.delete(self, db.raw("*"))
       if deleted then
@@ -124,6 +97,33 @@ do
       belongs_to = "Users"
     }
   }
+  self.create = function(self, opts)
+    if opts == nil then
+      opts = { }
+    end
+    opts.created_at = opts.created_at or db.format_date()
+    opts.updated_at = opts.updated_at or db.format_date()
+    local res = unpack(db.insert(self:table_name(), opts, {
+      on_conflict = "do_nothing",
+      returning = "*"
+    }))
+    if not (res) then
+      return nil, "vote already exists"
+    end
+    if res.counted then
+      local PollChoices
+      PollChoices = require("community.models").PollChoices
+      db.update(PollChoices:table_name(), {
+        vote_count = db.raw("vote_count + 1")
+      }, db.clause({
+        {
+          "id = ?",
+          res.poll_choice_id
+        }
+      }))
+    end
+    return self:load(res)
+  end
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end
