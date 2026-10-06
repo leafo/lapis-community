@@ -126,6 +126,32 @@ describe "TopicPollsFlow", ->
         user_id: current_user.id
       }
 
+    it "creates uncounted vote when count_poll_vote_for is false", ->
+      import CommunityUsers from require "spec.community_models"
+      snapshot = assert\snapshot!
+      stub(CommunityUsers.__base, "count_poll_vote_for").returns false
+
+      in_request {
+        post: {
+          choice_id: choice.id
+          action: "create"
+          poll_version: poll.version
+        }
+      }, =>
+        @current_user = current_user
+        @flow("topic_polls")\vote!
+
+      snapshot\revert!
+
+      vote = assert PollVotes\find {
+        poll_choice_id: choice.id,
+        user_id: current_user.id
+      }
+      assert.false vote.counted
+
+      choice\refresh!
+      assert.same 0, choice.vote_count
+
     it "errors when poll choice is missing", ->
       assert.has_error(
         ->

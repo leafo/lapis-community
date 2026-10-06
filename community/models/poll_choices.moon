@@ -93,15 +93,17 @@ class PollChoices extends Model
       }
       true
 
-  --- Set the vote for the user, aware of vote_type for the poll
-  --- @param user User The user who is voting
-  --- @return PollVotes The vote if it was created
-  vote: (user, counted=true) =>
+  -- Vote for this choice, aware of vote_type for the poll. When counted isn't
+  -- provided it comes from CommunityUsers.count_poll_vote_for
+  vote: (user, counted) =>
     assert user, "missing user"
-    import TopicPolls, PollVotes from require "community.models"
+    import TopicPolls, PollVotes, CommunityUsers from require "community.models"
 
     poll = @get_poll!
     return nil, "poll is closed" unless poll\is_open!
+
+    if counted == nil
+      counted = CommunityUsers\for_user(user)\count_poll_vote_for @
 
     -- Create the vote
     vote = PollVotes\create {

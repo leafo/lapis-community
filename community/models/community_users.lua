@@ -116,6 +116,9 @@ do
     count_vote_for = function(self, object)
       return object.user_id ~= self.user_id
     end,
+    count_poll_vote_for = function(self, poll_choice)
+      return true
+    end,
     purge_reports = function(self)
       local PostReports
       PostReports = require("community.models").PostReports

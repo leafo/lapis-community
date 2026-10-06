@@ -228,6 +228,10 @@ class CommunityUsers extends Model
   count_vote_for: (object) =>
     object.user_id != @user_id
 
+  -- should the user's vote on a poll choice count towards the results, an
+  -- override point
+  count_poll_vote_for: (poll_choice) => true
+
   -- this purges the reports the user has *created*, not received
   purge_reports: =>
     import PostReports from require "community.models"

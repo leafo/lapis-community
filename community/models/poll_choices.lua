@@ -41,18 +41,18 @@ do
       end
     end,
     vote = function(self, user, counted)
-      if counted == nil then
-        counted = true
-      end
       assert(user, "missing user")
-      local TopicPolls, PollVotes
+      local TopicPolls, PollVotes, CommunityUsers
       do
         local _obj_0 = require("community.models")
-        TopicPolls, PollVotes = _obj_0.TopicPolls, _obj_0.PollVotes
+        TopicPolls, PollVotes, CommunityUsers = _obj_0.TopicPolls, _obj_0.PollVotes, _obj_0.CommunityUsers
       end
       local poll = self:get_poll()
       if not (poll:is_open()) then
         return nil, "poll is closed"
+      end
+      if counted == nil then
+        counted = CommunityUsers:for_user(user):count_poll_vote_for(self)
       end
       local vote = PollVotes:create({
         poll_choice_id = self.id,
