@@ -53,6 +53,14 @@ do
         return "unlisted this topic"
       elseif "topic.unhide" == _exp_0 then
         return "relisted this topic"
+      elseif "topic.edit_poll" == _exp_0 then
+        return "edited this topic's poll"
+      elseif "topic.close_poll" == _exp_0 then
+        return "closed this topic's poll"
+      elseif "topic.delete_poll" == _exp_0 then
+        return "deleted this topic's poll"
+      elseif "topic.reset_poll_votes" == _exp_0 then
+        return "reset the votes on this topic's poll"
       end
     end,
     get_action_target = function(self)

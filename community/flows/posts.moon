@@ -1,6 +1,6 @@
 import Flow from require "lapis.flow"
 import Topics, Posts, PostEdits,
-  CommunityUsers, ActivityLogs, PendingPosts, ModerationLogs from require "community.models"
+  CommunityUsers, ActivityLogs, PendingPosts from require "community.models"
 
 db = require "lapis.db"
 import assert_error, yield_error from require "lapis.application"
@@ -247,11 +247,8 @@ class PostsFlow extends Flow
       poll_flow\set_poll @topic, post_update.poll
 
       if poll_moderated_changes
-        ModerationLogs\create {
-          user_id: @current_user.id
-          object: @topic
-          category_id: @topic.category_id
-          action: "topic.edit_poll"
+        TopicsFlow = require "community.flows.topics"
+        TopicsFlow(@)\write_moderation_log "topic.edit_poll", post_update.reason, {
           data: { changes: poll_moderated_changes }
         }
 

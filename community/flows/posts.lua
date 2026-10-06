@@ -1,9 +1,9 @@
 local Flow
 Flow = require("lapis.flow").Flow
-local Topics, Posts, PostEdits, CommunityUsers, ActivityLogs, PendingPosts, ModerationLogs
+local Topics, Posts, PostEdits, CommunityUsers, ActivityLogs, PendingPosts
 do
   local _obj_0 = require("community.models")
-  Topics, Posts, PostEdits, CommunityUsers, ActivityLogs, PendingPosts, ModerationLogs = _obj_0.Topics, _obj_0.Posts, _obj_0.PostEdits, _obj_0.CommunityUsers, _obj_0.ActivityLogs, _obj_0.PendingPosts, _obj_0.ModerationLogs
+  Topics, Posts, PostEdits, CommunityUsers, ActivityLogs, PendingPosts = _obj_0.Topics, _obj_0.Posts, _obj_0.PostEdits, _obj_0.CommunityUsers, _obj_0.ActivityLogs, _obj_0.PendingPosts
 end
 local db = require("lapis.db")
 local assert_error, yield_error
@@ -293,11 +293,8 @@ do
       if post_update.poll then
         poll_flow:set_poll(self.topic, post_update.poll)
         if poll_moderated_changes then
-          ModerationLogs:create({
-            user_id = self.current_user.id,
-            object = self.topic,
-            category_id = self.topic.category_id,
-            action = "topic.edit_poll",
+          local TopicsFlow = require("community.flows.topics")
+          TopicsFlow(self):write_moderation_log("topic.edit_poll", post_update.reason, {
             data = {
               changes = poll_moderated_changes
             }

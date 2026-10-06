@@ -243,11 +243,8 @@ do
       return self.pending_posts
     end,
     edit_pending_post = function(self)
-      local PendingPosts, ModerationLogs
-      do
-        local _obj_0 = require("community.models")
-        PendingPosts, ModerationLogs = _obj_0.PendingPosts, _obj_0.ModerationLogs
-      end
+      local PendingPosts
+      PendingPosts = require("community.models").PendingPosts
       self:load_category()
       local params = assert_valid(self.params, types.params_shape({
         {
@@ -259,7 +256,8 @@ do
           types.one_of({
             "promote",
             "deleted",
-            "spam"
+            "spam",
+            "ignored"
           })
         }
       }))
@@ -268,31 +266,13 @@ do
       local category_id = self.pending_post.category_id or self.pending_post:get_topic().category_id
       assert_error(category_id == self.category.id, "invalid pending post for category")
       assert_error(self.pending_post:allowed_to_moderate(self.current_user), "invalid pending post")
+      local PendingPostsFlow = require("community.flows.pending_posts")
+      local pending_posts_flow = PendingPostsFlow(self)
       local _exp_0 = params.action
       if "promote" == _exp_0 then
-        local post = self.pending_post:promote(self)
-        if post then
-          ModerationLogs:create({
-            user_id = self.current_user.id,
-            object = post,
-            category_id = self.category.id,
-            action = "post.approve_pending"
-          })
-        end
-        self.post = post
-      elseif "deleted" == _exp_0 or "spam" == _exp_0 then
-        local updated = self.pending_post:update({
-          status = PendingPosts.statuses:for_db(params.action)
-        })
-        if updated then
-          ModerationLogs:create({
-            user_id = self.current_user.id,
-            object = self.pending_post,
-            category_id = self.category.id,
-            action = "pending_post.status(" .. tostring(params.action) .. ")"
-          })
-        end
-        self.post = updated
+        self.post = pending_posts_flow:promote_pending_post(self.pending_post)
+      elseif "deleted" == _exp_0 or "spam" == _exp_0 or "ignored" == _exp_0 then
+        self.post = pending_posts_flow:set_pending_post_status(self.pending_post, params.action)
       end
       return true, self.post
     end,

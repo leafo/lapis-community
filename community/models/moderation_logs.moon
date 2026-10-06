@@ -117,6 +117,14 @@ class ModerationLogs extends Model
         "unlisted this topic"
       when "topic.unhide"
         "relisted this topic"
+      when "topic.edit_poll"
+        "edited this topic's poll"
+      when "topic.close_poll"
+        "closed this topic's poll"
+      when "topic.delete_poll"
+        "deleted this topic's poll"
+      when "topic.reset_poll_votes"
+        "reset the votes on this topic's poll"
 
   get_action_target: =>
     @get_target_category!

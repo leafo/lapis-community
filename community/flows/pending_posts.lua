@@ -20,8 +20,29 @@ do
         return true
       end
     end,
+    create_moderation_log = function(self, pending_post, opts)
+      local topic = opts.topic or pending_post:get_topic()
+      local category_id = pending_post.category_id or topic and topic.category_id
+      local log_objects = {
+        pending_post:get_user()
+      }
+      if topic then
+        table.insert(log_objects, topic)
+      end
+      return ModerationLogs:create({
+        user_id = self.current_user.id,
+        object = opts.object,
+        action = opts.action,
+        category_id = category_id,
+        log_objects = log_objects,
+        data = {
+          pending_post_id = pending_post.id,
+          title = pending_post.title
+        }
+      })
+    end,
     promote_pending_post = function(self, pending_post)
-      local post, err = pending_post:promote()
+      local post, err = pending_post:promote(self)
       if not (post) then
         return nil, err
       end
@@ -33,7 +54,29 @@ do
           post_id = post.id
         }
       })
+      self:create_moderation_log(pending_post, {
+        object = post,
+        topic = post:get_topic(),
+        action = "post.approve_pending"
+      })
       return post
+    end,
+    set_pending_post_status = function(self, pending_post, status)
+      local statuses = pending_post.__class.statuses
+      status = statuses:for_db(status)
+      if pending_post.status == status then
+        return true
+      end
+      if not (pending_post:update({
+        status = status
+      })) then
+        return nil, "failed to update status"
+      end
+      self:create_moderation_log(pending_post, {
+        object = pending_post,
+        action = "pending_post.status(" .. tostring(statuses:to_name(status)) .. ")"
+      })
+      return true
     end
   }
   _base_0.__index = _base_0

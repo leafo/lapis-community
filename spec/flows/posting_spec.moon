@@ -2037,6 +2037,7 @@ describe "posting flow", ->
           }
 
           edit_post poll_edit {
+            "post[reason]": "cleaning up"
             "post[poll][poll_question]": "Moderated question?"
             "post[poll][choices][2][id]": false
             "post[poll][choices][2][choice_text]": false
@@ -2054,10 +2055,13 @@ describe "posting flow", ->
             object_id: topic.id
             category_id: topic.category_id
             action: "topic.edit_poll"
+            reason: "cleaning up"
             data: types.shape {
               changes: types.shape { "question", "removed choice" }
             }
           }, open: true) logs[1]
+
+          assert.same "edited this topic's poll", logs[1]\get_action_text!
 
       it "updates end date when editing open poll", ->
         req = new_topic {
