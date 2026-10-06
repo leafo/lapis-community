@@ -27,6 +27,8 @@ check_duration = (start, finish) ->
   true
 
 class TopicPollsFlow extends Flow
+  expose_assigns: true
+
   @POLL_VALIDATION: {
     {"poll_question",            types.limited_text(limits.MAX_TITLE_LEN)}
     {"description",              types.empty / db.NULL + types.limited_text(limits.MAX_TITLE_LEN)}
@@ -75,33 +77,33 @@ class TopicPollsFlow extends Flow
   }, (params) =>
     import PollChoices,PollVotes from require "community.models"
 
-    choice = assert_error PollChoices\find(params.choice_id), "invalid poll"
-    poll = assert_error choice\get_poll!, "invalid poll"
+    @choice = assert_error PollChoices\find(params.choice_id), "invalid poll"
+    @poll = assert_error @choice\get_poll!, "invalid poll"
+
+    assert_error @poll\is_open!, "poll is closed" -- preempt for better error message
+    assert_error @poll\allowed_to_vote(@current_user, @_req), "not allowed to vote"
+
     switch params.action
       when "create"
-        assert_error poll\is_open!, "poll is closed" -- preempt for better error message
-        assert_error poll\allowed_to_vote(@current_user), "not allowed to vote"
-
         assert_error params.poll_version, "missing poll version"
-        assert_error params.poll_version == poll.version,
+        assert_error params.poll_version == @poll.version,
           "this poll has changed since you loaded it, please review it and vote again"
 
-        assert_error choice\vote @current_user
+        @vote = assert_error @choice\vote @current_user
       when "delete"
-        assert_error poll\is_open!, "poll is closed"
-        assert_error poll\allowed_to_vote(@current_user), "invalid poll"
-
         vote = assert_error PollVotes\find({
-          poll_choice_id: choice.id
+          poll_choice_id: @choice.id
           user_id: @current_user.id
         }), "invalid vote"
 
         vote\delete!
-        true
+
+    true
 
 
-  -- Request handler for listing who voted for a choice. next_page can lead to
-  -- an empty page when the last page was exactly full
+  -- Request handler for listing who voted for a choice, sets @votes and
+  -- @next_page. next_page can lead to an empty page when the last page was
+  -- exactly full
   choice_voters: (opts={}) =>
     import PollChoices, PollVotes from require "community.models"
     import OrderedPaginator from require "lapis.db.pagination"
@@ -112,15 +114,15 @@ class TopicPollsFlow extends Flow
       {"before", types.empty + types.db_id}
     }
 
-    choice = assert_error PollChoices\find(params.choice_id), "invalid poll"
-    poll = assert_error choice\get_poll!, "invalid poll"
-    assert_error poll\get_topic!\allowed_to_view(@current_user, @_req), "invalid poll"
-    assert_error poll\allowed_to_view_voters(@current_user), "not allowed to view voters"
+    @choice = assert_error PollChoices\find(params.choice_id), "invalid poll"
+    @poll = assert_error @choice\get_poll!, "invalid poll"
+    assert_error @poll\get_topic!\allowed_to_view(@current_user, @_req), "invalid poll"
+    assert_error @poll\allowed_to_view_voters(@current_user), "not allowed to view voters"
 
     per_page = opts.per_page or limits.POLL_VOTERS_PER_PAGE
 
     pager = OrderedPaginator PollVotes, "id", "where ?", db.clause({
-      poll_choice_id: choice.id
+      poll_choice_id: @choice.id
       counted: true
     }), {
       :per_page
@@ -129,12 +131,12 @@ class TopicPollsFlow extends Flow
         votes
     }
 
-    votes = pager\before params.before
+    @votes = pager\before params.before
 
-    next_page = if #votes == per_page
-      { before: votes[#votes].id }
+    @next_page = if #@votes == per_page
+      { before: @votes[#@votes].id }
 
-    votes, next_page
+    @votes, @next_page
 
   -- Used by set_poll to decide when to bump the poll version, and by
   -- locked_poll_changes. params must be the output of validate_params_shape

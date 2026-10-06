@@ -1812,14 +1812,14 @@ describe "posting flow", ->
           post_id: post.id
           "post[body]": "Updated body"
 
-          "topic[poll][poll_question]": "Updated question?"
-          "topic[poll][vote_type]": "single"
-          "topic[poll][choices][1][id]": "#{original_choices[1].id}"
-          "topic[poll][choices][1][choice_text]": "Red Updated"
-          "topic[poll][choices][2][id]": "#{original_choices[2].id}"
-          "topic[poll][choices][2][choice_text]": "Blue"
-          "topic[poll][choices][2][description]": "Still blue"
-          "topic[poll][choices][3][choice_text]": "Yellow"
+          "post[poll][poll_question]": "Updated question?"
+          "post[poll][vote_type]": "single"
+          "post[poll][choices][1][id]": "#{original_choices[1].id}"
+          "post[poll][choices][1][choice_text]": "Red Updated"
+          "post[poll][choices][2][id]": "#{original_choices[2].id}"
+          "post[poll][choices][2][choice_text]": "Blue"
+          "post[poll][choices][2][description]": "Still blue"
+          "post[poll][choices][3][choice_text]": "Yellow"
         }
 
         post\refresh!
@@ -1887,11 +1887,11 @@ describe "posting flow", ->
           params = {
             post_id: post.id
             "post[body]": "Original body"
-            "topic[poll][poll_question]": "Original question?"
-            "topic[poll][choices][1][id]": "#{choices[1].id}"
-            "topic[poll][choices][1][choice_text]": "Red"
-            "topic[poll][choices][2][id]": "#{choices[2].id}"
-            "topic[poll][choices][2][choice_text]": "Blue"
+            "post[poll][poll_question]": "Original question?"
+            "post[poll][choices][1][id]": "#{choices[1].id}"
+            "post[poll][choices][1][choice_text]": "Red"
+            "post[poll][choices][2][id]": "#{choices[2].id}"
+            "post[poll][choices][2][choice_text]": "Blue"
           }
 
           for k,v in pairs overrides
@@ -1902,9 +1902,9 @@ describe "posting flow", ->
         it "prevents author from changing locked fields", ->
           assert.has_error(
             -> edit_post poll_edit {
-              "topic[poll][poll_question]": "Different question?"
-              "topic[poll][choices][1][choice_text]": "Green"
-              "topic[poll][vote_type]": "multiple"
+              "post[poll][poll_question]": "Different question?"
+              "post[poll][choices][1][choice_text]": "Green"
+              "post[poll][vote_type]": "multiple"
             }
             {
               message: {"poll already has votes, can't change: question, vote type, choice text"}
@@ -1918,8 +1918,8 @@ describe "posting flow", ->
         it "prevents author from removing choices", ->
           assert.has_error(
             -> edit_post poll_edit {
-              "topic[poll][choices][2][id]": false
-              "topic[poll][choices][2][choice_text]": false
+              "post[poll][choices][2][id]": false
+              "post[poll][choices][2][choice_text]": false
             }
             {
               message: {"poll already has votes, can't change: removed choice"}
@@ -1932,11 +1932,11 @@ describe "posting flow", ->
           -- first entry renames the voted choice, second repeats the original text
           assert.has_error(
             -> edit_post poll_edit {
-              "topic[poll][choices][1][choice_text]": "Green"
-              "topic[poll][choices][2][id]": "#{choices[1].id}"
-              "topic[poll][choices][2][choice_text]": "Red"
-              "topic[poll][choices][3][id]": "#{choices[2].id}"
-              "topic[poll][choices][3][choice_text]": "Blue"
+              "post[poll][choices][1][choice_text]": "Green"
+              "post[poll][choices][2][id]": "#{choices[1].id}"
+              "post[poll][choices][2][choice_text]": "Red"
+              "post[poll][choices][3][id]": "#{choices[2].id}"
+              "post[poll][choices][3][choice_text]": "Blue"
             }
             {
               message: {"poll: choices: duplicate choice id"}
@@ -1957,8 +1957,8 @@ describe "posting flow", ->
           )
 
           edit_post poll_edit {
-            "topic[poll][anonymous]": "on"
-            "topic[poll][description]": "Still anonymous"
+            "post[poll][anonymous]": "on"
+            "post[poll][description]": "Still anonymous"
           }
 
           poll\refresh!
@@ -1971,7 +1971,7 @@ describe "posting flow", ->
 
           assert.has_error(
             -> edit_post poll_edit {
-              "topic[poll][poll_question]": "Different question?"
+              "post[poll][poll_question]": "Different question?"
             }
             {
               message: {"poll already has votes, can't change: question"}
@@ -1980,8 +1980,8 @@ describe "posting flow", ->
 
         it "lets author add choices and edit description", ->
           edit_post poll_edit {
-            "topic[poll][description]": "Pick a color"
-            "topic[poll][choices][3][choice_text]": "Green"
+            "post[poll][description]": "Pick a color"
+            "post[poll][choices][3][choice_text]": "Green"
           }
 
           poll\refresh!
@@ -2001,9 +2001,9 @@ describe "posting flow", ->
           }
 
           edit_post poll_edit {
-            "topic[poll][poll_question]": "Moderated question?"
-            "topic[poll][choices][2][id]": false
-            "topic[poll][choices][2][choice_text]": false
+            "post[poll][poll_question]": "Moderated question?"
+            "post[poll][choices][2][id]": false
+            "post[poll][choices][2][choice_text]": false
           }
 
           poll\refresh!
@@ -2041,10 +2041,10 @@ describe "posting flow", ->
         edit_post {
           post_id: req.topic\get_topic_post!.id
           "post[body]": "Body"
-          "topic[poll][poll_question]": "Question?"
-          "topic[poll][end_date]": finish
-          "topic[poll][choices][1][id]": "#{poll\get_poll_choices![1].id}"
-          "topic[poll][choices][1][choice_text]": "Yes"
+          "post[poll][poll_question]": "Question?"
+          "post[poll][end_date]": finish
+          "post[poll][choices][1][id]": "#{poll\get_poll_choices![1].id}"
+          "post[poll][choices][1][choice_text]": "Yes"
         }
 
         poll\refresh!
@@ -2068,11 +2068,11 @@ describe "posting flow", ->
           -> edit_post {
             post_id: req.topic\get_topic_post!.id
             "post[body]": "Changed body"
-            "topic[poll][poll_question]": "Question?"
-            "topic[poll][choices][1][id]": "#{choice.id}"
-            "topic[poll][choices][1][choice_text]": "Yes"
-            "topic[poll][choices][2][id]": "#{choice.id + 1000}"
-            "topic[poll][choices][2][choice_text]": "No"
+            "post[poll][poll_question]": "Question?"
+            "post[poll][choices][1][id]": "#{choice.id}"
+            "post[poll][choices][1][choice_text]": "Yes"
+            "post[poll][choices][2][id]": "#{choice.id + 1000}"
+            "post[poll][choices][2][choice_text]": "No"
           }
           {
             message: {"invalid poll choice"}
@@ -2089,8 +2089,8 @@ describe "posting flow", ->
         edit_post {
           post_id: post.id
           "post[body]": post.body
-          "topic[poll][poll_question]": "New poll?"
-          "topic[poll][choices][1][choice_text]": "Yes"
+          "post[poll][poll_question]": "New poll?"
+          "post[poll][choices][1][choice_text]": "Yes"
         }
 
         poll = assert topic\get_poll!, "topic should have poll"
@@ -2106,8 +2106,8 @@ describe "posting flow", ->
           -> edit_post {
             post_id: post.id
             "post[body]": post.body
-            "topic[poll][poll_question]": "New poll?"
-            "topic[poll][choices][1][choice_text]": "Yes"
+            "post[poll][poll_question]": "New poll?"
+            "post[poll][choices][1][choice_text]": "Yes"
           }
           {
             message: {"you can't create a poll in this category"}

@@ -90,21 +90,13 @@ class PendingPosts extends Model
   is_topic: =>
     not @topic_id
 
-  -- time spent waiting for approval doesn't count against the poll's duration
-  create_pending_poll: (topic) =>
+  -- Creates the poll stored by TopicPolls.pending_data, starting now
+  create_poll: (topic) =>
     import TopicPolls from require "community.models"
     date = require "date"
-    format = "%Y-%m-%d %H:%M:%S"
 
     params = @data.poll
-    now = date true
-    start = date params.start_date
-
-    if start < now
-      duration = date.diff(date(params.end_date), start)\spanseconds!
-      params.start_date = now\fmt format
-      params.end_date = now\copy!\addseconds(duration)\fmt format
-
+    params.end_date = date(true)\addseconds(params.duration)\fmt "%Y-%m-%d %H:%M:%S"
     TopicPolls\create_for_topic topic, params
 
   -- Convert pending to real post, and delete the pending post
@@ -157,7 +149,7 @@ class PendingPosts extends Model
       @get_category!\increment_from_topic topic
 
     if created_topic and @data and @data.poll
-      @create_pending_poll topic
+      @create_poll topic
 
     post\on_body_updated_callback req_or_flow
 

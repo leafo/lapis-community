@@ -33,6 +33,7 @@ do
   local _class_0
   local _parent_0 = Flow
   local _base_0 = {
+    expose_assigns = true,
     validate_params_shape = function(self)
       local choice_shape = types.params_shape(self.__class.CHOICE_VALIDATION)
       local unique_ids = types.custom(function(choices)
@@ -92,25 +93,23 @@ do
         local _obj_0 = require("community.models")
         PollChoices, PollVotes = _obj_0.PollChoices, _obj_0.PollVotes
       end
-      local choice = assert_error(PollChoices:find(params.choice_id), "invalid poll")
-      local poll = assert_error(choice:get_poll(), "invalid poll")
+      self.choice = assert_error(PollChoices:find(params.choice_id), "invalid poll")
+      self.poll = assert_error(self.choice:get_poll(), "invalid poll")
+      assert_error(self.poll:is_open(), "poll is closed")
+      assert_error(self.poll:allowed_to_vote(self.current_user, self._req), "not allowed to vote")
       local _exp_0 = params.action
       if "create" == _exp_0 then
-        assert_error(poll:is_open(), "poll is closed")
-        assert_error(poll:allowed_to_vote(self.current_user), "not allowed to vote")
         assert_error(params.poll_version, "missing poll version")
-        assert_error(params.poll_version == poll.version, "this poll has changed since you loaded it, please review it and vote again")
-        return assert_error(choice:vote(self.current_user))
+        assert_error(params.poll_version == self.poll.version, "this poll has changed since you loaded it, please review it and vote again")
+        self.vote = assert_error(self.choice:vote(self.current_user))
       elseif "delete" == _exp_0 then
-        assert_error(poll:is_open(), "poll is closed")
-        assert_error(poll:allowed_to_vote(self.current_user), "invalid poll")
         local vote = assert_error(PollVotes:find({
-          poll_choice_id = choice.id,
+          poll_choice_id = self.choice.id,
           user_id = self.current_user.id
         }), "invalid vote")
         vote:delete()
-        return true
       end
+      return true
     end)),
     choice_voters = function(self, opts)
       if opts == nil then
@@ -135,13 +134,13 @@ do
           types.empty + types.db_id
         }
       }))
-      local choice = assert_error(PollChoices:find(params.choice_id), "invalid poll")
-      local poll = assert_error(choice:get_poll(), "invalid poll")
-      assert_error(poll:get_topic():allowed_to_view(self.current_user, self._req), "invalid poll")
-      assert_error(poll:allowed_to_view_voters(self.current_user), "not allowed to view voters")
+      self.choice = assert_error(PollChoices:find(params.choice_id), "invalid poll")
+      self.poll = assert_error(self.choice:get_poll(), "invalid poll")
+      assert_error(self.poll:get_topic():allowed_to_view(self.current_user, self._req), "invalid poll")
+      assert_error(self.poll:allowed_to_view_voters(self.current_user), "not allowed to view voters")
       local per_page = opts.per_page or limits.POLL_VOTERS_PER_PAGE
       local pager = OrderedPaginator(PollVotes, "id", "where ?", db.clause({
-        poll_choice_id = choice.id,
+        poll_choice_id = self.choice.id,
         counted = true
       }), {
         per_page = per_page,
@@ -150,14 +149,13 @@ do
           return votes
         end
       })
-      local votes = pager:before(params.before)
-      local next_page
-      if #votes == per_page then
-        next_page = {
-          before = votes[#votes].id
+      self.votes = pager:before(params.before)
+      if #self.votes == per_page then
+        self.next_page = {
+          before = self.votes[#self.votes].id
         }
       end
-      return votes, next_page
+      return self.votes, self.next_page
     end,
     content_changes = function(self, poll, params)
       local changes = { }

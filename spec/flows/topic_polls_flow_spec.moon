@@ -130,6 +130,8 @@ describe "TopicPollsFlow", ->
       }, =>
         @current_user = current_user
         @flow("topic_polls")\vote!
+        assert.same choice.id, @vote.poll_choice_id
+        assert.same poll.id, @poll.id
         true
 
       assert PollVotes\find {
@@ -821,7 +823,8 @@ describe "TopicPollsFlow", ->
     choice_voters = (params, opts) ->
       unpack in_request { get: params }, =>
         @current_user = current_user
-        { @flow("topic_polls")\choice_voters opts }
+        @flow("topic_polls")\choice_voters opts
+        { @votes, @next_page }
 
     it "pages through counted votes newest first", ->
       votes = for i=1,3

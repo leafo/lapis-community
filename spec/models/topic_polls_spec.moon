@@ -388,20 +388,20 @@ describe "models.topics", ->
         end_date: db.raw "date_trunc('second', now() at time zone 'utc') + interval '#{end_offset} hours'"
       }
 
-    it "is upcoming", ->
+    it "is not open before start", ->
       poll = poll_at 1, 2
       poll\refresh!
-      assert.same {true, false, false}, {poll\is_upcoming!, poll\is_open!, poll\is_closed!}
+      assert.same {false, false}, {poll\is_open!, poll\is_closed!}
 
     it "is open", ->
       poll = poll_at -1, 1
       poll\refresh!
-      assert.same {false, true, false}, {poll\is_upcoming!, poll\is_open!, poll\is_closed!}
+      assert.same {true, false}, {poll\is_open!, poll\is_closed!}
 
     it "is closed", ->
       poll = poll_at -2, -1
       poll\refresh!
-      assert.same {false, false, true}, {poll\is_upcoming!, poll\is_open!, poll\is_closed!}
+      assert.same {false, true}, {poll\is_open!, poll\is_closed!}
 
   describe "visibility", ->
     local topic, author, moderator, other

@@ -200,23 +200,19 @@ do
             end
           end)() or nil)
         })
+        table.insert(v, {
+          "poll",
+          types.empty + types.table
+        })
       end
       local post_update = assert_valid(self.params.post, types.params_shape(v))
       post_update.body = assert_error(Posts:filter_body(post_update.body, post_update.body_format))
-      local has_poll
-      has_poll = assert_valid(self.params.topic or { }, types.params_shape({
-        {
-          "poll",
-          types.empty + types.table
-        }
-      })).poll
-      local poll_flow, poll_was_updated, poll_moderated_changes
-      poll_was_updated = false
-      if is_topic_post and has_poll then
+      local poll_flow, poll_moderated_changes
+      if post_update.poll then
         local PollsFlow = require("community.flows.topic_polls")
         poll_flow = PollsFlow(self)
         local poll_edit
-        poll_edit = assert_valid(self.params.topic, types.params_shape({
+        poll_edit = assert_valid(self.params.post, types.params_shape({
           {
             "poll",
             poll_flow:validate_params_shape()
@@ -299,9 +295,9 @@ do
         self.topic:update(topic_update)
         edited_title = topic_update.title and true
       end
-      if is_topic_post and post_update.poll then
+      local edited_poll
+      if post_update.poll then
         poll_flow:set_poll(self.topic, post_update.poll)
-        poll_was_updated = true
         if poll_moderated_changes then
           ModerationLogs:create({
             user_id = self.current_user.id,
@@ -313,8 +309,9 @@ do
             }
           })
         end
+        edited_poll = true
       end
-      if edited_body or edited_title or poll_was_updated then
+      if edited_body or edited_title or edited_poll then
         self.post:on_body_updated_callback(self)
       end
       if edited_body then

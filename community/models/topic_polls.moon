@@ -44,10 +44,9 @@ class TopicPolls extends Model
     super opts
 
   -- Used by TopicPollsFlow.set_poll and PendingPosts.promote. Doesn't
-  -- validate anything, dates should already be checked by set_poll_dates
+  -- validate anything, end_date should already be checked by validate_end_date
   @create_for_topic: (topic, params) =>
     import PollChoices from require "community.models"
-    limits = require "community.limits"
 
     poll = @create {
       topic_id: topic.id
@@ -56,11 +55,7 @@ class TopicPolls extends Model
       anonymous: params.anonymous
       hide_results: params.hide_results
       vote_type: params.vote_type
-      start_date: params.start_date
-      end_date: params.end_date or db.raw db.interpolate_query(
-        "date_trunc('second', now() AT TIME ZONE 'utc') + ? * interval '1 second'",
-        limits.DEFAULT_POLL_DURATION
-      )
+      end_date: params.end_date
     }
 
     for idx, choice in ipairs params.choices
@@ -73,8 +68,9 @@ class TopicPolls extends Model
 
     poll
 
-  -- Used by new_topic to store a poll on a pending post. db.NULL doesn't
-  -- survive JSON encoding
+  -- Used by new_topic to store a poll on a pending post. The duration is
+  -- stored instead of end_date so time spent waiting for approval doesn't
+  -- count against the poll. db.NULL doesn't survive JSON encoding
   @pending_data: (params) =>
     not_null = (v) -> v unless v == db.NULL
 
@@ -84,8 +80,7 @@ class TopicPolls extends Model
       anonymous: params.anonymous
       hide_results: params.hide_results
       vote_type: params.vote_type
-      start_date: params.start_date
-      end_date: params.end_date
+      duration: date.diff(date(params.end_date), date(true))\spanseconds!
       choices: for c in *params.choices
         {
           choice_text: c.choice_text
@@ -117,18 +112,15 @@ class TopicPolls extends Model
   allowed_to_edit: (user) =>
     @get_topic!\allowed_to_edit user
 
-  allowed_to_vote: (user) =>
+  allowed_to_vote: (user, req) =>
     unless @is_open!
       return nil, "poll is closed"
 
-    @get_topic!\allowed_to_view user
+    @get_topic!\allowed_to_view user, req
 
   is_open: =>
     now = date(true)
     now >= date(@start_date) and now < date(@end_date)
-
-  is_upcoming: =>
-    date(true) < date(@start_date)
 
   is_closed: =>
     date(true) >= date(@end_date)

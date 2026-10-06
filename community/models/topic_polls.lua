@@ -44,18 +44,15 @@ do
     allowed_to_edit = function(self, user)
       return self:get_topic():allowed_to_edit(user)
     end,
-    allowed_to_vote = function(self, user)
+    allowed_to_vote = function(self, user, req)
       if not (self:is_open()) then
         return nil, "poll is closed"
       end
-      return self:get_topic():allowed_to_view(user)
+      return self:get_topic():allowed_to_view(user, req)
     end,
     is_open = function(self)
       local now = date(true)
       return now >= date(self.start_date) and now < date(self.end_date)
-    end,
-    is_upcoming = function(self)
-      return date(true) < date(self.start_date)
     end,
     is_closed = function(self)
       return date(true) >= date(self.end_date)
@@ -162,7 +159,6 @@ do
   self.create_for_topic = function(self, topic, params)
     local PollChoices
     PollChoices = require("community.models").PollChoices
-    local limits = require("community.limits")
     local poll = self:create({
       topic_id = topic.id,
       poll_question = params.poll_question,
@@ -170,8 +166,7 @@ do
       anonymous = params.anonymous,
       hide_results = params.hide_results,
       vote_type = params.vote_type,
-      start_date = params.start_date,
-      end_date = params.end_date or db.raw(db.interpolate_query("date_trunc('second', now() AT TIME ZONE 'utc') + ? * interval '1 second'", limits.DEFAULT_POLL_DURATION))
+      end_date = params.end_date
     })
     for idx, choice in ipairs(params.choices) do
       PollChoices:create({
@@ -196,8 +191,7 @@ do
       anonymous = params.anonymous,
       hide_results = params.hide_results,
       vote_type = params.vote_type,
-      start_date = params.start_date,
-      end_date = params.end_date,
+      duration = date.diff(date(params.end_date), date(true)):spanseconds(),
       choices = (function()
         local _accum_0 = { }
         local _len_0 = 1

@@ -35,19 +35,12 @@ do
     is_topic = function(self)
       return not self.topic_id
     end,
-    create_pending_poll = function(self, topic)
+    create_poll = function(self, topic)
       local TopicPolls
       TopicPolls = require("community.models").TopicPolls
       local date = require("date")
-      local format = "%Y-%m-%d %H:%M:%S"
       local params = self.data.poll
-      local now = date(true)
-      local start = date(params.start_date)
-      if start < now then
-        local duration = date.diff(date(params.end_date), start):spanseconds()
-        params.start_date = now:fmt(format)
-        params.end_date = now:copy():addseconds(duration):fmt(format)
-      end
+      params.end_date = date(true):addseconds(params.duration):fmt("%Y-%m-%d %H:%M:%S")
       return TopicPolls:create_for_topic(topic, params)
     end,
     promote = function(self, req_or_flow)
@@ -103,7 +96,7 @@ do
         self:get_category():increment_from_topic(topic)
       end
       if created_topic and self.data and self.data.poll then
-        self:create_pending_poll(topic)
+        self:create_poll(topic)
       end
       post:on_body_updated_callback(req_or_flow)
       topic:increment_participant(self:get_user())
