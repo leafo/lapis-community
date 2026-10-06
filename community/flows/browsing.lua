@@ -122,7 +122,9 @@ do
       local TopicsFlow = require("community.flows.topics")
       TopicsFlow(self):load_topic()
       assert_error(self:allowed_to_view(self.topic), "not allowed to view")
-      self:preload_topic_poll(self.topic)
+      if not (self.topic.permanent) then
+        self:preload_topic_poll(self.topic)
+      end
       if opts.increment_views ~= false then
         self:increment_topic_view_counter()
       end
@@ -364,7 +366,6 @@ do
         end
       end
       preload(all_topics, "user")
-      preload(topics, "poll")
       if last_seens and self.current_user then
         preload((function()
           local _accum_0 = { }

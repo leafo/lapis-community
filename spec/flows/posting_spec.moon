@@ -416,6 +416,14 @@ describe "posting flow", ->
     describe "polls", ->
       import TopicPolls, PollChoices from require "spec.community_models"
 
+      local snapshot
+      before_each ->
+        snapshot = assert\snapshot!
+        stub(Categories.__base, "allowed_to_create_poll").returns true
+
+      after_each ->
+        snapshot\revert!
+
       it "creates poll with topic", ->
         category = factory.Categories!
 
@@ -798,6 +806,14 @@ describe "posting flow", ->
         import TopicPolls, PollChoices from require "spec.community_models"
         import db_json from require "community.helpers.models"
         date = require "date"
+
+        local snapshot
+        before_each ->
+          snapshot = assert\snapshot!
+          stub(Categories.__base, "allowed_to_create_poll").returns true
+
+        after_each ->
+          snapshot\revert!
         format = "%Y-%m-%d %H:%M:%S"
 
         create_pending = (poll_fields={}) ->
@@ -1791,6 +1807,14 @@ describe "posting flow", ->
 
     describe "polls", ->
       import TopicPolls, PollChoices from require "spec.community_models"
+
+      local snapshot
+      before_each ->
+        snapshot = assert\snapshot!
+        stub(Categories.__base, "allowed_to_create_poll").returns true
+
+      after_each ->
+        snapshot\revert!
 
       it "updates poll when editing topic post", ->
         category = factory.Categories!

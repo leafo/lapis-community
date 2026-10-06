@@ -88,7 +88,7 @@ class BrowsingFlow extends Flow
 
     assert_error @allowed_to_view(@topic), "not allowed to view"
 
-    @preload_topic_poll @topic
+    @preload_topic_poll @topic unless @topic.permanent
 
     if opts.increment_views != false
       @increment_topic_view_counter!
@@ -231,7 +231,6 @@ class BrowsingFlow extends Flow
         table.insert all_topics, t.last_post
 
     preload all_topics, "user"
-    preload topics, "poll"
 
     if last_seens and @current_user
       preload [t\with_user(@current_user.id) for t in *topics], "last_seen"

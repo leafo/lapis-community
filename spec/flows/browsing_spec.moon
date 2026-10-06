@@ -319,6 +319,13 @@ describe "browsing flow", ->
 
             assert.same {}, queries
 
+          it "skips poll for permanent topic", ->
+            topic = factory.Topics permanent: true
+            queries = queries_after_topic_posts topic, (t) ->
+              assert.nil t\get_poll!
+
+            assert.same 1, #queries
+
       describe "preview category topics", ->
         get_category_preview = (user, params) ->
           in_request { get: params }, =>
@@ -400,27 +407,6 @@ describe "browsing flow", ->
           assert.same nil, next_page
           assert.same nil, prev_page
           assert.same 0, UserCategoryLastSeens\count!
-
-        it "preloads topic polls", ->
-          category = factory.Categories!
-          with_poll = factory.Topics category_id: category.id
-          factory.Topics category_id: category.id
-
-          TopicPolls = require("spec.community_models").TopicPolls
-          TopicPolls\create {
-            topic_id: with_poll.id
-            poll_question: "Color?"
-            end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
-          }
-
-          topics = category_topics current_user, category_id: category.id
-          assert.same 2, #topics
-
-          queries = capture_queries ->
-            assert.same { [with_poll.id]: true },
-              { t.id, true for t in *topics when t\get_poll! }
-
-          assert.same {}, queries
 
         it "gets empty sticky topics", ->
           topics = sticky_category_topics!

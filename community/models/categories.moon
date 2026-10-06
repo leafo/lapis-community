@@ -367,8 +367,9 @@ class Categories extends Model
 
     false
 
+  -- polls are opt-in, override to enable
   allowed_to_create_poll: (user) =>
-    true
+    false
 
   -- return category_user virtual models for the category hierarchy
   preloaded_category_user_chain: (user, relation) =>
