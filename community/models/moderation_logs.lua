@@ -136,6 +136,10 @@ do
         [5] = {
           "post",
           "Posts"
+        },
+        [6] = {
+          "pending_post",
+          "PendingPosts"
         }
       }
     }

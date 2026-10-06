@@ -243,8 +243,11 @@ do
       return self.pending_posts
     end,
     edit_pending_post = function(self)
-      local PendingPosts
-      PendingPosts = require("community.models").PendingPosts
+      local PendingPosts, ModerationLogs
+      do
+        local _obj_0 = require("community.models")
+        PendingPosts, ModerationLogs = _obj_0.PendingPosts, _obj_0.ModerationLogs
+      end
       self:load_category()
       local params = assert_valid(self.params, types.params_shape({
         {
@@ -267,11 +270,29 @@ do
       assert_error(self.pending_post:allowed_to_moderate(self.current_user), "invalid pending post")
       local _exp_0 = params.action
       if "promote" == _exp_0 then
-        self.post = self.pending_post:promote(self)
+        local post = self.pending_post:promote(self)
+        if post then
+          ModerationLogs:create({
+            user_id = self.current_user.id,
+            object = post,
+            category_id = self.category.id,
+            action = "post.approve_pending"
+          })
+        end
+        self.post = post
       elseif "deleted" == _exp_0 or "spam" == _exp_0 then
-        self.post = self.pending_post:update({
+        local updated = self.pending_post:update({
           status = PendingPosts.statuses:for_db(params.action)
         })
+        if updated then
+          ModerationLogs:create({
+            user_id = self.current_user.id,
+            object = self.pending_post,
+            category_id = self.category.id,
+            action = "pending_post.status(" .. tostring(params.action) .. ")"
+          })
+        end
+        self.post = updated
       end
       return true, self.post
     end,

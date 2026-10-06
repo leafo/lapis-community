@@ -206,7 +206,7 @@ class CategoriesFlow extends Flow
 
   -- this is for a moderator eding a pending post in a category
   edit_pending_post: =>
-    import PendingPosts from require "community.models"
+    import PendingPosts, ModerationLogs from require "community.models"
 
     @load_category!
 
@@ -227,11 +227,31 @@ class CategoriesFlow extends Flow
 
     @post = switch params.action
       when "promote"
-        @pending_post\promote @
+        post = @pending_post\promote @
+
+        if post
+          ModerationLogs\create {
+            user_id: @current_user.id
+            object: post
+            category_id: @category.id
+            action: "post.approve_pending"
+          }
+
+        post
       when "deleted", "spam"
-        @pending_post\update {
+        updated = @pending_post\update {
           status: PendingPosts.statuses\for_db params.action
         }
+
+        if updated
+          ModerationLogs\create {
+            user_id: @current_user.id
+            object: @pending_post
+            category_id: @category.id
+            action: "pending_post.status(#{params.action})"
+          }
+
+        updated
 
     true, @post
 

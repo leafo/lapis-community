@@ -738,6 +738,16 @@ describe "categories", ->
         assert.same 1, Posts\count!
         assert.spy(s, "on_body_updated_callback").was.called!
 
+        assert types.shape({
+          types.partial {
+            user_id: current_user.id
+            category_id: category.id
+            object_type: ModerationLogs.object_types.post
+            object_id: unpack(Posts\select!).id
+            action: "post.approve_pending"
+          }
+        }) ModerationLogs\select!
+
       it "doesn't let stranger edit pending post", ->
         assert.has_error(
           ->
@@ -759,6 +769,16 @@ describe "categories", ->
 
         pending_post\refresh!
         assert.same PendingPosts.statuses.deleted, pending_post.status
+
+        assert types.shape({
+          types.partial {
+            user_id: current_user.id
+            category_id: category.id
+            object_type: ModerationLogs.object_types.pending_post
+            object_id: pending_post.id
+            action: "pending_post.status(deleted)"
+          }
+        }) ModerationLogs\select!
 
   describe "set children", ->
     local category
