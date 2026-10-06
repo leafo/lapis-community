@@ -6,7 +6,7 @@ import assert_has_queries, sorted_pairs from require "spec.helpers"
 
 import types from require "tableshape"
 
-describe "models.topics", ->
+describe "models.topic_polls", ->
   sorted_pairs!
 
   import Users from require "spec.models"
@@ -15,25 +15,24 @@ describe "models.topics", ->
 
   it "should create a poll", ->
     topic = factory.Topics!
-    poll = TopicPolls\create {
+    poll = factory.TopicPolls {
       topic_id: topic.id
       poll_question: "What is your favorite color?"
       start_date: db.raw "date_trunc('seconds', now() at time zone 'utc')"
-      end_date: db.raw "date_trunc('seconds', now() at time zone 'utc') + interval '1 day'"
     }
     assert.truthy poll.id
 
-    PollChoices\create {
+    factory.PollChoices {
       poll_id: poll.id
       choice_text: "Red"
       position: 1
     }
-    PollChoices\create {
+    factory.PollChoices {
       poll_id: poll.id
       choice_text: "Blue"
       position: 2
     }
-    PollChoices\create {
+    factory.PollChoices {
       poll_id: poll.id
       choice_text: "Green"
       position: 3
@@ -51,18 +50,17 @@ describe "models.topics", ->
 
     before_each ->
       topic = factory.Topics!
-      poll = TopicPolls\create {
+      poll = factory.TopicPolls {
         topic_id: topic.id
         poll_question: "What is your favorite color?"
         start_date: db.raw "date_trunc('seconds', now() at time zone 'utc')"
-        end_date: db.raw "date_trunc('seconds', now() at time zone 'utc') + interval '1 day'"
       }
-      red_choice = PollChoices\create {
+      red_choice = factory.PollChoices {
         poll_id: poll.id
         choice_text: "Red"
         position: 1
       }
-      blue_choice = PollChoices\create {
+      blue_choice = factory.PollChoices {
         poll_id: poll.id
         choice_text: "Blue"
         position: 2
@@ -92,13 +90,12 @@ describe "models.topics", ->
 
       -- Create another poll to ensure it is not affected by the delete
       other_topic = factory.Topics!
-      another_poll = TopicPolls\create {
+      another_poll = factory.TopicPolls {
         topic_id: other_topic.id
         poll_question: "What is your favorite fruit?"
         start_date: db.raw "date_trunc('seconds', now() at time zone 'utc')"
-        end_date: db.raw "date_trunc('seconds', now() at time zone 'utc') + interval '1 day'"
       }
-      another_choice = PollChoices\create {
+      another_choice = factory.PollChoices {
         poll_id: another_poll.id
         choice_text: "Apple"
         position: 1
@@ -381,7 +378,7 @@ describe "models.topics", ->
 
   describe "status", ->
     poll_at = (start_offset, end_offset) ->
-      TopicPolls\create {
+      factory.TopicPolls {
         topic_id: factory.Topics!.id
         poll_question: "When?"
         start_date: db.raw "date_trunc('second', now() at time zone 'utc') + interval '#{start_offset} hours'"
@@ -414,12 +411,11 @@ describe "models.topics", ->
       other = factory.Users!
 
     create_poll = (opts) ->
-      TopicPolls\create {
+      factory.TopicPolls {
         topic_id: topic.id
         poll_question: "Color?"
         anonymous: opts.anonymous
         hide_results: opts.hide_results
-        end_date: db.raw "date_trunc('second', now() at time zone 'utc') + interval '1 day'"
       }
 
     -- results and voters visibility for: logged out, other user, author, moderator
@@ -459,17 +455,16 @@ describe "models.topics", ->
     local poll
 
     before_each ->
-      poll = TopicPolls\create {
+      poll = factory.TopicPolls {
         topic_id: factory.Topics!.id
         poll_question: "Color?"
         vote_type: TopicPolls.vote_types.multiple
-        end_date: db.raw "date_trunc('second', now() at time zone 'utc') + interval '1 day'"
       }
 
     it "loads newest counted votes per choice", ->
-      busy = PollChoices\create poll_id: poll.id, choice_text: "Busy", position: 1
-      quiet = PollChoices\create poll_id: poll.id, choice_text: "Quiet", position: 2
-      empty = PollChoices\create poll_id: poll.id, choice_text: "Empty", position: 3
+      busy = factory.PollChoices poll_id: poll.id, choice_text: "Busy", position: 1
+      quiet = factory.PollChoices poll_id: poll.id, choice_text: "Quiet", position: 2
+      empty = factory.PollChoices poll_id: poll.id, choice_text: "Empty", position: 3
 
       busy_votes = for i=1,4
         busy\vote factory.Users!

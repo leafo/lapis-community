@@ -163,6 +163,17 @@ PendingPosts = (opts={}) ->
 
   assert models.PendingPosts\create opts
 
+TopicPolls = (opts={}) ->
+  opts.topic_id or= Topics!.id
+  opts.poll_question or= "Poll #{next_counter "poll"}?"
+  opts.end_date or= db.raw "date_trunc('second', now() at time zone 'utc') + interval '1 day'"
+  assert models.TopicPolls\create opts, returning: "*"
+
+PollChoices = (opts={}) ->
+  opts.poll_id or= TopicPolls!.id
+  opts.choice_text or= "Choice #{next_counter "poll_choice"}"
+  assert models.PollChoices\create opts
+
 CategoryTags = (opts={}) ->
   opts.category_id or= Categories!.id
   opts.label or= "Some tag #{next_counter "tag"}"
@@ -171,4 +182,5 @@ CategoryTags = (opts={}) ->
 { :next_counter, :next_email,
   :Categories, :Topics, :Posts, :Votes, :Moderators, :PostReports,
   :CategoryMembers, :Blocks, :Bans, :CategoryGroups, :Bookmarks,
-  :CommunityUsers, :PendingPosts, :CategoryTags, :ModerationLogs }
+  :CommunityUsers, :PendingPosts, :CategoryTags, :ModerationLogs,
+  :TopicPolls, :PollChoices }

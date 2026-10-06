@@ -24,7 +24,7 @@ local next_email
 next_email = function()
   return "me-" .. tostring(next_counter("email")) .. "@example.com"
 end
-local Users, CommunityUsers, Categories, Topics, Posts, Votes, Moderators, ModerationLogs, PostReports, CategoryMembers, Blocks, Bans, CategoryGroups, Bookmarks, PendingPosts, CategoryTags
+local Users, CommunityUsers, Categories, Topics, Posts, Votes, Moderators, ModerationLogs, PostReports, CategoryMembers, Blocks, Bans, CategoryGroups, Bookmarks, PendingPosts, TopicPolls, PollChoices, CategoryTags
 Users = function(...)
   return require("spec.factory").Users(...)
 end
@@ -235,6 +235,25 @@ PendingPosts = function(opts)
   opts.body_format = "markdown"
   return assert(models.PendingPosts:create(opts))
 end
+TopicPolls = function(opts)
+  if opts == nil then
+    opts = { }
+  end
+  opts.topic_id = opts.topic_id or Topics().id
+  opts.poll_question = opts.poll_question or "Poll " .. tostring(next_counter("poll")) .. "?"
+  opts.end_date = opts.end_date or db.raw("date_trunc('second', now() at time zone 'utc') + interval '1 day'")
+  return assert(models.TopicPolls:create(opts, {
+    returning = "*"
+  }))
+end
+PollChoices = function(opts)
+  if opts == nil then
+    opts = { }
+  end
+  opts.poll_id = opts.poll_id or TopicPolls().id
+  opts.choice_text = opts.choice_text or "Choice " .. tostring(next_counter("poll_choice"))
+  return assert(models.PollChoices:create(opts))
+end
 CategoryTags = function(opts)
   if opts == nil then
     opts = { }
@@ -260,5 +279,7 @@ return {
   CommunityUsers = CommunityUsers,
   PendingPosts = PendingPosts,
   CategoryTags = CategoryTags,
-  ModerationLogs = ModerationLogs
+  ModerationLogs = ModerationLogs,
+  TopicPolls = TopicPolls,
+  PollChoices = PollChoices
 }

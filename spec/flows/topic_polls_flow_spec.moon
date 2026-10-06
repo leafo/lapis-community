@@ -95,14 +95,13 @@ describe "TopicPollsFlow", ->
     before_each ->
       current_user = factory.Users!
       topic = factory.Topics!
-      poll = TopicPolls\create {
+      poll = factory.TopicPolls {
         topic_id: topic.id
         poll_question: "Vote on this question"
-        end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )")
         vote_type: TopicPolls.vote_types.single
       }
       poll\refresh!
-      choice = PollChoices\create {
+      choice = factory.PollChoices {
         poll_id: poll.id
         choice_text: "Option A"
         position: 1
@@ -286,10 +285,9 @@ describe "TopicPollsFlow", ->
 
     it "sets choices on poll with no choices", ->
       topic = factory.Topics!
-      poll = TopicPolls\create {
+      poll = factory.TopicPolls {
         topic_id: topic.id
         poll_question: "Some question..."
-        end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )")
         vote_type: TopicPolls.vote_types.single
       }
 
@@ -324,21 +322,20 @@ describe "TopicPollsFlow", ->
 
     it "sets choices on poll with existing choices", ->
       topic = factory.Topics!
-      poll = TopicPolls\create {
+      poll = factory.TopicPolls {
         topic_id: topic.id
         poll_question: "Some question..."
-        end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )")
         vote_type: TopicPolls.vote_types.single
       }
 
       -- Existing choices
-      existing_choice_1 = PollChoices\create {
+      existing_choice_1 = factory.PollChoices {
         poll_id: poll.id
         choice_text: "Old Option A"
         position: 1
       }
 
-      existing_choice_2 = PollChoices\create {
+      existing_choice_2 = factory.PollChoices {
         poll_id: poll.id
         choice_text: "Old Option B"
         position: 2
@@ -406,7 +403,7 @@ describe "TopicPollsFlow", ->
         anonymous: true
         hide_results: false
         vote_type: TopicPolls.vote_types.single
-        end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
+        end_date: require("date")(true)\adddays(1)\fmt "%Y-%m-%d %H:%M:%S"
         choices: {
           { choice_text: "Red", position: 1 }
           { choice_text: "Blue", position: 2 }
@@ -446,17 +443,16 @@ describe "TopicPollsFlow", ->
     it "updates poll for topic with existing poll", ->
       topic = factory.Topics!
 
-      poll = TopicPolls\create {
+      poll = factory.TopicPolls {
         topic_id: topic.id
         poll_question: "Initial question"
         description: "Initial description"
         anonymous: false
         hide_results: true
         vote_type: TopicPolls.vote_types.single
-        end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day' )")
       }
 
-      existing_choice = PollChoices\create {
+      existing_choice = factory.PollChoices {
         poll_id: poll.id
         choice_text: "Initial Option A"
         position: 1
@@ -507,7 +503,7 @@ describe "TopicPollsFlow", ->
       test_choices poll_choices
 
     it "does not change end_date when updating existing poll", ->
-      poll = TopicPolls\create {
+      poll = factory.TopicPolls {
         topic_id: topic.id
         poll_question: "Closed question"
         vote_type: TopicPolls.vote_types.single
@@ -536,16 +532,15 @@ describe "TopicPollsFlow", ->
     local poll, choice_a, choice_b
 
     before_each ->
-      poll = TopicPolls\create {
+      poll = factory.TopicPolls {
         topic_id: factory.Topics!.id
         poll_question: "Question?"
         vote_type: TopicPolls.vote_types.single
         anonymous: true
-        end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day')")
       }
 
-      choice_a = PollChoices\create poll_id: poll.id, choice_text: "A", position: 1
-      choice_b = PollChoices\create poll_id: poll.id, choice_text: "B", position: 2
+      choice_a = factory.PollChoices poll_id: poll.id, choice_text: "A", position: 1
+      choice_b = factory.PollChoices poll_id: poll.id, choice_text: "B", position: 2
 
     -- params as they would come out of validate_params_shape
     unchanged_params = ->
@@ -611,7 +606,7 @@ describe "TopicPollsFlow", ->
         }, locked_poll_changes params
 
       it "treats choice ids from another poll as removal", ->
-        other_choice = PollChoices\create poll_id: poll.id + 1000, choice_text: "X"
+        other_choice = factory.PollChoices poll_id: poll.id + 1000, choice_text: "X"
         params = unchanged_params!
         params.choices[2] = { id: other_choice.id, choice_text: "B" }
 
@@ -622,16 +617,15 @@ describe "TopicPollsFlow", ->
 
     before_each ->
       topic = factory.Topics!
-      poll = TopicPolls\create {
+      poll = factory.TopicPolls {
         topic_id: topic.id
         poll_question: "Question?"
         vote_type: TopicPolls.vote_types.single
-        end_date: db.raw("date_trunc('second', now() AT TIME ZONE 'utc' + interval '1 day')")
       }
       poll\refresh!
 
-      choice_a = PollChoices\create poll_id: poll.id, choice_text: "A", position: 1
-      choice_b = PollChoices\create poll_id: poll.id, choice_text: "B", position: 2
+      choice_a = factory.PollChoices poll_id: poll.id, choice_text: "A", position: 1
+      choice_b = factory.PollChoices poll_id: poll.id, choice_text: "B", position: 2
 
     edit_poll = (fn) ->
       params = {
@@ -727,11 +721,10 @@ describe "TopicPollsFlow", ->
     describe "with existing poll", ->
       local poll
       before_each ->
-        poll = TopicPolls\create {
+        poll = factory.TopicPolls {
           topic_id: factory.Topics!.id
           poll_question: "Color?"
           start_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') - interval '2 hours'"
-          end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
         }
         poll\refresh!
 
@@ -799,13 +792,12 @@ describe "TopicPollsFlow", ->
 
     before_each ->
       current_user = factory.Users!
-      poll = TopicPolls\create {
+      poll = factory.TopicPolls {
         topic_id: factory.Topics!.id
         poll_question: "Color?"
         anonymous: false
-        end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
       }
-      choice = PollChoices\create poll_id: poll.id, choice_text: "Red", position: 1
+      choice = factory.PollChoices poll_id: poll.id, choice_text: "Red", position: 1
 
     choice_voters = (params, opts) ->
       unpack in_request { get: params }, =>
@@ -858,17 +850,16 @@ describe "TopicPollsFlow", ->
       moderator = factory.Users!
       factory.Moderators user_id: moderator.id, object: topic\get_category!
 
-      poll = TopicPolls\create {
+      poll = factory.TopicPolls {
         topic_id: topic.id
         poll_question: "Color?"
         vote_type: TopicPolls.vote_types.multiple
         start_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') - interval '1 hour'"
-        end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
       }
       poll\refresh!
 
-      red = PollChoices\create poll_id: poll.id, choice_text: "Red", position: 1
-      blue = PollChoices\create poll_id: poll.id, choice_text: "Blue", position: 2
+      red = factory.PollChoices poll_id: poll.id, choice_text: "Red", position: 1
+      blue = factory.PollChoices poll_id: poll.id, choice_text: "Blue", position: 2
       red\vote factory.Users!
       blue\vote factory.Users!
 
@@ -948,12 +939,11 @@ describe "TopicPollsFlow", ->
       }) unpack ModerationLogs\select!
 
     it "reset_poll_votes clears votes and keeps poll", ->
-      other_poll = TopicPolls\create {
+      other_poll = factory.TopicPolls {
         topic_id: factory.Topics!.id
         poll_question: "Other?"
-        end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
       }
-      other_choice = PollChoices\create poll_id: other_poll.id, choice_text: "Other", position: 1
+      other_choice = factory.PollChoices poll_id: other_poll.id, choice_text: "Other", position: 1
       other_vote = other_choice\vote factory.Users!
 
       moderate "reset_poll_votes"

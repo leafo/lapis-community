@@ -257,13 +257,12 @@ describe "browsing flow", ->
 
           it "preloads poll, choices and viewer votes", ->
             topic = factory.Topics!
-            poll = TopicPolls\create {
+            poll = factory.TopicPolls {
               topic_id: topic.id
               poll_question: "Color?"
-              end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
             }
-            red = PollChoices\create poll_id: poll.id, choice_text: "Red", position: 1
-            PollChoices\create poll_id: poll.id, choice_text: "Blue", position: 2
+            red = factory.PollChoices poll_id: poll.id, choice_text: "Red", position: 1
+            factory.PollChoices poll_id: poll.id, choice_text: "Blue", position: 2
 
             red\vote current_user if current_user
 
@@ -292,13 +291,12 @@ describe "browsing flow", ->
 
             create_poll = (anonymous) ->
               topic = factory.Topics!
-              poll = TopicPolls\create {
+              poll = factory.TopicPolls {
                 topic_id: topic.id
                 poll_question: "Color?"
                 :anonymous
-                end_date: db.raw "date_trunc('second', now() AT TIME ZONE 'utc') + interval '1 day'"
               }
-              choice = PollChoices\create poll_id: poll.id, choice_text: "Red", position: 1
+              choice = factory.PollChoices poll_id: poll.id, choice_text: "Red", position: 1
               choice\vote factory.Users!
               topic
 
