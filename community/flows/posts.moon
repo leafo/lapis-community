@@ -178,11 +178,7 @@ class PostsFlow extends Flow
       PollsFlow = require "community.flows.topic_polls"
       poll_flow = PollsFlow @
 
-      -- validated separately for a clearer error message
-      {poll: poll_edit} = assert_valid @params.post, types.params_shape {
-        {"poll", poll_flow\validate_params_shape!}
-      }
-
+      poll_edit = poll_flow\validate_poll @params.post
       post_update.poll = poll_edit
 
       if existing_poll = @topic\get_poll!

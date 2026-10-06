@@ -71,6 +71,31 @@ do
     validate_params = function(self)
       return assert_valid(self.params, self:validate_params_shape())
     end,
+    validate_poll = function(self, params)
+      local poll
+      poll = assert_valid(params, types.params_shape({
+        {
+          "poll",
+          self:validate_params_shape()
+        }
+      })).poll
+      local filter
+      filter = function(text)
+        if text == db.NULL then
+          return text
+        end
+        return assert_error(TopicPolls:filter_text(text))
+      end
+      poll.poll_question = filter(poll.poll_question)
+      poll.description = filter(poll.description)
+      local _list_0 = poll.choices
+      for _index_0 = 1, #_list_0 do
+        local choice = _list_0[_index_0]
+        choice.choice_text = filter(choice.choice_text)
+        choice.description = filter(choice.description)
+      end
+      return poll
+    end,
     vote = require_current_user(with_params({
       {
         "choice_id",
@@ -389,14 +414,13 @@ do
         end
         existing_choices_map = _tbl_0
       end
-      for idx, choice_params in ipairs(choices) do
-        choice_params.position = choice_params.position or idx
+      for position, choice_params in ipairs(choices) do
         if choice_params.id then
           local existing_choice = assert(existing_choices_map[choice_params.id], "invalid poll choice")
           existing_choice:update({
             choice_text = choice_params.choice_text,
             description = choice_params.description,
-            position = choice_params.position
+            position = position
           })
           existing_choices_map[choice_params.id] = nil
         else
@@ -404,7 +428,7 @@ do
             poll_id = poll.id,
             choice_text = choice_params.choice_text,
             description = choice_params.description,
-            position = choice_params.position
+            position = position
           })
         end
       end
@@ -481,10 +505,6 @@ do
     {
       "description",
       types.empty / db.NULL + types.limited_text(limits.MAX_TITLE_LEN)
-    },
-    {
-      "position",
-      types.empty + types.db_id
     }
   }
   if _parent_0.__inherited then

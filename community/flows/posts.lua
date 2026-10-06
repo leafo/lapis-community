@@ -211,13 +211,7 @@ do
       if post_update.poll then
         local PollsFlow = require("community.flows.topic_polls")
         poll_flow = PollsFlow(self)
-        local poll_edit
-        poll_edit = assert_valid(self.params.post, types.params_shape({
-          {
-            "poll",
-            poll_flow:validate_params_shape()
-          }
-        })).poll
+        local poll_edit = poll_flow:validate_poll(self.params.post)
         post_update.poll = poll_edit
         do
           local existing_poll = self.topic:get_poll()

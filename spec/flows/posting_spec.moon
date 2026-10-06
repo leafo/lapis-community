@@ -474,6 +474,42 @@ describe "posting flow", ->
 
         assert_choices choices
 
+      it "filters poll text", ->
+        stub(TopicPolls, "filter_text").invokes (_, text) ->
+          return nil, "no spam allowed" if text\match "spam"
+          text\upper!
+
+        assert.has_error(
+          -> new_topic {
+            category_id: factory.Categories!.id
+            "topic[title]": "Poll Test"
+            "topic[body]": "Body"
+            "topic[poll][poll_question]": "Question?"
+            "topic[poll][choices][1][choice_text]": "buy spam"
+          }
+          { message: {"no spam allowed"} }
+        )
+
+        assert.same 0, Topics\count!
+
+        new_topic {
+          category_id: factory.Categories!.id
+          "topic[title]": "Poll Test"
+          "topic[body]": "Body"
+          "topic[poll][poll_question]": "Question?"
+          "topic[poll][description]": "pick one"
+          "topic[poll][choices][1][choice_text]": "Yes"
+          "topic[poll][choices][1][description]": "agree"
+        }
+
+        poll = unpack TopicPolls\select!
+        assert.same "QUESTION?", poll.poll_question
+        assert.same "PICK ONE", poll.description
+
+        choice = unpack poll\get_poll_choices!
+        assert.same "YES", choice.choice_text
+        assert.same "AGREE", choice.description
+
       it "creates poll with end date", ->
         date = require "date"
         finish = date(true)\addseconds 60 * 60 * 24 * 3

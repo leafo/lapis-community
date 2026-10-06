@@ -74,11 +74,7 @@ class TopicsFlow extends Flow
     }
 
     if new_topic.poll
-      -- we do validation like this so we can have nice error messages
-      {poll: new_poll} = assert_valid @params.topic, types.params_shape {
-        {"poll", poll_flow\validate_params_shape!}
-      }
-
+      new_poll = poll_flow\validate_poll @params.topic
       new_topic.poll = new_poll
 
       assert_error @category\allowed_to_create_poll(@current_user),

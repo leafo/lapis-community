@@ -111,13 +111,7 @@ do
         }
       }))
       if new_topic.poll then
-        local new_poll
-        new_poll = assert_valid(self.params.topic, types.params_shape({
-          {
-            "poll",
-            poll_flow:validate_params_shape()
-          }
-        })).poll
+        local new_poll = poll_flow:validate_poll(self.params.topic)
         new_topic.poll = new_poll
         assert_error(self.category:allowed_to_create_poll(self.current_user), "you can't create a poll in this category")
         assert_error(poll_flow:validate_end_date(new_poll))

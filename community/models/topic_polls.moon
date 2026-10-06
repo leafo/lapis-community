@@ -43,6 +43,11 @@ class TopicPolls extends Model
     opts.vote_type = @vote_types\for_db opts.vote_type or "single"
     super opts
 
+  -- Applied to the question, choices and descriptions before a poll is
+  -- created or edited. Override to filter or reject text, returns the text to
+  -- store or nil and an error
+  @filter_text: (text) => text
+
   -- Used by TopicPollsFlow.set_poll and PendingPosts.promote. Doesn't
   -- validate anything, end_date should already be checked by validate_end_date
   @create_for_topic: (topic, params) =>
@@ -58,12 +63,12 @@ class TopicPolls extends Model
       end_date: params.end_date
     }
 
-    for idx, choice in ipairs params.choices
+    for position, choice in ipairs params.choices
       PollChoices\create {
         poll_id: poll.id
         choice_text: choice.choice_text
         description: choice.description
-        position: choice.position or idx
+        :position
       }
 
     poll
@@ -85,7 +90,6 @@ class TopicPolls extends Model
         {
           choice_text: c.choice_text
           description: not_null c.description
-          position: c.position
         }
     }
 

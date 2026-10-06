@@ -156,6 +156,9 @@ do
     opts.vote_type = self.vote_types:for_db(opts.vote_type or "single")
     return _class_0.__parent.create(self, opts)
   end
+  self.filter_text = function(self, text)
+    return text
+  end
   self.create_for_topic = function(self, topic, params)
     local PollChoices
     PollChoices = require("community.models").PollChoices
@@ -168,12 +171,12 @@ do
       vote_type = params.vote_type,
       end_date = params.end_date
     })
-    for idx, choice in ipairs(params.choices) do
+    for position, choice in ipairs(params.choices) do
       PollChoices:create({
         poll_id = poll.id,
         choice_text = choice.choice_text,
         description = choice.description,
-        position = choice.position or idx
+        position = position
       })
     end
     return poll
@@ -200,8 +203,7 @@ do
           local c = _list_0[_index_0]
           _accum_0[_len_0] = {
             choice_text = c.choice_text,
-            description = not_null(c.description),
-            position = c.position
+            description = not_null(c.description)
           }
           _len_0 = _len_0 + 1
         end

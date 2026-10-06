@@ -42,7 +42,6 @@ class TopicPollsFlow extends Flow
     {"id",                       types.db_id + types.empty}
     {"choice_text",              types.limited_text(limits.MAX_TITLE_LEN)}
     {"description",              types.empty / db.NULL + types.limited_text(limits.MAX_TITLE_LEN)}
-    {"position",                 types.empty + types.db_id}
   }
 
   validate_params_shape: =>
@@ -69,6 +68,27 @@ class TopicPollsFlow extends Flow
 
   validate_params: =>
     assert_valid @params, @validate_params_shape!
+
+  -- Used by new_topic and edit_post, params is the table holding the poll
+  -- field so errors are prefixed with "poll:". Runs the text through
+  -- TopicPolls.filter_text
+  validate_poll: (params) =>
+    {:poll} = assert_valid params, types.params_shape {
+      {"poll", @validate_params_shape!}
+    }
+
+    filter = (text) ->
+      return text if text == db.NULL
+      assert_error TopicPolls\filter_text text
+
+    poll.poll_question = filter poll.poll_question
+    poll.description = filter poll.description
+
+    for choice in *poll.choices
+      choice.choice_text = filter choice.choice_text
+      choice.description = filter choice.description
+
+    poll
 
   vote: require_current_user with_params {
     {"choice_id", types.db_id}
@@ -325,17 +345,15 @@ class TopicPollsFlow extends Flow
     existing_choices = poll\get_poll_choices!
     existing_choices_map = { choice.id, choice for choice in *existing_choices }
 
-    -- Process incoming choices
-    for idx, choice_params in ipairs choices
-      choice_params.position or= idx
-
+    -- Process incoming choices, order of the array is the position
+    for position, choice_params in ipairs choices
       if choice_params.id
         -- Update existing choice
         existing_choice = assert existing_choices_map[choice_params.id], "invalid poll choice"
         existing_choice\update {
           choice_text: choice_params.choice_text,
           description: choice_params.description,
-          position: choice_params.position
+          :position
         }
         -- clear it from remiaing choices
         existing_choices_map[choice_params.id] = nil
@@ -345,7 +363,7 @@ class TopicPollsFlow extends Flow
           poll_id: poll.id
           choice_text: choice_params.choice_text
           description: choice_params.description
-          position: choice_params.position
+          :position
         }
 
     -- Delete remaining choices that were not updated
