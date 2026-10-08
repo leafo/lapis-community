@@ -2,12 +2,15 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 15.2
--- Dumped by pg_dump version 15.2
+\restrict 5zbVHSpy86PUi7DlCxdC3cAR55Jv8UgOl83BVGp6QXf6kL2miBg2MEaU7j9jysE
+
+-- Dumped from database version 18.6
+-- Dumped by pg_dump version 18.6
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -61,7 +64,7 @@ CREATE SEQUENCE public.community_activity_logs_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.community_activity_logs_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.community_activity_logs_id_seq OWNER TO postgres;
 
 --
 -- Name: community_activity_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -164,7 +167,7 @@ CREATE SEQUENCE public.community_categories_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.community_categories_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.community_categories_id_seq OWNER TO postgres;
 
 --
 -- Name: community_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -218,7 +221,7 @@ CREATE SEQUENCE public.community_category_groups_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.community_category_groups_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.community_category_groups_id_seq OWNER TO postgres;
 
 --
 -- Name: community_category_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -287,7 +290,7 @@ CREATE SEQUENCE public.community_category_tags_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.community_category_tags_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.community_category_tags_id_seq OWNER TO postgres;
 
 --
 -- Name: community_category_tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -344,7 +347,7 @@ CREATE SEQUENCE public.community_moderation_logs_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.community_moderation_logs_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.community_moderation_logs_id_seq OWNER TO postgres;
 
 --
 -- Name: community_moderation_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -406,13 +409,91 @@ CREATE SEQUENCE public.community_pending_posts_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.community_pending_posts_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.community_pending_posts_id_seq OWNER TO postgres;
 
 --
 -- Name: community_pending_posts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.community_pending_posts_id_seq OWNED BY public.community_pending_posts.id;
+
+
+--
+-- Name: community_poll_choices; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.community_poll_choices (
+    id integer NOT NULL,
+    poll_id integer NOT NULL,
+    choice_text text NOT NULL,
+    description text,
+    vote_count integer DEFAULT 0 NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.community_poll_choices OWNER TO postgres;
+
+--
+-- Name: community_poll_choices_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.community_poll_choices_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.community_poll_choices_id_seq OWNER TO postgres;
+
+--
+-- Name: community_poll_choices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.community_poll_choices_id_seq OWNED BY public.community_poll_choices.id;
+
+
+--
+-- Name: community_poll_votes; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.community_poll_votes (
+    id integer NOT NULL,
+    poll_choice_id integer NOT NULL,
+    user_id integer NOT NULL,
+    counted boolean DEFAULT true NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.community_poll_votes OWNER TO postgres;
+
+--
+-- Name: community_poll_votes_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.community_poll_votes_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.community_poll_votes_id_seq OWNER TO postgres;
+
+--
+-- Name: community_poll_votes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.community_poll_votes_id_seq OWNED BY public.community_poll_votes.id;
 
 
 --
@@ -446,7 +527,7 @@ CREATE SEQUENCE public.community_post_edits_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.community_post_edits_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.community_post_edits_id_seq OWNER TO postgres;
 
 --
 -- Name: community_post_edits_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -495,7 +576,7 @@ CREATE SEQUENCE public.community_post_reports_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.community_post_reports_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.community_post_reports_id_seq OWNER TO postgres;
 
 --
 -- Name: community_post_reports_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -547,7 +628,7 @@ CREATE SEQUENCE public.community_posts_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.community_posts_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.community_posts_id_seq OWNER TO postgres;
 
 --
 -- Name: community_posts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -603,6 +684,50 @@ CREATE TABLE public.community_topic_participants (
 ALTER TABLE public.community_topic_participants OWNER TO postgres;
 
 --
+-- Name: community_topic_polls; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.community_topic_polls (
+    id integer NOT NULL,
+    topic_id integer NOT NULL,
+    poll_question text NOT NULL,
+    description text,
+    vote_type smallint NOT NULL,
+    anonymous boolean DEFAULT true NOT NULL,
+    hide_results boolean DEFAULT false NOT NULL,
+    version integer DEFAULT 1 NOT NULL,
+    start_date timestamp without time zone DEFAULT date_trunc('second'::text, (now() AT TIME ZONE 'utc'::text)) NOT NULL,
+    end_date timestamp without time zone NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.community_topic_polls OWNER TO postgres;
+
+--
+-- Name: community_topic_polls_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.community_topic_polls_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.community_topic_polls_id_seq OWNER TO postgres;
+
+--
+-- Name: community_topic_polls_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.community_topic_polls_id_seq OWNED BY public.community_topic_polls.id;
+
+
+--
 -- Name: community_topics; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -648,7 +773,7 @@ CREATE SEQUENCE public.community_topics_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.community_topics_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.community_topics_id_seq OWNER TO postgres;
 
 --
 -- Name: community_topics_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -769,7 +894,7 @@ CREATE SEQUENCE public.community_warnings_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.community_warnings_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.community_warnings_id_seq OWNER TO postgres;
 
 --
 -- Name: community_warnings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -816,7 +941,7 @@ CREATE SEQUENCE public.users_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.users_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
 
 --
 -- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -868,6 +993,20 @@ ALTER TABLE ONLY public.community_pending_posts ALTER COLUMN id SET DEFAULT next
 
 
 --
+-- Name: community_poll_choices id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.community_poll_choices ALTER COLUMN id SET DEFAULT nextval('public.community_poll_choices_id_seq'::regclass);
+
+
+--
+-- Name: community_poll_votes id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.community_poll_votes ALTER COLUMN id SET DEFAULT nextval('public.community_poll_votes_id_seq'::regclass);
+
+
+--
 -- Name: community_post_edits id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -886,6 +1025,13 @@ ALTER TABLE ONLY public.community_post_reports ALTER COLUMN id SET DEFAULT nextv
 --
 
 ALTER TABLE ONLY public.community_posts ALTER COLUMN id SET DEFAULT nextval('public.community_posts_id_seq'::regclass);
+
+
+--
+-- Name: community_topic_polls id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.community_topic_polls ALTER COLUMN id SET DEFAULT nextval('public.community_topic_polls_id_seq'::regclass);
 
 
 --
@@ -1022,6 +1168,22 @@ ALTER TABLE ONLY public.community_pending_posts
 
 
 --
+-- Name: community_poll_choices community_poll_choices_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.community_poll_choices
+    ADD CONSTRAINT community_poll_choices_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: community_poll_votes community_poll_votes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.community_poll_votes
+    ADD CONSTRAINT community_poll_votes_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: community_post_edits community_post_edits_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1067,6 +1229,14 @@ ALTER TABLE ONLY public.community_subscriptions
 
 ALTER TABLE ONLY public.community_topic_participants
     ADD CONSTRAINT community_topic_participants_pkey PRIMARY KEY (topic_id, user_id);
+
+
+--
+-- Name: community_topic_polls community_topic_polls_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.community_topic_polls
+    ADD CONSTRAINT community_topic_polls_pkey PRIMARY KEY (id);
 
 
 --
@@ -1253,6 +1423,27 @@ CREATE INDEX community_pending_posts_topic_id_status_id_idx ON public.community_
 
 
 --
+-- Name: community_poll_choices_poll_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX community_poll_choices_poll_id_idx ON public.community_poll_choices USING btree (poll_id);
+
+
+--
+-- Name: community_poll_votes_poll_choice_id_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX community_poll_votes_poll_choice_id_id_idx ON public.community_poll_votes USING btree (poll_choice_id, id) WHERE counted;
+
+
+--
+-- Name: community_poll_votes_poll_choice_id_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX community_poll_votes_poll_choice_id_user_id_idx ON public.community_poll_votes USING btree (poll_choice_id, user_id);
+
+
+--
 -- Name: community_post_edits_post_id_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -1365,6 +1556,13 @@ CREATE INDEX community_subscriptions_user_id_idx ON public.community_subscriptio
 
 
 --
+-- Name: community_topic_polls_topic_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX community_topic_polls_topic_id_idx ON public.community_topic_polls USING btree (topic_id);
+
+
+--
 -- Name: community_topics_category_id_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -1425,16 +1623,21 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 -- PostgreSQL database dump complete
 --
 
+\unrestrict 5zbVHSpy86PUi7DlCxdC3cAR55Jv8UgOl83BVGp6QXf6kL2miBg2MEaU7j9jysE
+
 --
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 15.2
--- Dumped by pg_dump version 15.2
+\restrict iG00GzdnlljNm7068lC24hOspiwQWcPsddFyPdQF94OCNw8wGziYUmn3lYElU1m
+
+-- Dumped from database version 18.6
+-- Dumped by pg_dump version 18.6
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -1492,10 +1695,13 @@ community_41
 community_42
 community_43
 community_44
+community_45
 \.
 
 
 --
 -- PostgreSQL database dump complete
 --
+
+\unrestrict iG00GzdnlljNm7068lC24hOspiwQWcPsddFyPdQF94OCNw8wGziYUmn3lYElU1m
 
