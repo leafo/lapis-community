@@ -620,6 +620,9 @@ class Posts extends Model
 
   pin_to: (position) =>
     assert position, "missing position to pin to"
+    if @depth == 1 and position < 2
+      return nil, "can't pin above the topic post"
+
     topic = @get_topic!
     topic\reposition_post @, position
     @update pin_position: position
@@ -633,12 +636,17 @@ class Posts extends Model
         parent_post_id: @parent_post_id or db.NULL
         pin_position: db.NULL
         depth: @depth
-      }} limit 1
+      }} order by created_at asc, id asc limit 1
     ", @created_at, fields: "post_number"
 
     if after
+      position = if @post_number < after.post_number
+        after.post_number - 1
+      else
+        after.post_number
+
       topic = @get_topic!
-      topic\reposition_post @, after.post_number - 1
+      topic\reposition_post @, position
       @update pin_position: db.NULL
     else
       -- move to end

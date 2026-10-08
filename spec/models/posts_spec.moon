@@ -817,28 +817,44 @@ describe "models.posts", ->
       posts[4]\refresh!
       assert.same 2, posts[4].pin_position
 
-      -- move to top
-      posts[2]\pin_to 1
+      -- move above the other pinned post
+      posts[3]\pin_to 2
 
       assert.same {
-        {posts[2].id, 1}
-        {posts[1].id, 2}
+        {posts[1].id, 1}
+        {posts[3].id, 2}
         {posts[4].id, 3}
-        {posts[3].id, 4}
+        {posts[2].id, 4}
       }, [{p.id, p.post_number} for p in *Posts\select "order by post_number"]
 
-      posts[2]\refresh!
-      assert.same 1, posts[2].pin_position
+      posts[3]\refresh!
+      assert.same 2, posts[3].pin_position
 
       -- repins further down
-      posts[2]\pin_to 2
+      posts[3]\pin_to 3
+
+      assert.same {
+        {posts[1].id, 1}
+        {posts[4].id, 2}
+        {posts[3].id, 3}
+        {posts[2].id, 4}
+      }, [{p.id, p.post_number} for p in *Posts\select "order by post_number"]
+
+    it "refuses to pin above the topic post", ->
+      topic = factory.Topics!
+      posts = for i=1,3
+        factory.Posts topic_id: topic.id
+
+      assert.same {nil, "can't pin above the topic post"}, {posts[3]\pin_to 1}
 
       assert.same {
         {posts[1].id, 1}
         {posts[2].id, 2}
-        {posts[4].id, 3}
-        {posts[3].id, 4}
+        {posts[3].id, 3}
       }, [{p.id, p.post_number} for p in *Posts\select "order by post_number"]
+
+      posts[3]\refresh!
+      assert.nil posts[3].pin_position
 
 
   describe "unpin", ->
@@ -885,6 +901,28 @@ describe "models.posts", ->
       }, [{p.id, p.post_number} for p in *Posts\select "order by post_number"]
 
       assert.nil posts[3].pin_position
+
+    it "unpins post that was pinned below its original position", ->
+      posts[2]\pin_to 4
+      posts[2]\refresh!
+
+      assert.same {
+        {posts[1].id, 1}
+        {posts[3].id, 2}
+        {posts[4].id, 3}
+        {posts[2].id, 4}
+      }, [{p.id, p.post_number} for p in *Posts\select "order by post_number"]
+
+      posts[2]\unpin!
+
+      assert.same {
+        {posts[1].id, 1}
+        {posts[2].id, 2}
+        {posts[3].id, 3}
+        {posts[4].id, 4}
+      }, [{p.id, p.post_number} for p in *Posts\select "order by post_number"]
+
+      assert.nil posts[2].pin_position
 
     it "unpins post in middle", ->
       -- move to second slot
