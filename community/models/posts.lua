@@ -74,7 +74,7 @@ do
       end
       local topic = self:get_topic()
       do
-        local category = self.topic:get_category()
+        local category = topic:get_category()
         if category then
           return category:allowed_to_vote(user, direction, self)
         else
@@ -522,6 +522,9 @@ do
     end,
     pin_to = function(self, position)
       assert(position, "missing position to pin to")
+      if self.depth == 1 and position < 2 then
+        return nil, "can't pin above the topic post"
+      end
       local topic = self:get_topic()
       topic:reposition_post(self, position)
       return self:update({
@@ -535,12 +538,18 @@ do
         parent_post_id = self.parent_post_id or db.NULL,
         pin_position = db.NULL,
         depth = self.depth
-      })) .. " limit 1\n    ", self.created_at, {
+      })) .. " order by created_at asc, id asc limit 1\n    ", self.created_at, {
         fields = "post_number"
       }))
       if after then
+        local position
+        if self.post_number < after.post_number then
+          position = after.post_number - 1
+        else
+          position = after.post_number
+        end
         local topic = self:get_topic()
-        topic:reposition_post(self, after.post_number - 1)
+        topic:reposition_post(self, position)
         return self:update({
           pin_position = db.NULL
         })
@@ -750,7 +759,7 @@ do
     {
       "reports",
       has_many = "PostReports",
-      oreder = "id desc"
+      order = "id desc"
     },
     {
       "votes",

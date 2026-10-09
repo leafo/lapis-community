@@ -84,7 +84,7 @@ class Posts extends Model
     {"parent_post", belongs_to: "Posts"}
     {"edits", has_many: "PostEdits", order: "id asc"}
 
-    {"reports", has_many: "PostReports", oreder: "id desc"}
+    {"reports", has_many: "PostReports", order: "id desc"}
 
     {"votes", has_many: "Votes", key: "object_id", where: {
       object_type: 1
@@ -303,7 +303,7 @@ class Posts extends Model
 
     topic = @get_topic!
 
-    if category = @topic\get_category!
+    if category = topic\get_category!
       category\allowed_to_vote user, direction, @
     else
       true
