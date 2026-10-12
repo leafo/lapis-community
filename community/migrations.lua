@@ -1479,5 +1479,10 @@ return {
     return create_index(T("poll_votes"), "poll_choice_id", "id", {
       where = "counted"
     })
+  end,
+  [46] = function(self)
+    return add_column(T("category_tags"), "moderator_only", boolean({
+      default = false
+    }))
   end
 }

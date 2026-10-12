@@ -34,6 +34,12 @@ describe "models.topics", ->
     assert.same 1, #tags
     assert.same tag.label,tags[1].label
 
+  it "gets category tags skipping removed slugs", ->
+    topic = factory.Topics!
+    tag = factory.CategoryTags category_id: topic.category_id
+    topic\update tags: db.array { "removed", tag.slug }
+    assert.same {tag.slug}, [t.slug for t in *topic\get_tags!]
+
   describe "user_topic_last_seens", ->
     import UserTopicLastSeens from require "spec.community_models"
 

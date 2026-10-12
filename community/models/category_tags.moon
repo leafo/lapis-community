@@ -12,7 +12,8 @@ import Model from require "community.model"
 --   tag_order integer DEFAULT 0 NOT NULL,
 --   created_at timestamp without time zone NOT NULL,
 --   updated_at timestamp without time zone NOT NULL,
---   description text
+--   description text,
+--   moderator_only boolean DEFAULT false NOT NULL
 -- );
 -- ALTER TABLE ONLY community_category_tags
 --   ADD CONSTRAINT community_category_tags_pkey PRIMARY KEY (id);

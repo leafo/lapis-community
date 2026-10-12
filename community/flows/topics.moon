@@ -67,7 +67,7 @@ class TopicsFlow extends Flow
       {"title", types.limited_text limits.MAX_TITLE_LEN }
       {"body", types.limited_text limits.MAX_BODY_LEN }
       {"body_format", shapes.default("html") * types.db_enum(Posts.body_formats)}
-      {"tags", types.empty + types.limited_text(240) / @category\parse_tags }
+      {"tags", types.empty + types.limited_text(240) / (str) -> @category\parse_tags str, @current_user }
       {"sticky", types.empty / false + types.any / true}
       {"locked", types.empty / false + types.any / true}
       {"poll", types.empty + types.table}

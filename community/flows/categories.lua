@@ -728,6 +728,10 @@ do
     {
       "color",
       shapes.db_nullable(shapes.color)
+    },
+    {
+      "moderator_only",
+      types.empty / false + types.any / true
     }
   }
   self.CATEGORY_CHILD_VALIDATION = {

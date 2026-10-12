@@ -600,7 +600,10 @@ class Topics extends Model
     category = @get_category!
     return @tags unless category
     tags_by_slug = {t.slug, t for t in *category\get_tags!}
-    [tags_by_slug[t] for t in *@tags]
+    return for slug in *@tags
+      tag = tags_by_slug[slug]
+      continue unless tag
+      tag
 
   get_bookmark: (user) =>
     @with_user(user.id)\get_bookmark!

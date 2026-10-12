@@ -252,6 +252,25 @@ describe "categories", ->
           }
         }) category\get_tags!
 
+      it "sets moderator only tag", ->
+        set_tags {
+          category_id: category.id
+          "category_tags[1][label]": "staff pick"
+          "category_tags[1][moderator_only]": "on"
+          "category_tags[2][label]": "regular"
+        }
+
+        assert types.shape({
+          types.partial {
+            slug: "staff-pick"
+            moderator_only: true
+          }
+          types.partial {
+            slug: "regular"
+            moderator_only: false
+          }
+        }) category\get_tags!
+
       it "clears tags", ->
         for i=1,2
           factory.CategoryTags category_id: category.id

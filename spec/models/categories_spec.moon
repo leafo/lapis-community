@@ -38,6 +38,30 @@ describe "models.categories", ->
         "hello"
       }, [t.slug for t in *category\parse_tags "hello,zone,hello,butt"]
 
+    describe "moderator only tags", ->
+      local category
+
+      before_each ->
+        category = factory.Categories!
+        factory.CategoryTags slug: "hello", category_id: category.id
+        factory.CategoryTags slug: "staff", category_id: category.id, moderator_only: true
+
+      it "drops moderator only tag without user", ->
+        assert.same {"hello"}, [t.slug for t in *category\parse_tags "hello,staff"]
+
+      it "drops moderator only tag for regular user", ->
+        user = factory.Users!
+        assert.same {"hello"}, [t.slug for t in *category\parse_tags "hello,staff", user]
+
+      it "returns nil when only moderator only tags given", ->
+        user = factory.Users!
+        assert.nil category\parse_tags "staff", user
+
+      it "keeps moderator only tag for moderator", ->
+        user = factory.Users!
+        factory.Moderators user_id: user.id, object: category
+        assert.same {"hello", "staff"}, [t.slug for t in *category\parse_tags "hello,staff", user]
+
   describe "delete", ->
     i = db.interpolate_query
 

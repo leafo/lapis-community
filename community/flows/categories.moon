@@ -56,6 +56,7 @@ class CategoriesFlow extends Flow
     {"label",                    types.limited_text limits.MAX_TAG_LEN}
     {"description",              shapes.db_nullable types.limited_text(80)}
     {"color",                    shapes.db_nullable shapes.color}
+    {"moderator_only",           types.empty / false + types.any / true}
   }
 
   @CATEGORY_CHILD_VALIDATION: {

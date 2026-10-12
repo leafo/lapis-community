@@ -661,7 +661,7 @@ do
         category_order = last_topic.category_order
       })
     end,
-    parse_tags = function(self, str)
+    parse_tags = function(self, str, user)
       if str == nil then
         str = ""
       end
@@ -688,6 +688,7 @@ do
         parsed = _accum_0
       end
       local seen = { }
+      local is_moderator
       do
         local _accum_0 = { }
         local _len_0 = 1
@@ -703,6 +704,15 @@ do
             if seen[t.slug] then
               _continue_0 = true
               break
+            end
+            if t.moderator_only then
+              if is_moderator == nil then
+                is_moderator = self:allowed_to_moderate(user) and true or false
+              end
+              if not (is_moderator) then
+                _continue_0 = true
+                break
+              end
             end
             seen[t.slug] = true
             local _value_0 = t

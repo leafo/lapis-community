@@ -762,4 +762,7 @@ import create_table, create_index, drop_table, add_column, drop_column, drop_ind
     create_index T"poll_votes", "poll_choice_id", "user_id", unique: true
     create_index T"poll_votes", "poll_choice_id", "id", where: "counted"
 
+  [46]: =>
+    add_column T"category_tags", "moderator_only", boolean default: false
+
 }

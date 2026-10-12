@@ -188,17 +188,17 @@ do
           "title",
           types["nil"] + types.limited_text(limits.MAX_TITLE_LEN)
         })
+        local parse_tags
+        if category then
+          parse_tags = function(str)
+            return category:parse_tags(str, self.current_user) or { }
+          end
+        end
         table.insert(v, {
           "tags",
           types["nil"] + types.empty / (function()
             return { }
-          end) + types.limited_text(240) / (category and (function()
-            local _base_1 = category
-            local _fn_0 = _base_1.parse_tags
-            return function(...)
-              return _fn_0(_base_1, ...)
-            end
-          end)() or nil)
+          end) + types.limited_text(240) / parse_tags
         })
         table.insert(v, {
           "poll",
@@ -265,17 +265,36 @@ do
         do
           local new_tags = post_update.tags
           if new_tags then
-            if next(new_tags) then
-              topic_update.tags = db.array((function()
-                local _accum_0 = { }
-                local _len_0 = 1
+            do
+              local _accum_0 = { }
+              local _len_0 = 1
+              for _index_0 = 1, #new_tags do
+                local t = new_tags[_index_0]
+                _accum_0[_len_0] = t.slug
+                _len_0 = _len_0 + 1
+              end
+              new_tags = _accum_0
+            end
+            if not (self.topic:allowed_to_moderate(self.current_user)) then
+              local seen
+              do
+                local _tbl_0 = { }
                 for _index_0 = 1, #new_tags do
-                  local t = new_tags[_index_0]
-                  _accum_0[_len_0] = t.slug
-                  _len_0 = _len_0 + 1
+                  local s = new_tags[_index_0]
+                  _tbl_0[s] = true
                 end
-                return _accum_0
-              end)())
+                seen = _tbl_0
+              end
+              local _list_0 = (self.topic:get_tags() or { })
+              for _index_0 = 1, #_list_0 do
+                local t = _list_0[_index_0]
+                if t.moderator_only and not seen[t.slug] then
+                  table.insert(new_tags, t.slug)
+                end
+              end
+            end
+            if next(new_tags) then
+              topic_update.tags = db.array(new_tags)
             else
               topic_update.tags = db.NULL
             end

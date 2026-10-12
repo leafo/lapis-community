@@ -547,15 +547,30 @@ do
         end
         tags_by_slug = _tbl_0
       end
-      local _accum_0 = { }
-      local _len_0 = 1
-      local _list_0 = self.tags
-      for _index_0 = 1, #_list_0 do
-        local t = _list_0[_index_0]
-        _accum_0[_len_0] = tags_by_slug[t]
-        _len_0 = _len_0 + 1
-      end
-      return _accum_0
+      return (function()
+        local _accum_0 = { }
+        local _len_0 = 1
+        local _list_0 = self.tags
+        for _index_0 = 1, #_list_0 do
+          local _continue_0 = false
+          repeat
+            local slug = _list_0[_index_0]
+            local tag = tags_by_slug[slug]
+            if not (tag) then
+              _continue_0 = true
+              break
+            end
+            local _value_0 = tag
+            _accum_0[_len_0] = _value_0
+            _len_0 = _len_0 + 1
+            _continue_0 = true
+          until true
+          if not _continue_0 then
+            break
+          end
+        end
+        return _accum_0
+      end)()
     end,
     get_bookmark = function(self, user)
       return self:with_user(user.id):get_bookmark()

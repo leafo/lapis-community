@@ -255,6 +255,41 @@ describe "posting flow", ->
       topic = unpack Topics\select!
       assert.same {"hello"}, [t.slug for t in *topic\get_tags!]
 
+    it "drops moderator only tags for regular user", ->
+      category = factory.Categories!
+      factory.CategoryTags category_id: category.id, slug: "hello"
+      factory.CategoryTags category_id: category.id, slug: "staff", moderator_only: true
+
+      new_topic {
+        category_id: category.id
+        "topic[title]": "Hello"
+        "topic[body]": "World"
+        "topic[tags]": "hello,staff"
+      }
+
+      topic = unpack Topics\select!
+      assert.same {"hello"}, topic.tags
+
+    it "lets moderator create topic with moderator only tag", ->
+      category = factory.Categories!
+      factory.CategoryTags category_id: category.id, slug: "hello"
+      factory.CategoryTags category_id: category.id, slug: "staff", moderator_only: true
+
+      factory.Moderators {
+        user_id: current_user.id
+        object: category
+      }
+
+      new_topic {
+        category_id: category.id
+        "topic[title]": "Hello"
+        "topic[body]": "World"
+        "topic[tags]": "hello,staff"
+      }
+
+      topic = unpack Topics\select!
+      assert.same {"hello", "staff"}, topic.tags
+
     it "creates new topic with tags filtered by before_create_callback", ->
       category = factory.Categories!
       factory.CategoryTags slug: "first", category_id: category.id
@@ -1771,6 +1806,124 @@ describe "posting flow", ->
 
       topic\refresh!
       assert.nil topic.tags
+
+    it "preserves moderator only tags when regular user edits", ->
+      post = factory.Posts user_id: current_user.id
+      topic = post\get_topic!
+      category = topic\get_category!
+
+      factory.CategoryTags category_id: category.id, slug: "hello"
+      factory.CategoryTags category_id: category.id, slug: "zone"
+      factory.CategoryTags category_id: category.id, slug: "staff", moderator_only: true
+
+      topic\update tags: db.array { "staff", "hello" }
+
+      edit_post {
+        post_id: post.id
+        "post[body]": "good stuff"
+        "post[tags]": "zone,staff"
+      }
+
+      topic\refresh!
+      assert.same {"zone", "staff"}, topic.tags
+
+    it "preserves moderator only tag when a stored slug no longer exists", ->
+      post = factory.Posts user_id: current_user.id
+      topic = post\get_topic!
+      category = topic\get_category!
+
+      factory.CategoryTags category_id: category.id, slug: "hello"
+      factory.CategoryTags category_id: category.id, slug: "staff", moderator_only: true
+
+      topic\update tags: db.array { "removed", "staff" }
+
+      edit_post {
+        post_id: post.id
+        "post[body]": "good stuff"
+        "post[tags]": "hello"
+      }
+
+      topic\refresh!
+      assert.same {"hello", "staff"}, topic.tags
+
+    it "clears regular tags when regular user submits only moderator only tag", ->
+      post = factory.Posts user_id: current_user.id
+      topic = post\get_topic!
+      category = topic\get_category!
+
+      factory.CategoryTags category_id: category.id, slug: "hello"
+      factory.CategoryTags category_id: category.id, slug: "staff", moderator_only: true
+
+      topic\update tags: db.array { "hello", "staff" }
+
+      edit_post {
+        post_id: post.id
+        "post[body]": "good stuff"
+        "post[tags]": "staff"
+      }
+
+      topic\refresh!
+      assert.same {"staff"}, topic.tags
+
+    it "clears tags when editing with only unknown tags", ->
+      post = factory.Posts user_id: current_user.id
+      topic = post\get_topic!
+      category = topic\get_category!
+      tag = factory.CategoryTags category_id: category.id
+
+      topic\update tags: db.array { tag.slug }
+
+      edit_post {
+        post_id: post.id
+        "post[body]": "good stuff"
+        "post[tags]": "nope,nothing"
+      }
+
+      topic\refresh!
+      assert.nil topic.tags
+
+    it "preserves moderator only tags when regular user clears tags", ->
+      post = factory.Posts user_id: current_user.id
+      topic = post\get_topic!
+      category = topic\get_category!
+
+      factory.CategoryTags category_id: category.id, slug: "hello"
+      factory.CategoryTags category_id: category.id, slug: "staff", moderator_only: true
+
+      topic\update tags: db.array { "staff", "hello" }
+
+      edit_post {
+        post_id: post.id
+        "post[body]": "good stuff"
+        "post[tags]": ""
+      }
+
+      topic\refresh!
+      assert.same {"staff"}, topic.tags
+
+    it "lets moderator remove moderator only tag", ->
+      post = factory.Posts user_id: current_user.id
+      topic = post\get_topic!
+      category = topic\get_category!
+
+      factory.CategoryTags category_id: category.id, slug: "hello"
+      factory.CategoryTags category_id: category.id, slug: "staff", moderator_only: true
+
+      topic\update tags: db.array { "staff", "hello" }
+
+      factory.Moderators {
+        user_id: current_user.id
+        object: category
+      }
+
+      edit_post {
+        post_id: post.id
+        "post[body]": "good stuff"
+        "post[tags]": "hello"
+      }
+
+      topic\refresh!
+      assert.same {"hello"}, topic.tags
 
     it "edits post with reason", ->
       post = factory.Posts user_id: current_user.id

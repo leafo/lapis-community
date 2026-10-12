@@ -693,15 +693,20 @@ class Categories extends Model
       category_order: last_topic.category_order
     }
 
-  parse_tags: (str="") =>
+  parse_tags: (str="", user) =>
     tags_by_slug = {t.slug, t for t in *@get_tags!}
     import trim from require "lapis.util"
     parsed = [trim s for s in str\gmatch "[^,]+"]
     seen = {}
+    local is_moderator
     parsed = for t in *parsed
       t = tags_by_slug[t]
       continue unless t
       continue if seen[t.slug]
+      if t.moderator_only
+        if is_moderator == nil
+          is_moderator = @allowed_to_moderate(user) and true or false
+        continue unless is_moderator
       seen[t.slug] = true
       t
 

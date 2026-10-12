@@ -167,7 +167,10 @@ class PostsFlow extends Flow
       table.insert v, {"title", types.nil + types.limited_text limits.MAX_TITLE_LEN }
 
       -- this treats nil and not provided and does not action
-      table.insert v, {"tags", types.nil + types.empty / (-> {}) + types.limited_text(240) / (category and category\parse_tags or nil) }
+      parse_tags = if category
+        (str) -> category\parse_tags(str, @current_user) or {}
+
+      table.insert v, {"tags", types.nil + types.empty / (-> {}) + types.limited_text(240) / parse_tags }
       table.insert v, {"poll", types.empty + types.table}
 
     post_update = assert_valid @params.post, types.params_shape v
@@ -231,8 +234,18 @@ class PostsFlow extends Flow
         topic_update.slug = slugify topic_update.title
 
       if new_tags = post_update.tags
+        new_tags = [t.slug for t in *new_tags]
+
+        -- parse_tags strips moderator only tags from a non-moderator's input,
+        -- so re-add the existing ones rather than letting the edit clear them
+        unless @topic\allowed_to_moderate @current_user
+          seen = {s, true for s in *new_tags}
+          for t in *(@topic\get_tags! or {})
+            if t.moderator_only and not seen[t.slug]
+              table.insert new_tags, t.slug
+
         topic_update.tags = if next new_tags
-          db.array [t.slug for t in *new_tags]
+          db.array new_tags
         else
           db.NULL
 

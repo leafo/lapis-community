@@ -89,13 +89,9 @@ do
         },
         {
           "tags",
-          types.empty + types.limited_text(240) / (function()
-            local _base_1 = self.category
-            local _fn_0 = _base_1.parse_tags
-            return function(...)
-              return _fn_0(_base_1, ...)
-            end
-          end)()
+          types.empty + types.limited_text(240) / function(str)
+            return self.category:parse_tags(str, self.current_user)
+          end
         },
         {
           "sticky",
