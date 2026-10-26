@@ -820,6 +820,51 @@ describe "models.categories", ->
       order = [t.category_order for t in *topics]
       assert.same { 1,2,3,4 }, order
 
+    it "updates to topic date order", ->
+      -- topics[1] is the newest topic but has the oldest post, so post_date
+      -- and topic_date orders are reversed
+      category\update_category_order_type "topic_date"
+
+      for t in *topics
+        t\refresh!
+
+      order = [t.category_order for t in *topics]
+      assert.same { 4,3,2,1 }, order
+
+      category\refresh!
+      assert.same topics[1].id, category.last_topic_id
+
+    it "ignores replies when ordered by topic date", ->
+      category\update_category_order_type "topic_date"
+      category\refresh!
+
+      oldest = topics[4]
+      oldest\refresh!
+      before = oldest.category_order
+
+      post = factory.Posts topic_id: oldest.id
+      oldest\increment_from_post post
+
+      oldest\refresh!
+      category\refresh!
+
+      assert.same before, oldest.category_order
+      assert.same topics[1].id, category.last_topic_id
+
+    it "places new topic last when ordered by topic date", ->
+      category\update_category_order_type "topic_date"
+      category\refresh!
+
+      topic = factory.Topics {
+        category_id: category.id
+        category_order: category\next_topic_category_order!
+      }
+      category\increment_from_topic topic
+      topic\refresh!
+
+      assert.same 5, topic.category_order
+      assert.same topic.id, category.last_topic_id
+
   describe "find_moderator", ->
     local categories, other_category
     before_each ->

@@ -717,6 +717,11 @@ class Topics extends Model
       topics_count: db.raw "topics_count + 1"
     }, timestamp: false
 
+    -- category_order from the old category means nothing here and the topic
+    -- usually belongs mid-sequence, so renumber
+    if new_category\order_by_topic_date!
+      new_category\refresh_topic_category_order!
+
     true
 
   get_score: =>

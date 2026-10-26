@@ -131,6 +131,7 @@ class Categories extends Model
   @category_order_types: enum {
     post_date: 1
     topic_score: 2
+    topic_date: 3
   }
 
   @relations: {
@@ -481,6 +482,8 @@ class Categories extends Model
         @refresh_topic_category_order_by_post_date!
       when @@category_order_types.topic_score
         @refresh_topic_category_order_by_topic_score!
+      when @@category_order_types.topic_date
+        @refresh_topic_category_order_by_topic_date!
       else
         error "unknown category order type"
 
@@ -537,6 +540,22 @@ class Categories extends Model
 
     @refresh_last_topic!
 
+  refresh_topic_category_order_by_topic_date: =>
+    import Topics from require "community.models"
+    tname = db.escape_identifier Topics\table_name!
+
+    db.query "
+      update #{tname}
+      set category_order = k.category_order
+      from (
+        select id, row_number() over (order by created_at asc, id asc) as category_order
+        from #{tname} where category_id = ?
+      ) k
+      where #{tname}.id = k.id
+    ", @id
+
+    @refresh_last_topic!
+
   refresh_last_topic: =>
     import Topics from require "community.models"
 
@@ -567,6 +586,9 @@ class Categories extends Model
 
     import CategoryPostLogs from require "community.models"
     CategoryPostLogs\log_post post
+
+    -- replies don't change topic position, so last_topic must stay the newest topic
+    return if @order_by_topic_date!
 
     unless @last_topic_id == post.topic_id
       @clear_loaded_relation "last_topic"
@@ -740,6 +762,9 @@ class Categories extends Model
   order_by_date: =>
     @category_order_type == @@category_order_types.post_date
 
+  order_by_topic_date: =>
+    @category_order_type == @@category_order_types.topic_date
+
   -- this is for a brand new topic, so it has no votes and create date is right now
   next_topic_category_order: =>
     import Topics from require "community.models"
@@ -747,7 +772,7 @@ class Categories extends Model
     switch @category_order_type
       when @@category_order_types.topic_score
         Topics\calculate_score_category_order 0, db.format_date!, @topic_score_bucket_size!
-      when @@category_order_types.post_date
+      when @@category_order_types.post_date, @@category_order_types.topic_date
         Topics\update_category_order_sql @id
 
   update_category_order_type: (category_order) =>

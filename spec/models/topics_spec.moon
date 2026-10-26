@@ -932,6 +932,30 @@ describe "models.topics", ->
         assert.same 0, old_category.topics_count
         assert.same 1, new_category.topics_count
 
+      it "renumbers topic date ordered category on move", ->
+        new_category\update_category_order_type "topic_date"
+
+        existing = for i=1,2
+          factory.Topics {
+            category_id: new_category.id
+            created_at: db.raw db.interpolate_query "
+              now() at time zone 'utc' - ?::interval
+            ", "#{i} days"
+          }
+
+        new_category\refresh_topic_category_order!
+
+        topic\update created_at: db.raw "now() at time zone 'utc' - '36 hours'::interval"
+        topic\move_to_category new_category
+
+        topic\refresh!
+        for t in *existing
+          t\refresh!
+
+        assert.same 1, existing[2].category_order
+        assert.same 2, topic.category_order
+        assert.same 3, existing[1].category_order
+
       it "moves a topic with more relations", ->
         mod_log = ModerationLogs\create {
           object: topic

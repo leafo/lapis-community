@@ -406,6 +406,8 @@ do
         return self:refresh_topic_category_order_by_post_date()
       elseif self.__class.category_order_types.topic_score == _exp_0 then
         return self:refresh_topic_category_order_by_topic_score()
+      elseif self.__class.category_order_types.topic_date == _exp_0 then
+        return self:refresh_topic_category_order_by_topic_date()
       else
         return error("unknown category order type")
       end
@@ -437,6 +439,13 @@ do
       db.query("\n      update " .. tostring(tname) .. "\n      set category_order = k.category_order\n      from (\n        select id, row_number() over (order by last_post_at asc) as category_order\n        from\n        (\n          select\n            inside.id,\n            coalesce(\n              (select created_at from " .. tostring(posts_tname) .. " as posts where posts.id = last_post_id),\n              inside.created_at\n            ) as last_post_at\n          from " .. tostring(tname) .. " as inside where category_id = ?\n        ) as t\n      ) k\n      where " .. tostring(tname) .. ".id = k.id\n    ", self.id)
       return self:refresh_last_topic()
     end,
+    refresh_topic_category_order_by_topic_date = function(self)
+      local Topics
+      Topics = require("community.models").Topics
+      local tname = db.escape_identifier(Topics:table_name())
+      db.query("\n      update " .. tostring(tname) .. "\n      set category_order = k.category_order\n      from (\n        select id, row_number() over (order by created_at asc, id asc) as category_order\n        from " .. tostring(tname) .. " where category_id = ?\n      ) k\n      where " .. tostring(tname) .. ".id = k.id\n    ", self.id)
+      return self:refresh_last_topic()
+    end,
     refresh_last_topic = function(self)
       local Topics
       Topics = require("community.models").Topics
@@ -463,6 +472,9 @@ do
       local CategoryPostLogs
       CategoryPostLogs = require("community.models").CategoryPostLogs
       CategoryPostLogs:log_post(post)
+      if self:order_by_topic_date() then
+        return 
+      end
       if not (self.last_topic_id == post.topic_id) then
         self:clear_loaded_relation("last_topic")
         return self:update({
@@ -764,13 +776,16 @@ do
     order_by_date = function(self)
       return self.category_order_type == self.__class.category_order_types.post_date
     end,
+    order_by_topic_date = function(self)
+      return self.category_order_type == self.__class.category_order_types.topic_date
+    end,
     next_topic_category_order = function(self)
       local Topics
       Topics = require("community.models").Topics
       local _exp_0 = self.category_order_type
       if self.__class.category_order_types.topic_score == _exp_0 then
         return Topics:calculate_score_category_order(0, db.format_date(), self:topic_score_bucket_size())
-      elseif self.__class.category_order_types.post_date == _exp_0 then
+      elseif self.__class.category_order_types.post_date == _exp_0 or self.__class.category_order_types.topic_date == _exp_0 then
         return Topics:update_category_order_sql(self.id)
       end
     end,
@@ -1008,7 +1023,8 @@ do
   })
   self.category_order_types = enum({
     post_date = 1,
-    topic_score = 2
+    topic_score = 2,
+    topic_date = 3
   })
   self.relations = {
     {

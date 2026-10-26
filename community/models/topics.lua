@@ -694,6 +694,9 @@ do
       }, {
         timestamp = false
       })
+      if new_category:order_by_topic_date() then
+        new_category:refresh_topic_category_order()
+      end
       return true
     end,
     get_score = function(self)
